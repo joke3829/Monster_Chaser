@@ -136,6 +136,28 @@ void CGameFramework::InitRTVDSV()
 
 void CGameFramework::InitOutputBuffer()
 {
+	D3D12_DESCRIPTOR_HEAP_DESC heapdesc{};
+	heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	heapdesc.NumDescriptors = 1;
+	heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	m_pd3dDevice->CreateDescriptorHeap(&heapdesc, IID_PPV_ARGS(&m_pd3dOutputBufferView));
+
+	D3D12_RESOURCE_DESC desc = BASIC_BUFFER_DESC;
+	desc.Width = DEFINED_UAV_BUFFER_WIDTH;
+	desc.Height = DEFINED_UAV_BUFFER_HEIGHT;
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+	m_pd3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&m_pd3dOutputBuffer));
+
+	D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc{};
+	viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+	viewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	m_pd3dDevice->CreateUnorderedAccessView(m_pd3dOutputBuffer.Get(), nullptr, &viewDesc, m_pd3dOutputBufferView->GetCPUDescriptorHandleForHeapStart());
 
 }
 

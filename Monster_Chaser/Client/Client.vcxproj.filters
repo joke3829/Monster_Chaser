@@ -16,6 +16,12 @@
     <Filter Include="GameFramework">
       <UniqueIdentifier>{42ca8c9a-10b0-488e-a434-850bb3faa612}</UniqueIdentifier>
     </Filter>
+    <Filter Include="RayTracingPipeline">
+      <UniqueIdentifier>{7bd4c252-992e-48ba-bb2c-bf7a67840b75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="BLASManager">
+      <UniqueIdentifier>{ea8af3d9-a2f3-4c1f-a008-ef79557bd89f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -33,6 +39,12 @@
     <ClInclude Include="GameFramework.h">
       <Filter>GameFramework</Filter>
     </ClInclude>
+    <ClInclude Include="RayTracingPipeline.h">
+      <Filter>RayTracingPipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="BLASManager.h">
+      <Filter>BLASManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -40,6 +52,12 @@
     </ClCompile>
     <ClCompile Include="GameFramework.cpp">
       <Filter>GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="RayTracingPipeline.cpp">
+      <Filter>RayTracingPipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="BLASManager.cpp">
+      <Filter>BLASManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
