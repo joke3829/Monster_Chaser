@@ -28,7 +28,6 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	if (m_bRayTracingSupport)
 		InitOutputBuffer();
 	
-	m_bRaster = true;
 	g_DxResource.device = m_pd3dDevice.Get();
 	g_DxResource.cmdAlloc = m_pd3dCommandAllocator.Get();
 	g_DxResource.cmdList = m_pd3dCommandList.Get();
@@ -140,6 +139,41 @@ void CGameFramework::InitOutputBuffer()
 
 }
 
+LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+		KeyboardProcessing(hWnd, nMessage, wParam, lParam);
+		break;
+	case WM_MOUSEMOVE:
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+		break;
+	}
+	return 0;
+}
+
+void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+		switch (wParam) {
+		case 'p':	// 임시로 설정
+		case 'P':
+			if (m_bRayTracingSupport) {
+				m_bRaster = !m_bRaster;
+			}
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		break;
+	}
+}
+
 void CGameFramework::Render()
 {
 	auto barrier = [&](ID3D12Resource* pResource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
@@ -179,6 +213,31 @@ void CGameFramework::Render()
 		m_pdxgiSwapChain->Present(0, 0);
 	}
 	else {
+		// Scene의 DispatchRay 사용할 예정
 
+		// 임시로 Rasterization 코드 넣어둠
+		m_pd3dCommandAllocator->Reset();
+		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
+
+		UINT nCurrentBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
+
+		barrier(m_pd3dBackBuffer[nCurrentBufferIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		D3D12_CPU_DESCRIPTOR_HANDLE d3dCPUHandle = m_pd3dRenderTargetView->GetCPUDescriptorHandleForHeapStart();
+		d3dCPUHandle.ptr += (m_nRTVIncrementSize * nCurrentBufferIndex);
+		float colors[] = { 0.5f, 1.0f, 0.5f, 1.0f };
+		m_pd3dCommandList->ClearRenderTargetView(d3dCPUHandle, colors, 0, nullptr);
+
+		d3dCPUHandle = m_pd3dDepthStencilView->GetCPUDescriptorHandleForHeapStart();
+		m_pd3dCommandList->ClearDepthStencilView(d3dCPUHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+		// 여기에 렌더링 코드
+
+
+		barrier(m_pd3dBackBuffer[nCurrentBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+
+		m_pd3dCommandList->Close();
+		m_pd3dCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(m_pd3dCommandList.GetAddressOf()));
+		Flush();
+
+		m_pdxgiSwapChain->Present(0, 0);
 	}
 }

@@ -22,6 +22,9 @@ public:
 	// device의 RayTracing 지원 확인
 	void CheckRayTracingSupport();
 
+	LRESULT CALLBACK WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
 	void Render();
 private:
 	HWND m_hWnd{};
