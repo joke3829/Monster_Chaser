@@ -131,7 +131,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="BLASManager.h" />
+    <ClInclude Include="AccelerationStructureManager.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="GameFramework.h" />
     <ClInclude Include="RayTracingPipeline.h" />
@@ -140,10 +141,12 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BLASManager.cpp" />
+    <ClCompile Include="AccelerationStructureManager.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="GameFramework.cpp" />
     <ClCompile Include="RayTracingPipeline.cpp" />
+    <ClCompile Include="stdafx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Client.rc" />

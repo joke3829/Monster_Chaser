@@ -19,8 +19,11 @@
     <Filter Include="RayTracingPipeline">
       <UniqueIdentifier>{7bd4c252-992e-48ba-bb2c-bf7a67840b75}</UniqueIdentifier>
     </Filter>
-    <Filter Include="BLASManager">
-      <UniqueIdentifier>{ea8af3d9-a2f3-4c1f-a008-ef79557bd89f}</UniqueIdentifier>
+    <Filter Include="Camera">
+      <UniqueIdentifier>{3b3e4f75-5612-4bf4-9b2f-25e91ab01c6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="AccelerationStructureManager">
+      <UniqueIdentifier>{f08130c1-c339-4c11-a79e-42b2a1e87a53}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -42,8 +45,11 @@
     <ClInclude Include="RayTracingPipeline.h">
       <Filter>RayTracingPipeline</Filter>
     </ClInclude>
-    <ClInclude Include="BLASManager.h">
-      <Filter>BLASManager</Filter>
+    <ClInclude Include="Camera.h">
+      <Filter>Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="AccelerationStructureManager.h">
+      <Filter>AccelerationStructureManager</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -56,8 +62,14 @@
     <ClCompile Include="RayTracingPipeline.cpp">
       <Filter>RayTracingPipeline</Filter>
     </ClCompile>
-    <ClCompile Include="BLASManager.cpp">
-      <Filter>BLASManager</Filter>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="AccelerationStructureManager.cpp">
+      <Filter>AccelerationStructureManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

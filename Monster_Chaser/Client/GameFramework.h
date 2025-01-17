@@ -5,6 +5,8 @@
 #pragma once
 #include "stdafx.h"
 
+extern DXResources g_DxResource;
+
 class CGameFramework {
 public:
 	bool OnInit(HWND hWnd, HINSTANCE hInstance);

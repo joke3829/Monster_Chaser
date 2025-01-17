@@ -1,5 +1,6 @@
 #pragma once
-class CRayTracingPipeline
-{
+
+class CRayTracingPipeline {
+
 };
 

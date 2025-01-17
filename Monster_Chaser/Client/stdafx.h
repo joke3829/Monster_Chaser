@@ -66,16 +66,8 @@ struct DXResources {
 	ID3D12Fence* fence{ nullptr };
 };
 
-static DXResources g_DxResource{};
-
 // GPU 작업이 끝나기까지 기다린다.
-inline void Flush()
-{
-	static UINT64 nFenceValue = 1;
-	g_DxResource.cmdQueue->Signal(g_DxResource.fence, nFenceValue);
-	g_DxResource.fence->SetEventOnCompletion(nFenceValue++, nullptr);	
-	// 만약 비정상적으로 작동 시 WaitForSingleObject를 추가한다.
-}
+void Flush();
 
 // size를 alignment의 배수로 할당
 inline constexpr UINT Align(UINT size, UINT alignment)
@@ -83,42 +75,42 @@ inline constexpr UINT Align(UINT size, UINT alignment)
 	return (size + (alignment - 1)) & ~(alignment - 1);
 }
 
-// AccelerationStructure를 만들어 주는 함수
-inline void MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, ComPtr<ID3D12Resource>& asResource, UINT* updateScratchSize = nullptr)
-{
-	ID3D12Device5* device = g_DxResource.device;
-	ID3D12CommandAllocator* cmdAlloc = g_DxResource.cmdAlloc;
-	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
-	ID3D12CommandQueue* cmdQueue = g_DxResource.cmdQueue;
-
-	auto makeBuffer = [&](ComPtr<ID3D12Resource>& d3dResource, UINT bufferSize, auto InitialState)
-		{
-			auto desc = BASIC_BUFFER_DESC;
-			desc.Width = bufferSize;
-			desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-			device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, InitialState, nullptr, IID_PPV_ARGS(&d3dResource));
-		};
-
-	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO preBuildInfo{};
-	device->GetRaytracingAccelerationStructurePrebuildInfo(&inputs, &preBuildInfo);
-
-	if (updateScratchSize)
-		*updateScratchSize = preBuildInfo.UpdateScratchDataSizeInBytes;
-
-	makeBuffer(asResource, preBuildInfo.ResultDataMaxSizeInBytes, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
-
-	ComPtr<ID3D12Resource> ScratchBuffer{};
-	makeBuffer(ScratchBuffer, preBuildInfo.ScratchDataSizeInBytes, D3D12_RESOURCE_STATE_GENERIC_READ);
-
-	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC ASDesc{};
-	ASDesc.Inputs = inputs;
-	ASDesc.DestAccelerationStructureData = asResource->GetGPUVirtualAddress();
-	ASDesc.ScratchAccelerationStructureData = ScratchBuffer->GetGPUVirtualAddress();
-
-	cmdAlloc->Reset();
-	cmdList->Reset(cmdAlloc, nullptr);
-	cmdList->BuildRaytracingAccelerationStructure(&ASDesc, 0, nullptr);
-	cmdList->Close();
-	cmdQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&cmdList));
-	Flush();
-}
+//// AccelerationStructure를 만들어 주는 함수
+//inline void MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, ComPtr<ID3D12Resource>& asResource, UINT* updateScratchSize = nullptr)
+//{
+//	ID3D12Device5* device = g_DxResource.device;
+//	ID3D12CommandAllocator* cmdAlloc = g_DxResource.cmdAlloc;
+//	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
+//	ID3D12CommandQueue* cmdQueue = g_DxResource.cmdQueue;
+//
+//	auto makeBuffer = [&](ComPtr<ID3D12Resource>& d3dResource, UINT bufferSize, auto InitialState)
+//		{
+//			auto desc = BASIC_BUFFER_DESC;
+//			desc.Width = bufferSize;
+//			desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+//			device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, InitialState, nullptr, IID_PPV_ARGS(&d3dResource));
+//		};
+//
+//	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO preBuildInfo{};
+//	device->GetRaytracingAccelerationStructurePrebuildInfo(&inputs, &preBuildInfo);
+//
+//	if (updateScratchSize)
+//		*updateScratchSize = preBuildInfo.UpdateScratchDataSizeInBytes;
+//
+//	makeBuffer(asResource, preBuildInfo.ResultDataMaxSizeInBytes, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
+//
+//	ComPtr<ID3D12Resource> ScratchBuffer{};
+//	makeBuffer(ScratchBuffer, preBuildInfo.ScratchDataSizeInBytes, D3D12_RESOURCE_STATE_GENERIC_READ);
+//
+//	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC ASDesc{};
+//	ASDesc.Inputs = inputs;
+//	ASDesc.DestAccelerationStructureData = asResource->GetGPUVirtualAddress();
+//	ASDesc.ScratchAccelerationStructureData = ScratchBuffer->GetGPUVirtualAddress();
+//
+//	cmdAlloc->Reset();
+//	cmdList->Reset(cmdAlloc, nullptr);
+//	cmdList->BuildRaytracingAccelerationStructure(&ASDesc, 0, nullptr);
+//	cmdList->Close();
+//	cmdQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&cmdList));
+//	Flush();
+//}
