@@ -1,6 +1,6 @@
 // ==================================================
 // AccelerationStructureManager.h
-//
+// 하나의 Scene마다 해당 AS 가지게 한다.
 // ==================================================
 
 #pragma once
@@ -31,7 +31,8 @@ public:
 private:
 	ComPtr<ID3D12Resource> m_TLAS{};						// TLAS는 하나만 사용, BLASList를 토대로 만든다.
 	ComPtr<ID3D12Resource> m_InstanceBuffer{};				// TLAS에 들어갈 instance 버퍼
-	UINT64* m_pUpdateScracthSize{};
+	ComPtr<ID3D12Resource> m_TLASUpdateScratch{};			// 
+	D3D12_RAYTRACING_INSTANCE_DESC* m_pInstanceData{};		// 
 
 	std::vector<ComPtr<ID3D12Resource>> m_vBLASList;		// BLAS
 	UINT m_nInstances;				// 인스턴스 개수

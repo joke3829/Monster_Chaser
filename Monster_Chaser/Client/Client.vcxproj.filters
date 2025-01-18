@@ -25,6 +25,12 @@
     <Filter Include="AccelerationStructureManager">
       <UniqueIdentifier>{f08130c1-c339-4c11-a79e-42b2a1e87a53}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{5f0302a5-5ecc-4b59-bd22-aa8f6dc269e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ShaderBindingTable">
+      <UniqueIdentifier>{9aae679d-1942-48ac-9a4a-90d15ad3cd48}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -51,6 +57,12 @@
     <ClInclude Include="AccelerationStructureManager.h">
       <Filter>AccelerationStructureManager</Filter>
     </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderBindingTableManager.h">
+      <Filter>ShaderBindingTable</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -70,6 +82,12 @@
     </ClCompile>
     <ClCompile Include="AccelerationStructureManager.cpp">
       <Filter>AccelerationStructureManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderBindingTableManager.cpp">
+      <Filter>ShaderBindingTable</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -7,7 +7,7 @@ void CAccelerationStructureManager::SetScene()
 
 void CAccelerationStructureManager::UpdateScene()
 {
-
+	Flush();
 }
 
 // BLASList에 BLAS를 추가한다.
@@ -52,21 +52,42 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& asResource,
 
 void CAccelerationStructureManager::MakeTLAS()
 {
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_nInstances;
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
+		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&m_InstanceBuffer));
+	m_InstanceBuffer->Map(0, nullptr, reinterpret_cast<void**>(&m_pInstanceData));
+	// 여기는 확정이 아님
+	for (UINT i = 0; i < m_nInstances; ++i) {
+		m_pInstanceData[i] = {
+			.InstanceID = i,
+			.InstanceMask = 1,
+			.AccelerationStructure = m_vBLASList[i]->GetGPUVirtualAddress()
+		};
+	}
+
+
+	UINT64 updateScratchSize{};
+
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
 	inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
 	inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
 	inputs.NumDescs = m_nInstances;
 	inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-	//inputs.InstanceDescs = 
+	inputs.InstanceDescs = m_InstanceBuffer->GetGPUVirtualAddress();
 
-	MakeAccelerationStructure(inputs, m_TLAS, m_pUpdateScracthSize);
+	MakeAccelerationStructure(inputs, m_TLAS, &updateScratchSize);
 
 	// 스크래치 버퍼 만들기
-
+	desc = BASIC_BUFFER_DESC;
+	desc.Width = std::max<UINT64>(updateScratchSize, 8ULL);
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
+		D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_TLASUpdateScratch));
 }
 
 // AS 생성
-void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, ComPtr<ID3D12Resource>& asResource, UINT64* updateScratchSize = nullptr)
+void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, ComPtr<ID3D12Resource>& asResource, UINT64* updateScratchSize)
 {
 	ID3D12Device5* device = g_DxResource.device;
 	ID3D12CommandAllocator* cmdAlloc = g_DxResource.cmdAlloc;
