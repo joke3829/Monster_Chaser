@@ -16,6 +16,7 @@
 
 // 필요한 헤더 및 라이브러리를 여기에 추가한다 =================================================
 
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <string>
