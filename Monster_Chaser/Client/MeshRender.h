@@ -29,3 +29,15 @@ private:
 	std::shared_ptr<Shader> m_Shader;
 	std::shared_ptr<Material> m_Material;
 };
+
+/*
+	이렇게 사용을 할 거 같다
+	
+	Object* a;
+	auto me = std::make_shared<Mesh>();
+	auto meshRender = a->AddComponent<MeshRender>();
+	meshRender->SetMesh(me);
+
+	auto trans = a->AddComponent<Transform>();
+
+*/
