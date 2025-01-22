@@ -20,6 +20,7 @@
 #include <vector>
 #include <algorithm>
 #include <string>
+#include <fstream>
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
