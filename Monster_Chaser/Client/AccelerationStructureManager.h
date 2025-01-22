@@ -15,18 +15,18 @@ public:
 	void SetScene();				// 셰이더에 TLAS를 넘겨준다.
 	void UpdateScene();				// instance 정보를 받아 행렬및 장면을 업데이트 해주자
 
-	
-
+	// BLASList에 BLAS를 추가한다.
 	void AddBLAS(ID3D12Resource* vertexBuffer, UINT vertexcount, UINT64 vertexStride, DXGI_FORMAT vertexFormat,
 		ID3D12Resource* indexBuffer = nullptr, UINT indices = 0, DXGI_FORMAT indexFormat = DXGI_FORMAT_UNKNOWN);
-
+	// BLAS를 생성한다.
 	void MakeBLAS(ComPtr<ID3D12Resource>& asResource,
 		ID3D12Resource* vertexBuffer, UINT vertexCount, UINT64 vertexStride, DXGI_FORMAT vertexFormat,
-		ID3D12Resource* indexBuffer = nullptr, UINT indices = 0, DXGI_FORMAT indexFormat = DXGI_FORMAT_UNKNOWN);
-
+		ID3D12Resource* indexBuffer = nullptr, UINT indices = 0, DXGI_FORMAT indexFormat = DXGI_FORMAT_UNKNOWN, bool bOpaque = true);
+	// TLAS를 생성한다.
 	void MakeTLAS();
-
-	void MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, ComPtr<ID3D12Resource>& asResource, UINT64* updateScratchSize = nullptr);
+	// AccelerationStructure를 만든다.
+	void MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, 
+		ComPtr<ID3D12Resource>& asResource, UINT64* updateScratchSize = nullptr);
 
 private:
 	ComPtr<ID3D12Resource> m_TLAS{};						// TLAS는 하나만 사용, BLASList를 토대로 만든다.

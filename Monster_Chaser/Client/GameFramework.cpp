@@ -27,6 +27,8 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	// UAV Buffer
 	if (m_bRayTracingSupport)
 		InitOutputBuffer();
+
+	// 필요하면 Scene을 초기화하는 단계도 추가한다.
 	
 	g_DxResource.device = m_pd3dDevice.Get();
 	g_DxResource.cmdAlloc = m_pd3dCommandAllocator.Get();

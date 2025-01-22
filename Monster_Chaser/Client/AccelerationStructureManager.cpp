@@ -25,11 +25,11 @@ void CAccelerationStructureManager::AddBLAS(ID3D12Resource* vertexBuffer, UINT v
 // 추후 모델의 포멧을 보고 수정 예정
 void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& asResource,
 	ID3D12Resource* vertexBuffer, UINT vertexCount, UINT64 vertexStride, DXGI_FORMAT vertexFormat,
-	ID3D12Resource* indexBuffer, UINT indices, DXGI_FORMAT indexFormat)
+	ID3D12Resource* indexBuffer, UINT indices, DXGI_FORMAT indexFormat, bool bOpaque)
 {
 	D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc{};
 	geometryDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-	geometryDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
+	geometryDesc.Flags = bOpaque ? D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE : D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
 	geometryDesc.Triangles.Transform3x4 = 0;
 	geometryDesc.Triangles.VertexBuffer.StartAddress = vertexBuffer->GetGPUVirtualAddress();
 	geometryDesc.Triangles.VertexBuffer.StrideInBytes = vertexStride;
