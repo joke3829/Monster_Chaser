@@ -7,7 +7,7 @@ void Component::SetActive(bool isActive)
 		OnEnable();
 	}
 	else {
-		if (!bActive) {
+		if (!m_bActive) {
 			return;
 		}
 
@@ -17,7 +17,7 @@ void Component::SetActive(bool isActive)
 
 void Component::FirstUpdate()
 {
-	if (!bActive) {
+	if (!m_bActive) {
 		return;
 	}
 

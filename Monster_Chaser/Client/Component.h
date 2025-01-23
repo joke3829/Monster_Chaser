@@ -15,7 +15,7 @@ public:
 	virtual ~Component() = default;
 
 private:
-	bool bActive = false;
+	bool m_bActive = false;
 
 	void (Component::* m_UpdateFunc)() { &Component::FirstUpdate };
 	void UpdateFunc() { (this->*m_UpdateFunc)(); }
@@ -27,12 +27,12 @@ private:
 	// 객체 활성화 시 호출
 	virtual void OnEnable()
 	{
-		bActive = true;
+		m_bActive = true;
 	}
 	// 객체 비활성화 시 호출
 	virtual void OnDisable()
 	{
-		bActive = false;
+		m_bActive = false;
 	}
 
 	//매 프레임 호출
