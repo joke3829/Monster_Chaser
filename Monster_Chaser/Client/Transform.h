@@ -4,8 +4,9 @@
 // 
 // 추가적인 기능은 개발 진행에 따라 확장 예정
 //-----------------------------------------------------------------------------
-#include "Component.h"
+
 #include "stdafx.h"
+#include "Component.h"
 
 class Transform : public Component
 {

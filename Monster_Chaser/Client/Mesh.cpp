@@ -30,7 +30,7 @@ void Mesh::MakeResourceView(ComPtr<ID3D12DescriptorHeap>& pDescriptor, ComPtr<ID
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	desc.NumDescriptors = 1;
 	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	g_DxResource.device->CreateDescriptorHeap()
+	//g_DxResource.device->CreateDescriptorHeap();
 }
 
 

@@ -4,11 +4,14 @@
 // 
 // 추가 기능은 개발 진행에 따라 확장 예정
 //-----------------------------------------------------------------------------
+#pragma once
+
 #include "stdafx.h"
 
-class Component : public std::enable_shared_from_this<Component>
+class Component
 {
 public:
+	Component()=default;
 	virtual ~Component() = default;
 
 private:

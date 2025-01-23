@@ -43,32 +43,32 @@ private:
 
 	UINT m_nColorCount{};								// <Colors> 개수
 	ComPtr<ID3D12Resource> m_pd3dColorsBuffer{};		// ?
-	ComPtr<ID3D12DescriptorHeap> m_pd3dVertexBufferView{};
+	ComPtr<ID3D12DescriptorHeap> m_pd3dColorsBufferView{};
 	bool m_bHasColor = false;
 
 	UINT m_nTexCoord0Count{};							// <TextureCoords0>
 	ComPtr<ID3D12Resource> m_pd3dTexCoord0Buffer{};		// 아마도 DXGI_FORMAT_R32G32B32_UNORM;
-	ComPtr<ID3D12DescriptorHeap> m_pd3dVertexBufferView{};
+	ComPtr<ID3D12DescriptorHeap> m_pd3dTexCoord0BufferView{};
 	bool m_bHasTex0 = false;
 
 	UINT m_nTexCoord1Count{};							// <TextureCoords1>
 	ComPtr<ID3D12Resource> m_pd3dTexCoord1Buffer{};		// 아마도 DXGI_FORMAT_R32G32B32_UNORM;
-	ComPtr<ID3D12DescriptorHeap> m_pd3dVertexBufferView{};
+	ComPtr<ID3D12DescriptorHeap> m_pd3dTexCoord1BuffeViewr{};
 	bool m_bHasTex1 = false;
 
 	UINT m_nNormalsCount{};								// <Normals>
 	ComPtr<ID3D12Resource> m_pd3dNormalsBuffer{};		// 정규화겠지
-	ComPtr<ID3D12DescriptorHeap> m_pd3dVertexBufferView{};
+	ComPtr<ID3D12DescriptorHeap> m_pd3dNormalsBufferView{};
 	bool m_bHasNormals = false;
 
 	UINT m_nTangentsCount{};							// <Tangents>
 	ComPtr<ID3D12Resource> m_pd3dTangentsBuffer{};	
-	ComPtr<ID3D12DescriptorHeap> m_pd3dVertexBufferView{};
+	ComPtr<ID3D12DescriptorHeap> m_pd3dTangentsBufferView{};
 	bool m_bHasTangents = false;
 
 	UINT m_nBiTangentsCount{};							// <BiTangents>
 	ComPtr<ID3D12Resource> m_pd3dBiTangentsBuffer{};
-	ComPtr<ID3D12DescriptorHeap> m_pd3dVertexBufferView{};
+	ComPtr<ID3D12DescriptorHeap> m_pd3dBiTangentsBufferView{};
 	bool m_bHasBiTangents = false;
 
 	UINT m_nSubMeshesCount{};							// SubMesh개수 (vector::size()로 알아올 수 있다, 필요한가?, reserve할때 사용 가능)

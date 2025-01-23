@@ -30,9 +30,9 @@ public:
 	virtual void Release();
 	virtual void ReleaseUploadBuffers();
 private:
-	static std::shared_ptr<Mesh> m_Mesh;
-	static std::shared_ptr<Shader> m_Shader;
-	static std::shared_ptr<Material> m_Material;
+	std::shared_ptr<Mesh> m_Mesh;
+	std::shared_ptr<Shader> m_Shader;
+	std::shared_ptr<Material> m_Material;
 };
 
 /*
