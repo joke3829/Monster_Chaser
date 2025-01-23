@@ -14,6 +14,7 @@ class MeshRender : public Component
 public:
 	virtual ~MeshRender() = default;
 
+	// 리소스 세팅
 	template<class T>
 	void SetMesh(std::shared_ptr<T>& mesh) { m_Mesh = mesh; }
 	template<class T>
@@ -21,13 +22,17 @@ public:
 	template<class T>
 	void SetMaterial(std::shared_ptr<T>& material) { m_Material = material; }
 
+	// 리소스 가져오기
 	std::shared_ptr<Mesh> GetMesh() { return m_Mesh; }
 	std::shared_ptr<Shader> GetShader() { return m_Shader; }
 	std::shared_ptr<Material> GetMaterial() { return m_Material; }
+
+	virtual void Release();
+	virtual void ReleaseUploadBuffers();
 private:
-	std::shared_ptr<Mesh> m_Mesh;
-	std::shared_ptr<Shader> m_Shader;
-	std::shared_ptr<Material> m_Material;
+	static std::shared_ptr<Mesh> m_Mesh;
+	static std::shared_ptr<Shader> m_Shader;
+	static std::shared_ptr<Material> m_Material;
 };
 
 /*

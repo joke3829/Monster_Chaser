@@ -19,9 +19,6 @@
     <Filter Include="RayTracingPipeline">
       <UniqueIdentifier>{7bd4c252-992e-48ba-bb2c-bf7a67840b75}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Camera">
-      <UniqueIdentifier>{3b3e4f75-5612-4bf4-9b2f-25e91ab01c6e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="AccelerationStructureManager">
       <UniqueIdentifier>{f08130c1-c339-4c11-a79e-42b2a1e87a53}</UniqueIdentifier>
     </Filter>
@@ -61,6 +58,12 @@
     <Filter Include="Timer">
       <UniqueIdentifier>{dd5da520-bf3e-42c1-9f02-74258826d94b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Component\Camera">
+      <UniqueIdentifier>{3b3e4f75-5612-4bf4-9b2f-25e91ab01c6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object">
+      <UniqueIdentifier>{a141e35b-0194-41a9-9cc9-7a9f67b13981}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -82,7 +85,7 @@
       <Filter>RayTracingPipeline</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Camera</Filter>
+      <Filter>Component\Camera</Filter>
     </ClInclude>
     <ClInclude Include="AccelerationStructureManager.h">
       <Filter>AccelerationStructureManager</Filter>
@@ -117,6 +120,9 @@
     <ClInclude Include="Timer.h">
       <Filter>Timer</Filter>
     </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Object</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -132,7 +138,7 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
-      <Filter>Camera</Filter>
+      <Filter>Component\Camera</Filter>
     </ClCompile>
     <ClCompile Include="AccelerationStructureManager.cpp">
       <Filter>AccelerationStructureManager</Filter>
@@ -166,6 +172,9 @@
     </ClCompile>
     <ClCompile Include="Timer.cpp">
       <Filter>Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
