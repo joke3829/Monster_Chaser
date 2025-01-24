@@ -1,7 +1,7 @@
 #include "Mesh.h"
 
 
-Mesh::Mesh(std::ifstream& inFile)
+Mesh::Mesh(std::ifstream& inFile, std::string strMeshName)
 {
 	std::string strLabel{};
 	auto readLabel = [&]() {
@@ -11,7 +11,8 @@ Mesh::Mesh(std::ifstream& inFile)
 		inFile.read(strLabel.data(), nStrLength);
 		};
 	// 이름 받기
-	GetMeshNameFromFile(inFile);
+	//GetMeshNameFromFile(inFile);
+	m_MeshName = strMeshName;
 
 	while (1) {
 		readLabel();
@@ -38,16 +39,16 @@ Mesh::Mesh(std::ifstream& inFile)
 	}
 }
 
-void Mesh::GetMeshNameFromFile(std::ifstream& inFile)
-{
-	int temp;	// 정점의 수
-	inFile.read((char*)&temp, sizeof(int));
-
-	char nStrLength{};
-	inFile.read((char*)&nStrLength, sizeof(char));
-	m_MeshName.assign(nStrLength, ' ');
-	inFile.read(m_MeshName.data(), nStrLength);
-}
+//void Mesh::GetMeshNameFromFile(std::ifstream& inFile)
+//{
+//	int temp;	// 정점의 수
+//	inFile.read((char*)&temp, sizeof(int));
+//
+//	char nStrLength{};
+//	inFile.read((char*)&nStrLength, sizeof(char));
+//	m_MeshName.assign(nStrLength, ' ');
+//	inFile.read(m_MeshName.data(), nStrLength);
+//}
 
 void Mesh::GetBoundInfoFromFile(std::ifstream& inFile)
 {
@@ -251,5 +252,64 @@ void Mesh::MakeSubMesh(std::ifstream& inFile)
 	inFile.read((char*)&indices, sizeof(int));
 	m_vIndices.push_back(indices);
 
+	if (indices > 0) {
+		std::vector<UINT> index{};
+		index.assign(indices, 0);
+		inFile.read((char*)index.data(), sizeof(UINT) * indices);
 
+		// CreateBuffer
+		auto desc = BASIC_BUFFER_DESC;
+		desc.Width = sizeof(UINT) * indices;
+		// 일단은 UPLOAD로 생성, 문제 시 DEFAULT로 변경 예정
+		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
+			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(indexBuffer.GetAddressOf()));
+
+		void* ptr;
+		indexBuffer->Map(0, nullptr, &ptr);
+		memcpy(ptr, index.data(), sizeof(UINT) * indices);
+		indexBuffer->Unmap(0, nullptr);
+	}
+	m_vSubMeshes.push_back(indexBuffer);
 }
+
+// =============================== getter ====================================
+std::string Mesh::getName() const
+{
+	return m_MeshName;
+}
+ID3D12Resource* Mesh::getVertexBuffer() const
+{
+	return m_pd3dVertexBuffer.Get();
+}
+
+ID3D12Resource* Mesh::getColorsBuffer() const
+{
+	return m_pd3dColorsBuffer.Get();
+}
+
+ID3D12Resource* Mesh::getTexCoord0Buffer() const
+{
+	return m_pd3dTexCoord0Buffer.Get();
+}
+ID3D12Resource* Mesh::getTexCoord1Buffer() const
+{
+	return m_pd3dTexCoord1Buffer.Get();
+}
+ID3D12Resource* Mesh::getNormalsBuffer() const
+{
+	return m_pd3dNormalsBuffer.Get();
+}
+ID3D12Resource* Mesh::getTangentsBuffer() const
+{
+	return m_pd3dTangentsBuffer.Get();
+}
+ID3D12Resource* Mesh::getBiTangentsBuffer() const
+{
+	return m_pd3dBiTangentsBuffer.Get();
+}
+ID3D12Resource* Mesh::getIndexBuffer(UINT index) const
+{
+	return m_vSubMeshes[index].Get();
+}
+
+// ==========================================================================

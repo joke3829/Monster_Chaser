@@ -37,6 +37,12 @@ using Microsoft::WRL::ComPtr;
 
 // =============================================================================================
 
+// enumerate ============================================================================
+enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...?
+	ALBEDO_COLOR, EMISSIVE_COLOR, SPECULAR_COLOR, GLOSSINESS
+};
+//========================================================================================
+
 // 상수 정의 ===========================================================================
 
 #define DEFINED_GAME_WINDOW_WIDTH 1920	
@@ -76,43 +82,3 @@ inline constexpr UINT Align(UINT size, UINT alignment)
 {
 	return (size + (alignment - 1)) & ~(alignment - 1);
 }
-
-//// AccelerationStructure를 만들어 주는 함수
-//inline void MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, ComPtr<ID3D12Resource>& asResource, UINT* updateScratchSize = nullptr)
-//{
-//	ID3D12Device5* device = g_DxResource.device;
-//	ID3D12CommandAllocator* cmdAlloc = g_DxResource.cmdAlloc;
-//	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
-//	ID3D12CommandQueue* cmdQueue = g_DxResource.cmdQueue;
-//
-//	auto makeBuffer = [&](ComPtr<ID3D12Resource>& d3dResource, UINT bufferSize, auto InitialState)
-//		{
-//			auto desc = BASIC_BUFFER_DESC;
-//			desc.Width = bufferSize;
-//			desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-//			device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, InitialState, nullptr, IID_PPV_ARGS(&d3dResource));
-//		};
-//
-//	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO preBuildInfo{};
-//	device->GetRaytracingAccelerationStructurePrebuildInfo(&inputs, &preBuildInfo);
-//
-//	if (updateScratchSize)
-//		*updateScratchSize = preBuildInfo.UpdateScratchDataSizeInBytes;
-//
-//	makeBuffer(asResource, preBuildInfo.ResultDataMaxSizeInBytes, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
-//
-//	ComPtr<ID3D12Resource> ScratchBuffer{};
-//	makeBuffer(ScratchBuffer, preBuildInfo.ScratchDataSizeInBytes, D3D12_RESOURCE_STATE_GENERIC_READ);
-//
-//	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC ASDesc{};
-//	ASDesc.Inputs = inputs;
-//	ASDesc.DestAccelerationStructureData = asResource->GetGPUVirtualAddress();
-//	ASDesc.ScratchAccelerationStructureData = ScratchBuffer->GetGPUVirtualAddress();
-//
-//	cmdAlloc->Reset();
-//	cmdList->Reset(cmdAlloc, nullptr);
-//	cmdList->BuildRaytracingAccelerationStructure(&ASDesc, 0, nullptr);
-//	cmdList->Close();
-//	cmdQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&cmdList));
-//	Flush();
-//}

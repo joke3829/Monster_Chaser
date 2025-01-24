@@ -40,9 +40,6 @@
     <Filter Include="Resource\Mesh">
       <UniqueIdentifier>{711ed52a-e486-444a-acfc-a53476dd44f8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource\Material">
-      <UniqueIdentifier>{d3ebdf63-1ac8-42a4-bcf8-998330b137e9}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Shader">
       <UniqueIdentifier>{a75edf83-28b1-4fb6-8b92-bbe3c5239eb1}</UniqueIdentifier>
     </Filter>
@@ -60,6 +57,12 @@
     </Filter>
     <Filter Include="Timer">
       <UniqueIdentifier>{dd5da520-bf3e-42c1-9f02-74258826d94b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\GameObject">
+      <UniqueIdentifier>{b53e0a0f-7fa3-4281-b326-33917618c968}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\ResourceManager">
+      <UniqueIdentifier>{0d1b56cb-2641-4657-b002-5cc17ec1e9f4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -96,9 +99,6 @@
     <ClInclude Include="Mesh.h">
       <Filter>Resource\Mesh</Filter>
     </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>Resource\Material</Filter>
-    </ClInclude>
     <ClInclude Include="Texture.h">
       <Filter>Resource\Texture</Filter>
     </ClInclude>
@@ -116,6 +116,18 @@
     </ClInclude>
     <ClInclude Include="Timer.h">
       <Filter>Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Resource\GameObject</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceManager.h">
+      <Filter>Resource\ResourceManager</Filter>
+    </ClInclude>
+    <ClInclude Include="d3dx12.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="DDSTextureLoader12.h">
+      <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -146,9 +158,6 @@
     <ClCompile Include="Mesh.cpp">
       <Filter>Resource\Mesh</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>Resource\Material</Filter>
-    </ClCompile>
     <ClCompile Include="Texture.cpp">
       <Filter>Resource\Texture</Filter>
     </ClCompile>
@@ -166,6 +175,15 @@
     </ClCompile>
     <ClCompile Include="Timer.cpp">
       <Filter>Timer</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Resource\GameObject</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceManager.cpp">
+      <Filter>Resource\ResourceManager</Filter>
+    </ClCompile>
+    <ClCompile Include="DDSTextureLoader12.cpp">
+      <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

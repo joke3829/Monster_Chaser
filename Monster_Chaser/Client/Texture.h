@@ -4,7 +4,22 @@
 // 
 // 진행하면서 내용 추가 예정
 //-----------------------------------------------------------------------------
-class Texture
-{
+#include "stdafx.h"
+#include "DDSTextureLoader12.h"
+
+extern DXResources g_DxResource;
+
+class CTexture {
+public:
+	CTexture(wchar_t* pszFileName, bool bDDS = true);
+	void CreateSRV();
+
+	void SetTextureName(std::string name);
+	std::string getName() const;
+private:
+	std::string m_strName{};
+
+	ComPtr<ID3D12Resource> m_pd3dTexture{};
+	ComPtr<ID3D12DescriptorHeap> m_pd3dShaderResourceView{};
 };
 

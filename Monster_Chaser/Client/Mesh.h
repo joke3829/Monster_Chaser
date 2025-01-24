@@ -18,9 +18,9 @@ extern DXResources g_DxResource;
 
 class Mesh {
 public:
-	Mesh(std::ifstream& inFile);		// ctor-메시 즉시 생성					
+	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor-메시 즉시 생성					
 
-	void GetMeshNameFromFile(std::ifstream& inFile);
+	//void GetMeshNameFromFile(std::ifstream& inFile);
 	void GetBoundInfoFromFile(std::ifstream& inFile);
 	void GetPositionFromFile(std::ifstream& inFile);
 	void GetColorsFromFile(std::ifstream& inFile);
@@ -35,7 +35,13 @@ public:
 	std::string getName() const;
 
 	ID3D12Resource* getVertexBuffer() const;
-
+	ID3D12Resource* getColorsBuffer() const;
+	ID3D12Resource* getTexCoord0Buffer() const;
+	ID3D12Resource* getTexCoord1Buffer() const;
+	ID3D12Resource* getNormalsBuffer() const;
+	ID3D12Resource* getTangentsBuffer() const;
+	ID3D12Resource* getBiTangentsBuffer() const;
+	ID3D12Resource* getIndexBuffer(UINT index) const;
 protected:
 private:
 	std::string m_MeshName{};							// Mesh의 이름
@@ -72,9 +78,8 @@ private:
 
 	UINT m_nSubMeshesCount{};							// SubMesh개수 (vector::size()로 알아올 수 있다, 필요한가?, reserve할때 사용 가능)
 	std::vector<ComPtr<ID3D12Resource>> m_vSubMeshes;	// SubMesh(indexbuffer)가 저장된 배열
-	std::vector<UINT> m_vIndices;						// 각 SubMesh에 대한 Index 개수
+	std::vector<UINT> m_vIndices;						// 각 SubMesh에 대한 Index 개수, 이게 0이면 존재하지 않는다.
 	bool m_bHasSubMeshes = false;
 
 	
 };
-

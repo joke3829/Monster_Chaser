@@ -5,6 +5,8 @@
 // 진행하면서 내용 변경 예정
 //-----------------------------------------------------------------------------
 
+#include "stdafx.h"
+
 const ULONG MAX_SAMPLE_COUNT = 50; // Maximum frame time sample count
 
 class CGameTimer
