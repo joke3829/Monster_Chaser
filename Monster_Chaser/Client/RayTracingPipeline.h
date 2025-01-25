@@ -14,6 +14,9 @@ public:
 	void AddPipelineConfigSubObject(UINT nMaxTraceDepth);
 
 	void MakePipelineState();
+
+	ID3D12StateObject* getPipelineState();
+
 private:
 	ComPtr<ID3D12StateObject> m_pRaytracingPipelineState{};
 	

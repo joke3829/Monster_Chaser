@@ -91,3 +91,8 @@ void CRayTracingPipeline::MakePipelineState()
 
 	g_DxResource.device->CreateStateObject(&desc, IID_PPV_ARGS(&m_pRaytracingPipelineState));
 }
+
+ID3D12StateObject* CRayTracingPipeline::getPipelineState()
+{
+	return m_pRaytracingPipelineState.Get();
+}

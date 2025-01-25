@@ -12,11 +12,13 @@
 
 extern DXResources g_DxResource;
 
-
 class CShaderBindingTableManager {
 public:
+	void Setup(ID3D12StateObject* pipeline);
 
+	void CreateSBT();
 private:
+	ID3D12StateObject* m_pRaytracingPIpeline;
 	ComPtr<ID3D12Resource> m_pRayGenTable{};
 
 	ComPtr<ID3D12Resource> m_pMissTable{};

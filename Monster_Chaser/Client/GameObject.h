@@ -35,16 +35,16 @@ struct Material {	// 명시적으로 쓸라고 이따구로 쓴거에요
 	int m_nSpecularMapIndex = -1;
 	int m_nNormalMapIndex = -1;
 	int m_nMetallicMapIndex = -1;
-	int m_nMapIndex = -1;
-	int m_nAlbedoMapIndex = -1;
-	int m_nAlbedoMapIndex = -1;
+	int m_nEmissionMapIndex = -1;
+	int m_nDetailAlbedoMapIndex = -1;
+	int m_nDetailNormalMapIndex = -1;
 };
 
 class CGameObject {
 public:
 	bool InitializeObjectFromFile(std::ifstream& inFile);
 
-	Material& getMaterial();
+	std::vector<Material>& getMaterials();
 
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
@@ -62,7 +62,7 @@ protected:
 	XMFLOAT3 m_xmf3Up{};
 	XMFLOAT3 m_xmf3Look{};
 
-	Material m_Material;
+	std::vector<Material> m_vMaterials;
 	// 상수버퍼로 넘길 리소스가 필요한가? 일단 보류
 	// 상수 버퍼로 넘길거는 마테리얼의 AlbedoColor, EmissiveColor, Glossiness, Metalic, SpecularHighlight, 
 	// 텍스쳐의 경우는 local root 바로 보낼것

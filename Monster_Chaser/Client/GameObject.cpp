@@ -35,9 +35,9 @@ bool CGameObject::InitializeObjectFromFile(std::ifstream& inFile)
 	InitializeAxis();
 }
 
-Material& CGameObject::getMaterial()
+std::vector<Material>& CGameObject::getMaterials()
 {
-	return m_Material;
+	return m_vMaterials;
 }
 
 void CGameObject::SetMeshIndex(int index)
