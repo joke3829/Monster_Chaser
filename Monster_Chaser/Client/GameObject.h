@@ -70,7 +70,7 @@ protected:
 
 	int m_nMeshIndex = -1;		// 이 오브젝트가 참조하는 Mesh Index
 	int m_nParentIndex = -1;	// 이 오브젝트의 부모 GameObject인덱스
-
+	UINT m_nHitGroupIndex{};	// 어떤 HitGroup을 볼거냐?
 
 };
 
