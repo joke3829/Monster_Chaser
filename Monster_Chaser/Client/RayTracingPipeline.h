@@ -16,11 +16,11 @@ public:
 	void MakePipelineState();
 
 	ID3D12StateObject* getPipelineState();
-
+	std::vector<LPCWSTR>& getExports();
 private:
 	ComPtr<ID3D12StateObject> m_pRaytracingPipelineState{};
 	
 	std::vector<D3D12_STATE_SUBOBJECT> m_vSuvobjects;
-	std::vector<LPCWSTR> m_exports;
+	std::vector<LPCWSTR> m_exports;			// HitGroup 종류? 개수
 };
 

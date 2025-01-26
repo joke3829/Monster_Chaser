@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Mesh.h"
 #include "GameObject.h"
 
 extern DXResources g_DxResource;

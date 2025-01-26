@@ -96,3 +96,8 @@ ID3D12StateObject* CRayTracingPipeline::getPipelineState()
 {
 	return m_pRaytracingPipelineState.Get();
 }
+
+std::vector<LPCWSTR>& CRayTracingPipeline::getExports()
+{
+	return m_exports;
+}
