@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RayTracingPipeline.h"
+#include "ResourceManager.h"
 
 // ===============================================================================
 // 바인딩 테이블을 만들기 위해선 StateObject를 이용해서 Identifier를 가져와야하고
@@ -14,15 +15,22 @@ extern DXResources g_DxResource;
 
 class CShaderBindingTableManager {
 public:
-	void Setup(CRayTracingPipeline* pipeline);
+	void Setup(CRayTracingPipeline* pipeline, CResourceManager* manager);
 
 	void CreateSBT();
 private:
 	CRayTracingPipeline* m_pRaytracingPipeline{};
+	CResourceManager* m_pResourceManager{};
 	ComPtr<ID3D12Resource> m_pRayGenTable{};
 
 	ComPtr<ID3D12Resource> m_pMissTable{};
 
 	ComPtr<ID3D12Resource> m_pHitGroupTable{};
+	UINT64 m_nHitGroupSize{};
+	UINT64 m_nHitGroupStride{};
+
+	ComPtr<ID3D12Resource> m_pd3dNullBuffer{};
+	ComPtr<ID3D12Resource> m_pd3dNullTexture{};
+	ComPtr<ID3D12DescriptorHeap> m_pd3dNullBufferView;
 };
 
