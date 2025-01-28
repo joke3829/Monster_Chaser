@@ -312,4 +312,43 @@ ID3D12Resource* Mesh::getIndexBuffer(UINT index) const
 	return m_vSubMeshes[index].Get();
 }
 
+bool Mesh::getHasVertex() const
+{
+	return m_bHasVertex;
+}
+
+bool Mesh::getHasColor() const
+{
+	return m_bHasColor;
+}
+bool Mesh::getHasTex0() const
+{
+	return m_bHasTex0;
+}
+bool Mesh::getHasTex1() const
+{
+	return m_bHasTex1;
+}
+bool Mesh::getHasNormal() const
+{
+	return m_bHasNormals;
+}
+bool Mesh::getHasTangent() const
+{
+	return m_bHasTangents;
+}
+bool Mesh::getHasBiTangent() const
+{
+	return m_bHasBiTangents;
+}
+bool Mesh::getHasSubmesh() const
+{
+	return m_bHasSubMeshes;
+}
+
+UINT Mesh::getSubMeshCount() const
+{
+	return m_nSubMeshesCount;
+}
+
 // ==========================================================================

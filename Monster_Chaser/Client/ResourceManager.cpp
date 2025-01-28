@@ -140,6 +140,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
 					});
+				vMaterials[nCurrentMaterial].m_bHasAlbedoMap = true;
 				vMaterials[nCurrentMaterial].m_nAlbedoMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
 			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
@@ -162,6 +163,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
 					});
+				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;
 				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = std::distance(m_vTextureList.begin(), p);	// 여기
 			}
 			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
@@ -184,6 +186,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
 					});
+				vMaterials[nCurrentMaterial].m_bHasMetallicMap = true;
 				vMaterials[nCurrentMaterial].m_nMetallicMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
 			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
@@ -206,6 +209,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
 					});
+				vMaterials[nCurrentMaterial].m_bHasNormalMap = true;
 				vMaterials[nCurrentMaterial].m_nNormalMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
 			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
@@ -228,6 +232,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
 					});
+				vMaterials[nCurrentMaterial].m_bHasEmissionMap = true;
 				vMaterials[nCurrentMaterial].m_nEmissionMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
 			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
@@ -250,6 +255,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
 					});
+				vMaterials[nCurrentMaterial].m_bHasDetailAlbedoMap = true;
 				vMaterials[nCurrentMaterial].m_nDetailAlbedoMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
 			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
@@ -272,6 +278,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
 					});
+				vMaterials[nCurrentMaterial].m_bHasDetailNormalMap = true;
 				vMaterials[nCurrentMaterial].m_nDetailNormalMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
 			else if (strLabel == "null") {	// 있더라고 null이면 사용 안한단 뜻
@@ -294,4 +301,23 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 	for (int i = 0; i < vMaterials.size(); ++i) {
 		m_vGameObjectList[nCurrentIndex]->getMaterials().push_back(vMaterials[i]);
 	}
+}
+
+void CResourceManager::InitializeGameObjectCBuffer()
+{
+	for (int i = 0; i < m_vGameObjectList.size(); ++i)
+		m_vGameObjectList[i]->InitializeConstanctBuffer();
+}
+
+std::vector<std::unique_ptr<CGameObject>>& CResourceManager::getGameObjectList()
+{
+	return m_vGameObjectList;
+}
+std::vector<std::unique_ptr<Mesh>>& CResourceManager::getMeshList()
+{
+	return m_vMeshList;
+}
+std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
+{
+	return m_vTextureList;
 }

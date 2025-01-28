@@ -4,6 +4,27 @@
 const wchar_t* RayGenShaderNames[] = { L"dd" };
 const wchar_t* MissShaderNames[] = { L"", L"" };
 
+struct LocalRootArg {
+	D3D12_GPU_VIRTUAL_ADDRESS CBufferGPUVirtualAddress;	// 상수 버퍼
+	// Mesh 정보
+	D3D12_GPU_VIRTUAL_ADDRESS VertexBuffer;
+	D3D12_GPU_VIRTUAL_ADDRESS ColorsBuffer;
+	D3D12_GPU_VIRTUAL_ADDRESS TexCoord0Buffer;
+	D3D12_GPU_VIRTUAL_ADDRESS TexCoord1Buffer;
+	D3D12_GPU_VIRTUAL_ADDRESS NormalsBuffer;
+	D3D12_GPU_VIRTUAL_ADDRESS TangentBuffer;
+	D3D12_GPU_VIRTUAL_ADDRESS BiTangentBuffer;
+	D3D12_GPU_VIRTUAL_ADDRESS IndexBuffer;
+
+	D3D12_GPU_DESCRIPTOR_HANDLE AlbedoMap;
+	D3D12_GPU_DESCRIPTOR_HANDLE SpecularMap;
+	D3D12_GPU_DESCRIPTOR_HANDLE NormalMap;
+	D3D12_GPU_DESCRIPTOR_HANDLE MetallicMap;
+	D3D12_GPU_DESCRIPTOR_HANDLE EmissionMap;
+	D3D12_GPU_DESCRIPTOR_HANDLE DetailAlbedoMap;
+	D3D12_GPU_DESCRIPTOR_HANDLE DetailNormalMap;
+};
+
 void CShaderBindingTableManager::Setup(CRayTracingPipeline* pipeline, CResourceManager* manager)
 {
 	m_pRaytracingPipeline = pipeline;
@@ -91,5 +112,29 @@ void CShaderBindingTableManager::CreateSBT()
 			tempdata = static_cast<char*>(tempdata) + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
 		}
 		m_pMissTable->Unmap(0, nullptr);
+	}
+
+	// HitGroupTable
+	{
+		m_nHitGroupSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + sizeof(LocalRootArg);
+		m_nHitGroupStride = Align(m_nHitGroupSize, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
+
+		UINT nVaildMeshes{};
+		std::vector<std::unique_ptr<CGameObject>>& vObjects = m_pResourceManager->getGameObjectList();
+		std::vector<std::unique_ptr<Mesh>>& vMeshes = m_pResourceManager->getMeshList();
+		std::vector<std::unique_ptr<CTexture>>& vTextures = m_pResourceManager->getTextureList();
+
+		for (std::unique_ptr<CGameObject>& object : vObjects) {
+			int n = object->getMeshIndex();
+			if (vMeshes[n]->getHasVertex()) {
+				if (vMeshes[n]->getHasSubmesh())
+					nVaildMeshes += vMeshes[n]->getSubMeshCount();
+				else
+					nVaildMeshes += 1;
+			}
+		}
+
+		makeBuffer(m_pHitGroupTable, m_nHitGroupStride * nVaildMeshes);
+
 	}
 }

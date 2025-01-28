@@ -42,6 +42,17 @@ public:
 	ID3D12Resource* getTangentsBuffer() const;
 	ID3D12Resource* getBiTangentsBuffer() const;
 	ID3D12Resource* getIndexBuffer(UINT index) const;
+
+	bool getHasVertex() const;
+	bool getHasColor() const;
+	bool getHasTex0() const;
+	bool getHasTex1() const;
+	bool getHasNormal() const;
+	bool getHasTangent() const;
+	bool getHasBiTangent() const;
+	bool getHasSubmesh() const;
+
+	UINT getSubMeshCount() const;
 protected:
 private:
 	std::string m_MeshName{};							// Mesh¿« ¿Ã∏ß

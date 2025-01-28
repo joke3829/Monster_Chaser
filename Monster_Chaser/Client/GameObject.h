@@ -40,11 +40,43 @@ struct Material {	// 명시적으로 쓸라고 이따구로 쓴거에요
 	int m_nDetailNormalMapIndex = -1;
 };
 
+struct HasMaterial
+{
+	bool bHasAlbedoColor;
+	bool bHasEmissiveColor;
+	bool bHasSpecularColor;
+	bool bHasGlossiness;
+	bool bHasSmoothness;
+	bool bHasMetallic;
+	bool bHasSpecularHighlight;
+	bool bHasGlossyReflection;
+
+	bool bHasAlbedoMap;
+	bool bHasSpecularMap;
+	bool bHasNormalMap;
+	bool bHasMetallicMap;
+	bool bHasEmissionMap;
+	bool bHasDetailAlbedoMap;
+	bool bHasDetailNormalMap;
+
+	XMFLOAT4 AlbedoColor;
+	XMFLOAT4 EmissiveColor;
+	XMFLOAT4 SpecularColor;
+	float Glossiness;
+	float Smoothness;
+	float Metallic;
+	float SpecularHighlight;
+	float GlossyReflection;
+};
+
 class CGameObject {
 public:
 	bool InitializeObjectFromFile(std::ifstream& inFile);
 
+	void InitializeConstanctBuffer();
+
 	std::vector<Material>& getMaterials();
+	int getMeshIndex() const;
 
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
@@ -63,6 +95,7 @@ protected:
 	XMFLOAT3 m_xmf3Look{};
 
 	std::vector<Material> m_vMaterials;
+	std::vector<ComPtr<ID3D12Resource>> m_vCBuffers;		// 상수 버퍼 모음
 	// 상수버퍼로 넘길 리소스가 필요한가? 일단 보류
 	// 상수 버퍼로 넘길거는 마테리얼의 AlbedoColor, EmissiveColor, Glossiness, Metalic, SpecularHighlight, 
 	// 텍스쳐의 경우는 local root 바로 보낼것
@@ -70,7 +103,7 @@ protected:
 
 	int m_nMeshIndex = -1;		// 이 오브젝트가 참조하는 Mesh Index
 	int m_nParentIndex = -1;	// 이 오브젝트의 부모 GameObject인덱스
-	UINT m_nHitGroupIndex{};	// 어떤 HitGroup을 볼거냐?
+	int m_nHitGroupIndex = -1;	// 어떤 HitGroup을 볼거냐?
 
 };
 
