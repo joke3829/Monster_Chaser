@@ -306,7 +306,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 void CResourceManager::InitializeGameObjectCBuffer()
 {
 	for (int i = 0; i < m_vGameObjectList.size(); ++i)
-		m_vGameObjectList[i]->InitializeConstanctBuffer();
+		m_vGameObjectList[i]->InitializeConstanctBuffer(m_vMeshList);
 }
 
 std::vector<std::unique_ptr<CGameObject>>& CResourceManager::getGameObjectList()

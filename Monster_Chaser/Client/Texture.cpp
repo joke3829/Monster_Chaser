@@ -66,6 +66,11 @@ void CTexture::CreateSRV()
 	g_DxResource.device->CreateShaderResourceView(m_pd3dTexture.Get(), &srvDesc, m_pd3dShaderResourceView->GetCPUDescriptorHandleForHeapStart());
 }
 
+ID3D12DescriptorHeap* CTexture::getView() const
+{
+	return m_pd3dShaderResourceView.Get();
+}
+
 void CTexture::SetTextureName(std::string name)
 {
 	m_strName = name;

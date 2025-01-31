@@ -35,18 +35,18 @@ bool CGameObject::InitializeObjectFromFile(std::ifstream& inFile)
 	InitializeAxis();
 }
 
-void CGameObject::InitializeConstanctBuffer()
+void CGameObject::InitializeConstanctBuffer(std::vector<std::unique_ptr<Mesh>>& meshes)
 {
-	auto makeBuffer = [&]() {
+	auto makeBuffer = [&](UINT argSize) {
 		ComPtr<ID3D12Resource> resource{};
 		auto desc = BASIC_BUFFER_DESC;
-		desc.Width = Align(sizeof(HasMaterial), 256);
+		desc.Width = Align(argSize, 256);
 		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(resource.GetAddressOf()));
 		m_vCBuffers.push_back(resource);
 		};
 
 	for (int i = 0; i < m_vMaterials.size(); ++i) {
-		makeBuffer();
+		makeBuffer(sizeof(HasMaterial));
 		HasMaterial* pHas;
 		m_vCBuffers[i]->Map(0, nullptr, (void**)&pHas);
 		pHas->bHasAlbedoColor = m_vMaterials[i].m_bHasAlbedoColor;
@@ -76,6 +76,37 @@ void CGameObject::InitializeConstanctBuffer()
 		pHas->GlossyReflection = m_vMaterials[i].m_fGlossyReflection;
 		m_vCBuffers[i]->Unmap(0, nullptr);
 	}
+
+	auto makeMeshCBuffer = [&](ComPtr<ID3D12Resource>& resource) {
+		auto desc = BASIC_BUFFER_DESC;
+		desc.Width = Align(sizeof(HasMesh), 256);
+		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(resource.GetAddressOf()));
+		};
+
+	makeMeshCBuffer(m_pd3dMeshCBuffer);
+	HasMesh* pHas;
+	HasMesh tempHas{};
+	m_pd3dMeshCBuffer->Map(0, nullptr, (void**)&pHas);
+	if (m_nMeshIndex != -1) {
+		if (meshes[m_nMeshIndex]->getHasVertex())
+			tempHas.bHasVertex = true;
+		if (meshes[m_nMeshIndex]->getHasColor())
+			tempHas.bHasColor = true;
+		if (meshes[m_nMeshIndex]->getHasTex0())
+			tempHas.bHasTex0 = true;
+		if (meshes[m_nMeshIndex]->getHasTex1())
+			tempHas.bHasTex1 = true;
+		if (meshes[m_nMeshIndex]->getHasNormal())
+			tempHas.bHasNormals = true;
+		if (meshes[m_nMeshIndex]->getHasTangent())
+			tempHas.bHasTangenrs = true;
+		if (meshes[m_nMeshIndex]->getHasBiTangent())
+			tempHas.bHasBiTangents = true;
+		if (meshes[m_nMeshIndex]->getHasSubmesh())
+			tempHas.bHasSubMeshes = true;
+	}
+	memcpy(pHas, &tempHas, sizeof(HasMesh));
+	m_pd3dMeshCBuffer->Unmap(0, nullptr);
 }
 
 std::vector<Material>& CGameObject::getMaterials()
@@ -88,6 +119,16 @@ int CGameObject::getMeshIndex() const
 	return m_nMeshIndex;
 }
 
+ID3D12Resource* CGameObject::getCbuffer(int index) const
+{
+	return m_vCBuffers[index].Get();
+}
+
+ID3D12Resource* CGameObject::getMeshCBuffer() const
+{
+	return m_pd3dMeshCBuffer.Get();
+}
+
 void CGameObject::SetMeshIndex(int index)
 {
 	m_nMeshIndex = index;
@@ -96,6 +137,11 @@ void CGameObject::SetMeshIndex(int index)
 void CGameObject::SetParentIndex(int index)
 {
 	m_nParentIndex = index;
+}
+
+void CGameObject::SetHitGroupIndex(int index)
+{
+	m_nHitGroupIndex = index;
 }
 
 void CGameObject::InitializeAxis()

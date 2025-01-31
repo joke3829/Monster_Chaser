@@ -14,6 +14,8 @@ public:
 	CTexture(wchar_t* pszFileName, bool bDDS = true);
 	void CreateSRV();
 
+	ID3D12DescriptorHeap* getView() const;
+
 	void SetTextureName(std::string name);
 	std::string getName() const;
 private:

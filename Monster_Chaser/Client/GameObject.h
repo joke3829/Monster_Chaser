@@ -69,17 +69,31 @@ struct HasMaterial
 	float GlossyReflection;
 };
 
+struct HasMesh {
+	bool bHasVertex = false;
+	bool bHasColor = false;
+	bool bHasTex0 = false;
+	bool bHasTex1 = false;
+	bool bHasNormals = false;
+	bool bHasTangenrs = false;
+	bool bHasBiTangents = false;
+	bool bHasSubMeshes = false;
+};
+
 class CGameObject {
 public:
 	bool InitializeObjectFromFile(std::ifstream& inFile);
 
-	void InitializeConstanctBuffer();
+	void InitializeConstanctBuffer(std::vector<std::unique_ptr<Mesh>>& meshes);
 
 	std::vector<Material>& getMaterials();
 	int getMeshIndex() const;
+	ID3D12Resource* getCbuffer(int index) const;
+	ID3D12Resource* getMeshCBuffer() const;
 
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
+	void SetHitGroupIndex(int index);
 
 	void InitializeAxis();
 protected:
@@ -89,6 +103,7 @@ protected:
 	XMFLOAT3 m_xmf3Scale{};
 
 	XMFLOAT4X4 m_xmf4x4LocalMatrix{};
+	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
 
 	XMFLOAT3 m_xmf3Right{};
 	XMFLOAT3 m_xmf3Up{};
@@ -96,6 +111,7 @@ protected:
 
 	std::vector<Material> m_vMaterials;
 	std::vector<ComPtr<ID3D12Resource>> m_vCBuffers;		// 상수 버퍼 모음
+	ComPtr<ID3D12Resource> m_pd3dMeshCBuffer{};
 	// 상수버퍼로 넘길 리소스가 필요한가? 일단 보류
 	// 상수 버퍼로 넘길거는 마테리얼의 AlbedoColor, EmissiveColor, Glossiness, Metalic, SpecularHighlight, 
 	// 텍스쳐의 경우는 local root 바로 보낼것
