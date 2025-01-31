@@ -1,5 +1,10 @@
 #include "AccelerationStructureManager.h"
 
+void CAccelerationStructureManager::Setup(CResourceManager* resourceManager)
+{
+	m_pResourceManager = resourceManager;
+}
+
 void CAccelerationStructureManager::SetScene()
 {
 	g_DxResource.cmdList->SetComputeRootShaderResourceView(m_nRootParameterIndex, m_TLAS->GetGPUVirtualAddress());

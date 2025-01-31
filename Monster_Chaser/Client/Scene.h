@@ -1,5 +1,8 @@
 #pragma once
-#include "stdafx.h"
+#include "RayTracingPipeline.h"
+#include "ResourceManager.h"
+#include "ShaderBindingTableManager.h"
+#include "AccelerationStructureManager.h"
 
 extern DXResources g_DxResource;
 
@@ -15,7 +18,14 @@ protected:
 
 class CRaytracingScene : public CScene {
 public:
+	void SetUp();
 
+	void Render();
 protected:
+	void CreateRootSignature();
+
 	ComPtr<ID3D12RootSignature> m_pLocalRootSignature{};
+	std::unique_ptr<CRayTracingPipeline> m_pRaytracingPipeline{};
+	std::unique_ptr<CResourceManager> m_pResourceManager{};
+	std::unique_ptr<CShaderBindingTableManager> m_pShaderBindingTable{};
 };
