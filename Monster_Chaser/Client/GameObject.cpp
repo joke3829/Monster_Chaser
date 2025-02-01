@@ -119,6 +119,11 @@ int CGameObject::getMeshIndex() const
 	return m_nMeshIndex;
 }
 
+int CGameObject::getHitGroupIndex() const
+{
+	return m_nHitGroupIndex;
+}
+
 ID3D12Resource* CGameObject::getCbuffer(int index) const
 {
 	return m_vCBuffers[index].Get();
@@ -127,6 +132,11 @@ ID3D12Resource* CGameObject::getCbuffer(int index) const
 ID3D12Resource* CGameObject::getMeshCBuffer() const
 {
 	return m_pd3dMeshCBuffer.Get();
+}
+
+XMFLOAT4X4 CGameObject::getWorldMatrix()
+{
+	return m_xmf4x4WorldMatrix;
 }
 
 void CGameObject::SetMeshIndex(int index)

@@ -43,6 +43,9 @@ public:
 	ID3D12Resource* getBiTangentsBuffer() const;
 	ID3D12Resource* getIndexBuffer(UINT index) const;
 
+	UINT getVertexCount() const;
+	UINT getIndexCount(int index) const;
+
 	bool getHasVertex() const;
 	bool getHasColor() const;
 	bool getHasTex0() const;

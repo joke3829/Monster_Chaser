@@ -88,8 +88,11 @@ public:
 
 	std::vector<Material>& getMaterials();
 	int getMeshIndex() const;
+	int getHitGroupIndex() const;
 	ID3D12Resource* getCbuffer(int index) const;
 	ID3D12Resource* getMeshCBuffer() const;
+
+	XMFLOAT4X4 getWorldMatrix();
 
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);

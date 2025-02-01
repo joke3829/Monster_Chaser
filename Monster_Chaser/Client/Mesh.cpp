@@ -312,6 +312,15 @@ ID3D12Resource* Mesh::getIndexBuffer(UINT index) const
 	return m_vSubMeshes[index].Get();
 }
 
+UINT Mesh::getVertexCount() const
+{
+	return m_nVertexCount;
+}
+UINT Mesh::getIndexCount(int index) const
+{
+	return m_vIndices[index];
+}
+
 bool Mesh::getHasVertex() const
 {
 	return m_bHasVertex;
