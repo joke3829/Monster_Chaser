@@ -70,9 +70,12 @@ void Mesh::GetPositionFromFile(std::ifstream& inFile)
 		vPositions.assign(m_nVertexCount, XMFLOAT3(0.0, 0.0, 0.0));
 		inFile.read((char*)vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
 
+		D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5{};
+		g_DxResource.device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5));
+		options5;
+
 		// vertex buffer 생성
 		auto desc = BASIC_BUFFER_DESC;
-		desc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		desc.Width = sizeof(XMFLOAT3) * m_nVertexCount;
 		// 일단은 UPLOAD로 생성, 문제 시 DEFAULT로 변경 예정
 		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, 

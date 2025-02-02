@@ -9,6 +9,8 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 {
 	m_hWnd = hWnd; m_hInstance = hInstance;
 
+	_tcscpy_s(m_pszFrameRate, _T("Client ("));
+
 	// device, fence 초기화
 	InitDevice();
 	
@@ -35,6 +37,11 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	g_DxResource.cmdList = m_pd3dCommandList.Get();
 	g_DxResource.cmdQueue = m_pd3dCommandQueue.Get();
 	g_DxResource.fence = m_pd3dFence.Get();
+
+	m_pCamera = std::make_shared<CCamera>();
+	m_pCamera->Setup(2);
+
+	InitScene();
 
 	return true;
 }
@@ -163,6 +170,13 @@ void CGameFramework::InitOutputBuffer()
 
 }
 
+void CGameFramework::InitScene()
+{
+	m_pScene = std::make_unique<CRaytracingScene>();
+	m_pScene->SetUp();
+	m_pScene->SetCamera(m_pCamera);
+}
+
 LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessage) {
@@ -175,6 +189,7 @@ LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, W
 	case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN:
 	case WM_RBUTTONUP:
+		MouseProcessing(hWnd, nMessage, wParam, lParam);
 		break;
 	}
 	return 0;
@@ -198,6 +213,29 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 	}
 }
 
+void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_LBUTTONDOWN:
+		m_bHold = true;
+		GetCursorPos(&oldCursor);
+		break;
+	case WM_LBUTTONUP:
+		m_bHold = false;
+		break;
+	case WM_MOUSEMOVE:
+	{
+		POINT cursorpos;
+		if (m_bHold) {
+			GetCursorPos(&cursorpos);
+			m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
+			SetCursorPos(oldCursor.x, oldCursor.y);
+		}
+		break;
+	}
+	}
+}
+
 void CGameFramework::Render()
 {
 	auto barrier = [&](ID3D12Resource* pResource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
@@ -211,6 +249,7 @@ void CGameFramework::Render()
 
 			m_pd3dCommandList->ResourceBarrier(1, &resBarrier);
 		};
+	m_Timer.Tick(60.0f);
 	if (m_bRaster) {
 		m_pd3dCommandAllocator->Reset();
 		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
@@ -243,7 +282,13 @@ void CGameFramework::Render()
 		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
 
 		// 렌더링 작업(Set & Draw) ===================
+		m_pScene->UpdateObject(m_Timer.GetTimeElapsed());
 
+		m_pScene->PrepareRender();
+		m_pd3dCommandList->SetDescriptorHeaps(1, m_pd3dOutputBufferView.GetAddressOf());
+		m_pd3dCommandList->SetComputeRootDescriptorTable(0, m_pd3dOutputBufferView->GetGPUDescriptorHandleForHeapStart());
+
+		m_pScene->Render();
 		// ===========================================
 
 		ID3D12Resource* backBuffer{};
@@ -266,4 +311,7 @@ void CGameFramework::Render()
 
 		m_pdxgiSwapChain->Present(0, 0);
 	}
+
+	m_Timer.GetFrameRate(m_pszFrameRate + 8, 37);
+	SetWindowText(m_hWnd, m_pszFrameRate);
 }

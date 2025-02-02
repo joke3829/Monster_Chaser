@@ -1,6 +1,6 @@
 #include "Texture.h"
 
-CTexture::CTexture(wchar_t* pszFileName, bool bDDS)
+CTexture::CTexture(const wchar_t* pszFileName, bool bDDS)
 {
 	g_DxResource.cmdAlloc->Reset();
 	g_DxResource.cmdList->Reset(g_DxResource.cmdAlloc, nullptr);

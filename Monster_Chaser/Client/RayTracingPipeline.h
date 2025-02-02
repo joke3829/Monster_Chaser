@@ -6,7 +6,7 @@ extern DXResources g_DxResource;
 class CRayTracingPipeline {
 public:
 	// 다음과 같은 순서로 만들어라
-	void AddLibrarySubObject(auto compiledShader);
+	void AddLibrarySubObject(const unsigned char* compiledShader, size_t shaderSize);
 	void AddHitGroupSubObject(wchar_t* exportName, wchar_t* ClosestHit = nullptr, wchar_t* AnyHit = nullptr, wchar_t* Intersect = nullptr);			// ClosestHit, AnyHit, Intersect
 	void AddShaderConfigSubObject(UINT nMaxAttributeSize, UINT nMaxPayloadSize);
 	void AddLocalRootAndAsoociationSubObject(ID3D12RootSignature* pLocalRootSignature);

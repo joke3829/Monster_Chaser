@@ -25,7 +25,9 @@ void CAccelerationStructureManager::UpdateScene()
 				m_pInstanceData[i].InstanceID = i;
 				m_pInstanceData[i].InstanceMask = 1;
 				auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-				XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
+				//XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
+				//XMStoreFloat3x4(ptr, XMMatrixTranspose(XMLoadFloat4x4(&object->getWorldMatrix())));
+				XMStoreFloat3x4(ptr, XMMatrixIdentity());
 				++i;
 			}
 		}

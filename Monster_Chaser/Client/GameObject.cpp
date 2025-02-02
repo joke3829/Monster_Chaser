@@ -33,6 +33,8 @@ bool CGameObject::InitializeObjectFromFile(std::ifstream& inFile)
 	inFile.read((char*)&m_xmf4x4LocalMatrix, sizeof(XMFLOAT4X4));
 
 	InitializeAxis();
+
+	return true;
 }
 
 void CGameObject::InitializeConstanctBuffer(std::vector<std::unique_ptr<Mesh>>& meshes)
@@ -109,6 +111,14 @@ void CGameObject::InitializeConstanctBuffer(std::vector<std::unique_ptr<Mesh>>& 
 	m_pd3dMeshCBuffer->Unmap(0, nullptr);
 }
 
+void CGameObject::UpdateWorldMatrix()
+{
+	m_xmf4x4WorldMatrix._11 = m_xmf3Right.x; m_xmf4x4WorldMatrix._12 = m_xmf3Right.y; m_xmf4x4WorldMatrix._13 = m_xmf3Right.z; m_xmf4x4WorldMatrix._14 = 0;
+	m_xmf4x4WorldMatrix._21 = m_xmf3Up.x; m_xmf4x4WorldMatrix._22 = m_xmf3Up.y; m_xmf4x4WorldMatrix._23 = m_xmf3Up.z; m_xmf4x4WorldMatrix._24 = 0;
+	m_xmf4x4WorldMatrix._31 = m_xmf3Look.x; m_xmf4x4WorldMatrix._32 = m_xmf3Look.y; m_xmf4x4WorldMatrix._33 = m_xmf3Look.z; m_xmf4x4WorldMatrix._34 = 0;
+	m_xmf4x4WorldMatrix._41 = m_xmf3Pos.x; m_xmf4x4WorldMatrix._42 = m_xmf3Pos.y; m_xmf4x4WorldMatrix._43 = m_xmf3Pos.z; m_xmf4x4WorldMatrix._44 = 1;
+}
+
 std::vector<Material>& CGameObject::getMaterials()
 {
 	return m_vMaterials;
@@ -122,6 +132,11 @@ int CGameObject::getMeshIndex() const
 int CGameObject::getHitGroupIndex() const
 {
 	return m_nHitGroupIndex;
+}
+
+int CGameObject::getParentIndex() const
+{
+	return m_nParentIndex;
 }
 
 ID3D12Resource* CGameObject::getCbuffer(int index) const
@@ -139,6 +154,11 @@ XMFLOAT4X4 CGameObject::getWorldMatrix()
 	return m_xmf4x4WorldMatrix;
 }
 
+XMFLOAT4X4 CGameObject::getLocalMatrix()
+{
+	return m_xmf4x4LocalMatrix;
+}
+
 void CGameObject::SetMeshIndex(int index)
 {
 	m_nMeshIndex = index;
@@ -154,9 +174,14 @@ void CGameObject::SetHitGroupIndex(int index)
 	m_nHitGroupIndex = index;
 }
 
+void CGameObject::SetWorlaMatrix(XMFLOAT4X4& mtx)
+{
+	m_xmf4x4WorldMatrix = mtx;
+}
+
 void CGameObject::InitializeAxis()
 {
-	auto normalizeFloat3 = [](XMFLOAT3& xmf) {
+	/*auto normalizeFloat3 = [](XMFLOAT3& xmf) {
 		XMStoreFloat3(&xmf, XMVector3Normalize(XMLoadFloat3(&xmf)));
 		};
 	m_xmf3Right = XMFLOAT3(m_xmf4x4LocalMatrix._11, m_xmf4x4LocalMatrix._12, m_xmf4x4LocalMatrix._13);
@@ -165,5 +190,10 @@ void CGameObject::InitializeAxis()
 
 	normalizeFloat3(m_xmf3Right);
 	normalizeFloat3(m_xmf3Up);
-	normalizeFloat3(m_xmf3Look);
+	normalizeFloat3(m_xmf3Look);*/
+
+	m_xmf3Right = XMFLOAT3(1.0, 0.0, 0.0);
+	m_xmf3Up = XMFLOAT3(0.0, 1.0, 0.0);
+	m_xmf3Look = XMFLOAT3(0.0, 0.0, 1.0);
+
 }

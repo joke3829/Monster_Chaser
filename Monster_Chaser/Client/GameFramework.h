@@ -4,6 +4,9 @@
 // ===================================================
 #pragma once
 #include "stdafx.h"
+#include "Scene.h"
+#include "Timer.h"
+#include "Camera.h"
 
 extern DXResources g_DxResource;
 
@@ -24,8 +27,11 @@ public:
 	// device의 RayTracing 지원 확인
 	void CheckRayTracingSupport();
 
+	void InitScene();
+
 	LRESULT CALLBACK WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	void Render();
 private:
@@ -56,5 +62,14 @@ private:
 	// DXR
 	ComPtr<ID3D12Resource> m_pd3dOutputBuffer{};
 	ComPtr<ID3D12DescriptorHeap> m_pd3dOutputBufferView{};
+
+	_TCHAR m_pszFrameRate[50];
+	CGameTimer m_Timer;
+
+	std::unique_ptr<CScene> m_pScene{};
+
+	std::shared_ptr<CCamera> m_pCamera{};
+	bool m_bHold = false;
+	POINT oldCursor;
 };
 

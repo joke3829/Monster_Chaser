@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <string>
 #include <fstream>
+#include <timeapi.h>
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -31,6 +32,7 @@
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "Winmm.lib")
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;

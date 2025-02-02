@@ -11,7 +11,7 @@ extern DXResources g_DxResource;
 
 class CTexture {
 public:
-	CTexture(wchar_t* pszFileName, bool bDDS = true);
+	CTexture(const wchar_t* pszFileName, bool bDDS = true);
 	void CreateSRV();
 
 	ID3D12DescriptorHeap* getView() const;

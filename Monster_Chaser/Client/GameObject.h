@@ -86,17 +86,22 @@ public:
 
 	void InitializeConstanctBuffer(std::vector<std::unique_ptr<Mesh>>& meshes);
 
+	void UpdateWorldMatrix();
+
 	std::vector<Material>& getMaterials();
 	int getMeshIndex() const;
 	int getHitGroupIndex() const;
+	int getParentIndex() const;
 	ID3D12Resource* getCbuffer(int index) const;
 	ID3D12Resource* getMeshCBuffer() const;
 
 	XMFLOAT4X4 getWorldMatrix();
+	XMFLOAT4X4 getLocalMatrix();
 
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
 	void SetHitGroupIndex(int index);
+	void SetWorlaMatrix(XMFLOAT4X4& mtx);
 
 	void InitializeAxis();
 protected:

@@ -12,6 +12,8 @@ public:
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);
 	void InitializeGameObjectCBuffer();
 
+	void UpdateWorldMatrix();	// UpdateWorldMatrix
+
 	// getter
 	std::vector<std::unique_ptr<CGameObject>>& getGameObjectList();
 	std::vector<std::unique_ptr<Mesh>>& getMeshList();
