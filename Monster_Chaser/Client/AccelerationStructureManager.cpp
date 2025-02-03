@@ -21,13 +21,13 @@ void CAccelerationStructureManager::UpdateScene()
 		if (n != -1) {
 			if (meshes[n]->getHasVertex()) {
 				m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-				m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+				m_pInstanceData[i].InstanceContributionToHitGroupIndex = 0;//object->getHitGroupIndex();
 				m_pInstanceData[i].InstanceID = i;
 				m_pInstanceData[i].InstanceMask = 1;
 				auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-				//XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
+				XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
 				//XMStoreFloat3x4(ptr, XMMatrixTranspose(XMLoadFloat4x4(&object->getWorldMatrix())));
-				XMStoreFloat3x4(ptr, XMMatrixIdentity());
+				//XMStoreFloat3x4(ptr, XMMatrixIdentity());
 				++i;
 			}
 		}

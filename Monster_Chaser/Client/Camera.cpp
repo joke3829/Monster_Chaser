@@ -26,6 +26,15 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 	XMStoreFloat3(&m_xmf3Dir, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Dir), mtxrotate));
 }
 
+void CCamera::Move(int arrow, float fElapsedTime)
+{
+	if (arrow == 0) {
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * 10 * fElapsedTime));
+	}
+	else
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -10 * fElapsedTime));
+}
+
 void CCamera::UpdateViewMatrix()
 {
 	XMStoreFloat3(&m_xmf3At, (XMLoadFloat3(&m_xmf3Eye) + XMLoadFloat3(&m_xmf3Dir)));
@@ -33,8 +42,8 @@ void CCamera::UpdateViewMatrix()
 
 	XMMATRIX viewProj = XMLoadFloat4x4(&m_xmf4x4View) * XMLoadFloat4x4(&m_xmf4x4Proj);
 	m_pCameraInfo->xmf3Eye = m_xmf3Eye;
-	XMStoreFloat4x4(&m_pCameraInfo->xmf4x4ViewProj, viewProj);
-	XMStoreFloat4x4(&m_pCameraInfo->xmf4x4InverseViewProj, XMMatrixInverse(nullptr, viewProj));
+	XMStoreFloat4x4(&m_pCameraInfo->xmf4x4ViewProj, XMMatrixTranspose(viewProj));
+	XMStoreFloat4x4(&m_pCameraInfo->xmf4x4InverseViewProj, XMMatrixTranspose(XMMatrixInverse(nullptr, viewProj)));
 }
 
 void CCamera::SetShaderVariable()

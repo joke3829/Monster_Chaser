@@ -15,6 +15,7 @@ public:
 	void Setup(int nRootParameterIndex);
 
 	void Rotate(int cxDelta, int cyDelta);
+	void Move(int arrow, float fElapsedTime);
 
 	void UpdateViewMatrix();
 	void SetShaderVariable();
@@ -31,7 +32,7 @@ protected:
 	XMFLOAT4X4 m_xmf4x4View;
 	XMFLOAT4X4 m_xmf4x4Proj;
 	
-	float m_fFOV = 90.0f;
+	float m_fFOV = 60.0f;
 	float m_fAspect = 960.0f / 540.0f;
 	float m_fNear = 0.1f;
 	float m_fFar = 1000.0f;

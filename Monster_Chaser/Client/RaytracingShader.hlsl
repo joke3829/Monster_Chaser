@@ -87,13 +87,16 @@ Texture2D l_DetailNormalMap : register(t2, space6);
 [shader("raygeneration")]
 void RayGenShader()
 {
-    uint2 idx = DispatchRaysIndex().xy;
-    float2 size = DispatchRaysDimensions().xy;
-    float2 uv = idx / size;
-    float3 target = float3((uv.x * 2 - 1) * 1.8 * (size.x / size.y), (1 - uv.y) * 4 - 2 + camera.y, 0);
+    float2 xy = DispatchRaysIndex().xy + 0.5f;
+    float2 screenPos = xy / DispatchRaysDimensions().xy * 2.0 - 1.0;
+    screenPos.y = -screenPos.y;
+    
+    float4 world = mul(float4(screenPos, 0, 1), g_CameraInfo.mtxInverseViewProj);
+    world.xyz /= world.w;
+    
     RayDesc ray;
-    ray.Origin = camera;
-    ray.Direction = target - camera;
+    ray.Origin = g_CameraInfo.cameraEye;
+    ray.Direction = normalize(world.xyz - ray.Origin);
     ray.TMin = 0.001;
     ray.TMax = 1000;
     
@@ -101,7 +104,7 @@ void RayGenShader()
     
     TraceRay(g_Scene, RAY_FLAG_NONE, 0xFF, 0, 0, 0, ray, payload);
     
-    uav[idx] = float4(payload.RayColor, 1.0f);
+    uav[DispatchRaysIndex().xy] = float4(payload.RayColor, 1.0f);
 }
 
 [shader("miss")]
@@ -129,8 +132,9 @@ void ClosestHit(inout Payload payload, BuiltInTriangleIntersectionAttributes att
     float2 texCoord = uvs[0] * (1.0f - attrib.barycentrics.x - attrib.barycentrics.y) +
     uvs[1] * attrib.barycentrics.x + uvs[2] * attrib.barycentrics.y;
     
-    if (l_Material.bHasAlbedoMap) {
-        float4 color = l_AlbedoMap.SampleLevel(g_Sampler, texCoord, 0);
+    if (l_Material.bHasAlbedoColor) {
+        //float4 color = l_NormalMap.SampleLevel(g_Sampler, texCoord, 0);
+        float4 color = float4(0.0, 1.0, 0.5, 1.0);
         payload.RayColor = color.xyz;
     }
     else

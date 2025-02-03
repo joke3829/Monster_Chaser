@@ -236,6 +236,17 @@ void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LP
 	}
 }
 
+void CGameFramework::ProcessInput(float fElapsedTime)
+{
+	UCHAR keyBuffer[256];
+	GetKeyboardState(keyBuffer);
+
+	if (keyBuffer['W'] & 0x80)
+		m_pCamera->Move(0, fElapsedTime);
+	if (keyBuffer['S'] & 0x80)
+		m_pCamera->Move(1, fElapsedTime);
+}
+
 void CGameFramework::Render()
 {
 	auto barrier = [&](ID3D12Resource* pResource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
@@ -281,13 +292,14 @@ void CGameFramework::Render()
 		m_pd3dCommandAllocator->Reset();
 		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
 
+		ProcessInput(m_Timer.GetTimeElapsed());
 		// ·»´õ¸µ ÀÛ¾÷(Set & Draw) ===================
-		m_pScene->UpdateObject(m_Timer.GetTimeElapsed());
-
 		m_pScene->PrepareRender();
+
 		m_pd3dCommandList->SetDescriptorHeaps(1, m_pd3dOutputBufferView.GetAddressOf());
 		m_pd3dCommandList->SetComputeRootDescriptorTable(0, m_pd3dOutputBufferView->GetGPUDescriptorHandleForHeapStart());
 
+		m_pScene->UpdateObject(m_Timer.GetTimeElapsed());
 		m_pScene->Render();
 		// ===========================================
 
