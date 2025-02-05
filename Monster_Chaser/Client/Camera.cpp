@@ -29,10 +29,10 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 void CCamera::Move(int arrow, float fElapsedTime)
 {
 	if (arrow == 0) {
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * 10 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * 20 * fElapsedTime));
 	}
 	else
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -10 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -20 * fElapsedTime));
 }
 
 void CCamera::UpdateViewMatrix()

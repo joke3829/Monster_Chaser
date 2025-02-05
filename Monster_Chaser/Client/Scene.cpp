@@ -18,9 +18,11 @@ void CRaytracingScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\Terrain.bin");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\Terrain.bin", "src\\texture\\Terrain\\");
 	// =========================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();
+
+	m_pResourceManager->testing();
 
 	// ShaderBindingTable
 	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
@@ -120,7 +122,7 @@ void CRaytracingScene::CreateRootSignature()
 	}
 	{
 		// LocalRootSignature
-		D3D12_DESCRIPTOR_RANGE srvRange[7];
+		D3D12_DESCRIPTOR_RANGE srvRange[7] = {};
 		srvRange[0].BaseShaderRegister = 2;		// t2, space0
 		srvRange[0].NumDescriptors = 1;
 		srvRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -156,7 +158,7 @@ void CRaytracingScene::CreateRootSignature()
 		srvRange[6].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		srvRange[6].RegisterSpace = 6;
 
-		D3D12_ROOT_PARAMETER params[17]{};
+		D3D12_ROOT_PARAMETER params[17] = {};
 		params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	// b1, space0
 		params[0].Descriptor.RegisterSpace = 0;
 		params[0].Descriptor.ShaderRegister = 1;

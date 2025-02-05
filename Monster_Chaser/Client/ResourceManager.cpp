@@ -1,7 +1,8 @@
 #include "ResourceManager.h"
 
-bool CResourceManager::AddResourceFromFile(wchar_t* FilePath)
+bool CResourceManager::AddResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront)
 {
+	FilePathFront = textureFilePathFront;
 	std::ifstream inFile{ FilePath, std::ios::binary };
 	if (!inFile) {
 		OutputDebugString(L"Can't File Open!\n");
@@ -54,6 +55,9 @@ void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentI
 			if (p != m_vMeshList.end()) {	// 이미 리스트에 해당 이름을 가진 메시가 존재
 				// 주의할게 이름이 아예 중복이 없는지는 아직 확인을 못함
 				m_vGameObjectList[nCurrentObjectIndex]->SetMeshIndex(std::distance(m_vMeshList.begin(), p));
+				// 중복 메시가 나와도 파일에는 전부 기록되어 있다. 뺴줘야해
+				Mesh* tempMesh = new Mesh(inFile, strLabel);
+				delete tempMesh;
 			}
 			else {	// 없으면 새로 생성과 동시에 인덱스 지정
 				m_vGameObjectList[nCurrentObjectIndex]->SetMeshIndex(m_vMeshList.size());
@@ -90,7 +94,6 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 	int tempData{};
 	std::vector<Material> vMaterials;
 
-	std::string FilePathFront{ "src\\texture\\" };		// 경로는 바뀔 수 있다.
 	std::string FilePathBack{ ".dds" };				// 포맷도 바뀔 수 있다.
 
 	int nCurrentMaterial{};

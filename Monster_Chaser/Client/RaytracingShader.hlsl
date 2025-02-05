@@ -11,24 +11,25 @@ struct CameraInfo
     float3 cameraEye;
 };
 
+// 0 == false, 1 == true
 struct HasMaterial
 {
-    bool bHasAlbedoColor;
-    bool bHasEmissiveColor;
-    bool bHasSpecularColor;
-    bool bHasGlossiness;
-    bool bHasSmoothness;
-    bool bHasMetallic;
-    bool bHasSpecularHighlight;
-    bool bHasGlossyReflection;
+    int bHasAlbedoColor;
+    int bHasEmissiveColor;
+    int bHasSpecularColor;
+    int bHasGlossiness;
+    int bHasSmoothness;
+    int bHasMetallic;
+    int bHasSpecularHighlight;
+    int bHasGlossyReflection;
     
-    bool bHasAlbedoMap;
-    bool bHasSpecularMap;
-    bool bHasNormalMap;
-    bool bHasMetallicMap;
-    bool bHasEmissionMap;
-    bool bHasDetailAlbedoMap;
-    bool bHasDetailNormalMap;
+    int bHasAlbedoMap;
+    int bHasSpecularMap;
+    int bHasNormalMap;
+    int bHasMetallicMap;
+    int bHasEmissionMap;
+    int bHasDetailAlbedoMap;
+    int bHasDetailNormalMap;
     
     float4 AlbedoColor;
     float4 EmissiveColor;
@@ -42,14 +43,14 @@ struct HasMaterial
 
 struct HasMesh
 {
-    bool bHasVertex;
-    bool bHasColor;
-    bool bHasTex0;
-    bool bHasTex1;
-    bool bHasNormals;
-    bool bHasTangenrs;
-    bool bHasBiTangents;
-    bool bHasSubMeshes;
+    int bHasVertex;
+    int bHasColor;
+    int bHasTex0;
+    int bHasTex1;
+    int bHasNormals;
+    int bHasTangenrs;
+    int bHasBiTangents;
+    int bHasSubMeshes;
 };
 
 // Global Root Signature ============================================
@@ -116,29 +117,26 @@ void Miss(inout Payload payload)
 [shader("closesthit")]
 void ClosestHit(inout Payload payload, BuiltInTriangleIntersectionAttributes attrib)
 {
+    
     float2 uvs[3] = { float2(0.0, 0.0), float2(0.0, 0.0), float2(0.0, 0.0) };
     uint index[3];
     uint idx;
-    if (l_Mesh.bHasSubMeshes) {
-        idx = PrimitiveIndex() * 3;
-        index[0] = l_Indices[idx];
-        index[1] = l_Indices[idx + 1];
-        index[2] = l_Indices[idx + 2];
-        uvs[0] = l_Tex0[index[0]];
-        uvs[1] = l_Tex0[index[1]];
-        uvs[2] = l_Tex0[index[2]];
-    }
+    idx = PrimitiveIndex() * 3; // 0~1627
+    uint id = InstanceID();
+    if(id == 0 || id == 1 || id == 2)
+        idx = 0;
+    index[0] = l_Indices[idx];
+    index[1] = l_Indices[idx + 1];
+    index[2] = l_Indices[idx + 2];
+    uvs[0] = l_Tex0[index[0]];
+    uvs[1] = l_Tex0[index[1]];
+    uvs[2] = l_Tex0[index[2]];
     
     float2 texCoord = uvs[0] * (1.0f - attrib.barycentrics.x - attrib.barycentrics.y) +
     uvs[1] * attrib.barycentrics.x + uvs[2] * attrib.barycentrics.y;
-    
-    if (l_Material.bHasAlbedoColor) {
-        //float4 color = l_NormalMap.SampleLevel(g_Sampler, texCoord, 0);
-        float4 color = float4(0.0, 1.0, 0.5, 1.0);
-        payload.RayColor = color.xyz;
-    }
+
+    if (l_Material.bHasAlbedoMap != 0)
+        payload.RayColor = l_AlbedoMap.SampleLevel(g_Sampler, texCoord, 0);
     else
-    {
-        payload.RayColor = float3(1.0, 1.0, 0.0);
-    }
+        payload.RayColor = float3(1.0, 0.0, 0.0);
 }

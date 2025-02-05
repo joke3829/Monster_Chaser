@@ -42,22 +42,22 @@ struct Material {	// 명시적으로 쓸라고 이따구로 쓴거에요
 
 struct HasMaterial
 {
-	bool bHasAlbedoColor;
-	bool bHasEmissiveColor;
-	bool bHasSpecularColor;
-	bool bHasGlossiness;
-	bool bHasSmoothness;
-	bool bHasMetallic;
-	bool bHasSpecularHighlight;
-	bool bHasGlossyReflection;
+	int bHasAlbedoColor;
+	int bHasEmissiveColor;
+	int bHasSpecularColor;
+	int bHasGlossiness;
+	int bHasSmoothness;
+	int bHasMetallic;
+	int bHasSpecularHighlight;
+	int bHasGlossyReflection;
 
-	bool bHasAlbedoMap;
-	bool bHasSpecularMap;
-	bool bHasNormalMap;
-	bool bHasMetallicMap;
-	bool bHasEmissionMap;
-	bool bHasDetailAlbedoMap;
-	bool bHasDetailNormalMap;
+	int bHasAlbedoMap;
+	int bHasSpecularMap;
+	int bHasNormalMap;
+	int bHasMetallicMap;
+	int bHasEmissionMap;
+	int bHasDetailAlbedoMap;
+	int bHasDetailNormalMap;
 
 	XMFLOAT4 AlbedoColor;
 	XMFLOAT4 EmissiveColor;
@@ -70,14 +70,14 @@ struct HasMaterial
 };
 
 struct HasMesh {
-	bool bHasVertex = false;
-	bool bHasColor = false;
-	bool bHasTex0 = false;
-	bool bHasTex1 = false;
-	bool bHasNormals = false;
-	bool bHasTangenrs = false;
-	bool bHasBiTangents = false;
-	bool bHasSubMeshes = false;
+	int bHasVertex = false;
+	int bHasColor = false;
+	int bHasTex0 = false;
+	int bHasTex1 = false;
+	int bHasNormals = false;
+	int bHasTangenrs = false;
+	int bHasBiTangents = false;
+	int bHasSubMeshes = false;
 };
 
 class CGameObject {
@@ -87,6 +87,12 @@ public:
 	void InitializeConstanctBuffer(std::vector<std::unique_ptr<Mesh>>& meshes);
 
 	void UpdateWorldMatrix();
+
+	void testLocalMatrix(int i)
+	{
+		m_xmf4x4LocalMatrix._41 += (10 * i);
+		m_xmf4x4LocalMatrix._43 += (10 * i);
+	}
 
 	std::vector<Material>& getMaterials();
 	int getMeshIndex() const;
