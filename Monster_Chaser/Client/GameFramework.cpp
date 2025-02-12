@@ -5,6 +5,11 @@
 
 #include "GameFramework.h"
 
+CGameFramework::~CGameFramework()
+{
+	::CloseHandle(m_hFenceHandle);
+}
+
 bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 {
 	m_hWnd = hWnd; m_hInstance = hInstance;
@@ -37,6 +42,7 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	g_DxResource.cmdList = m_pd3dCommandList.Get();
 	g_DxResource.cmdQueue = m_pd3dCommandQueue.Get();
 	g_DxResource.fence = m_pd3dFence.Get();
+	g_DxResource.pFenceHandle = &m_hFenceHandle;
 
 	m_pCamera = std::make_shared<CCamera>();
 	m_pCamera->Setup(2);
@@ -60,6 +66,7 @@ void CGameFramework::InitDevice()
 
 	// Create Fence
 	m_pd3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_pd3dFence));
+	m_hFenceHandle = ::CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
 void CGameFramework::CheckRayTracingSupport()

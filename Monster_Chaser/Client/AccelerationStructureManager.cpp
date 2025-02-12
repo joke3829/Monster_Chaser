@@ -16,6 +16,7 @@ void CAccelerationStructureManager::UpdateScene()
 	std::vector<std::unique_ptr<CGameObject>>& objects = m_pResourceManager->getGameObjectList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 	int i{};
+	
 	for (std::unique_ptr<CGameObject>& object : objects) {
 		int n = object->getMeshIndex();
 		if (n != -1) {
@@ -164,11 +165,13 @@ void CAccelerationStructureManager::InitTLAS()
 				++m_nValidObject;
 		}
 	}
+
 	auto instanceDesc = BASIC_BUFFER_DESC;
 	instanceDesc.Width = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_nValidObject;
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &instanceDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_InstanceBuffer.GetAddressOf()));
 	m_InstanceBuffer->Map(0, nullptr, (void**)&m_pInstanceData);
+	
 
 	UINT64 updateScratchSize;
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
@@ -193,7 +196,7 @@ void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRA
 	ID3D12Device5* device = g_DxResource.device;
 	ID3D12CommandAllocator* cmdAlloc = g_DxResource.cmdAlloc;
 	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
-	ID3D12CommandQueue* cmdQueue = g_DxResource.cmdQueue;
+	ID3D12CommandQueue* cmdQueue = g_DxResource.cmdQueue; 
 
 	auto makeBuffer = [&](ComPtr<ID3D12Resource>& d3dResource, UINT bufferSize, auto InitialState)
 		{
@@ -207,7 +210,8 @@ void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRA
 	device->GetRaytracingAccelerationStructurePrebuildInfo(&inputs, &preBuildInfo);
 
 	if (updateScratchSize)
-		*updateScratchSize = preBuildInfo.UpdateScratchDataSizeInBytes;
+		*updateScratchSize = preBuildInfo.ScratchDataSizeInBytes;
+		//*updateScratchSize = preBuildInfo.UpdateScratchDataSizeInBytes;
 
 	makeBuffer(asResource, preBuildInfo.ResultDataMaxSizeInBytes, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
 
@@ -222,6 +226,10 @@ void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRA
 	cmdAlloc->Reset();
 	cmdList->Reset(cmdAlloc, nullptr);
 	cmdList->BuildRaytracingAccelerationStructure(&ASDesc, 0, nullptr);
+	D3D12_RESOURCE_BARRIER d3dbr{};
+	d3dbr.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	d3dbr.UAV.pResource = asResource.Get();
+	cmdList->ResourceBarrier(1, &d3dbr);
 	cmdList->Close();
 	cmdQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&cmdList));
 	Flush();

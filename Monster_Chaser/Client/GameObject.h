@@ -58,6 +58,7 @@ struct HasMaterial
 	int bHasEmissionMap;
 	int bHasDetailAlbedoMap;
 	int bHasDetailNormalMap;
+	int padding[1];
 
 	XMFLOAT4 AlbedoColor;
 	XMFLOAT4 EmissiveColor;
@@ -67,6 +68,7 @@ struct HasMaterial
 	float Metallic;
 	float SpecularHighlight;
 	float GlossyReflection;
+	float padding2[3];
 };
 
 struct HasMesh {

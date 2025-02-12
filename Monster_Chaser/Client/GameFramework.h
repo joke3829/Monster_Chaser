@@ -12,6 +12,8 @@ extern DXResources g_DxResource;
 
 class CGameFramework {
 public:
+	~CGameFramework();
+
 	bool OnInit(HWND hWnd, HINSTANCE hInstance);
 
 	void InitDevice();
@@ -49,6 +51,7 @@ private:
 	ComPtr<ID3D12GraphicsCommandList4> m_pd3dCommandList{};
 
 	ComPtr<ID3D12Fence> m_pd3dFence{};
+	HANDLE m_hFenceHandle{};
 
 	bool m_bRayTracingSupport{};	// RayTracing 지원 여부
 	bool m_bRaster{};				// Rendering 방식 결정 값

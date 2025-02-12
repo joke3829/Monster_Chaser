@@ -1,5 +1,7 @@
 #include "Texture.h"
 
+std::wstring namestr;
+
 CTexture::CTexture(const wchar_t* pszFileName, bool bDDS)
 {
 	g_DxResource.cmdAlloc->Reset();
@@ -15,6 +17,8 @@ CTexture::CTexture(const wchar_t* pszFileName, bool bDDS)
 	D3D12_SUBRESOURCE_DATA subResourceData;
 	if (bDDS)
 		LoadDDSTextureFromFileEx(g_DxResource.device, pszFileName, 0, D3D12_RESOURCE_FLAG_NONE, DDS_LOADER_DEFAULT, m_pd3dTexture.GetAddressOf(), decodedData, vSubresources, &ddsAlphaMode, &blsCubeMap);
+
+	namestr = pszFileName;
 
 	UINT64 nBytes{};
 	UINT nSubResource = (UINT)vSubresources.size();

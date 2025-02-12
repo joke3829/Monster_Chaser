@@ -18,11 +18,9 @@ void CRaytracingScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\Terrain.bin", "src\\texture\\Terrain\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\Cave.bin", "src\\texture\\Map\\");
 	// =========================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();
-
-	m_pResourceManager->testing();
 
 	// ShaderBindingTable
 	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
@@ -64,7 +62,7 @@ void CRaytracingScene::Render()
 	raydesc.RayGenerationShaderRecord.SizeInBytes = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
 
 	raydesc.MissShaderTable.StartAddress = m_pShaderBindingTable->getMissTable()->GetGPUVirtualAddress();
-	raydesc.MissShaderTable.SizeInBytes = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+	raydesc.MissShaderTable.SizeInBytes = m_pShaderBindingTable->getMissSize();
 	raydesc.MissShaderTable.StrideInBytes = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
 
 	raydesc.HitGroupTable.StartAddress = m_pShaderBindingTable->getHitGroupTable()->GetGPUVirtualAddress();

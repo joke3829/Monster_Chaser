@@ -110,6 +110,7 @@ void CShaderBindingTableManager::CreateSBT()
 	{
 		void* tempdata;
 		makeBuffer(m_pMissTable, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT * MissIDs.size());
+		m_nMissSize = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT * MissIDs.size();
 		m_pMissTable->Map(0, nullptr, &tempdata);
 		for (int i = 0; i < MissIDs.size(); ++i) {
 			memcpy(tempdata, MissIDs[i], D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
@@ -120,6 +121,19 @@ void CShaderBindingTableManager::CreateSBT()
 
 	// HitGroupTable
 	{
+		// 테스트용
+		/*
+		void* tempdata;
+		makeBuffer(m_pHitGroupTable, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT * HitGroupIDs.size());
+		m_nHitGroupSize = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT * HitGroupIDs.size();
+		m_pHitGroupTable->Map(0, nullptr, &tempdata);
+		for (int i = 0; i < HitGroupIDs.size(); ++i) {
+			memcpy(tempdata, HitGroupIDs[i], D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+			tempdata = static_cast<char*>(tempdata) + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+		}
+		m_pHitGroupTable->Unmap(0, nullptr);
+		*/
+		
 		m_nHitGroupSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + sizeof(LocalRootArg);
 		m_nHitGroupStride = Align(m_nHitGroupSize, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
 
@@ -141,6 +155,8 @@ void CShaderBindingTableManager::CreateSBT()
 		}
 
 		makeBuffer(m_pHitGroupTable, m_nHitGroupStride * nVaildMeshes * exports.size());
+		m_nHitGroupSize = m_pHitGroupTable.Get()->GetDesc().Width;
+
 		void* ptrStride{};
 		void* ptrtemp{};
 		m_pHitGroupTable->Map(0, nullptr, &ptrStride);
@@ -328,9 +344,14 @@ void CShaderBindingTableManager::CreateSBT()
 			}
 		}
 		m_pHitGroupTable->Unmap(0, nullptr);
+		
 	}
 }
 
+UINT64 CShaderBindingTableManager::getMissSize() const
+{
+	return m_nMissSize;
+}
 
 ID3D12Resource* CShaderBindingTableManager::getRayGenTable() const
 {

@@ -324,6 +324,7 @@ void CResourceManager::UpdateWorldMatrix()
 		else {
 			object->UpdateWorldMatrix();
 		}
+		//object->SetWorlaMatrix(object->getLocalMatrix());
 	}
 }
 

@@ -74,6 +74,7 @@ struct DXResources {
 	ID3D12GraphicsCommandList4* cmdList{ nullptr };
 	ID3D12CommandQueue* cmdQueue{ nullptr };
 	ID3D12Fence* fence{ nullptr };
+	HANDLE* pFenceHandle{ nullptr };
 };
 
 // GPU 작업이 끝나기까지 기다린다.
