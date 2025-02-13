@@ -70,10 +70,6 @@ void Mesh::GetPositionFromFile(std::ifstream& inFile)
 		vPositions.assign(m_nVertexCount, XMFLOAT3(0.0, 0.0, 0.0));
 		inFile.read((char*)vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
 
-		D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5{};
-		g_DxResource.device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof(options5));
-		options5;
-
 		// vertex buffer »ý¼º
 		auto desc = BASIC_BUFFER_DESC;
 		desc.Width = sizeof(XMFLOAT3) * m_nVertexCount;
@@ -184,7 +180,7 @@ void Mesh::GetTangentFromFile(std::ifstream& inFile)
 {
 	inFile.read((char*)&m_nTangentsCount, sizeof(int));
 	if (m_nTangentsCount > 0) {
-		m_bHasTex0 = true;
+		m_bHasTangents = true;
 		std::vector<XMFLOAT3> uv;
 		uv.assign(m_nTangentsCount, XMFLOAT3(0.0, 0.0, 0.0));
 		inFile.read((char*)uv.data(), sizeof(XMFLOAT3) * m_nTangentsCount);
@@ -207,7 +203,7 @@ void Mesh::GetBiTangentFromFile(std::ifstream& inFile)
 {
 	inFile.read((char*)&m_nBiTangentsCount, sizeof(int));
 	if (m_nBiTangentsCount > 0) {
-		m_bHasTex0 = true;
+		m_bHasBiTangents = true;
 		std::vector<XMFLOAT3> uv;
 		uv.assign(m_nBiTangentsCount, XMFLOAT3(0.0, 0.0, 0.0));
 		inFile.read((char*)uv.data(), sizeof(XMFLOAT3) * m_nBiTangentsCount);

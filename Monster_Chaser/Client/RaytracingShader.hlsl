@@ -162,6 +162,6 @@ void ClosestHit(inout Payload payload, BuiltInTriangleIntersectionAttributes att
     else if(l_Material.bHasAlbedoColor != 0)
         payload.RayColor = l_Material.AlbedoColor.xyz;
     else
-        payload.RayColor = float3(1.0, 0.0, 0.0);
+        payload.RayColor = float3(0.0, 0.0, 0.0);
     
 }

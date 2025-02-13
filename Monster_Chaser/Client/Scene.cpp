@@ -18,7 +18,7 @@ void CRaytracingScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\Cave.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\Environment.bin", "src\\texture\\Map\\");
 	// =========================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();
 
