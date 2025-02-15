@@ -318,7 +318,7 @@ void CResourceManager::UpdateWorldMatrix()
 		if (object->getParentIndex() != -1) {
 			XMFLOAT4X4 wmtx = m_vGameObjectList[object->getParentIndex()]->getWorldMatrix();
 			XMFLOAT4X4 lmtx = object->getLocalMatrix();
-			XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&wmtx) * XMLoadFloat4x4(&lmtx));
+			XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
 			object->SetWorlaMatrix(lmtx);
 		}
 		else {

@@ -114,8 +114,8 @@ void Miss(inout Payload payload)
     float slope = normalize(WorldRayDirection()).y;
     float t = saturate(slope * 5 + 0.5);
     
-    float skyTop = float3(0.24, 0.44, 0.72);
-    float skyBottom = float3(0.75, 0.86, 0.93);
+    float3 skyTop = float3(0.24, 0.44, 0.72);
+    float3 skyBottom = float3(0.75, 0.86, 0.93);
     
     payload.RayColor = lerp(skyBottom, skyTop, t);
 }
@@ -162,6 +162,6 @@ void ClosestHit(inout Payload payload, BuiltInTriangleIntersectionAttributes att
     else if(l_Material.bHasAlbedoColor != 0)
         payload.RayColor = l_Material.AlbedoColor.xyz;
     else
-        payload.RayColor = float3(0.0, 0.0, 0.0);
+        payload.RayColor = float3(0.5, 1.0, 0.5);
     
 }
