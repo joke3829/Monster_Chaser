@@ -7,6 +7,7 @@ void CRaytracingScene::SetUp()
 
 	// Create And Set up PipelineState
 	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	m_pRaytracingPipeline->Setup(1 + 1 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
 	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"ClosestHit");
 	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 12);
