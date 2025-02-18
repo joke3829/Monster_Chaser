@@ -35,5 +35,8 @@ private:
 	std::vector<std::unique_ptr<CGameObject>> m_vGameObjectList;
 	std::vector<std::unique_ptr<Mesh>> m_vMeshList;
 	std::vector<std::unique_ptr<CTexture>> m_vTextureList;
+
+	// Skinning animation
+	std::vector<std::unique_ptr<CSkinningObject>> m_vSkinningObject;
 };
 

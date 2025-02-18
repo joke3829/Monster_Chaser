@@ -4,7 +4,7 @@
 
 extern DXResources g_DxResource;
 
-struct Material {	// 명시적으로 쓸라고 이따구로 쓴거에요
+struct Material {	// 명시적으로 쓸라고 이렇게 쓴 것
 	bool m_bHasAlbedoColor = false;
 	bool m_bHasEmissiveColor = false;
 	bool m_bHasSpecularColor = false;
@@ -139,3 +139,37 @@ protected:
 
 };
 
+// ==================================================================
+
+class CSkinningInfo {
+public:
+
+private:
+	UINT m_nBonesPerVertex{};	// 정점 당 사용 뼈 개수
+	UINT m_nBones{};			// 뼈 개수
+
+	UINT m_nRefMesh{};			// 참조하는 메시의 번호
+
+	std::vector<std::string> m_vBoneNames{};	// 뼈 이름 리스트
+	std::vector<XMFLOAT4X4> m_vOffsetMatrix{};	// offset 행렬 -> 셰이더 상에서 최대 몇개인지 모름
+	std::vector<UINT> m_vBoneIndices{};			// 뼈 인덱스 -> 셰이더 상에서 최대 몇개인지 모름
+	std::vector<float> m_vBoneWeight{};			// 뼈 가중치 -> 셰이더 상에서 최대 몇개인지 모름
+	std::vector<XMFLOAT4X4> m_vAnimateMatrix{};	// 애니메이션 행렬 -> 셰이더 상에서 최대 몇개인지 모름
+
+	ComPtr<ID3D12Resource> m_p상수버퍼;
+};
+
+class CSkinningObject {
+public:
+protected:
+	std::vector<std::unique_ptr<CGameObject>> m_vObjects{};
+	std::vector<std::unique_ptr<Mesh>> m_vMeshes{};
+	std::vector<std::unique_ptr<CSkinningInfo>> m_vSkinningInfo{};
+};
+
+// Rasterizer와 RayTracing에서의 Skinning Animation은 방법이 다르다
+// 레이트레이싱 용 스키닝 오브젝트, BLAS를 가지고 있음
+class CRayTracingSkinningObject : public CSkinningObject {
+public:
+protected:
+};
