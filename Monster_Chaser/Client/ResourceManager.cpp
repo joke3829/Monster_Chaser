@@ -26,6 +26,33 @@ bool CResourceManager::AddResourceFromFile(wchar_t* FilePath, std::string textur
 	return true;
 }
 
+bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront)
+{
+	std::ifstream inFile{ FilePath, std::ios::binary };
+	if (!inFile) {
+		OutputDebugString(L"Can't File Open!\n");
+		return false;
+	}
+	std::string strLabel{};
+	auto readLabel = [&]() {
+		char nStrLength{};
+		inFile.read(&nStrLength, sizeof(char));
+		strLabel.assign(nStrLength, ' ');
+		inFile.read(strLabel.data(), nStrLength);
+		};
+	m_vSkinningObject.push_back(std::make_unique<CSkinningObject>());
+	m_vSkinningObject[m_vSkinningObject.size() - 1]->AddResourceFromFile(inFile, textureFilePathFront);
+
+	if (!inFile.eof()) {
+		readLabel();
+		if ("<Animation>:" == strLabel) {
+
+		}
+	}
+
+	return true;
+}
+
 void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentIndex)
 {
 	UINT nCurrentObjectIndex = m_vGameObjectList.size();

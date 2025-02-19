@@ -1,12 +1,14 @@
 #pragma once
 
-#include "GameObject.h"
+//#include "GameObject.h"
+#include "AnimationManager.h"
 
 extern DXResources g_DxResource;
 
 class CResourceManager {
 public:
 	bool AddResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront);
+	bool AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront);
 
 	void AddGameObjectFromFile(std::ifstream& inFile, int nParentIndex = -1);
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);
@@ -38,5 +40,6 @@ private:
 
 	// Skinning animation
 	std::vector<std::unique_ptr<CSkinningObject>> m_vSkinningObject;
+	std::vector<std::unique_ptr<CAnimationManager>> m_vAnimationManager;
 };
 

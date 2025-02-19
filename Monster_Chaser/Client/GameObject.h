@@ -96,6 +96,7 @@ public:
 		m_xmf4x4LocalMatrix._43 += (10 * i);
 	}
 
+	std::string getFrameName() const;
 	std::vector<Material>& getMaterials();
 	int getMeshIndex() const;
 	int getHitGroupIndex() const;
@@ -143,7 +144,7 @@ protected:
 
 class CSkinningInfo {
 public:
-
+	CSkinningInfo(std::ifstream& inFile, UINT nRefMesh);
 private:
 	UINT m_nBonesPerVertex{};	// 정점 당 사용 뼈 개수
 	UINT m_nBones{};			// 뼈 개수
@@ -161,9 +162,16 @@ private:
 
 class CSkinningObject {
 public:
+	void AddResourceFromFile(std::ifstream& inFile, std::string strFront);
+	void AddObjectFromFile(std::ifstream& inFile, int nParentIndex = -1);
+	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);
 protected:
+	std::string m_strObjectName{};
+
+	std::string FilePathFront{};
 	std::vector<std::unique_ptr<CGameObject>> m_vObjects{};
-	std::vector<std::unique_ptr<Mesh>> m_vMeshes{};
+	std::vector<std::shared_ptr<Mesh>> m_vMeshes{};
+	std::vector<std::shared_ptr<CTexture>> m_vTextures{};
 	std::vector<std::unique_ptr<CSkinningInfo>> m_vSkinningInfo{};
 };
 

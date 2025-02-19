@@ -119,6 +119,11 @@ void CGameObject::UpdateWorldMatrix()
 	m_xmf4x4WorldMatrix._41 = m_xmf3Pos.x; m_xmf4x4WorldMatrix._42 = m_xmf3Pos.y; m_xmf4x4WorldMatrix._43 = m_xmf3Pos.z; m_xmf4x4WorldMatrix._44 = 1;
 }
 
+std::string CGameObject::getFrameName() const
+{
+	return m_strName;
+}
+
 std::vector<Material>& CGameObject::getMaterials()
 {
 	return m_vMaterials;
@@ -196,4 +201,361 @@ void CGameObject::InitializeAxis()
 	m_xmf3Up = XMFLOAT3(0.0, 1.0, 0.0);
 	m_xmf3Look = XMFLOAT3(0.0, 0.0, 1.0);
 
+}
+
+
+// =============================================================
+
+CSkinningInfo::CSkinningInfo(std::ifstream& inFile, UINT nRefMesh)
+{
+	std::string strLabel{};
+	UINT tempInt{};
+	auto readLabel = [&]() {
+		char nStrLength{};
+		inFile.read(&nStrLength, sizeof(char));
+		strLabel.assign(nStrLength, ' ');
+		inFile.read(strLabel.data(), nStrLength);
+		};
+	m_nRefMesh = nRefMesh;
+
+	readLabel();	// 이름
+	while (1) {
+		readLabel();
+		if (strLabel == "</SkinningInfo>")
+			break;
+		else if ("<BonesPerVertex>:" == strLabel)
+			inFile.read((char*)&m_nBonesPerVertex, sizeof(int));
+		else if ("<Bounds>:" == strLabel) { // 바운딩 박스 정보, 필요하면 가져간다
+			XMFLOAT3 tempData{};
+			inFile.read((char*)&tempData, sizeof(XMFLOAT3));
+			inFile.read((char*)&tempData, sizeof(XMFLOAT3));
+		}
+		else if ("<BoneNames>:" == strLabel) {
+			inFile.read((char*)&m_nBones, sizeof(int));
+			for (int i = 0; i < m_nBones; ++i) {
+				readLabel();
+				m_vBoneNames.push_back(strLabel);
+			}
+		}
+		else if ("<BoneOffsets>:" == strLabel) {
+			inFile.read((char*)&m_nBones, sizeof(int));
+			m_vOffsetMatrix.assign(m_nBones, XMFLOAT4X4());
+			inFile.read((char*)m_vOffsetMatrix.data(), sizeof(XMFLOAT4X4) * m_nBones);
+		}
+		else if ("<BoneIndices>:" == strLabel) {
+			inFile.read((char*)&tempInt, sizeof(UINT));
+			m_vBoneIndices.assign(tempInt, 0);
+			inFile.read((char*)m_vBoneIndices.data(), sizeof(int) * tempInt);
+		}
+		else if ("<BoneWeights>:" == strLabel) {
+			inFile.read((char*)&tempInt, sizeof(UINT));
+			m_vBoneWeight.assign(tempInt, 0);
+			inFile.read((char*)m_vBoneWeight.data(), sizeof(float) * tempInt);
+		}
+	}
+}
+
+void CSkinningObject::AddResourceFromFile(std::ifstream& inFile, std::string strFront)
+{
+	FilePathFront = strFront;
+	std::string strLabel{};
+	auto readLabel = [&]() {
+		char nStrLength{};
+		inFile.read(&nStrLength, sizeof(char));
+		strLabel.assign(nStrLength, ' ');
+		inFile.read(strLabel.data(), nStrLength);
+		};
+	while (1) {
+		readLabel();
+		if (strLabel == "</Hierarchy>")
+			break;
+		else if (strLabel == "<Frame>:")
+			AddObjectFromFile(inFile);
+	}
+
+	if (m_vObjects.size() != 0)
+		m_strObjectName = m_vObjects[0]->getFrameName();
+}
+
+void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
+{
+	UINT nCurrentObjectIndex = m_vObjects.size();
+	m_vObjects.push_back(std::make_unique<CGameObject>());
+	m_vObjects[nCurrentObjectIndex]->InitializeObjectFromFile(inFile);
+
+	if (nParentIndex != -1) {		// 부모가 존재한다는 뜻
+		m_vObjects[nCurrentObjectIndex]->SetParentIndex(nParentIndex);
+	}
+
+	std::string strLabel{};
+	auto readLabel = [&]() {
+		char nStrLength{};
+		inFile.read(&nStrLength, sizeof(char));
+		strLabel.assign(nStrLength, ' ');
+		inFile.read(strLabel.data(), nStrLength);
+		};
+	int tempData{};
+	while (1) {
+		readLabel();
+		if (strLabel == "<Mesh>:") {
+			inFile.read((char*)&tempData, sizeof(int));
+			readLabel();	// 메시의 이름 읽기
+			auto p = std::find_if(m_vMeshes.begin(), m_vMeshes.end(), [&](std::shared_ptr<Mesh>& tempMesh) {
+				return tempMesh->getName() == strLabel;
+				});
+			if (p != m_vMeshes.end()) {	// 이미 리스트에 해당 이름을 가진 메시가 존재
+				// 주의할게 이름이 아예 중복이 없는지는 아직 확인을 못함
+				m_vObjects[nCurrentObjectIndex]->SetMeshIndex(std::distance(m_vMeshes.begin(), p));
+				// 중복 메시가 나와도 파일에는 전부 기록되어 있다.
+				Mesh* tempMesh = new Mesh(inFile, strLabel);	// 그 기록을 빼주는 작업
+				delete tempMesh;
+			}
+			else {	// 없으면 새로 생성과 동시에 인덱스 지정
+				m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
+				m_vMeshes.push_back(std::make_shared<Mesh>(inFile, strLabel));
+			}
+		}
+		else if (strLabel == "<SkinningInfo>:") {
+			m_vSkinningInfo.push_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size()));
+		}
+		else if (strLabel == "<Materials>:") {
+			inFile.read((char*)&tempData, sizeof(int));
+			AddMaterialFromFile(inFile, nCurrentObjectIndex);
+		}
+		else if (strLabel == "<Children>:") {
+			inFile.read((char*)&tempData, sizeof(int));
+			if (tempData > 0) {
+				for (int i = 0; i < tempData; ++i) {
+					readLabel();	// <Frame>: 부분을 빼준다
+					AddObjectFromFile(inFile, nCurrentObjectIndex);
+				}
+			}
+		}
+		else if (strLabel == "</Frame>")
+			break;
+	}
+}
+
+void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex)
+{
+	std::string strLabel{};
+	auto readLabel = [&]() {
+		char nStrLength{};
+		inFile.read(&nStrLength, sizeof(char));
+		strLabel.assign(nStrLength, ' ');
+		inFile.read(strLabel.data(), nStrLength);
+		};
+	int tempData{};
+	std::vector<Material> vMaterials;
+
+	std::string FilePathBack{ ".dds" };				// 포맷도 바뀔 수 있다.
+
+	int nCurrentMaterial{};
+	while (1) {
+		readLabel();
+		if (strLabel == "<Material>:") {
+			nCurrentMaterial = vMaterials.size();
+			vMaterials.push_back(Material());
+			inFile.read((char*)&tempData, sizeof(int));
+		}
+		else if (strLabel == "<AlbedoColor>:") {
+			vMaterials[nCurrentMaterial].m_bHasAlbedoColor = true;
+			inFile.read((char*)&vMaterials[nCurrentMaterial].m_xmf4AlbedoColor, sizeof(XMFLOAT4));
+		}
+		else if (strLabel == "<EmissiveColor>:") {
+			vMaterials[nCurrentMaterial].m_bHasEmissiveColor = true;
+			inFile.read((char*)&vMaterials[nCurrentMaterial].m_xmf4EmissiveColor, sizeof(XMFLOAT4));
+		}
+		else if (strLabel == "<SpecularColor>:") {
+			vMaterials[nCurrentMaterial].m_bHasSpecularColor = true;
+			inFile.read((char*)&vMaterials[nCurrentMaterial].m_xmf4SpecularColor, sizeof(XMFLOAT4));
+		}
+		else if (strLabel == "<Glossiness>:") {
+			vMaterials[nCurrentMaterial].m_bHasGlossiness = true;
+			inFile.read((char*)&vMaterials[nCurrentMaterial].m_fGlossiness, sizeof(float));
+		}
+		else if (strLabel == "<Smoothness>:") {
+			vMaterials[nCurrentMaterial].m_bHasSmoothness = true;
+			inFile.read((char*)&vMaterials[nCurrentMaterial].m_fSmoothness, sizeof(float));
+		}
+		else if (strLabel == "<Metallic>:") {
+			vMaterials[nCurrentMaterial].m_bHasMetallic = true;
+			inFile.read((char*)&vMaterials[nCurrentMaterial].m_fMetallic, sizeof(float));
+		}
+		else if (strLabel == "<SpecularHighlight>:") {
+			vMaterials[nCurrentMaterial].m_bHasSpecularHighlight = true;
+			inFile.read((char*)&vMaterials[nCurrentMaterial].m_fSpecularHighlight, sizeof(float));
+		}
+		else if (strLabel == "<GlossyReflection>:") {
+			vMaterials[nCurrentMaterial].m_bHasGlossyReflection = true;
+			inFile.read((char*)&vMaterials[nCurrentMaterial].m_fGlossyReflection, sizeof(float));
+		}
+		else if (strLabel == "<AlbedoMap>:") {
+			readLabel();
+			if (strLabel[0] == '@') {	// 이미 존재함
+				strLabel.erase(strLabel.begin());
+				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
+					return txt->getName() == strLabel;
+					});
+				vMaterials[nCurrentMaterial].m_bHasAlbedoMap = true;
+				vMaterials[nCurrentMaterial].m_nAlbedoMapIndex = std::distance(m_vTextures.begin(), p);
+			}
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
+				continue;
+			}
+			else {	// 없으니 새로 만들어라
+				vMaterials[nCurrentMaterial].m_bHasAlbedoMap = true;
+				vMaterials[nCurrentMaterial].m_nAlbedoMapIndex = m_vTextures.size();
+				std::string FilePath = FilePathFront + strLabel + FilePathBack;
+				std::wstring wstr;
+				wstr.assign(FilePath.begin(), FilePath.end());
+				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
+			}
+		}
+		else if (strLabel == "<SpecularMap>:") {
+			readLabel();
+			if (strLabel[0] == '@') {	// 이미 존재함
+				strLabel.erase(strLabel.begin());
+				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
+					return txt->getName() == strLabel;
+					});
+				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;
+				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = std::distance(m_vTextures.begin(), p);	// 여기
+			}
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
+				continue;
+			}
+			else {	// 없으니 새로 만들어라
+				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;	// 여기
+				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = m_vTextures.size();	// 여기
+				std::string FilePath = FilePathFront + strLabel + FilePathBack;
+				std::wstring wstr;
+				wstr.assign(FilePath.begin(), FilePath.end());
+				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
+			}
+		}
+		else if (strLabel == "<MetallicMap>:") {
+			readLabel();
+			if (strLabel[0] == '@') {	// 이미 존재함
+				strLabel.erase(strLabel.begin());
+				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
+					return txt->getName() == strLabel;
+					});
+				vMaterials[nCurrentMaterial].m_bHasMetallicMap = true;
+				vMaterials[nCurrentMaterial].m_nMetallicMapIndex = std::distance(m_vTextures.begin(), p);
+			}
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
+				continue;
+			}
+			else {	// 없으니 새로 만들어라
+				vMaterials[nCurrentMaterial].m_bHasMetallicMap = true;
+				vMaterials[nCurrentMaterial].m_nMetallicMapIndex = m_vTextures.size();
+				std::string FilePath = FilePathFront + strLabel + FilePathBack;
+				std::wstring wstr;
+				wstr.assign(FilePath.begin(), FilePath.end());
+				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
+			}
+		}
+		else if (strLabel == "<NormalMap>:") {
+			readLabel();
+			if (strLabel[0] == '@') {	// 이미 존재함
+				strLabel.erase(strLabel.begin());
+				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
+					return txt->getName() == strLabel;
+					});
+				vMaterials[nCurrentMaterial].m_bHasNormalMap = true;
+				vMaterials[nCurrentMaterial].m_nNormalMapIndex = std::distance(m_vTextures.begin(), p);
+			}
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
+				continue;
+			}
+			else {	// 없으니 새로 만들어라
+				vMaterials[nCurrentMaterial].m_bHasNormalMap = true;
+				vMaterials[nCurrentMaterial].m_nNormalMapIndex = m_vTextures.size();
+				std::string FilePath = FilePathFront + strLabel + FilePathBack;
+				std::wstring wstr;
+				wstr.assign(FilePath.begin(), FilePath.end());
+				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
+			}
+		}
+		else if (strLabel == "<EmissionMap>:") {
+			readLabel();
+			if (strLabel[0] == '@') {	// 이미 존재함
+				strLabel.erase(strLabel.begin());
+				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
+					return txt->getName() == strLabel;
+					});
+				vMaterials[nCurrentMaterial].m_bHasEmissionMap = true;
+				vMaterials[nCurrentMaterial].m_nEmissionMapIndex = std::distance(m_vTextures.begin(), p);
+			}
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
+				continue;
+			}
+			else {	// 없으니 새로 만들어라
+				vMaterials[nCurrentMaterial].m_bHasEmissionMap = true;
+				vMaterials[nCurrentMaterial].m_nEmissionMapIndex = m_vTextures.size();
+				std::string FilePath = FilePathFront + strLabel + FilePathBack;
+				std::wstring wstr;
+				wstr.assign(FilePath.begin(), FilePath.end());
+				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
+			}
+		}
+		else if (strLabel == "<DetailAlbedoMap>:") {
+			readLabel();
+			if (strLabel[0] == '@') {	// 이미 존재함
+				strLabel.erase(strLabel.begin());
+				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
+					return txt->getName() == strLabel;
+					});
+				vMaterials[nCurrentMaterial].m_bHasDetailAlbedoMap = true;
+				vMaterials[nCurrentMaterial].m_nDetailAlbedoMapIndex = std::distance(m_vTextures.begin(), p);
+			}
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
+				continue;
+			}
+			else {	// 없으니 새로 만들어라
+				vMaterials[nCurrentMaterial].m_bHasDetailAlbedoMap = true;
+				vMaterials[nCurrentMaterial].m_nDetailAlbedoMapIndex = m_vTextures.size();
+				std::string FilePath = FilePathFront + strLabel + FilePathBack;
+				std::wstring wstr;
+				wstr.assign(FilePath.begin(), FilePath.end());
+				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
+			}
+		}
+		else if (strLabel == "<DetailNormalMap>:") {
+			readLabel();
+			if (strLabel[0] == '@') {	// 이미 존재함
+				strLabel.erase(strLabel.begin());
+				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
+					return txt->getName() == strLabel;
+					});
+				vMaterials[nCurrentMaterial].m_bHasDetailNormalMap = true;
+				vMaterials[nCurrentMaterial].m_nDetailNormalMapIndex = std::distance(m_vTextures.begin(), p);
+			}
+			else if (strLabel == "null") {	// 있더라고 null이면 사용 안한단 뜻
+				continue;
+			}
+			else {	// 없으니 새로 만들어라
+				vMaterials[nCurrentMaterial].m_bHasDetailNormalMap = true;
+				vMaterials[nCurrentMaterial].m_nDetailNormalMapIndex = m_vTextures.size();
+				std::string FilePath = FilePathFront + strLabel + FilePathBack;
+				std::wstring wstr;
+				wstr.assign(FilePath.begin(), FilePath.end());
+				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
+			}
+		}
+		else if (strLabel == "</Materials>")
+			break;
+	}
+	// 게임 오브젝트에 마테리얼 저장
+	for (int i = 0; i < vMaterials.size(); ++i) {
+		m_vObjects[nCurrentIndex]->getMaterials().push_back(vMaterials[i]);
+	}
 }
