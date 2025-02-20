@@ -49,7 +49,6 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 			m_vAnimationManager.push_back(std::make_unique<CAnimationManager>(inFile, m_vSkinningObject[m_vSkinningObject.size() - 1].get()));
 		}
 	}
-
 	return true;
 }
 

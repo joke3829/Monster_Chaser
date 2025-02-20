@@ -61,3 +61,22 @@ CAnimationManager::CAnimationManager(std::ifstream& inFile, CSkinningObject* obj
 		}
 	}
 }
+
+
+void CAnimationManager::SetFramesPointerFromSkinningObject(std::vector<std::unique_ptr<CGameObject>>& vObjects)
+{
+	for (std::string& name : m_vFrameNames) {
+		auto p = std::find_if(vObjects.begin(), vObjects.end(), [&](std::unique_ptr<CGameObject>& frame) {
+			return frame->getFrameName() == name;
+			});
+		if (p != vObjects.end()) {
+			m_vFrames.push_back((*p).get());
+		}
+	}
+	
+}
+
+void CAnimationManager::MakeAnimationMatrixIndex(CSkinningInfo* pSkinningInfo)
+{
+
+}

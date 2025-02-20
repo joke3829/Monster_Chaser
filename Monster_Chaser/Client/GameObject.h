@@ -142,6 +142,7 @@ protected:
 
 // ==================================================================
 
+// 이 친구는 프레임에서 필요한 행렬만 모아서 상수버퍼를 만들어 set하는 역할
 class CSkinningInfo {
 public:
 	CSkinningInfo(std::ifstream& inFile, UINT nRefMesh);
@@ -155,9 +156,7 @@ private:
 	std::vector<XMFLOAT4X4> m_vOffsetMatrix{};	// offset 행렬 -> 셰이더 상에서 최대 몇개인지 모름
 	std::vector<UINT> m_vBoneIndices{};			// 뼈 인덱스 -> 셰이더 상에서 최대 몇개인지 모름
 	std::vector<float> m_vBoneWeight{};			// 뼈 가중치 -> 셰이더 상에서 최대 몇개인지 모름
-	std::vector<XMFLOAT4X4> m_vAnimateMatrix{};	// 애니메이션 행렬 -> 셰이더 상에서 최대 몇개인지 모름
-
-	ComPtr<ID3D12Resource> m_p상수버퍼;
+	std::vector<UINT>m_vAnimationMatrixIndex{};	// 뼈의 애니메이션 행렬을 찾기 위해 인덱스를 하나 더 만들어준다.
 };
 
 class CSkinningObject {

@@ -2,6 +2,8 @@
 #include "stdafx.h"
 #include "GameObject.h"
 
+extern DXResources g_DxResource;
+
 class CAnimationSet {
 public:
 	CAnimationSet(std::ifstream& inFile, UINT nBones);
@@ -22,12 +24,19 @@ private:
 class CAnimationManager {
 public:
 	CAnimationManager(std::ifstream& inFile, CSkinningObject* object);
-protected:
+	void SetFramesPointerFromSkinningObject(std::vector<std::unique_ptr<CGameObject>>& vObjects);	// 스키닝 준비 함수
 
+	// SkinningInfo를 받고 그 SkinningInfo의 행렬 index 만들어 준다.
+	void MakeAnimationMatrixIndex(CSkinningInfo* pSkinningInfo);
+protected:
 	UINT m_nAnimationSets{};
 	std::vector<std::string> m_vFrameNames{};		// 한번 쓰고 버리나?
 	std::vector<std::shared_ptr<CAnimationSet>> m_vAnimationSets{};
 
 	std::vector<CGameObject*> m_vFrames{};	// 복사 할 때 해당 객체에 맞게 업데이트 필요
+	
+	// 상수버퍼를 여기서 만들까?
+	ComPtr<ID3D12Resource> m_pMatrixBuffer{};		// 애니메이션 행렬을 넣을 상수 버퍼
+	std::vector<XMFLOAT4X4> m_vMatrixes{};			// 애니메이션 행렬을 저장할 배열
 };
 
