@@ -60,6 +60,11 @@ CAnimationManager::CAnimationManager(std::ifstream& inFile, CSkinningObject* obj
 				m_vAnimationSets.push_back(std::make_shared<CAnimationSet>(inFile, m_vFrameNames.size()));
 		}
 	}
+	m_vMatrixes.assign(m_vFrameNames.size(), XMFLOAT4X4());
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = sizeof(XMFLOAT4X4) * m_vFrameNames.size();
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pMatrixBuffer.GetAddressOf()));
+	m_pMatrixBuffer->Map(0, nullptr, &m_pMappedPointer);
 }
 
 
@@ -73,10 +78,13 @@ void CAnimationManager::SetFramesPointerFromSkinningObject(std::vector<std::uniq
 			m_vFrames.push_back((*p).get());
 		}
 	}
-	
 }
 
-void CAnimationManager::MakeAnimationMatrixIndex(CSkinningInfo* pSkinningInfo)
+void CAnimationManager::MakeAnimationMatrixIndex(CSkinningObject* pSkinningObject)
 {
-
+	std::vector<std::unique_ptr<CSkinningInfo>>& skinningInfo = pSkinningObject->getSkinningInfo();
+	for (std::unique_ptr<CSkinningInfo>& p : skinningInfo) {
+		p->MakeAnimationMatrixIndex(m_vFrameNames);
+		p->MakeBufferAndDescriptorHeap(m_pMatrixBuffer, m_vMatrixes.size());
+	}
 }

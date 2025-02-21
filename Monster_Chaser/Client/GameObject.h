@@ -146,17 +146,29 @@ protected:
 class CSkinningInfo {
 public:
 	CSkinningInfo(std::ifstream& inFile, UINT nRefMesh);
+
+	void MakeAnimationMatrixIndex(std::vector<std::string>& vFrameNames);
+	void MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixBuffer, UINT nElements);
 private:
 	UINT m_nBonesPerVertex{};	// 정점 당 사용 뼈 개수
 	UINT m_nBones{};			// 뼈 개수
+	UINT m_nVertexCount{};		// 해당 메시의 정점 개수, 부정확, 확인 필요
 
 	UINT m_nRefMesh{};			// 참조하는 메시의 번호
 
 	std::vector<std::string> m_vBoneNames{};	// 뼈 이름 리스트
-	std::vector<XMFLOAT4X4> m_vOffsetMatrix{};	// offset 행렬 -> 셰이더 상에서 최대 몇개인지 모름
-	std::vector<UINT> m_vBoneIndices{};			// 뼈 인덱스 -> 셰이더 상에서 최대 몇개인지 모름
-	std::vector<float> m_vBoneWeight{};			// 뼈 가중치 -> 셰이더 상에서 최대 몇개인지 모름
+	std::vector<XMFLOAT4X4> m_vOffsetMatrix{};	// offset 행렬
+	std::vector<UINT> m_vBoneIndices{};			// 뼈 인덱스
+	std::vector<float> m_vBoneWeight{};			// 뼈 가중치
 	std::vector<UINT>m_vAnimationMatrixIndex{};	// 뼈의 애니메이션 행렬을 찾기 위해 인덱스를 하나 더 만들어준다.
+
+	ComPtr<ID3D12DescriptorHeap> m_pd3dDesciptorHeap{};
+
+	ComPtr<ID3D12Resource> m_pConstantBuffer{};
+	ComPtr<ID3D12Resource> m_pOffsetMatrixBuffer{};
+	ComPtr<ID3D12Resource> m_pBoneIndicesBuffer{};
+	ComPtr<ID3D12Resource> m_pBoneWeightBuffer{};
+	ComPtr<ID3D12Resource> m_pAnimationMatrixIndexBuffer{};
 };
 
 class CSkinningObject {
@@ -164,6 +176,8 @@ public:
 	void AddResourceFromFile(std::ifstream& inFile, std::string strFront);
 	void AddObjectFromFile(std::ifstream& inFile, int nParentIndex = -1);
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);
+
+	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
 protected:
 	std::string m_strObjectName{};
 

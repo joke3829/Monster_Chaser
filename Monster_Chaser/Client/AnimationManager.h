@@ -27,7 +27,7 @@ public:
 	void SetFramesPointerFromSkinningObject(std::vector<std::unique_ptr<CGameObject>>& vObjects);	// 스키닝 준비 함수
 
 	// SkinningInfo를 받고 그 SkinningInfo의 행렬 index 만들어 준다.
-	void MakeAnimationMatrixIndex(CSkinningInfo* pSkinningInfo);
+	void MakeAnimationMatrixIndex(CSkinningObject* pSkinningObject);
 protected:
 	UINT m_nAnimationSets{};
 	std::vector<std::string> m_vFrameNames{};		// 한번 쓰고 버리나?
@@ -37,6 +37,7 @@ protected:
 	
 	// 상수버퍼를 여기서 만들까?
 	ComPtr<ID3D12Resource> m_pMatrixBuffer{};		// 애니메이션 행렬을 넣을 상수 버퍼
+	void* m_pMappedPointer{};
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// 애니메이션 행렬을 저장할 배열
 };
 
