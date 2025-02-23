@@ -211,4 +211,7 @@
   <ItemGroup>
     <FxCompile Include="RaytracingShader.hlsl" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="AnimationComputeShader.hlsl" />
+  </ItemGroup>
 </Project>

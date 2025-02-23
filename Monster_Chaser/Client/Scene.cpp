@@ -5,6 +5,10 @@ void CRaytracingScene::SetUp()
 	// Create Global & Local Root Signature
 	CreateRootSignature();
 
+	// animation Pipeline Ready
+	CreateComputeRootSignature();
+	CreateComputeShader();
+
 	// Create And Set up PipelineState
 	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
 	m_pRaytracingPipeline->Setup(1 + 1 + 1 + 2 + 1 + 1);
@@ -239,4 +243,93 @@ void CRaytracingScene::CreateRootSignature()
 		g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pLocalRootSignature.GetAddressOf()));
 		pBlob->Release();
 	}
+}
+
+void CRaytracingScene::CreateComputeRootSignature()
+{
+	D3D12_DESCRIPTOR_RANGE skinningRange[6]{};
+	skinningRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	skinningRange[0].NumDescriptors = 1;
+	skinningRange[0].BaseShaderRegister = 0;
+	skinningRange[0].RegisterSpace = 0;
+	skinningRange[0].OffsetInDescriptorsFromTableStart = 0;
+
+	skinningRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	skinningRange[1].NumDescriptors = 1;
+	skinningRange[1].BaseShaderRegister = 0;
+	skinningRange[1].RegisterSpace = 0;
+	skinningRange[1].OffsetInDescriptorsFromTableStart = 1;
+
+	skinningRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	skinningRange[2].NumDescriptors = 1;
+	skinningRange[2].BaseShaderRegister = 1;
+	skinningRange[2].RegisterSpace = 0;
+	skinningRange[2].OffsetInDescriptorsFromTableStart = 2;
+
+	skinningRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	skinningRange[3].NumDescriptors = 1;
+	skinningRange[3].BaseShaderRegister = 2;
+	skinningRange[3].RegisterSpace = 0;
+	skinningRange[3].OffsetInDescriptorsFromTableStart = 3;
+
+	skinningRange[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	skinningRange[4].NumDescriptors = 1;
+	skinningRange[4].BaseShaderRegister = 3;
+	skinningRange[4].RegisterSpace = 0;
+	skinningRange[4].OffsetInDescriptorsFromTableStart = 4;
+
+	skinningRange[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	skinningRange[5].NumDescriptors = 1;
+	skinningRange[5].BaseShaderRegister = 4;
+	skinningRange[5].RegisterSpace = 0;
+	skinningRange[5].OffsetInDescriptorsFromTableStart = 5;
+
+	D3D12_DESCRIPTOR_RANGE uavRange{};
+	uavRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+	uavRange.NumDescriptors = 1;
+	uavRange.BaseShaderRegister = 0;
+	uavRange.RegisterSpace = 0;
+	uavRange.OffsetInDescriptorsFromTableStart = 0;
+
+	// 0 - ani info, 1 - InputVertex, 2 - OutputVertex
+	D3D12_ROOT_PARAMETER params[3]{};
+	params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[0].DescriptorTable.NumDescriptorRanges = 6;
+	params[0].DescriptorTable.pDescriptorRanges = skinningRange;
+
+	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	params[1].Descriptor.RegisterSpace = 0;
+	params[1].Descriptor.ShaderRegister = 5;
+
+	params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[2].DescriptorTable.NumDescriptorRanges = 1;
+	params[2].DescriptorTable.pDescriptorRanges = &uavRange;
+
+	D3D12_ROOT_SIGNATURE_DESC desc{};
+	desc.NumParameters = 3;
+	desc.pParameters = params;
+	desc.NumStaticSamplers = 0;
+	desc.pStaticSamplers = nullptr;
+	
+	ID3DBlob* pBlob{};
+	D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pComputeRootSignature.GetAddressOf()));
+	pBlob->Release();
+}
+
+void CRaytracingScene::CreateComputeShader()
+{
+	ID3DBlob* pBlob{};
+	D3DCompileFromFile(L"AnimationComputeShader.hlsl", nullptr, nullptr, "main", "cs_5_1", 0, 0, &pBlob, nullptr);
+
+	//D3D12_CACHED_PIPELINE_STATE tempState{};
+	D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
+	desc.pRootSignature = m_pComputeRootSignature.Get();
+	desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	desc.CS.BytecodeLength = pBlob->GetBufferSize();
+	desc.CS.pShaderBytecode = pBlob->GetBufferPointer();
+
+	g_DxResource.device->CreateComputePipelineState(&desc, IID_PPV_ARGS(m_pAnimationComputeShader.GetAddressOf()));
+
+	pBlob->Release();
 }

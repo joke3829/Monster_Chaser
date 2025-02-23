@@ -32,10 +32,16 @@ public:
 	void Render();
 protected:
 	void CreateRootSignature();
+	void CreateComputeRootSignature();
+	void CreateComputeShader();
 
 	ComPtr<ID3D12RootSignature> m_pLocalRootSignature{};
 	std::unique_ptr<CRayTracingPipeline> m_pRaytracingPipeline{};
 	std::unique_ptr<CResourceManager> m_pResourceManager{};
 	std::unique_ptr<CShaderBindingTableManager> m_pShaderBindingTable{};
 	std::unique_ptr<CAccelerationStructureManager> m_pAccelerationStructureManager{};
+
+	// 스키닝 애니메이션 용 리소스
+	ComPtr<ID3D12RootSignature> m_pComputeRootSignature{};
+	ComPtr<ID3D12PipelineState> m_pAnimationComputeShader{};
 };
