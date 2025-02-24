@@ -668,3 +668,142 @@ std::vector<std::unique_ptr<CSkinningInfo>>& CSkinningObject::getSkinningInfo()
 {
 	return m_vSkinningInfo;
 }
+
+
+// ==================================================================================
+
+void CRayTracingSkinningObject::PrepareObject()
+{
+	MakeBLAS();
+	ReadyOutputVertexBuffer();
+}
+
+void CRayTracingSkinningObject::UpdateObject(float fElapsedTime)
+{
+	// 컴퓨트를 이용해 정점 버퍼 구하고 
+}
+
+void CRayTracingSkinningObject::MakeBLAS()
+{
+	for (std::shared_ptr<Mesh>& mesh : m_vMeshes) {
+		ComPtr<ID3D12Resource> blas{};
+		if (mesh->getHasVertex()) {
+			InitBLAS(blas, mesh);
+		}
+		m_vBLAS.push_back(blas);
+	}
+	if (m_nScratchSize != 0) {
+		auto desc = BASIC_BUFFER_DESC;
+		desc.Width = m_nScratchSize;
+		desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+		g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_pScratchBuffer.GetAddressOf()));
+	}
+}
+
+void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::shared_ptr<Mesh>& mesh)
+{
+	std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> GeometryDesc{};
+	if (mesh->getHasSubmesh()) {
+		int nSubMesh = mesh->getSubMeshCount();
+		for (int i = 0; i < nSubMesh; ++i) {
+			D3D12_RAYTRACING_GEOMETRY_DESC desc{};
+			desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// 임시
+			desc.Triangles.Transform3x4 = 0;
+			desc.Triangles.VertexBuffer = {
+				.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
+				.StrideInBytes = sizeof(float) * 3
+			};
+			desc.Triangles.VertexCount = mesh->getVertexCount();
+			desc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+			desc.Triangles.IndexBuffer = mesh->getIndexBuffer(i)->GetGPUVirtualAddress();
+			desc.Triangles.IndexCount = mesh->getIndexCount(i);
+			desc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
+
+			GeometryDesc.push_back(desc);
+		}
+	}
+	else {
+		D3D12_RAYTRACING_GEOMETRY_DESC desc{};
+		desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+		desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// 임시
+		desc.Triangles.Transform3x4 = 0;
+		desc.Triangles.VertexBuffer = {
+			.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
+			.StrideInBytes = sizeof(float) * 3
+		};
+		desc.Triangles.VertexCount = mesh->getVertexCount();
+		desc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+		desc.Triangles.IndexBuffer = 0;
+		desc.Triangles.IndexCount = 0;
+		desc.Triangles.IndexFormat = DXGI_FORMAT_UNKNOWN;
+
+		GeometryDesc.push_back(desc);
+	}
+
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
+	inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+	inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+	inputs.NumDescs = GeometryDesc.size();
+	inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+	inputs.pGeometryDescs = GeometryDesc.data();
+
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO preBuildInfo{};
+	g_DxResource.device->GetRaytracingAccelerationStructurePrebuildInfo(&inputs, &preBuildInfo);
+	m_nScratchSize = (preBuildInfo.ScratchDataSizeInBytes > m_nScratchSize) ? preBuildInfo.ScratchDataSizeInBytes : m_nScratchSize;
+
+	// blas
+	auto bDesc = BASIC_BUFFER_DESC;
+	bDesc.Width = preBuildInfo.ResultDataMaxSizeInBytes;
+	bDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &bDesc, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, nullptr, IID_PPV_ARGS(resource.GetAddressOf()));
+
+	ComPtr<ID3D12Resource> ScratchBuffer{};
+	bDesc.Width = preBuildInfo.ScratchDataSizeInBytes;
+	g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &bDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(ScratchBuffer.GetAddressOf()));
+
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC ASDesc{};
+	ASDesc.Inputs = inputs;
+	ASDesc.DestAccelerationStructureData = resource->GetGPUVirtualAddress();
+	ASDesc.ScratchAccelerationStructureData = ScratchBuffer->GetGPUVirtualAddress();
+
+	g_DxResource.cmdAlloc->Reset();
+	g_DxResource.cmdList->Reset(g_DxResource.cmdAlloc, nullptr);
+	g_DxResource.cmdList->BuildRaytracingAccelerationStructure(&ASDesc, 0, nullptr);
+	D3D12_RESOURCE_BARRIER d3dbr{};
+	d3dbr.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+	d3dbr.UAV.pResource = resource.Get();
+	g_DxResource.cmdList->ResourceBarrier(1, &d3dbr);
+	g_DxResource.cmdList->Close();
+	g_DxResource.cmdQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(&g_DxResource.cmdList));
+	Flush();
+}
+
+void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
+{
+	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo) {
+		ComPtr<ID3D12Resource> resource{};
+		auto desc = BASIC_BUFFER_DESC;
+		desc.Width = m_vMeshes[info->getRefMeshIndex()]->getVertexCount() * sizeof(XMFLOAT3);
+		desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+		g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(resource.GetAddressOf()));
+
+
+		D3D12_DESCRIPTOR_HEAP_DESC hDesc{};
+		hDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		hDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		hDesc.NumDescriptors = 1;
+
+		ComPtr<ID3D12DescriptorHeap> descriptorHeap{};
+		g_DxResource.device->CreateDescriptorHeap(&hDesc, IID_PPV_ARGS(descriptorHeap.GetAddressOf()));
+
+		D3D12_UNORDERED_ACCESS_VIEW_DESC vDesc{};
+		vDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+		vDesc.Buffer.NumElements = m_vMeshes[info->getRefMeshIndex()]->getVertexCount();
+		vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+
+		g_DxResource.device->CreateUnorderedAccessView(resource.Get(), nullptr, &vDesc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+		m_vOutputVertexBuffer.push_back(resource);
+		m_vUAV.push_back(descriptorHeap);
+	}
+}

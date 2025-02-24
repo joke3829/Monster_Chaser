@@ -6,8 +6,8 @@ void CRaytracingScene::SetUp()
 	CreateRootSignature();
 
 	// animation Pipeline Ready
-	CreateComputeRootSignature();
-	CreateComputeShader();
+	//CreateComputeRootSignature();
+	//CreateComputeShader();
 
 	// Create And Set up PipelineState
 	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();

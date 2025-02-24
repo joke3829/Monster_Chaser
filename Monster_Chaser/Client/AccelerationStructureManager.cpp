@@ -216,7 +216,7 @@ void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRA
 	makeBuffer(asResource, preBuildInfo.ResultDataMaxSizeInBytes, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
 
 	ComPtr<ID3D12Resource> ScratchBuffer{};
-	makeBuffer(ScratchBuffer, preBuildInfo.ScratchDataSizeInBytes, D3D12_RESOURCE_STATE_GENERIC_READ);
+	makeBuffer(ScratchBuffer, preBuildInfo.ScratchDataSizeInBytes, D3D12_RESOURCE_STATE_COMMON);
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC ASDesc{};
 	ASDesc.Inputs = inputs;

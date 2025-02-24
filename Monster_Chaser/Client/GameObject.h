@@ -149,6 +149,8 @@ public:
 
 	void MakeAnimationMatrixIndex(std::vector<std::string>& vFrameNames);
 	void MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixBuffer, UINT nElements);
+
+	UINT getRefMeshIndex() const { return m_nRefMesh; }
 private:
 	UINT m_nBonesPerVertex{};	// 정점 당 사용 뼈 개수
 	UINT m_nBones{};			// 뼈 개수
@@ -177,6 +179,9 @@ public:
 	void AddObjectFromFile(std::ifstream& inFile, int nParentIndex = -1);
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);
 
+	virtual void PrepareObject() {};
+	virtual void UpdateObject(float fElapsedTime) {};
+
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
 protected:
 	std::string m_strObjectName{};
@@ -192,5 +197,19 @@ protected:
 // 레이트레이싱 용 스키닝 오브젝트, BLAS를 가지고 있음
 class CRayTracingSkinningObject : public CSkinningObject {
 public:
+	void PrepareObject();
+	void UpdateObject(float fElapsedTime);
 protected:
+	// ===================================================
+	void MakeBLAS();
+	void InitBLAS(ComPtr<ID3D12Resource>& resource, std::shared_ptr<Mesh>& mesh);
+
+	void ReadyOutputVertexBuffer();
+	// ===================================================
+	std::vector<ComPtr<ID3D12Resource>> m_vBLAS{};
+	ComPtr<ID3D12Resource> m_pScratchBuffer{};
+	UINT64 m_nScratchSize{};
+
+	std::vector<ComPtr<ID3D12Resource>> m_vOutputVertexBuffer{};
+	std::vector<ComPtr<ID3D12DescriptorHeap>> m_vUAV{};
 };
