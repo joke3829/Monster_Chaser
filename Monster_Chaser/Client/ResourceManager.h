@@ -15,22 +15,13 @@ public:
 	void InitializeGameObjectCBuffer();
 
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
-	void testing()
-	{
-		m_vGameObjectList[3]->testLocalMatrix(2);
-		m_vGameObjectList[4]->testLocalMatrix(4);
-
-		m_vGameObjectList[7]->testLocalMatrix(2);
-		m_vGameObjectList[10]->testLocalMatrix(2);
-		m_vGameObjectList[13]->testLocalMatrix(2);
-		m_vGameObjectList[16]->testLocalMatrix(2);
-		m_vGameObjectList[19]->testLocalMatrix(2);
-	}
 
 	// getter
 	std::vector<std::unique_ptr<CGameObject>>& getGameObjectList();
 	std::vector<std::unique_ptr<Mesh>>& getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& getTextureList();
+
+	std::vector<std::unique_ptr<CSkinningObject>>& getSkinningObjectList() { return m_vSkinningObject; }
 private:
 	std::string FilePathFront{};
 

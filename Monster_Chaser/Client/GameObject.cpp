@@ -37,7 +37,8 @@ bool CGameObject::InitializeObjectFromFile(std::ifstream& inFile)
 	return true;
 }
 
-void CGameObject::InitializeConstanctBuffer(std::vector<std::unique_ptr<Mesh>>& meshes)
+/*template<class T>
+void CGameObject::InitializeConstanctBuffer(std::vector<T>& meshes)
 {
 	auto makeBuffer = [&](UINT argSize) {
 		ComPtr<ID3D12Resource> resource{};
@@ -110,6 +111,7 @@ void CGameObject::InitializeConstanctBuffer(std::vector<std::unique_ptr<Mesh>>& 
 	memcpy(pHas, &tempHas, sizeof(HasMesh));
 	m_pd3dMeshCBuffer->Unmap(0, nullptr);
 }
+*/
 
 void CGameObject::UpdateWorldMatrix()
 {
@@ -662,6 +664,12 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 	for (int i = 0; i < vMaterials.size(); ++i) {
 		m_vObjects[nCurrentIndex]->getMaterials().push_back(vMaterials[i]);
 	}
+}
+
+void CSkinningObject::InitializeGameObjectCBuffer()
+{
+	for (std::unique_ptr<CGameObject>& object : m_vObjects)
+		object->InitializeConstanctBuffer(m_vMeshes);
 }
 
 std::vector<std::unique_ptr<CSkinningInfo>>& CSkinningObject::getSkinningInfo()

@@ -6,8 +6,8 @@ void CRaytracingScene::SetUp()
 	CreateRootSignature();
 
 	// animation Pipeline Ready
-	//CreateComputeRootSignature();
-	//CreateComputeShader();
+	CreateComputeRootSignature();
+	CreateComputeShader();
 
 	// Create And Set up PipelineState
 	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
@@ -22,15 +22,22 @@ void CRaytracingScene::SetUp()
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
-	// 여기에 파일 넣기 ========================================
+	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
 	// =========================================================
-	m_pResourceManager->InitializeGameObjectCBuffer();
+	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
+
+
 
 	// ShaderBindingTable
 	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
 	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
 	m_pShaderBindingTable->CreateSBT();
+
+	// 여기서 필요한 객체 복사 ======================================================
+
+	// ==============================================================================
 
 	// AccelerationStructure
 	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
