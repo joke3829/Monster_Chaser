@@ -258,6 +258,10 @@ public:
 
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
 	std::vector<std::unique_ptr<CGameObject>>& getObjects() { return m_vObjects; }
+	std::vector<std::shared_ptr<Mesh>>& getMeshes() { return m_vMeshes; }
+	std::vector<std::shared_ptr<CTexture>>& getTextures() { return m_vTextures; }
+
+	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;
 protected:
 	std::string m_strObjectName{};
 
@@ -266,6 +270,7 @@ protected:
 	std::vector<std::shared_ptr<Mesh>> m_vMeshes{};
 	std::vector<std::shared_ptr<CTexture>> m_vTextures{};
 	std::vector<std::unique_ptr<CSkinningInfo>> m_vSkinningInfo{};
+	std::vector<ComPtr<ID3D12Resource>> text;
 };
 
 // Rasterizer와 RayTracing에서의 Skinning Animation은 방법이 다르다
@@ -274,6 +279,8 @@ class CRayTracingSkinningObject : public CSkinningObject {
 public:
 	void PrepareObject();
 	void UpdateObject(float fElapsedTime);
+
+	std::vector<ComPtr<ID3D12Resource>>& getBLAS() { return m_vBLAS; }
 protected:
 	// ===================================================
 	void MakeBLAS();

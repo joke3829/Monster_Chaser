@@ -14,6 +14,7 @@ public:
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);
 	void InitializeGameObjectCBuffer();
 
+	void PrepareObject();
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
 
 	// getter

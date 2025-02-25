@@ -39,6 +39,8 @@ void CRaytracingScene::SetUp()
 
 	// ==============================================================================
 
+	m_pResourceManager->PrepareObject();
+
 	// AccelerationStructure
 	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
 	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);

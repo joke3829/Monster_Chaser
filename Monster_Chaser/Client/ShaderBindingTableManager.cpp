@@ -157,12 +157,13 @@ void CShaderBindingTableManager::CreateSBT()
 		}
 		// Skinning
 		for (std::unique_ptr<CSkinningObject>& SkinningObject : vSkinnings) {
+			std::vector<std::shared_ptr<Mesh>>& sMeshes = SkinningObject->getMeshes();
 			for (std::unique_ptr<CGameObject>& object : SkinningObject->getObjects()) {
 				int n = object->getMeshIndex();
 				if (n != -1) {
-					if (vMeshes[n]->getHasVertex()) {
-						if (vMeshes[n]->getHasSubmesh())
-							nVaildMeshes += vMeshes[n]->getSubMeshCount();
+					if (sMeshes[n]->getHasVertex()) {
+						if (sMeshes[n]->getHasSubmesh())
+							nVaildMeshes += sMeshes[n]->getSubMeshCount();
 						else
 							nVaildMeshes += 1;
 					}
@@ -362,87 +363,89 @@ void CShaderBindingTableManager::CreateSBT()
 			}
 		}
 		for (std::unique_ptr<CSkinningObject>& SkinningObject : vSkinnings) {
+			std::vector<std::shared_ptr<Mesh>>& sMeshes = SkinningObject->getMeshes();
+			std::vector<std::shared_ptr<CTexture>>& vSTexture = SkinningObject->getTextures();
 			for (std::unique_ptr<CGameObject>& object : SkinningObject->getObjects()) {
 				int n = object->getMeshIndex();
 				if (n != -1) {
 					std::vector<Material>& vMaterials = object->getMaterials();
-					if (vMeshes[n]->getHasVertex()) {
+					if (sMeshes[n]->getHasVertex()) {
 						object->SetHitGroupIndex(nRecords);	// object의 hitgroup index 설정
-						if (vMeshes[n]->getHasSubmesh()) {	// 서브 메시를 가질 때(인덱스를 가질 때)
-							for (int i = 0; i < vMeshes[n]->getSubMeshCount(); ++i) {	// i == object의 mesh 인덱스
+						if (sMeshes[n]->getHasSubmesh()) {	// 서브 메시를 가질 때(인덱스를 가질 때)
+							for (int i = 0; i < sMeshes[n]->getSubMeshCount(); ++i) {	// i == object의 mesh 인덱스
 								for (int j = 0; j < HitGroupIDs.size(); ++j) {			// j == IDs 인덱스
 									LocalRootArg args{};
 									{
 										args.CBufferGPUVirtualAddress = object->getCbuffer(i)->GetGPUVirtualAddress();
 										args.MeshCBufferGPUVirtualAddress = object->getMeshCBuffer()->GetGPUVirtualAddress();
 										// 정점
-										args.VertexBuffer = vMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
+										args.VertexBuffer = sMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
 										// 컬러
-										if (vMeshes[n]->getHasColor())
-											args.ColorsBuffer = vMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
+										if (sMeshes[n]->getHasColor())
+											args.ColorsBuffer = sMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
 										else
 											args.ColorsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 										// Tex0
-										if (vMeshes[n]->getHasTex0())
-											args.TexCoord0Buffer = vMeshes[n]->getTexCoord0Buffer()->GetGPUVirtualAddress();
+										if (sMeshes[n]->getHasTex0())
+											args.TexCoord0Buffer = sMeshes[n]->getTexCoord0Buffer()->GetGPUVirtualAddress();
 										else
 											args.TexCoord0Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 										// Tex1
-										if (vMeshes[n]->getHasTex1())
-											args.TexCoord1Buffer = vMeshes[n]->getTexCoord1Buffer()->GetGPUVirtualAddress();
+										if (sMeshes[n]->getHasTex1())
+											args.TexCoord1Buffer = sMeshes[n]->getTexCoord1Buffer()->GetGPUVirtualAddress();
 										else
 											args.TexCoord1Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 										// Normal
-										if (vMeshes[n]->getHasNormal())
-											args.NormalsBuffer = vMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
+										if (sMeshes[n]->getHasNormal())
+											args.NormalsBuffer = sMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
 										else
 											args.NormalsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 										// Tangent
-										if (vMeshes[n]->getHasTangent())
-											args.TangentBuffer = vMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
+										if (sMeshes[n]->getHasTangent())
+											args.TangentBuffer = sMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
 										else
 											args.TangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 										// BiTangent
-										if (vMeshes[n]->getHasBiTangent())
-											args.BiTangentBuffer = vMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
+										if (sMeshes[n]->getHasBiTangent())
+											args.BiTangentBuffer = sMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
 										else
 											args.BiTangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 										// Index
-										args.IndexBuffer = vMeshes[n]->getIndexBuffer(i)->GetGPUVirtualAddress();
+										args.IndexBuffer = sMeshes[n]->getIndexBuffer(i)->GetGPUVirtualAddress();
 
 										// AlbedoMap
 										if (vMaterials[i].m_bHasAlbedoMap)
-											args.AlbedoMap = vTextures[vMaterials[i].m_nAlbedoMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+											args.AlbedoMap = vSTexture[vMaterials[i].m_nAlbedoMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 										else
 											args.AlbedoMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 										// SpecularMap
 										if (vMaterials[i].m_bHasSpecularMap)
-											args.SpecularMap = vTextures[vMaterials[i].m_nSpecularMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+											args.SpecularMap = vSTexture[vMaterials[i].m_nSpecularMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 										else
 											args.SpecularMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 										// NormalMap
 										if (vMaterials[i].m_bHasNormalMap)
-											args.NormalMap = vTextures[vMaterials[i].m_nNormalMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+											args.NormalMap = vSTexture[vMaterials[i].m_nNormalMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 										else
 											args.NormalMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 										// MetallicMap
 										if (vMaterials[i].m_bHasMetallicMap)
-											args.MetallicMap = vTextures[vMaterials[i].m_nMetallicMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+											args.MetallicMap = vSTexture[vMaterials[i].m_nMetallicMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 										else
 											args.MetallicMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 										// EmissionMap
 										if (vMaterials[i].m_bHasEmissionMap)
-											args.EmissionMap = vTextures[vMaterials[i].m_nEmissionMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+											args.EmissionMap = vSTexture[vMaterials[i].m_nEmissionMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 										else
 											args.EmissionMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 										// DetailAlbedoMap
 										if (vMaterials[i].m_bHasDetailAlbedoMap)
-											args.DetailAlbedoMap = vTextures[vMaterials[i].m_nDetailAlbedoMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+											args.DetailAlbedoMap = vSTexture[vMaterials[i].m_nDetailAlbedoMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 										else
 											args.DetailAlbedoMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 										// DetailNormalMap
 										if (vMaterials[i].m_bHasDetailNormalMap)
-											args.DetailNormalMap = vTextures[vMaterials[i].m_nDetailNormalMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+											args.DetailNormalMap = vSTexture[vMaterials[i].m_nDetailNormalMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 										else
 											args.DetailNormalMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 									}
@@ -463,35 +466,35 @@ void CShaderBindingTableManager::CreateSBT()
 									args.CBufferGPUVirtualAddress = object->getCbuffer(0)->GetGPUVirtualAddress();
 									args.MeshCBufferGPUVirtualAddress = object->getMeshCBuffer()->GetGPUVirtualAddress();
 									// 정점
-									args.VertexBuffer = vMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
+									args.VertexBuffer = sMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
 									// 컬러
-									if (vMeshes[n]->getHasColor())
-										args.ColorsBuffer = vMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
+									if (sMeshes[n]->getHasColor())
+										args.ColorsBuffer = sMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
 									else
 										args.ColorsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 									// Tex0
-									if (vMeshes[n]->getHasTex0())
-										args.TexCoord0Buffer = vMeshes[n]->getTexCoord0Buffer()->GetGPUVirtualAddress();
+									if (sMeshes[n]->getHasTex0())
+										args.TexCoord0Buffer = sMeshes[n]->getTexCoord0Buffer()->GetGPUVirtualAddress();
 									else
 										args.TexCoord0Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 									// Tex1
-									if (vMeshes[n]->getHasTex1())
-										args.TexCoord1Buffer = vMeshes[n]->getTexCoord1Buffer()->GetGPUVirtualAddress();
+									if (sMeshes[n]->getHasTex1())
+										args.TexCoord1Buffer = sMeshes[n]->getTexCoord1Buffer()->GetGPUVirtualAddress();
 									else
 										args.TexCoord1Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 									// Normal
-									if (vMeshes[n]->getHasNormal())
-										args.NormalsBuffer = vMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
+									if (sMeshes[n]->getHasNormal())
+										args.NormalsBuffer = sMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
 									else
 										args.NormalsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 									// Tangent
-									if (vMeshes[n]->getHasTangent())
-										args.TangentBuffer = vMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
+									if (sMeshes[n]->getHasTangent())
+										args.TangentBuffer = sMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
 									else
 										args.TangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 									// BiTangent
-									if (vMeshes[n]->getHasBiTangent())
-										args.BiTangentBuffer = vMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
+									if (sMeshes[n]->getHasBiTangent())
+										args.BiTangentBuffer = sMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
 									else
 										args.BiTangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 									// Index
@@ -499,37 +502,37 @@ void CShaderBindingTableManager::CreateSBT()
 
 									// AlbedoMap
 									if (vMaterials[0].m_bHasAlbedoMap)
-										args.AlbedoMap = vTextures[vMaterials[0].m_nAlbedoMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+										args.AlbedoMap = vSTexture[vMaterials[0].m_nAlbedoMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 									else
 										args.AlbedoMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 									// SpecularMap
 									if (vMaterials[0].m_bHasSpecularMap)
-										args.SpecularMap = vTextures[vMaterials[0].m_nSpecularMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+										args.SpecularMap = vSTexture[vMaterials[0].m_nSpecularMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 									else
 										args.SpecularMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 									// NormalMap
 									if (vMaterials[0].m_bHasNormalMap)
-										args.NormalMap = vTextures[vMaterials[0].m_nNormalMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+										args.NormalMap = vSTexture[vMaterials[0].m_nNormalMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 									else
 										args.NormalMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 									// MetallicMap
 									if (vMaterials[0].m_bHasMetallicMap)
-										args.MetallicMap = vTextures[vMaterials[0].m_nMetallicMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+										args.MetallicMap = vSTexture[vMaterials[0].m_nMetallicMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 									else
 										args.MetallicMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 									// EmissionMap
 									if (vMaterials[0].m_bHasEmissionMap)
-										args.EmissionMap = vTextures[vMaterials[0].m_nEmissionMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+										args.EmissionMap = vSTexture[vMaterials[0].m_nEmissionMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 									else
 										args.EmissionMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 									// DetailAlbedoMap
 									if (vMaterials[0].m_bHasDetailAlbedoMap)
-										args.DetailAlbedoMap = vTextures[vMaterials[0].m_nDetailAlbedoMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+										args.DetailAlbedoMap = vSTexture[vMaterials[0].m_nDetailAlbedoMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 									else
 										args.DetailAlbedoMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 									// DetailNormalMap
 									if (vMaterials[0].m_bHasDetailNormalMap)
-										args.DetailNormalMap = vTextures[vMaterials[0].m_nDetailNormalMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+										args.DetailNormalMap = vSTexture[vMaterials[0].m_nDetailNormalMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
 									else
 										args.DetailNormalMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
 								}

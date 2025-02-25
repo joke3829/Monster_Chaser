@@ -40,7 +40,7 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 		strLabel.assign(nStrLength, ' ');
 		inFile.read(strLabel.data(), nStrLength);
 		};
-	m_vSkinningObject.push_back(std::make_unique<CSkinningObject>());
+	m_vSkinningObject.push_back(std::make_unique<CRayTracingSkinningObject>());
 	m_vSkinningObject[m_vSkinningObject.size() - 1]->AddResourceFromFile(inFile, textureFilePathFront);
 
 	if (!inFile.eof()) {
@@ -344,6 +344,12 @@ void CResourceManager::InitializeGameObjectCBuffer()
 		m_vSkinningObject[i]->InitializeGameObjectCBuffer();
 }
 
+void CResourceManager::PrepareObject()
+{
+	for (std::unique_ptr<CSkinningObject>& object : m_vSkinningObject)
+		object->PrepareObject();
+}
+
 void CResourceManager::UpdateWorldMatrix()
 {
 	for (std::unique_ptr<CGameObject>& object : m_vGameObjectList) {
@@ -357,6 +363,19 @@ void CResourceManager::UpdateWorldMatrix()
 			object->UpdateWorldMatrix();
 		}
 		//object->SetWorlaMatrix(object->getLocalMatrix());
+	}
+	for (std::unique_ptr<CSkinningObject>& Skinning : m_vSkinningObject) {
+		std::vector<std::unique_ptr<CGameObject>>& sObjects = Skinning->getObjects();
+		for (std::unique_ptr<CGameObject>& object : sObjects) {
+			if (object->getParentIndex() != -1) {
+				XMFLOAT4X4 wmtx = sObjects[object->getParentIndex()]->getWorldMatrix();
+				XMFLOAT4X4 lmtx = object->getLocalMatrix();
+				XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
+				object->SetWorlaMatrix(lmtx);
+			}
+			else
+				object->UpdateWorldMatrix();
+		}
 	}
 }
 
