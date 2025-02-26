@@ -301,12 +301,14 @@ void CGameFramework::Render()
 
 		ProcessInput(m_Timer.GetTimeElapsed());
 		// ·»´õ¸µ ÀÛ¾÷(Set & Draw) ===================
+
+		m_pScene->UpdateObject(m_Timer.GetTimeElapsed());
+
 		m_pScene->PrepareRender();
 
 		m_pd3dCommandList->SetDescriptorHeaps(1, m_pd3dOutputBufferView.GetAddressOf());
 		m_pd3dCommandList->SetComputeRootDescriptorTable(0, m_pd3dOutputBufferView->GetGPUDescriptorHandleForHeapStart());
 
-		m_pScene->UpdateObject(m_Timer.GetTimeElapsed());
 		m_pScene->Render();
 		// ===========================================
 

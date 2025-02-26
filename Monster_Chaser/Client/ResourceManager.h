@@ -15,6 +15,9 @@ public:
 	void InitializeGameObjectCBuffer();
 
 	void PrepareObject();
+
+	void UpdateSkinningMesh(float fElapsedTime);
+	void ReBuildBLAS();
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
 
 	// getter

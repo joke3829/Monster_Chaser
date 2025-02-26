@@ -163,12 +163,6 @@ public:
 
 	void UpdateWorldMatrix();
 
-	void testLocalMatrix(int i)
-	{
-		m_xmf4x4LocalMatrix._41 += (10 * i);
-		m_xmf4x4LocalMatrix._43 += (10 * i);
-	}
-
 	std::string getFrameName() const;
 	std::vector<Material>& getMaterials();
 	int getMeshIndex() const;
@@ -184,6 +178,7 @@ public:
 	void SetParentIndex(int index);
 	void SetHitGroupIndex(int index);
 	void SetWorlaMatrix(XMFLOAT4X4& mtx);
+	void SetLocalMatrix(XMFLOAT4X4& ltx) { m_xmf4x4LocalMatrix = ltx; }
 
 	void InitializeAxis();
 protected:
@@ -223,6 +218,8 @@ public:
 	void MakeAnimationMatrixIndex(std::vector<std::string>& vFrameNames);
 	void MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixBuffer, UINT nElements);
 
+	void SetShaderVariables();
+
 	UINT getRefMeshIndex() const { return m_nRefMesh; }
 private:
 	UINT m_nBonesPerVertex{};	// 정점 당 사용 뼈 개수
@@ -255,6 +252,7 @@ public:
 	virtual void PrepareObject() {};
 	void InitializeGameObjectCBuffer();
 	virtual void UpdateObject(float fElapsedTime) {};
+	virtual void ReBuildBLAS() {}
 
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
 	std::vector<std::unique_ptr<CGameObject>>& getObjects() { return m_vObjects; }
@@ -279,6 +277,7 @@ class CRayTracingSkinningObject : public CSkinningObject {
 public:
 	void PrepareObject();
 	void UpdateObject(float fElapsedTime);
+	void ReBuildBLAS();
 
 	std::vector<ComPtr<ID3D12Resource>>& getBLAS() { return m_vBLAS; }
 protected:

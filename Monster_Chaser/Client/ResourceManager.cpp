@@ -350,6 +350,21 @@ void CResourceManager::PrepareObject()
 		object->PrepareObject();
 }
 
+void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
+{
+	// 애니메이션이 없는 스키닝 객체면 문제가 생김
+	for (int i = 0; i < m_vAnimationManager.size(); ++i) {
+		m_vAnimationManager[i]->TimeIncrease(fElapsedTime);
+		m_vSkinningObject[i]->UpdateObject(fElapsedTime);
+	}
+}
+
+void CResourceManager::ReBuildBLAS()
+{
+	for (std::unique_ptr<CSkinningObject>& object : m_vSkinningObject)
+		object->ReBuildBLAS();
+}
+
 void CResourceManager::UpdateWorldMatrix()
 {
 	for (std::unique_ptr<CGameObject>& object : m_vGameObjectList) {

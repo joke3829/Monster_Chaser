@@ -7,6 +7,10 @@ extern DXResources g_DxResource;
 class CAnimationSet {
 public:
 	CAnimationSet(std::ifstream& inFile, UINT nBones);
+
+	void UpdateAnimationMatrix(std::vector<XMFLOAT4X4>& vMatrixes, float fElapsedTime);
+
+	float getLength() const { return m_fLength; }
 private:
 	std::string m_AnimationName{};
 	float m_fLength{};
@@ -28,8 +32,14 @@ public:
 
 	// SkinningInfo를 받고 그 SkinningInfo의 행렬 index 만들어 준다.
 	void MakeAnimationMatrixIndex(CSkinningObject* pSkinningObject);
+
+	void TimeIncrease(float fElapsedTime);			// 시간 증가
+	void UpdateAnimation(float fElapsedTime);		// 시간 지정
+	void UpdateAnimationMatrix();
 protected:
 	UINT m_nAnimationSets{};
+	UINT m_nCurrnetSet{};
+	float m_fElapsedTime{};
 	std::vector<std::string> m_vFrameNames{};		// 한번 쓰고 버리나?
 	std::vector<std::shared_ptr<CAnimationSet>> m_vAnimationSets{};
 

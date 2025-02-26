@@ -54,8 +54,11 @@ public:
 	bool getHasTangent() const;
 	bool getHasBiTangent() const;
 	bool getHasSubmesh() const;
+	bool getbSkinning() const { return m_bSkinningMesh; }
 
 	UINT getSubMeshCount() const;
+	
+	void setSkinning(bool bSkinning) { m_bSkinningMesh = bSkinning; }
 protected:
 private:
 	std::string m_MeshName{};							// Mesh의 이름
@@ -95,5 +98,5 @@ private:
 	std::vector<UINT> m_vIndices;						// 각 SubMesh에 대한 Index 개수, 이게 0이면 존재하지 않는다.
 	bool m_bHasSubMeshes = false;
 
-	
+	bool m_bSkinningMesh = false;
 };

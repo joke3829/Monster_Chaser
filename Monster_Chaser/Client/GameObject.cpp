@@ -361,6 +361,14 @@ void CSkinningInfo::MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixB
 	g_DxResource.device->CreateShaderResourceView(pMatrixBuffer.Get(), &vDesc, handle);
 }
 
+void CSkinningInfo::SetShaderVariables()
+{
+	g_DxResource.cmdList->SetDescriptorHeaps(1, m_pd3dDesciptorHeap.GetAddressOf());
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(0, m_pd3dDesciptorHeap->GetGPUDescriptorHandleForHeapStart());
+}
+
+// ============================================================================
+
 void CSkinningObject::AddResourceFromFile(std::ifstream& inFile, std::string strFront)
 {
 	FilePathFront = strFront;
@@ -688,7 +696,79 @@ void CRayTracingSkinningObject::PrepareObject()
 
 void CRayTracingSkinningObject::UpdateObject(float fElapsedTime)
 {
-	// 컴퓨트를 이용해 정점 버퍼 구하고 
+	for (int i = 0; i < m_vSkinningInfo.size(); ++i) {
+		m_vSkinningInfo[i]->SetShaderVariables();
+		UINT ref = m_vSkinningInfo[i]->getRefMeshIndex();
+		g_DxResource.cmdList->SetComputeRootShaderResourceView(1, m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress());
+		g_DxResource.cmdList->SetDescriptorHeaps(1, m_vUAV[ref].GetAddressOf());
+		g_DxResource.cmdList->SetComputeRootDescriptorTable(2, m_vUAV[ref]->GetGPUDescriptorHandleForHeapStart());
+
+		UINT dispatch = m_vMeshes[ref]->getVertexCount() / 32 + 1;
+		g_DxResource.cmdList->Dispatch(dispatch, 1, 1);
+	}
+}
+
+void CRayTracingSkinningObject::ReBuildBLAS()
+{
+	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo) {
+		UINT ref = info->getRefMeshIndex();
+		std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> GeometryDesc{};
+		if (m_vMeshes[ref]->getHasSubmesh()) {
+			int nSubMesh = m_vMeshes[ref]->getSubMeshCount();
+			for (int i = 0; i < nSubMesh; ++i) {
+				D3D12_RAYTRACING_GEOMETRY_DESC desc{};
+				desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+				desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// 임시
+				desc.Triangles.Transform3x4 = 0;
+				desc.Triangles.VertexBuffer = {
+					.StartAddress = m_vOutputVertexBuffer[ref]->GetGPUVirtualAddress(),
+					.StrideInBytes = sizeof(float) * 3
+				};
+				desc.Triangles.VertexCount = m_vMeshes[ref]->getVertexCount();
+				desc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+				desc.Triangles.IndexBuffer = m_vMeshes[ref]->getIndexBuffer(i)->GetGPUVirtualAddress();
+				desc.Triangles.IndexCount = m_vMeshes[ref]->getIndexCount(i);
+				desc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
+
+				GeometryDesc.push_back(desc);
+			}
+		}
+		else {
+			D3D12_RAYTRACING_GEOMETRY_DESC desc{};
+			desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// 임시
+			desc.Triangles.Transform3x4 = 0;
+			desc.Triangles.VertexBuffer = {
+				.StartAddress = m_vOutputVertexBuffer[ref]->GetGPUVirtualAddress(),
+				.StrideInBytes = sizeof(float) * 3
+			};
+			desc.Triangles.VertexCount = m_vMeshes[ref]->getVertexCount();
+			desc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
+			desc.Triangles.IndexBuffer = 0;
+			desc.Triangles.IndexCount = 0;
+			desc.Triangles.IndexFormat = DXGI_FORMAT_UNKNOWN;
+
+			GeometryDesc.push_back(desc);
+		}
+
+		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
+		inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+		inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+		inputs.NumDescs = GeometryDesc.size();
+		inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
+		inputs.pGeometryDescs = GeometryDesc.data();
+
+		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC ASDesc{};
+		ASDesc.Inputs = inputs;
+		ASDesc.DestAccelerationStructureData = m_vBLAS[ref]->GetGPUVirtualAddress();
+		ASDesc.ScratchAccelerationStructureData = m_pScratchBuffer->GetGPUVirtualAddress();
+
+		g_DxResource.cmdList->BuildRaytracingAccelerationStructure(&ASDesc, 0, nullptr);
+		D3D12_RESOURCE_BARRIER d3dbr{};
+		d3dbr.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+		d3dbr.UAV.pResource = m_vBLAS[ref].Get();
+		g_DxResource.cmdList->ResourceBarrier(1, &d3dbr);
+	}
 }
 
 void CRayTracingSkinningObject::MakeBLAS()
@@ -789,28 +869,31 @@ void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::
 
 void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 {
-	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo) {
+	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo)
+		m_vMeshes[info->getRefMeshIndex()]->setSkinning(true);
+	for (std::shared_ptr<Mesh>& mesh : m_vMeshes) {
 		ComPtr<ID3D12Resource> resource{};
-		auto desc = BASIC_BUFFER_DESC;
-		desc.Width = m_vMeshes[info->getRefMeshIndex()]->getVertexCount() * sizeof(XMFLOAT3);
-		desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-		g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(resource.GetAddressOf()));
-
-
-		D3D12_DESCRIPTOR_HEAP_DESC hDesc{};
-		hDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		hDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		hDesc.NumDescriptors = 1;
-
 		ComPtr<ID3D12DescriptorHeap> descriptorHeap{};
-		g_DxResource.device->CreateDescriptorHeap(&hDesc, IID_PPV_ARGS(descriptorHeap.GetAddressOf()));
+		if (mesh->getbSkinning()) {
+			auto desc = BASIC_BUFFER_DESC;
+			desc.Width = mesh->getVertexCount() * sizeof(XMFLOAT3);
+			desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+			g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(resource.GetAddressOf()));
 
-		D3D12_UNORDERED_ACCESS_VIEW_DESC vDesc{};
-		vDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-		vDesc.Buffer.NumElements = m_vMeshes[info->getRefMeshIndex()]->getVertexCount();
-		vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+			D3D12_DESCRIPTOR_HEAP_DESC hDesc{};
+			hDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+			hDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+			hDesc.NumDescriptors = 1;
 
-		g_DxResource.device->CreateUnorderedAccessView(resource.Get(), nullptr, &vDesc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+			g_DxResource.device->CreateDescriptorHeap(&hDesc, IID_PPV_ARGS(descriptorHeap.GetAddressOf()));
+
+			D3D12_UNORDERED_ACCESS_VIEW_DESC vDesc{};
+			vDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+			vDesc.Buffer.NumElements = mesh->getVertexCount();
+			vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+
+			g_DxResource.device->CreateUnorderedAccessView(resource.Get(), nullptr, &vDesc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+		}
 		m_vOutputVertexBuffer.push_back(resource);
 		m_vUAV.push_back(descriptorHeap);
 	}

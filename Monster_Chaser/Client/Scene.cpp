@@ -23,7 +23,7 @@ void CRaytracingScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
 	// =========================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
@@ -51,7 +51,16 @@ void CRaytracingScene::SetUp()
 void CRaytracingScene::UpdateObject(float fElapsedTime)
 {
 	m_pCamera->UpdateViewMatrix();
-	m_pCamera->SetShaderVariable();
+	//m_pCamera->SetShaderVariable();
+
+	// compute shader & rootSignature set
+	g_DxResource.cmdList->SetPipelineState(m_pAnimationComputeShader.Get());
+	g_DxResource.cmdList->SetComputeRootSignature(m_pComputeRootSignature.Get());
+
+	m_pResourceManager->UpdateSkinningMesh(fElapsedTime);
+	Flush();
+	// BLAS 재빌드
+	m_pResourceManager->ReBuildBLAS();
 
 	m_pResourceManager->UpdateWorldMatrix();
 	m_pAccelerationStructureManager->UpdateScene();
@@ -65,6 +74,7 @@ void CRaytracingScene::PrepareRender()
 
 void CRaytracingScene::Render()
 {
+	m_pCamera->SetShaderVariable();
 	m_pAccelerationStructureManager->SetScene();
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
@@ -257,41 +267,43 @@ void CRaytracingScene::CreateRootSignature()
 void CRaytracingScene::CreateComputeRootSignature()
 {
 	D3D12_DESCRIPTOR_RANGE skinningRange[6]{};
-	skinningRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-	skinningRange[0].NumDescriptors = 1;
-	skinningRange[0].BaseShaderRegister = 0;
-	skinningRange[0].RegisterSpace = 0;
-	skinningRange[0].OffsetInDescriptorsFromTableStart = 0;
+	{
+		skinningRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+		skinningRange[0].NumDescriptors = 1;
+		skinningRange[0].BaseShaderRegister = 0;
+		skinningRange[0].RegisterSpace = 0;
+		skinningRange[0].OffsetInDescriptorsFromTableStart = 0;
 
-	skinningRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	skinningRange[1].NumDescriptors = 1;
-	skinningRange[1].BaseShaderRegister = 0;
-	skinningRange[1].RegisterSpace = 0;
-	skinningRange[1].OffsetInDescriptorsFromTableStart = 1;
+		skinningRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		skinningRange[1].NumDescriptors = 1;
+		skinningRange[1].BaseShaderRegister = 0;
+		skinningRange[1].RegisterSpace = 0;
+		skinningRange[1].OffsetInDescriptorsFromTableStart = 1;
 
-	skinningRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	skinningRange[2].NumDescriptors = 1;
-	skinningRange[2].BaseShaderRegister = 1;
-	skinningRange[2].RegisterSpace = 0;
-	skinningRange[2].OffsetInDescriptorsFromTableStart = 2;
+		skinningRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		skinningRange[2].NumDescriptors = 1;
+		skinningRange[2].BaseShaderRegister = 1;
+		skinningRange[2].RegisterSpace = 0;
+		skinningRange[2].OffsetInDescriptorsFromTableStart = 2;
 
-	skinningRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	skinningRange[3].NumDescriptors = 1;
-	skinningRange[3].BaseShaderRegister = 2;
-	skinningRange[3].RegisterSpace = 0;
-	skinningRange[3].OffsetInDescriptorsFromTableStart = 3;
+		skinningRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		skinningRange[3].NumDescriptors = 1;
+		skinningRange[3].BaseShaderRegister = 2;
+		skinningRange[3].RegisterSpace = 0;
+		skinningRange[3].OffsetInDescriptorsFromTableStart = 3;
 
-	skinningRange[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	skinningRange[4].NumDescriptors = 1;
-	skinningRange[4].BaseShaderRegister = 3;
-	skinningRange[4].RegisterSpace = 0;
-	skinningRange[4].OffsetInDescriptorsFromTableStart = 4;
+		skinningRange[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		skinningRange[4].NumDescriptors = 1;
+		skinningRange[4].BaseShaderRegister = 3;
+		skinningRange[4].RegisterSpace = 0;
+		skinningRange[4].OffsetInDescriptorsFromTableStart = 4;
 
-	skinningRange[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	skinningRange[5].NumDescriptors = 1;
-	skinningRange[5].BaseShaderRegister = 4;
-	skinningRange[5].RegisterSpace = 0;
-	skinningRange[5].OffsetInDescriptorsFromTableStart = 5;
+		skinningRange[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		skinningRange[5].NumDescriptors = 1;
+		skinningRange[5].BaseShaderRegister = 4;
+		skinningRange[5].RegisterSpace = 0;
+		skinningRange[5].OffsetInDescriptorsFromTableStart = 5;
+	}
 
 	D3D12_DESCRIPTOR_RANGE uavRange{};
 	uavRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
