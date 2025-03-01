@@ -173,12 +173,16 @@ public:
 
 	XMFLOAT4X4 getWorldMatrix();
 	XMFLOAT4X4 getLocalMatrix();
+	XMFLOAT4X4 getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
 
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
 	void SetHitGroupIndex(int index);
 	void SetWorlaMatrix(XMFLOAT4X4& mtx);
 	void SetLocalMatrix(XMFLOAT4X4& ltx) { m_xmf4x4LocalMatrix = ltx; }
+	void SetLocalMatrixTranspose(XMFLOAT4X4& ltx) { XMStoreFloat4x4(&m_xmf4x4LocalMatrix, XMMatrixTranspose(XMLoadFloat4x4(&ltx))); }
+
+	void SetAnimationMatrix(XMFLOAT4X4& atx) { m_xmf4x4AnimationMatrix = atx; }
 
 	void InitializeAxis();
 protected:
@@ -189,6 +193,7 @@ protected:
 
 	XMFLOAT4X4 m_xmf4x4LocalMatrix{};
 	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
+	XMFLOAT4X4 m_xmf4x4AnimationMatrix{};
 
 	XMFLOAT3 m_xmf3Right{};
 	XMFLOAT3 m_xmf3Up{};
@@ -251,6 +256,7 @@ public:
 
 	virtual void PrepareObject() {};
 	void InitializeGameObjectCBuffer();
+	virtual void UpdateAnimationMatrixes();
 	virtual void UpdateObject(float fElapsedTime) {};
 	virtual void ReBuildBLAS() {}
 
@@ -268,7 +274,6 @@ protected:
 	std::vector<std::shared_ptr<Mesh>> m_vMeshes{};
 	std::vector<std::shared_ptr<CTexture>> m_vTextures{};
 	std::vector<std::unique_ptr<CSkinningInfo>> m_vSkinningInfo{};
-	std::vector<ComPtr<ID3D12Resource>> text;
 };
 
 // Rasterizer와 RayTracing에서의 Skinning Animation은 방법이 다르다

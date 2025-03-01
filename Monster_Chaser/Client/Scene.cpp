@@ -23,12 +23,11 @@ void CRaytracingScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
 	// =========================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
-
-
 
 	// ShaderBindingTable
 	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
@@ -326,6 +325,38 @@ void CRaytracingScene::CreateComputeRootSignature()
 	params[2].DescriptorTable.NumDescriptorRanges = 1;
 	params[2].DescriptorTable.pDescriptorRanges = &uavRange;
 
+	//D3D12_ROOT_PARAMETER params[9]{};
+	//params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	//params[0].Descriptor.ShaderRegister = 0;
+
+	//params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[1].Descriptor.ShaderRegister = 0;
+
+	//params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[2].Descriptor.ShaderRegister = 1;
+
+	//params[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[3].Descriptor.ShaderRegister = 2;
+
+	//params[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[4].Descriptor.ShaderRegister = 3;
+
+	//params[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[5].Descriptor.ShaderRegister = 4;
+
+	//params[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[6].Descriptor.ShaderRegister = 5;
+
+	//params[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	//params[7].DescriptorTable.NumDescriptorRanges = 1;
+	//params[7].DescriptorTable.pDescriptorRanges = &uavRange;
+
+	//// test
+	//params[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[8].Descriptor.ShaderRegister = 6;
+
+
+
 	D3D12_ROOT_SIGNATURE_DESC desc{};
 	desc.NumParameters = 3;
 	desc.pParameters = params;
@@ -341,7 +372,11 @@ void CRaytracingScene::CreateComputeRootSignature()
 void CRaytracingScene::CreateComputeShader()
 {
 	ID3DBlob* pBlob{};
-	D3DCompileFromFile(L"AnimationComputeShader.hlsl", nullptr, nullptr, "main", "cs_5_1", 0, 0, &pBlob, nullptr);
+	ID3DBlob* errorb{};
+	D3DCompileFromFile(L"AnimationComputeShader.hlsl", nullptr, nullptr, "main", "cs_5_1", 0, 0, &pBlob, &errorb);
+	if (errorb)
+		OutputDebugStringA((char*)errorb->GetBufferPointer());
+
 
 	//D3D12_CACHED_PIPELINE_STATE tempState{};
 	D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};

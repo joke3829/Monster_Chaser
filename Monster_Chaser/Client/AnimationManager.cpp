@@ -24,34 +24,43 @@ CAnimationSet::CAnimationSet(std::ifstream& inFile, UINT nBones)
 
 	m_vTransforms.assign(m_nKeyFrame, std::vector<XMFLOAT4X4>(nBones));
 	for (int i = 0; i < m_nKeyFrame; ++i) {
+		std::vector<XMFLOAT4X4>& test = m_vTransforms[i];
 		readLabel();		// <Transforms>:
 		inFile.read((char*)&tempInt, sizeof(UINT));
 		inFile.read((char*)&tempFloat, sizeof(float));
 		m_vKeyTime.push_back(tempFloat);
-		inFile.read((char*)m_vTransforms[i].data(), sizeof(XMFLOAT4X4) * nBones);
+		inFile.read((char*)test.data(), sizeof(XMFLOAT4X4) * nBones);
 	}
 }
 
-void CAnimationSet::UpdateAnimationMatrix(std::vector<XMFLOAT4X4>& vMatrixes, float fElapsedTime)
+void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime)
 {
-	auto p = std::find_if(m_vKeyTime.begin(), m_vKeyTime.end(), [&](float& time) {return time <= fElapsedTime; });
-	if(p == m_vKeyTime.end())
-		memcpy(vMatrixes.data(), m_vTransforms[m_vTransforms.size() - 1].data(), sizeof(XMFLOAT4X4) * m_vKeyTime.size());
-	else {
-		UINT index = std::distance(m_vKeyTime.begin(), p);
-		// t (0 ~ 1)
-		float t = (fElapsedTime - m_vKeyTime[index]) / (m_vKeyTime[index + 1] - m_vKeyTime[index]);
-		// 행렬 보간
-		for (int i = 0; i < m_vTransforms[index].size(); ++i) {
-			XMVECTOR S0, R0, T0, S1, R1, T1;
-			XMMatrixDecompose(&S0, &R0, &T0, XMLoadFloat4x4(&m_vTransforms[index][i]));
-			XMMatrixDecompose(&S1, &R1, &T1, XMLoadFloat4x4(&m_vTransforms[index + 1][i]));
-			XMVECTOR S = XMVectorLerp(S0, S1, t);
-			XMVECTOR T = XMVectorLerp(T0, T1, t);
-			XMVECTOR R = XMQuaternionSlerp(R0, R1, t);
-			XMStoreFloat4x4(&vMatrixes[i], XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
-		}
+	auto p = std::find_if(m_vKeyTime.begin(), m_vKeyTime.end(), [&](float& time) {return time >= fElapsedTime; });
+	if (p == m_vKeyTime.end())
+		p -= 1;
+	else if (p == m_vKeyTime.begin())
+		p += 1;
+	UINT index = std::distance(m_vKeyTime.begin(), p) - 1;
+	// t (0 ~ 1)
+	float t = (fElapsedTime - m_vKeyTime[index]) / (m_vKeyTime[index + 1] - m_vKeyTime[index]);
+	// 행렬 보간
+	for (int i = 0; i < vMatrixes.size(); ++i) {
+		XMFLOAT4X4 xmf{};
+		XMVECTOR S0, R0, T0, S1, R1, T1;
+		XMMatrixDecompose(&S0, &R0, &T0, XMLoadFloat4x4(&m_vTransforms[index][i]));
+		XMMatrixDecompose(&S1, &R1, &T1, XMLoadFloat4x4(&m_vTransforms[index + 1][i]));
+		XMVECTOR S = XMVectorLerp(S0, S1, t);
+		XMVECTOR T = XMVectorLerp(T0, T1, t);
+		XMVECTOR R = XMQuaternionSlerp(R0, R1, t);
+		//XMStoreFloat4x4(&xmf, XMMatrixTranspose(XMMatrixAffineTransformation(S, XMVectorZero(), R, T)));
+		XMStoreFloat4x4(&xmf, XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
+		vMatrixes[i]->SetLocalMatrix(xmf);
 	}
+	//}
+	//memcpy(vMatrixes.data(), m_vTransforms[0].data(), sizeof(XMFLOAT4X4) * vMatrixes.size());
+	/*for (int i = 0; i < m_vTransforms[0].size(); ++i) {
+		XMStoreFloat4x4(&vMatrixes[i], XMMatrixTranspose(XMLoadFloat4x4(&m_vTransforms[0][i])));
+	}*/
 }
 
 // ====================================================================================
@@ -119,7 +128,8 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 	float length = m_vAnimationSets[m_nCurrnetSet]->getLength();
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
-	UpdateAnimationMatrix();
+	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
+	//g_DxResource.cmdList->SetComputeRootShaderResourceView(5, m_pMatrixBuffer->GetGPUVirtualAddress());
 }
 
 void CAnimationManager::UpdateAnimation(float fElapsedTime)
@@ -128,13 +138,12 @@ void CAnimationManager::UpdateAnimation(float fElapsedTime)
 	float length = m_vAnimationSets[m_nCurrnetSet]->getLength();
 	while (m_fElapsedTime > length)
 		m_fElapsedTime - length;
-	UpdateAnimationMatrix();
+	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
 }
 
 void CAnimationManager::UpdateAnimationMatrix()
 {
-	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vMatrixes, m_fElapsedTime);
-	for (int i = 0; i < m_vFrames.size(); ++i)
-		m_vFrames[i]->SetLocalMatrix(m_vMatrixes[i]);
+	for (int i = 0; i < m_vMatrixes.size(); ++i)
+		XMStoreFloat4x4(&m_vMatrixes[i], XMMatrixTranspose(XMLoadFloat4x4(&m_vFrames[i]->getAnimationMatrix())));
 	memcpy(m_pMappedPointer, m_vMatrixes.data(), sizeof(XMFLOAT4X4) * m_vMatrixes.size());
 }

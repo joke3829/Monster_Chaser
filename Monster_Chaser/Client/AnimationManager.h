@@ -8,7 +8,7 @@ class CAnimationSet {
 public:
 	CAnimationSet(std::ifstream& inFile, UINT nBones);
 
-	void UpdateAnimationMatrix(std::vector<XMFLOAT4X4>& vMatrixes, float fElapsedTime);
+	void UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime);
 
 	float getLength() const { return m_fLength; }
 private:

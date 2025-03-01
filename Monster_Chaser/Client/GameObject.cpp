@@ -188,7 +188,7 @@ void CGameObject::SetWorlaMatrix(XMFLOAT4X4& mtx)
 
 void CGameObject::InitializeAxis()
 {
-	/*auto normalizeFloat3 = [](XMFLOAT3& xmf) {
+	auto normalizeFloat3 = [](XMFLOAT3& xmf) {
 		XMStoreFloat3(&xmf, XMVector3Normalize(XMLoadFloat3(&xmf)));
 		};
 	m_xmf3Right = XMFLOAT3(m_xmf4x4LocalMatrix._11, m_xmf4x4LocalMatrix._12, m_xmf4x4LocalMatrix._13);
@@ -197,11 +197,11 @@ void CGameObject::InitializeAxis()
 
 	normalizeFloat3(m_xmf3Right);
 	normalizeFloat3(m_xmf3Up);
-	normalizeFloat3(m_xmf3Look);*/
+	normalizeFloat3(m_xmf3Look);
 
-	m_xmf3Right = XMFLOAT3(1.0, 0.0, 0.0);
+	/*m_xmf3Right = XMFLOAT3(1.0, 0.0, 0.0);
 	m_xmf3Up = XMFLOAT3(0.0, 1.0, 0.0);
-	m_xmf3Look = XMFLOAT3(0.0, 0.0, 1.0);
+	m_xmf3Look = XMFLOAT3(0.0, 0.0, 1.0);*/
 
 }
 
@@ -262,7 +262,8 @@ void CSkinningInfo::MakeAnimationMatrixIndex(std::vector<std::string>& vFrameNam
 {
 	for (std::string& name : m_vBoneNames) {
 		auto p = std::find(vFrameNames.begin(), vFrameNames.end(), name);
-		m_vAnimationMatrixIndex.push_back(std::distance(vFrameNames.begin(), p));
+		UINT n = std::distance(vFrameNames.begin(), p);
+		m_vAnimationMatrixIndex.push_back(n);
 	}
 }
 
@@ -291,6 +292,8 @@ void CSkinningInfo::MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixB
 	desc.Width = sizeof(XMFLOAT4X4) * m_vOffsetMatrix.size();
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pOffsetMatrixBuffer.GetAddressOf()));
 	m_pOffsetMatrixBuffer->Map(0, nullptr, &tempData);
+	for (int i = 0; i < m_vOffsetMatrix.size(); ++i)
+		XMStoreFloat4x4(&m_vOffsetMatrix[i], XMMatrixTranspose(XMLoadFloat4x4(&m_vOffsetMatrix[i])));
 	memcpy(tempData, m_vOffsetMatrix.data(), sizeof(XMFLOAT4X4) * m_vOffsetMatrix.size());
 	m_pOffsetMatrixBuffer->Unmap(0, nullptr);
 
@@ -312,8 +315,9 @@ void CSkinningInfo::MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixB
 	desc.Width = sizeof(UINT) * m_vAnimationMatrixIndex.size();
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pAnimationMatrixIndexBuffer.GetAddressOf()));
 	m_pAnimationMatrixIndexBuffer->Map(0, nullptr, &tempData);
-	memcpy(tempData, m_vBoneWeight.data(), sizeof(UINT) * m_vAnimationMatrixIndex.size());
+	memcpy(tempData, m_vAnimationMatrixIndex.data(), sizeof(UINT) * m_vAnimationMatrixIndex.size());
 	m_pAnimationMatrixIndexBuffer->Unmap(0, nullptr);
+
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = m_pd3dDesciptorHeap->GetCPUDescriptorHandleForHeapStart();
 
@@ -365,6 +369,11 @@ void CSkinningInfo::SetShaderVariables()
 {
 	g_DxResource.cmdList->SetDescriptorHeaps(1, m_pd3dDesciptorHeap.GetAddressOf());
 	g_DxResource.cmdList->SetComputeRootDescriptorTable(0, m_pd3dDesciptorHeap->GetGPUDescriptorHandleForHeapStart());
+	/*g_DxResource.cmdList->SetComputeRootConstantBufferView(0, m_pConstantBuffer->GetGPUVirtualAddress());
+	g_DxResource.cmdList->SetComputeRootShaderResourceView(1, m_pOffsetMatrixBuffer->GetGPUVirtualAddress());
+	g_DxResource.cmdList->SetComputeRootShaderResourceView(2, m_pBoneIndicesBuffer->GetGPUVirtualAddress());
+	g_DxResource.cmdList->SetComputeRootShaderResourceView(3, m_pBoneWeightBuffer->GetGPUVirtualAddress());
+	g_DxResource.cmdList->SetComputeRootShaderResourceView(4, m_pAnimationMatrixIndexBuffer->GetGPUVirtualAddress());*/
 }
 
 // ============================================================================
@@ -678,6 +687,21 @@ void CSkinningObject::InitializeGameObjectCBuffer()
 {
 	for (std::unique_ptr<CGameObject>& object : m_vObjects)
 		object->InitializeConstanctBuffer(m_vMeshes);
+}
+
+void CSkinningObject::UpdateAnimationMatrixes()
+{
+	for (std::unique_ptr<CGameObject>& object : m_vObjects) {
+		int parent = object->getParentIndex();
+		if (parent != -1) {
+			XMFLOAT4X4 patx = m_vObjects[parent]->getAnimationMatrix();
+			XMFLOAT4X4 ltx = object->getLocalMatrix();
+			XMStoreFloat4x4(&ltx, XMLoadFloat4x4(&ltx) * XMLoadFloat4x4(&patx));
+			object->SetAnimationMatrix(ltx);
+		}
+		else
+			object->SetAnimationMatrix(object->getLocalMatrix());
+	}
 }
 
 std::vector<std::unique_ptr<CSkinningInfo>>& CSkinningObject::getSkinningInfo()

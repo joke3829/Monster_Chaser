@@ -103,7 +103,8 @@ void RayGenShader()
     
     Payload payload;
     
-    TraceRay(g_Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, 0xFF, 0, 1, 0, ray, payload);
+    // RAY_FLAG_CULL_BACK_FACING_TRIANGLES
+    TraceRay(g_Scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
     
     uav[DispatchRaysIndex().xy] = float4(payload.RayColor, 1.0f);
 }
