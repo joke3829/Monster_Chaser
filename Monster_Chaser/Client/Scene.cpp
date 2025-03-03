@@ -24,8 +24,9 @@ void CRaytracingScene::SetUp()
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	// =========================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 
@@ -34,8 +35,9 @@ void CRaytracingScene::SetUp()
 	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
 	m_pShaderBindingTable->CreateSBT();
 
-	// 여기서 필요한 객체 복사 ======================================================
-
+	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
+	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
+	skinned[0]->setPreTransform(0.1, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
@@ -63,6 +65,30 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 	m_pAccelerationStructureManager->UpdateScene();
+}
+
+void CRaytracingScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+		switch (wParam) {
+		case '1':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '2':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(1);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '3':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		break;
+	}
 }
 
 void CRaytracingScene::PrepareRender()

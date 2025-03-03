@@ -213,6 +213,9 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 				m_bRaster = !m_bRaster;
 			}
 			break;
+		default:
+			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
+			break;
 		}
 		break;
 	case WM_KEYUP:
@@ -251,7 +254,11 @@ void CGameFramework::ProcessInput(float fElapsedTime)
 	if (keyBuffer['W'] & 0x80)
 		m_pCamera->Move(0, fElapsedTime);
 	if (keyBuffer['S'] & 0x80)
+		m_pCamera->Move(3, fElapsedTime);
+	if (keyBuffer[VK_SPACE] & 0x80)
 		m_pCamera->Move(1, fElapsedTime);
+	if (keyBuffer[VK_CONTROL] & 0x80)
+		m_pCamera->Move(2, fElapsedTime);
 }
 
 void CGameFramework::Render()

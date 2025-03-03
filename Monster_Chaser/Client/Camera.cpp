@@ -28,11 +28,17 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 
 void CCamera::Move(int arrow, float fElapsedTime)
 {
-	if (arrow == 0) {
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * 50 * fElapsedTime));
+	if (arrow == 0) {	// 앞
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * 20 * fElapsedTime));
+	}
+	else if (arrow == 1) { // 위
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * 10 * fElapsedTime));
+	}
+	else if (arrow == 2) {	// 아래
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * -10 * fElapsedTime));
 	}
 	else
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -50 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -20 * fElapsedTime));
 }
 
 void CCamera::UpdateViewMatrix()

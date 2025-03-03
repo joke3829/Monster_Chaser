@@ -250,15 +250,19 @@ private:
 
 class CSkinningObject {
 public:
+	CSkinningObject();
 	void AddResourceFromFile(std::ifstream& inFile, std::string strFront);
 	void AddObjectFromFile(std::ifstream& inFile, int nParentIndex = -1);
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);
 
 	virtual void PrepareObject() {};
-	void InitializeGameObjectCBuffer();
 	virtual void UpdateAnimationMatrixes();
 	virtual void UpdateObject(float fElapsedTime) {};
 	virtual void ReBuildBLAS() {}
+
+	void InitializeGameObjectCBuffer();
+	void setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 position);
+	void UpdateWorldMatrix();
 
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
 	std::vector<std::unique_ptr<CGameObject>>& getObjects() { return m_vObjects; }
@@ -274,6 +278,16 @@ protected:
 	std::vector<std::shared_ptr<Mesh>> m_vMeshes{};
 	std::vector<std::shared_ptr<CTexture>> m_vTextures{};
 	std::vector<std::unique_ptr<CSkinningInfo>> m_vSkinningInfo{};
+
+	// XMFLOAT4X4
+	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
+	XMFLOAT4X4 m_xmf4x4PreTransformMatrix{};	// 메시의 방향을 정렬하기 위해 사용
+	bool m_bUsePreTransform = false;
+
+	XMFLOAT3 m_xmf3Right{};
+	XMFLOAT3 m_xmf3Up{};
+	XMFLOAT3 m_xmf3Look;
+	XMFLOAT3 m_xmf3Position{};
 };
 
 // Rasterizer와 RayTracing에서의 Skinning Animation은 방법이 다르다

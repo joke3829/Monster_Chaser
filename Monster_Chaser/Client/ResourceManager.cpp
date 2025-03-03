@@ -382,18 +382,19 @@ void CResourceManager::UpdateWorldMatrix()
 		//object->SetWorlaMatrix(object->getLocalMatrix());
 	}
 	for (std::unique_ptr<CSkinningObject>& Skinning : m_vSkinningObject) {
-		std::vector<std::unique_ptr<CGameObject>>& sObjects = Skinning->getObjects();
-		for (std::unique_ptr<CGameObject>& object : sObjects) {
-			if (object->getParentIndex() != -1) {
-				XMFLOAT4X4 wmtx = sObjects[object->getParentIndex()]->getWorldMatrix();
-				XMFLOAT4X4 lmtx = object->getLocalMatrix();
-				XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
-				object->SetWorlaMatrix(lmtx);
-			}
-			else
-				object->SetWorlaMatrix(object->getLocalMatrix());
-				//object->UpdateWorldMatrix();
-		}
+		Skinning->UpdateWorldMatrix();
+		//std::vector<std::unique_ptr<CGameObject>>& sObjects = Skinning->getObjects();
+		//for (std::unique_ptr<CGameObject>& object : sObjects) {
+		//	if (object->getParentIndex() != -1) {
+		//		XMFLOAT4X4 wmtx = sObjects[object->getParentIndex()]->getWorldMatrix();
+		//		XMFLOAT4X4 lmtx = object->getLocalMatrix();
+		//		XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
+		//		object->SetWorlaMatrix(lmtx);
+		//	}
+		//	else
+		//		object->SetWorlaMatrix(object->getLocalMatrix());
+		//		//object->UpdateWorldMatrix();
+		//}
 	}
 }
 

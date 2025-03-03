@@ -28,8 +28,8 @@ void main( uint3 DTid : SV_DispatchThreadID )
             float boneWeight = g_BoneWeight[(DTid.x * BonePerVertex) + i];
             
             float4 input = float4(g_InsertVertexBuffer[DTid.x], 1.0f);
-            float4x4 boneMatrix = mul(g_OffsetMatrix[boneIndex], g_AnimationMatrix[g_AnimationMatrixIndex[boneIndex]]);
-            //float4x4 boneMatrix = g_AnimationMatrix[g_AnimationMatrixIndex[boneIndex]];
+            float4x4 boneMatrix = mul(g_OffsetMatrix[boneIndex], 
+            g_AnimationMatrix[g_AnimationMatrixIndex[boneIndex]]);
             weightPos += boneWeight * mul(input, boneMatrix).xyz;
         }
         g_OutputVertexBuffer[DTid.x] = weightPos;

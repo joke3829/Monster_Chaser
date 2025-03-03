@@ -378,6 +378,15 @@ void CSkinningInfo::SetShaderVariables()
 
 // ============================================================================
 
+CSkinningObject::CSkinningObject()
+{
+	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, XMMatrixIdentity());
+	XMStoreFloat4x4(&m_xmf4x4PreTransformMatrix, XMMatrixIdentity());
+	m_xmf3Right = XMFLOAT3(1.0f, 0.0f, 0.0f);
+	m_xmf3Up = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	m_xmf3Look = XMFLOAT3(0.0f, 0.0f, 1.0f);
+}
+
 void CSkinningObject::AddResourceFromFile(std::ifstream& inFile, std::string strFront)
 {
 	FilePathFront = strFront;
@@ -687,6 +696,45 @@ void CSkinningObject::InitializeGameObjectCBuffer()
 {
 	for (std::unique_ptr<CGameObject>& object : m_vObjects)
 		object->InitializeConstanctBuffer(m_vMeshes);
+}
+
+void CSkinningObject::setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 position)
+{
+	m_bUsePreTransform = true;
+	XMMATRIX xmfScale = XMMatrixScaling(scale, scale, scale);
+	XMMATRIX xmfRotateX = XMMatrixRotationX(XMConvertToRadians(rotate.x));
+	XMMATRIX xmfRotateY = XMMatrixRotationX(XMConvertToRadians(rotate.y));
+	XMMATRIX xmfRotateZ = XMMatrixRotationX(XMConvertToRadians(rotate.z));
+
+	XMMATRIX xmfRotation = xmfRotateX * xmfRotateY * xmfRotateZ;
+
+	XMMATRIX xmfTranslation = XMMatrixTranslation(position.x, position.y, position.z);
+
+	XMStoreFloat4x4(&m_xmf4x4PreTransformMatrix, xmfScale * xmfRotation * xmfTranslation);
+}
+
+void CSkinningObject::UpdateWorldMatrix()
+{
+	for (std::unique_ptr<CGameObject>& object : m_vObjects) {
+		if (object->getParentIndex() != -1) {
+			XMFLOAT4X4 wmtx = m_vObjects[object->getParentIndex()]->getWorldMatrix();
+			XMFLOAT4X4 lmtx = object->getLocalMatrix();
+			XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
+			object->SetWorlaMatrix(lmtx);
+		}
+		else {
+			XMFLOAT4X4 lmtx = object->getLocalMatrix();
+			if (m_bUsePreTransform) {
+				XMMATRIX mtx = XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix);
+				XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * mtx);
+				object->SetWorlaMatrix(lmtx);
+			}
+			else {
+				XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
+				object->SetWorlaMatrix(lmtx);
+			}
+		}
+	}
 }
 
 void CSkinningObject::UpdateAnimationMatrixes()

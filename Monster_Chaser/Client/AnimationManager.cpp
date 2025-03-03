@@ -56,11 +56,6 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 		XMStoreFloat4x4(&xmf, XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
 		vMatrixes[i]->SetLocalMatrix(xmf);
 	}
-	//}
-	//memcpy(vMatrixes.data(), m_vTransforms[0].data(), sizeof(XMFLOAT4X4) * vMatrixes.size());
-	/*for (int i = 0; i < m_vTransforms[0].size(); ++i) {
-		XMStoreFloat4x4(&vMatrixes[i], XMMatrixTranspose(XMLoadFloat4x4(&m_vTransforms[0][i])));
-	}*/
 }
 
 // ====================================================================================
@@ -129,7 +124,6 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
-	//g_DxResource.cmdList->SetComputeRootShaderResourceView(5, m_pMatrixBuffer->GetGPUVirtualAddress());
 }
 
 void CAnimationManager::UpdateAnimation(float fElapsedTime)

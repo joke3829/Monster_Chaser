@@ -14,6 +14,8 @@ public:
 	virtual void SetCamera(std::shared_ptr<CCamera>& pCamera) { m_pCamera = pCamera; }
 
 	virtual void UpdateObject(float fElapsedTime) {};
+	
+	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 
 	virtual void PrepareRender() {};
 	virtual void Render() {};
@@ -27,6 +29,8 @@ class CRaytracingScene : public CScene {
 public:
 	void SetUp();
 	void UpdateObject(float fElapsedTime);
+
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	void PrepareRender();
 	void Render();
