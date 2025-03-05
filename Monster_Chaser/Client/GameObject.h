@@ -251,7 +251,6 @@ private:
 class CSkinningObject {
 public:
 	CSkinningObject();
-	CSkinningObject& operator=(const CSkinningObject& other);
 	void AddResourceFromFile(std::ifstream& inFile, std::string strFront);
 	void AddObjectFromFile(std::ifstream& inFile, int nParentIndex = -1);
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);

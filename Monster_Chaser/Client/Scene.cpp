@@ -1,55 +1,5 @@
 #include "Scene.h"
 
-void CRaytracingScene::SetUp()
-{
-	// Create Global & Local Root Signature
-	CreateRootSignature();
-
-	// animation Pipeline Ready
-	CreateComputeRootSignature();
-	CreateComputeShader();
-
-	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
-	m_pRaytracingPipeline->Setup(1 + 1 + 1 + 2 + 1 + 1);
-	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"ClosestHit");
-	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 16);
-	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
-	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(3);
-	m_pRaytracingPipeline->MakePipelineState();
-
-	// Resource Ready
-	m_pResourceManager = std::make_unique<CResourceManager>();
-	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
-	// =========================================================
-	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
-
-	// ShaderBindingTable
-	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
-	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
-	m_pShaderBindingTable->CreateSBT();
-
-	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
-	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
-	skinned[0]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
-	//skinned[0]->setPosition(XMFLOAT3(10.0f, 0.0f, 50.0f));
-	// ==============================================================================
-
-	m_pResourceManager->PrepareObject();
-
-	// AccelerationStructure
-	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
-	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
-	m_pAccelerationStructureManager->InitBLAS();
-	m_pAccelerationStructureManager->InitTLAS();
-}
-
 void CRaytracingScene::UpdateObject(float fElapsedTime)
 {
 	m_pCamera->UpdateViewMatrix();
@@ -66,30 +16,6 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 	m_pAccelerationStructureManager->UpdateScene();
-}
-
-void CRaytracingScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
-{
-	switch (nMessage) {
-	case WM_KEYDOWN:
-		switch (wParam) {
-		case '1':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '2':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(1);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '3':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		}
-		break;
-	case WM_KEYUP:
-		break;
-	}
 }
 
 void CRaytracingScene::PrepareRender()
@@ -415,4 +341,89 @@ void CRaytracingScene::CreateComputeShader()
 	g_DxResource.device->CreateComputePipelineState(&desc, IID_PPV_ARGS(m_pAnimationComputeShader.GetAddressOf()));
 
 	pBlob->Release();
+}
+
+// =====================================================================================
+
+void CRaytracingTestScene::SetUp()
+{
+	// Create Global & Local Root Signature
+	CreateRootSignature();
+
+	// animation Pipeline Ready
+	CreateComputeRootSignature();
+	CreateComputeShader();
+
+	// Create And Set up PipelineState
+	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	m_pRaytracingPipeline->Setup(1 + 1 + 1 + 2 + 1 + 1);
+	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"ClosestHit");
+	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 16);
+	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
+	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(3);
+	m_pRaytracingPipeline->MakePipelineState();
+
+	// Resource Ready
+	m_pResourceManager = std::make_unique<CResourceManager>();
+	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	// =========================================================
+
+	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
+	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	// 완전히 새로운 객체를 만들 땐 여기서 ========================================
+	
+	// ============================================================================
+	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
+
+	// ShaderBindingTable
+	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
+	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
+	m_pShaderBindingTable->CreateSBT();
+
+	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
+
+	//skinned[0]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
+	// ==============================================================================
+
+	m_pResourceManager->PrepareObject();
+
+	// AccelerationStructure
+	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
+	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
+	m_pAccelerationStructureManager->InitBLAS();
+	m_pAccelerationStructureManager->InitTLAS();
+}
+
+
+void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+		switch (wParam) {
+		case '1':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '2':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(1);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '3':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		break;
+	}
 }

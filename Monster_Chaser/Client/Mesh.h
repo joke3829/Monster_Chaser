@@ -16,9 +16,25 @@
 
 extern DXResources g_DxResource;
 
+class CHeightMapImage {
+public:
+	CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3 xmf3Scale);
+	float GetHeight(int x, int z);
+
+	std::unique_ptr<BYTE[]> m_pHeightMapPixels;
+
+	int m_nWidth;
+	int m_nLength;
+
+	XMFLOAT3 m_xmf3Scale;
+};
+
+// =============================================================================
+
 class Mesh {
 public:
 	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor-메시 즉시 생성					
+	Mesh(CHeightMapImage* heightmap, std::string strMeshName);	// 지형 메시를 만들때 사용
 
 	//void GetMeshNameFromFile(std::ifstream& inFile);
 	void GetBoundInfoFromFile(std::ifstream& inFile);

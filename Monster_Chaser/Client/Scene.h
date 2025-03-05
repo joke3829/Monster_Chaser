@@ -27,17 +27,18 @@ protected:
 
 class CRaytracingScene : public CScene {
 public:
-	void SetUp();
-	void UpdateObject(float fElapsedTime);
+	virtual void SetUp() {}
+	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void UpdateObject(float fElapsedTime);
 
 	void PrepareRender();
 	void Render();
-protected:
+
 	void CreateRootSignature();
 	void CreateComputeRootSignature();
 	void CreateComputeShader();
+protected:
 
 	ComPtr<ID3D12RootSignature> m_pLocalRootSignature{};
 	std::unique_ptr<CRayTracingPipeline> m_pRaytracingPipeline{};
@@ -48,4 +49,10 @@ protected:
 	// 스키닝 애니메이션 용 리소스
 	ComPtr<ID3D12RootSignature> m_pComputeRootSignature{};
 	ComPtr<ID3D12PipelineState> m_pAnimationComputeShader{};
+};
+
+class CRaytracingTestScene : public CRaytracingScene {
+public:
+	void SetUp();
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 };
