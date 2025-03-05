@@ -251,6 +251,7 @@ private:
 class CSkinningObject {
 public:
 	CSkinningObject();
+	CSkinningObject& operator=(const CSkinningObject& other);
 	void AddResourceFromFile(std::ifstream& inFile, std::string strFront);
 	void AddObjectFromFile(std::ifstream& inFile, int nParentIndex = -1);
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);
@@ -262,6 +263,7 @@ public:
 
 	void InitializeGameObjectCBuffer();
 	void setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 position);
+	void setPosition(XMFLOAT3 position);
 	void UpdateWorldMatrix();
 
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();

@@ -713,6 +713,13 @@ void CSkinningObject::setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 pos
 	XMStoreFloat4x4(&m_xmf4x4PreTransformMatrix, xmfScale * xmfRotation * xmfTranslation);
 }
 
+void CSkinningObject::setPosition(XMFLOAT3 position)
+{
+	m_xmf4x4WorldMatrix._41 = position.x;
+	m_xmf4x4WorldMatrix._42 = position.y;
+	m_xmf4x4WorldMatrix._43 = position.z;
+}
+
 void CSkinningObject::UpdateWorldMatrix()
 {
 	for (std::unique_ptr<CGameObject>& object : m_vObjects) {

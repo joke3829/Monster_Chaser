@@ -14,7 +14,7 @@ void CRaytracingScene::SetUp()
 	m_pRaytracingPipeline->Setup(1 + 1 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
 	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"ClosestHit");
-	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 12);
+	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 16);
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
 	m_pRaytracingPipeline->AddPipelineConfigSubObject(3);
@@ -37,7 +37,8 @@ void CRaytracingScene::SetUp()
 
 	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
 	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
-	skinned[0]->setPreTransform(0.1, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[0]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
+	//skinned[0]->setPosition(XMFLOAT3(10.0f, 0.0f, 50.0f));
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
