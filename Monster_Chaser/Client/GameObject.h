@@ -84,6 +84,9 @@ struct HasMesh {
 
 class CGameObject {
 public:
+	CGameObject() {};
+	CGameObject(const CGameObject& other);
+	CGameObject& operator=(const CGameObject& other);	// 복사 할당
 	bool InitializeObjectFromFile(std::ifstream& inFile);
 
 	template<class T>
@@ -161,7 +164,11 @@ public:
 		m_pd3dMeshCBuffer->Unmap(0, nullptr);
 	}
 
-	void UpdateWorldMatrix();
+	void SetPosition(XMFLOAT3 pos);
+	void SetRotate(XMFLOAT3 rot);	// 각각 right, up, look 축으로 회전
+	void SetScale(XMFLOAT3 scale);
+
+	void move(float fElapsedTime);	// test용
 
 	std::string getFrameName() const;
 	std::vector<Material>& getMaterials();
@@ -171,6 +178,7 @@ public:
 	ID3D12Resource* getCbuffer(int index) const;
 	ID3D12Resource* getMeshCBuffer() const;
 
+
 	XMFLOAT4X4 getWorldMatrix();
 	XMFLOAT4X4 getLocalMatrix();
 	XMFLOAT4X4 getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
@@ -178,6 +186,7 @@ public:
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
 	void SetHitGroupIndex(int index);
+	void SetFrameName(std::string& name) { m_strName = name; }
 	void SetWorlaMatrix(XMFLOAT4X4& mtx);
 	void SetLocalMatrix(XMFLOAT4X4& ltx) { m_xmf4x4LocalMatrix = ltx; }
 	void SetLocalMatrixTranspose(XMFLOAT4X4& ltx) { XMStoreFloat4x4(&m_xmf4x4LocalMatrix, XMMatrixTranspose(XMLoadFloat4x4(&ltx))); }
@@ -186,6 +195,7 @@ public:
 
 	void InitializeAxis();
 protected:
+	void UpdateLocalMatrix();
 	std::string m_strName{};
 
 	XMFLOAT3 m_xmf3Pos{};
@@ -219,6 +229,7 @@ protected:
 class CSkinningInfo {
 public:
 	CSkinningInfo(std::ifstream& inFile, UINT nRefMesh);
+	CSkinningInfo(const CSkinningInfo& other);
 
 	void MakeAnimationMatrixIndex(std::vector<std::string>& vFrameNames);
 	void MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixBuffer, UINT nElements);
@@ -251,6 +262,9 @@ private:
 class CSkinningObject {
 public:
 	CSkinningObject();
+
+	virtual void CopyFromOtherObject(CSkinningObject* other);
+
 	void AddResourceFromFile(std::ifstream& inFile, std::string strFront);
 	void AddObjectFromFile(std::ifstream& inFile, int nParentIndex = -1);
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);
@@ -265,6 +279,7 @@ public:
 	void setPosition(XMFLOAT3 position);
 	void UpdateWorldMatrix();
 
+	std::string getName() const { return m_strObjectName; }
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
 	std::vector<std::unique_ptr<CGameObject>>& getObjects() { return m_vObjects; }
 	std::vector<std::shared_ptr<Mesh>>& getMeshes() { return m_vMeshes; }
@@ -287,7 +302,7 @@ protected:
 
 	XMFLOAT3 m_xmf3Right{};
 	XMFLOAT3 m_xmf3Up{};
-	XMFLOAT3 m_xmf3Look;
+	XMFLOAT3 m_xmf3Look{};
 	XMFLOAT3 m_xmf3Position{};
 };
 

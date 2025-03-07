@@ -40,13 +40,13 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 		strLabel.assign(nStrLength, ' ');
 		inFile.read(strLabel.data(), nStrLength);
 		};
-	m_vSkinningObject.push_back(std::make_unique<CRayTracingSkinningObject>());
+	m_vSkinningObject.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 	m_vSkinningObject[m_vSkinningObject.size() - 1]->AddResourceFromFile(inFile, textureFilePathFront);
 
 	if (!inFile.eof()) {
 		readLabel();
 		if ("<Animation>:" == strLabel) {	// 애니메이션이 있으면 매니저 생성 & 오브젝트 지정
-			m_vAnimationManager.push_back(std::make_unique<CAnimationManager>(inFile, m_vSkinningObject[m_vSkinningObject.size() - 1].get()));
+			m_vAnimationManager.emplace_back(std::make_unique<CAnimationManager>(inFile));
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->SetFramesPointerFromSkinningObject(m_vSkinningObject[m_vSkinningObject.size() - 1]->getObjects());
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->MakeAnimationMatrixIndex(m_vSkinningObject[m_vSkinningObject.size() - 1].get());
 		}
@@ -58,7 +58,7 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentIndex)
 {
 	UINT nCurrentObjectIndex = m_vGameObjectList.size();
-	m_vGameObjectList.push_back(std::make_unique<CGameObject>());
+	m_vGameObjectList.emplace_back(std::make_unique<CGameObject>());
 	m_vGameObjectList[nCurrentObjectIndex]->InitializeObjectFromFile(inFile);
 
 	if (nParentIndex != -1) {		// 부모가 존재한다는 뜻
@@ -90,7 +90,7 @@ void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentI
 			}
 			else {	// 없으면 새로 생성과 동시에 인덱스 지정
 				m_vGameObjectList[nCurrentObjectIndex]->SetMeshIndex(m_vMeshList.size());
-				m_vMeshList.push_back(std::make_unique<Mesh>(inFile, strLabel));
+				m_vMeshList.emplace_back(std::make_unique<Mesh>(inFile, strLabel));
 			}
 		}
 		else if (strLabel == "<Materials>:") {
@@ -130,7 +130,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 		readLabel();
 		if (strLabel == "<Material>:") {
 			nCurrentMaterial = vMaterials.size();
-			vMaterials.push_back(Material());
+			vMaterials.emplace_back(Material());
 			inFile.read((char*)&tempData, sizeof(int));
 		}
 		else if (strLabel == "<AlbedoColor>:") {
@@ -184,7 +184,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -207,7 +207,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -230,7 +230,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -253,7 +253,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -276,7 +276,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -299,7 +299,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -322,7 +322,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -331,7 +331,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 	}
 	// 게임 오브젝트에 마테리얼 저장
 	for (int i = 0; i < vMaterials.size(); ++i) {
-		m_vGameObjectList[nCurrentIndex]->getMaterials().push_back(vMaterials[i]);
+		m_vGameObjectList[nCurrentIndex]->getMaterials().emplace_back(vMaterials[i]);
 	}
 }
 
@@ -377,9 +377,8 @@ void CResourceManager::UpdateWorldMatrix()
 			object->SetWorlaMatrix(lmtx);
 		}
 		else {
-			object->UpdateWorldMatrix();
+			object->SetWorlaMatrix(object->getLocalMatrix());
 		}
-		//object->SetWorlaMatrix(object->getLocalMatrix());
 	}
 	for (std::unique_ptr<CSkinningObject>& Skinning : m_vSkinningObject) {
 		Skinning->UpdateWorldMatrix();

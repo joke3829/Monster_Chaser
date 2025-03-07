@@ -44,7 +44,7 @@ void CRayTracingPipeline::AddHitGroupSubObject(wchar_t* exportName, wchar_t* Clo
 	hitGroup->HitGroupExport = exportName;
 
 	// export를 저장한다.
-	m_exports.push_back(exportName);
+	m_exports.emplace_back(exportName);
 
 	/*D3D12_STATE_SUBOBJECT temp{};
 	temp.Type = D3D12_STATE_SUBOBJECT_TYPE_HIT_GROUP;

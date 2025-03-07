@@ -27,7 +27,9 @@ private:
 // 여기서 프레임 이름 별 포인터를 만들 예정
 class CAnimationManager {
 public:
-	CAnimationManager(std::ifstream& inFile, CSkinningObject* object);
+	CAnimationManager(std::ifstream& inFile);
+	CAnimationManager(const CAnimationManager& other);
+
 	void SetFramesPointerFromSkinningObject(std::vector<std::unique_ptr<CGameObject>>& vObjects);	// 스키닝 준비 함수
 
 	// SkinningInfo를 받고 그 SkinningInfo의 행렬 index 만들어 준다.

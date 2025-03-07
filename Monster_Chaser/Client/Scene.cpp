@@ -378,9 +378,18 @@ void CRaytracingTestScene::SetUp()
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
 	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
-	// 완전히 새로운 객체를 만들 땐 여기서 ========================================
+	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
+	// 완전히 새로운 객체 & skinning Object 복사는 여기서 ========================================
 	
-	// ============================================================================
+	// 복사 예시
+	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	skinned[2]->CopyFromOtherObject(skinned[1].get());
+	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[1].get()));
+	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
+	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
+	aManagers[2]->UpdateAnimation(0.5f);
+
+	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 
 	// ShaderBindingTable
@@ -389,6 +398,9 @@ void CRaytracingTestScene::SetUp()
 	m_pShaderBindingTable->CreateSBT();
 
 	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
+	normalObjects.emplace_back(std::make_unique<CGameObject>(*normalObjects[3].get()));
+	normalObjects[normalObjects.size() - 1]->SetParentIndex(-1);
+	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3());
 
 	//skinned[0]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
@@ -425,5 +437,36 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 		break;
 	case WM_KEYUP:
 		break;
+	}
+}
+
+void CRaytracingTestScene::ProcessInput(float fElapsedTime)
+{
+	UCHAR keyBuffer[256];
+	GetKeyboardState(keyBuffer);
+
+	if (keyBuffer['W'] & 0x80)
+		m_pCamera->Move(0, fElapsedTime);
+	if (keyBuffer['S'] & 0x80)
+		m_pCamera->Move(3, fElapsedTime);
+	if (keyBuffer[VK_SPACE] & 0x80)
+		m_pCamera->Move(1, fElapsedTime);
+	if (keyBuffer[VK_CONTROL] & 0x80)
+		m_pCamera->Move(2, fElapsedTime);
+
+
+	UINT t = m_pResourceManager->getGameObjectList().size();
+
+	if (keyBuffer[VK_UP] & 0x80) {
+		m_pResourceManager->getGameObjectList()[t - 1]->move(fElapsedTime);
+	}
+	if (keyBuffer[VK_LEFT] & 0x80) {
+		m_pResourceManager->getGameObjectList()[t - 1]->SetRotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
+	}
+	if (keyBuffer[VK_DOWN] & 0x80) {
+
+	}
+	if (keyBuffer[VK_RIGHT] & 0x80) {
+		m_pResourceManager->getGameObjectList()[t - 1]->SetRotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 	}
 }

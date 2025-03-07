@@ -74,17 +74,17 @@ void CShaderBindingTableManager::CreateSBT()
 	// Identifier 사용 준비
 	for (int i = 0; i < std::size(RayGenShaderNames); ++i) {
 		void* raygenID = properties->GetShaderIdentifier(RayGenShaderNames[i]);
-		raygenIDs.push_back(raygenID);
+		raygenIDs.emplace_back(raygenID);
 	}
 
 	for (int i = 0; i < std::size(MissShaderNames); ++i) {
 		void* MissID = properties->GetShaderIdentifier(MissShaderNames[i]);
-		MissIDs.push_back(MissID);
+		MissIDs.emplace_back(MissID);
 	}
 
 	for (int i = 0; i < exports.size(); ++i) {
 		void* HitGroupID = properties->GetShaderIdentifier(exports[i]);
-		HitGroupIDs.push_back(HitGroupID);
+		HitGroupIDs.emplace_back(HitGroupID);
 	}
 
 	auto makeBuffer = [&](ComPtr<ID3D12Resource>& buffer, UINT size)

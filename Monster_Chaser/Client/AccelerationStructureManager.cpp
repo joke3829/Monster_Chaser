@@ -92,7 +92,7 @@ void CAccelerationStructureManager::InitBLAS()
 		if (mesh->getHasVertex()) {
 			MakeBLAS(blas, mesh);
 		}
-		m_vBLASList.push_back(blas);
+		m_vBLASList.emplace_back(blas);
 	}
 }
 
@@ -116,7 +116,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 			desc.Triangles.IndexCount = mesh->getIndexCount(i);
 			desc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
 
-			GeometryDesc.push_back(desc);
+			GeometryDesc.emplace_back(desc);
 		}
 	}
 	else {
@@ -134,7 +134,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 		desc.Triangles.IndexCount = 0;
 		desc.Triangles.IndexFormat = DXGI_FORMAT_UNKNOWN;
 
-		GeometryDesc.push_back(desc);
+		GeometryDesc.emplace_back(desc);
 	}
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};

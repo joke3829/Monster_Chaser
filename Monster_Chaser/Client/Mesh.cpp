@@ -278,7 +278,7 @@ void Mesh::MakeSubMesh(std::ifstream& inFile)
 	inFile.read((char*)&subMeshIndex, sizeof(int));
 
 	inFile.read((char*)&indices, sizeof(int));
-	m_vIndices.push_back(indices);
+	m_vIndices.emplace_back(indices);
 
 	if (indices > 0) {
 		std::vector<UINT> index{};
@@ -297,7 +297,7 @@ void Mesh::MakeSubMesh(std::ifstream& inFile)
 		memcpy(ptr, index.data(), sizeof(UINT) * indices);
 		indexBuffer->Unmap(0, nullptr);
 	}
-	m_vSubMeshes.push_back(indexBuffer);
+	m_vSubMeshes.emplace_back(indexBuffer);
 }
 
 // =============================== getter ====================================

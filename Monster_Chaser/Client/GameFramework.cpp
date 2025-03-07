@@ -248,17 +248,7 @@ void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LP
 
 void CGameFramework::ProcessInput(float fElapsedTime)
 {
-	UCHAR keyBuffer[256];
-	GetKeyboardState(keyBuffer);
-
-	if (keyBuffer['W'] & 0x80)
-		m_pCamera->Move(0, fElapsedTime);
-	if (keyBuffer['S'] & 0x80)
-		m_pCamera->Move(3, fElapsedTime);
-	if (keyBuffer[VK_SPACE] & 0x80)
-		m_pCamera->Move(1, fElapsedTime);
-	if (keyBuffer[VK_CONTROL] & 0x80)
-		m_pCamera->Move(2, fElapsedTime);
+	m_pScene->ProcessInput(fElapsedTime);
 }
 
 void CGameFramework::Render()

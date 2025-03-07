@@ -1,5 +1,55 @@
 #include "GameObject.h"
 
+CGameObject::CGameObject(const CGameObject& other)
+{
+	m_strName = other.m_strName;	
+	m_xmf3Pos = other.m_xmf3Pos;
+	m_xmf3Scale = other.m_xmf3Scale;
+	
+	m_xmf3Right = other.m_xmf3Right;
+	m_xmf3Up = other.m_xmf3Up;
+	m_xmf3Look = other.m_xmf3Look;
+
+	m_xmf4x4LocalMatrix = other.m_xmf4x4LocalMatrix;
+	//UpdateLocalMatrix();
+
+	// 복사는 SBT가 만들어지고 이루어지기때문에 Resource는 복사하지 않는다.
+	// index와 Material만 가져온다
+
+	for (int i = 0; i < other.m_vMaterials.size(); ++i)
+		m_vMaterials.emplace_back(other.m_vMaterials[i]);
+
+	m_nMeshIndex = other.m_nMeshIndex;
+	m_nParentIndex = other.m_nParentIndex;
+	m_nHitGroupIndex = other.m_nHitGroupIndex;
+}
+
+CGameObject& CGameObject::operator=(const CGameObject& other)
+{
+	if (this != &other) {
+		m_strName = other.m_strName;
+		m_xmf3Pos = other.m_xmf3Pos;
+		m_xmf3Scale = other.m_xmf3Scale;
+
+		m_xmf3Right = other.m_xmf3Right;
+		m_xmf3Up = other.m_xmf3Up;
+		m_xmf3Look = other.m_xmf3Look;
+
+		//UpdateLocalMatrix();
+		m_xmf4x4LocalMatrix = other.m_xmf4x4LocalMatrix;
+		// 복사는 SBT가 만들어지고 이루어지기때문에 Resource는 복사하지 않는다.
+		// index와 Material만 가져온다
+
+		for (int i = 0; i < other.m_vMaterials.size(); ++i)
+			m_vMaterials.emplace_back(other.m_vMaterials[i]);
+
+		m_nMeshIndex = other.m_nMeshIndex;
+		m_nParentIndex = other.m_nParentIndex;
+		m_nHitGroupIndex = other.m_nHitGroupIndex;
+	}
+	return *this;
+}
+
 bool CGameObject::InitializeObjectFromFile(std::ifstream& inFile)
 {
 	int temp;	// 불필요한 정보들을 빼낸다.
@@ -37,88 +87,54 @@ bool CGameObject::InitializeObjectFromFile(std::ifstream& inFile)
 	return true;
 }
 
-/*template<class T>
-void CGameObject::InitializeConstanctBuffer(std::vector<T>& meshes)
+void CGameObject::UpdateLocalMatrix()
 {
-	auto makeBuffer = [&](UINT argSize) {
-		ComPtr<ID3D12Resource> resource{};
-		auto desc = BASIC_BUFFER_DESC;
-		desc.Width = Align(argSize, 256);
-		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(resource.GetAddressOf()));
-		m_vCBuffers.push_back(resource);
-		};
+	XMFLOAT4X4 tempMatrix{};
+	tempMatrix._11 = m_xmf3Right.x; tempMatrix._12 = m_xmf3Right.y; tempMatrix._13 = m_xmf3Right.z; tempMatrix._14 = 0;
+	tempMatrix._21 = m_xmf3Up.x; tempMatrix._22 = m_xmf3Up.y; tempMatrix._23 = m_xmf3Up.z; tempMatrix._24 = 0;
+	tempMatrix._31 = m_xmf3Look.x; tempMatrix._32 = m_xmf3Look.y; tempMatrix._33 = m_xmf3Look.z; tempMatrix._34 = 0;
+	tempMatrix._41 = 0; tempMatrix._42 = 0; tempMatrix._43 = 0; tempMatrix._44 = 1;
 
-	for (int i = 0; i < m_vMaterials.size(); ++i) {
-		makeBuffer(sizeof(HasMaterial));
-		HasMaterial* pHas;
-		m_vCBuffers[i]->Map(0, nullptr, (void**)&pHas);
-		pHas->bHasAlbedoColor = m_vMaterials[i].m_bHasAlbedoColor;
-		pHas->bHasEmissiveColor = m_vMaterials[i].m_bHasEmissiveColor;
-		pHas->bHasSpecularColor = m_vMaterials[i].m_bHasSpecularColor;
-		pHas->bHasGlossiness = m_vMaterials[i].m_bHasGlossiness;
-		pHas->bHasSmoothness = m_vMaterials[i].m_bHasSmoothness;
-		pHas->bHasMetallic = m_vMaterials[i].m_bHasMetallic;
-		pHas->bHasSpecularHighlight = m_vMaterials[i].m_bHasSpecularHighlight;
-		pHas->bHasGlossyReflection = m_vMaterials[i].m_bHasGlossyReflection;
+	XMStoreFloat4x4(&tempMatrix, XMMatrixScaling(m_xmf3Scale.x, m_xmf3Scale.y, m_xmf3Scale.z) * XMLoadFloat4x4(&tempMatrix));
+	tempMatrix._41 = m_xmf3Pos.x; tempMatrix._42 = m_xmf3Pos.y; tempMatrix._43 = m_xmf3Pos.z;
 
-		pHas->bHasAlbedoMap = m_vMaterials[i].m_bHasAlbedoMap;
-		pHas->bHasSpecularMap = m_vMaterials[i].m_bHasSpecularMap;
-		pHas->bHasNormalMap = m_vMaterials[i].m_bHasNormalMap;
-		pHas->bHasMetallicMap = m_vMaterials[i].m_bHasMetallicMap;
-		pHas->bHasEmissionMap = m_vMaterials[i].m_bHasEmissionMap;
-		pHas->bHasDetailAlbedoMap = m_vMaterials[i].m_bHasDetailAlbedoMap;
-		pHas->bHasDetailNormalMap = m_vMaterials[i].m_bHasDetailNormalMap;
-
-		pHas->AlbedoColor = m_vMaterials[i].m_xmf4AlbedoColor;
-		pHas->EmissiveColor = m_vMaterials[i].m_xmf4EmissiveColor;
-		pHas->SpecularColor = m_vMaterials[i].m_xmf4SpecularColor;
-		pHas->Glossiness = m_vMaterials[i].m_fGlossiness;
-		pHas->Smoothness = m_vMaterials[i].m_fSmoothness;
-		pHas->Metallic = m_vMaterials[i].m_fMetallic;
-		pHas->SpecularHighlight = m_vMaterials[i].m_fSpecularHighlight;
-		pHas->GlossyReflection = m_vMaterials[i].m_fGlossyReflection;
-		m_vCBuffers[i]->Unmap(0, nullptr);
-	}
-
-	auto makeMeshCBuffer = [&](ComPtr<ID3D12Resource>& resource) {
-		auto desc = BASIC_BUFFER_DESC;
-		desc.Width = Align(sizeof(HasMesh), 256);
-		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(resource.GetAddressOf()));
-		};
-
-	makeMeshCBuffer(m_pd3dMeshCBuffer);
-	HasMesh* pHas;
-	HasMesh tempHas{};
-	m_pd3dMeshCBuffer->Map(0, nullptr, (void**)&pHas);
-	if (m_nMeshIndex != -1) {
-		if (meshes[m_nMeshIndex]->getHasVertex())
-			tempHas.bHasVertex = true;
-		if (meshes[m_nMeshIndex]->getHasColor())
-			tempHas.bHasColor = true;
-		if (meshes[m_nMeshIndex]->getHasTex0())
-			tempHas.bHasTex0 = true;
-		if (meshes[m_nMeshIndex]->getHasTex1())
-			tempHas.bHasTex1 = true;
-		if (meshes[m_nMeshIndex]->getHasNormal())
-			tempHas.bHasNormals = true;
-		if (meshes[m_nMeshIndex]->getHasTangent())
-			tempHas.bHasTangenrs = true;
-		if (meshes[m_nMeshIndex]->getHasBiTangent())
-			tempHas.bHasBiTangents = true;
-		if (meshes[m_nMeshIndex]->getHasSubmesh())
-			tempHas.bHasSubMeshes = true;
-	}
-	memcpy(pHas, &tempHas, sizeof(HasMesh));
-	m_pd3dMeshCBuffer->Unmap(0, nullptr);
+	m_xmf4x4LocalMatrix = tempMatrix;
 }
-*/
-
-void CGameObject::UpdateWorldMatrix()
+void CGameObject::SetPosition(XMFLOAT3 pos)
 {
-	m_xmf4x4WorldMatrix._11 = m_xmf3Right.x; m_xmf4x4WorldMatrix._12 = m_xmf3Right.y; m_xmf4x4WorldMatrix._13 = m_xmf3Right.z; m_xmf4x4WorldMatrix._14 = 0;
-	m_xmf4x4WorldMatrix._21 = m_xmf3Up.x; m_xmf4x4WorldMatrix._22 = m_xmf3Up.y; m_xmf4x4WorldMatrix._23 = m_xmf3Up.z; m_xmf4x4WorldMatrix._24 = 0;
-	m_xmf4x4WorldMatrix._31 = m_xmf3Look.x; m_xmf4x4WorldMatrix._32 = m_xmf3Look.y; m_xmf4x4WorldMatrix._33 = m_xmf3Look.z; m_xmf4x4WorldMatrix._34 = 0;
-	m_xmf4x4WorldMatrix._41 = m_xmf3Pos.x; m_xmf4x4WorldMatrix._42 = m_xmf3Pos.y; m_xmf4x4WorldMatrix._43 = m_xmf3Pos.z; m_xmf4x4WorldMatrix._44 = 1;
+	m_xmf3Pos = pos;
+	UpdateLocalMatrix();
+}
+// 사용 주의
+void CGameObject::SetRotate(XMFLOAT3 rot)
+{
+	XMMATRIX mtx;
+	if (rot.x != 0.0f) {
+		mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Right), XMConvertToRadians(rot.x));
+		XMStoreFloat3(&m_xmf3Look, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Look), mtx));
+		XMStoreFloat3(&m_xmf3Up, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Up), mtx));
+	}
+	if (rot.y != 0.0f) {
+		mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(rot.y));
+		XMStoreFloat3(&m_xmf3Look, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Look), mtx));
+		XMStoreFloat3(&m_xmf3Right, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Right), mtx));
+	}
+	if (rot.z != 0.0f) {
+		mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Look), XMConvertToRadians(rot.z));
+		XMStoreFloat3(&m_xmf3Right, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Right), mtx));
+		XMStoreFloat3(&m_xmf3Up, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Up), mtx));
+	}
+	UpdateLocalMatrix();
+}
+void CGameObject::SetScale(XMFLOAT3 scale)
+{
+	m_xmf3Scale = scale;
+	UpdateLocalMatrix();
+}
+
+void CGameObject::move(float fElapsedTime) {
+	 XMStoreFloat3(&m_xmf3Pos, XMLoadFloat3(&m_xmf3Pos) + (XMLoadFloat3(&m_xmf3Look) * 30.0f * fElapsedTime));
+	 UpdateLocalMatrix();
 }
 
 std::string CGameObject::getFrameName() const
@@ -191,18 +207,30 @@ void CGameObject::InitializeAxis()
 	auto normalizeFloat3 = [](XMFLOAT3& xmf) {
 		XMStoreFloat3(&xmf, XMVector3Normalize(XMLoadFloat3(&xmf)));
 		};
-	m_xmf3Right = XMFLOAT3(m_xmf4x4LocalMatrix._11, m_xmf4x4LocalMatrix._12, m_xmf4x4LocalMatrix._13);
+	
+	/*m_xmf3Right = XMFLOAT3(m_xmf4x4LocalMatrix._11, m_xmf4x4LocalMatrix._12, m_xmf4x4LocalMatrix._13);
 	m_xmf3Up = XMFLOAT3(m_xmf4x4LocalMatrix._21, m_xmf4x4LocalMatrix._22, m_xmf4x4LocalMatrix._23);
 	m_xmf3Look = XMFLOAT3(m_xmf4x4LocalMatrix._31, m_xmf4x4LocalMatrix._32, m_xmf4x4LocalMatrix._33);
 
 	normalizeFloat3(m_xmf3Right);
 	normalizeFloat3(m_xmf3Up);
-	normalizeFloat3(m_xmf3Look);
+	normalizeFloat3(m_xmf3Look);*/
 
 	/*m_xmf3Right = XMFLOAT3(1.0, 0.0, 0.0);
 	m_xmf3Up = XMFLOAT3(0.0, 1.0, 0.0);
 	m_xmf3Look = XMFLOAT3(0.0, 0.0, 1.0);*/
+	XMVECTOR scale, rotation, position;
+	XMMatrixDecompose(&scale, &rotation, &position, XMLoadFloat4x4(&m_xmf4x4LocalMatrix));
 
+	XMMATRIX rotationMatrix = XMMatrixRotationQuaternion(rotation);
+
+	XMStoreFloat3(&m_xmf3Right, rotationMatrix.r[0]);
+	XMStoreFloat3(&m_xmf3Up, rotationMatrix.r[1]);
+	XMStoreFloat3(&m_xmf3Look, rotationMatrix.r[2]);
+
+	normalizeFloat3(m_xmf3Right);
+	normalizeFloat3(m_xmf3Up);
+	normalizeFloat3(m_xmf3Look);
 }
 
 
@@ -236,7 +264,7 @@ CSkinningInfo::CSkinningInfo(std::ifstream& inFile, UINT nRefMesh)
 			inFile.read((char*)&m_nBones, sizeof(int));
 			for (int i = 0; i < m_nBones; ++i) {
 				readLabel();
-				m_vBoneNames.push_back(strLabel);
+				m_vBoneNames.emplace_back(strLabel);
 			}
 		}
 		else if ("<BoneOffsets>:" == strLabel) {
@@ -258,12 +286,34 @@ CSkinningInfo::CSkinningInfo(std::ifstream& inFile, UINT nRefMesh)
 	}
 }
 
+CSkinningInfo::CSkinningInfo(const CSkinningInfo& other)
+{
+	m_nBonesPerVertex = other.m_nBonesPerVertex;
+	m_nBones = other.m_nBones;
+	m_nVertexCount = other.m_nVertexCount;
+
+	m_nRefMesh = other.m_nRefMesh;
+	for (int i = 0; i < other.m_vBoneNames.size(); ++i)
+		m_vBoneNames.emplace_back(other.m_vBoneNames[i]);
+	for (int i = 0; i < other.m_vOffsetMatrix.size(); ++i) {
+		m_vOffsetMatrix.emplace_back(other.m_vOffsetMatrix[i]);
+		XMStoreFloat4x4(&m_vOffsetMatrix[i], XMMatrixTranspose(XMLoadFloat4x4(&m_vOffsetMatrix[i])));
+	}
+	for (int i = 0; i < other.m_vBoneIndices.size(); ++i)
+		m_vBoneIndices.emplace_back(other.m_vBoneIndices[i]);
+	for (int i = 0; i < other.m_vBoneWeight.size(); ++i)
+		m_vBoneWeight.emplace_back(other.m_vBoneWeight[i]);
+
+	// 해당 정보는 animaitonManager가 채워준다.
+	//for (int i = 0; i < other.m_vAnimationMatrixIndex.size(); ++i)
+	//	m_vAnimationMatrixIndex.emplace_back(other.m_vAnimationMatrixIndex[i]);
+}
+
 void CSkinningInfo::MakeAnimationMatrixIndex(std::vector<std::string>& vFrameNames)
 {
 	for (std::string& name : m_vBoneNames) {
 		auto p = std::find(vFrameNames.begin(), vFrameNames.end(), name);
-		UINT n = std::distance(vFrameNames.begin(), p);
-		m_vAnimationMatrixIndex.push_back(n);
+		m_vAnimationMatrixIndex.emplace_back(distance(vFrameNames.begin(), p));
 	}
 }
 
@@ -387,6 +437,20 @@ CSkinningObject::CSkinningObject()
 	m_xmf3Look = XMFLOAT3(0.0f, 0.0f, 1.0f);
 }
 
+void CSkinningObject::CopyFromOtherObject(CSkinningObject* other)
+{
+	m_strObjectName = other->getName();	// 복사로 받았으니 이름 변경 필요
+
+	for (std::unique_ptr<CGameObject>& Frame : other->getObjects())
+		m_vObjects.emplace_back(std::make_unique<CGameObject>(*Frame.get()));
+	for (std::shared_ptr<Mesh>& mesh : other->getMeshes())
+		m_vMeshes.emplace_back(mesh);
+	for (std::shared_ptr<CTexture>& texture : other->getTextures())
+		m_vTextures.emplace_back(texture);
+	for (std::unique_ptr<CSkinningInfo>& info : other->getSkinningInfo())
+		m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(*info.get()));
+}
+
 void CSkinningObject::AddResourceFromFile(std::ifstream& inFile, std::string strFront)
 {
 	FilePathFront = strFront;
@@ -412,7 +476,7 @@ void CSkinningObject::AddResourceFromFile(std::ifstream& inFile, std::string str
 void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 {
 	UINT nCurrentObjectIndex = m_vObjects.size();
-	m_vObjects.push_back(std::make_unique<CGameObject>());
+	m_vObjects.emplace_back(std::make_unique<CGameObject>());
 	m_vObjects[nCurrentObjectIndex]->InitializeObjectFromFile(inFile);
 
 	if (nParentIndex != -1) {		// 부모가 존재한다는 뜻
@@ -444,11 +508,11 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			}
 			else {	// 없으면 새로 생성과 동시에 인덱스 지정
 				m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
-				m_vMeshes.push_back(std::make_shared<Mesh>(inFile, strLabel));
+				m_vMeshes.emplace_back(std::make_shared<Mesh>(inFile, strLabel));
 			}
 		}
 		else if (strLabel == "<SkinningInfo>:") {
-			m_vSkinningInfo.push_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size()));
+			m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size()));
 		}
 		else if (strLabel == "<Materials>:") {
 			inFile.read((char*)&tempData, sizeof(int));
@@ -487,7 +551,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 		readLabel();
 		if (strLabel == "<Material>:") {
 			nCurrentMaterial = vMaterials.size();
-			vMaterials.push_back(Material());
+			vMaterials.emplace_back(Material());
 			inFile.read((char*)&tempData, sizeof(int));
 		}
 		else if (strLabel == "<AlbedoColor>:") {
@@ -541,7 +605,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures.emplace_back(std::make_shared<CTexture>(wstr.c_str()));
 				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -564,7 +628,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures.emplace_back(std::make_shared<CTexture>(wstr.c_str()));
 				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -587,7 +651,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures.emplace_back(std::make_shared<CTexture>(wstr.c_str()));
 				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -610,7 +674,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures.emplace_back(std::make_shared<CTexture>(wstr.c_str()));
 				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -633,7 +697,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures.emplace_back(std::make_shared<CTexture>(wstr.c_str()));
 				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -656,7 +720,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures.emplace_back(std::make_shared<CTexture>(wstr.c_str()));
 				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -679,7 +743,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextures.push_back(std::make_shared<CTexture>(wstr.c_str()));
+				m_vTextures.emplace_back(std::make_shared<CTexture>(wstr.c_str()));
 				m_vTextures[m_vTextures.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -688,7 +752,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 	}
 	// 게임 오브젝트에 마테리얼 저장
 	for (int i = 0; i < vMaterials.size(); ++i) {
-		m_vObjects[nCurrentIndex]->getMaterials().push_back(vMaterials[i]);
+		m_vObjects[nCurrentIndex]->getMaterials().emplace_back(vMaterials[i]);
 	}
 }
 
@@ -809,7 +873,7 @@ void CRayTracingSkinningObject::ReBuildBLAS()
 				desc.Triangles.IndexCount = m_vMeshes[ref]->getIndexCount(i);
 				desc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
 
-				GeometryDesc.push_back(desc);
+				GeometryDesc.emplace_back(desc);
 			}
 		}
 		else {
@@ -827,7 +891,7 @@ void CRayTracingSkinningObject::ReBuildBLAS()
 			desc.Triangles.IndexCount = 0;
 			desc.Triangles.IndexFormat = DXGI_FORMAT_UNKNOWN;
 
-			GeometryDesc.push_back(desc);
+			GeometryDesc.emplace_back(desc);
 		}
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
@@ -857,7 +921,7 @@ void CRayTracingSkinningObject::MakeBLAS()
 		if (mesh->getHasVertex()) {
 			InitBLAS(blas, mesh);
 		}
-		m_vBLAS.push_back(blas);
+		m_vBLAS.emplace_back(blas);
 	}
 	if (m_nScratchSize != 0) {
 		auto desc = BASIC_BUFFER_DESC;
@@ -887,7 +951,7 @@ void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::
 			desc.Triangles.IndexCount = mesh->getIndexCount(i);
 			desc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
 
-			GeometryDesc.push_back(desc);
+			GeometryDesc.emplace_back(desc);
 		}
 	}
 	else {
@@ -905,7 +969,7 @@ void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::
 		desc.Triangles.IndexCount = 0;
 		desc.Triangles.IndexFormat = DXGI_FORMAT_UNKNOWN;
 
-		GeometryDesc.push_back(desc);
+		GeometryDesc.emplace_back(desc);
 	}
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
@@ -973,7 +1037,7 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 
 			g_DxResource.device->CreateUnorderedAccessView(resource.Get(), nullptr, &vDesc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 		}
-		m_vOutputVertexBuffer.push_back(resource);
-		m_vUAV.push_back(descriptorHeap);
+		m_vOutputVertexBuffer.emplace_back(resource);
+		m_vUAV.emplace_back(descriptorHeap);
 	}
 }

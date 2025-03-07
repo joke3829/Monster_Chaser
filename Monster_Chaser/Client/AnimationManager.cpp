@@ -28,7 +28,7 @@ CAnimationSet::CAnimationSet(std::ifstream& inFile, UINT nBones)
 		readLabel();		// <Transforms>:
 		inFile.read((char*)&tempInt, sizeof(UINT));
 		inFile.read((char*)&tempFloat, sizeof(float));
-		m_vKeyTime.push_back(tempFloat);
+		m_vKeyTime.emplace_back(tempFloat);
 		inFile.read((char*)test.data(), sizeof(XMFLOAT4X4) * nBones);
 	}
 }
@@ -60,7 +60,7 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 
 // ====================================================================================
 
-CAnimationManager::CAnimationManager(std::ifstream& inFile, CSkinningObject* object)
+CAnimationManager::CAnimationManager(std::ifstream& inFile)
 {
 	UINT tempInt{};
 	std::string strLabel{};
@@ -82,10 +82,10 @@ CAnimationManager::CAnimationManager(std::ifstream& inFile, CSkinningObject* obj
 			inFile.read((char*)&tempInt, sizeof(UINT));
 			for (int i = 0; i < tempInt; ++i) {
 				readLabel();
-				m_vFrameNames.push_back(strLabel);
+				m_vFrameNames.emplace_back(strLabel);
 			}
 			for (int i = 0; i < m_nAnimationSets; ++i)
-				m_vAnimationSets.push_back(std::make_shared<CAnimationSet>(inFile, m_vFrameNames.size()));
+				m_vAnimationSets.emplace_back(std::make_shared<CAnimationSet>(inFile, m_vFrameNames.size()));
 		}
 	}
 	m_vMatrixes.assign(m_vFrameNames.size(), XMFLOAT4X4());
@@ -95,6 +95,20 @@ CAnimationManager::CAnimationManager(std::ifstream& inFile, CSkinningObject* obj
 	m_pMatrixBuffer->Map(0, nullptr, &m_pMappedPointer);
 }
 
+CAnimationManager::CAnimationManager(const CAnimationManager& other)
+{
+	m_nAnimationSets = other.m_nAnimationSets;
+	for (int i = 0; i < other.m_vFrameNames.size(); ++i)
+		m_vFrameNames.emplace_back(other.m_vFrameNames[i]);
+	for (int i = 0; i < m_nAnimationSets; ++i)
+		m_vAnimationSets.emplace_back(other.m_vAnimationSets[i]);
+
+	m_vMatrixes.assign(m_vFrameNames.size(), XMFLOAT4X4());
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = sizeof(XMFLOAT4X4) * m_vFrameNames.size();
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pMatrixBuffer.GetAddressOf()));
+	m_pMatrixBuffer->Map(0, nullptr, &m_pMappedPointer);
+}
 
 void CAnimationManager::SetFramesPointerFromSkinningObject(std::vector<std::unique_ptr<CGameObject>>& vObjects)
 {
@@ -103,7 +117,7 @@ void CAnimationManager::SetFramesPointerFromSkinningObject(std::vector<std::uniq
 			return frame->getFrameName() == name;
 			});
 		if (p != vObjects.end()) {
-			m_vFrames.push_back((*p).get());
+			m_vFrames.emplace_back((*p).get());
 		}
 	}
 }
@@ -131,7 +145,7 @@ void CAnimationManager::UpdateAnimation(float fElapsedTime)
 	m_fElapsedTime = fElapsedTime;
 	float length = m_vAnimationSets[m_nCurrnetSet]->getLength();
 	while (m_fElapsedTime > length)
-		m_fElapsedTime - length;
+		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
 }
 

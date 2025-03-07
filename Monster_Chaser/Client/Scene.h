@@ -16,6 +16,7 @@ public:
 	virtual void UpdateObject(float fElapsedTime) {};
 	
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
+	virtual void ProcessInput(float fElapsedTime) {};
 
 	virtual void PrepareRender() {};
 	virtual void Render() {};
@@ -29,6 +30,7 @@ class CRaytracingScene : public CScene {
 public:
 	virtual void SetUp() {}
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
+	virtual void ProcessInput(float fElapsedTime) {};
 
 	void UpdateObject(float fElapsedTime);
 
@@ -54,5 +56,6 @@ protected:
 class CRaytracingTestScene : public CRaytracingScene {
 public:
 	void SetUp();
+	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 };
