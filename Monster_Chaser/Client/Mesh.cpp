@@ -1,5 +1,29 @@
 #include "Mesh.h"
 
+CHeightMapImage::CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3 xmf3Scale)
+{
+	m_nWidth = nWidth;
+	m_nLength = nLength;
+	m_xmf3Scale = xmf3Scale;
+	std::unique_ptr<BYTE[]> pHeightMapPixels = std::make_unique<BYTE[]>(m_nWidth * m_nLength);
+	HANDLE hFile = ::CreateFile(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_READONLY, NULL);
+	DWORD dwBytesRead;
+	::ReadFile(hFile, pHeightMapPixels.get(), (m_nWidth * m_nLength), &dwBytesRead, NULL);
+	::CloseHandle(hFile);
+
+	m_pHeightMapPixels = std::make_unique<BYTE[]>(m_nWidth * m_nLength);
+	for (int z = 0; z < m_nLength; ++z) {
+		for (int x = 0; x < m_nWidth; ++x) {
+			m_pHeightMapPixels[x + ((m_nLength - 1 - z) * m_nWidth)] = pHeightMapPixels[x + (z * m_nWidth)];
+		}
+	}
+}
+
+float CHeightMapImage::GetHeight(int x, int z)
+{
+	//float f = m_pHeightMapPixels[x + (z * m_nWidth)];
+	return m_pHeightMapPixels[x + (z * m_nWidth)];
+}
 
 Mesh::Mesh(std::ifstream& inFile, std::string strMeshName)
 {
@@ -37,6 +61,11 @@ Mesh::Mesh(std::ifstream& inFile, std::string strMeshName)
 		else if (strLabel == "</Mesh>")
 			break;
 	}
+}
+
+Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
+{
+	std::vector<XMFLOAT3> test{};
 }
 
 //void Mesh::GetMeshNameFromFile(std::ifstream& inFile)
@@ -249,7 +278,7 @@ void Mesh::MakeSubMesh(std::ifstream& inFile)
 	inFile.read((char*)&subMeshIndex, sizeof(int));
 
 	inFile.read((char*)&indices, sizeof(int));
-	m_vIndices.push_back(indices);
+	m_vIndices.emplace_back(indices);
 
 	if (indices > 0) {
 		std::vector<UINT> index{};
@@ -268,7 +297,7 @@ void Mesh::MakeSubMesh(std::ifstream& inFile)
 		memcpy(ptr, index.data(), sizeof(UINT) * indices);
 		indexBuffer->Unmap(0, nullptr);
 	}
-	m_vSubMeshes.push_back(indexBuffer);
+	m_vSubMeshes.emplace_back(indexBuffer);
 }
 
 // =============================== getter ====================================

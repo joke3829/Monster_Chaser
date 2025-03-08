@@ -64,6 +64,9 @@
     <Filter Include="Resource\ResourceManager">
       <UniqueIdentifier>{0d1b56cb-2641-4657-b002-5cc17ec1e9f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\AnimationManager">
+      <UniqueIdentifier>{26e56987-728b-4f9b-bb23-ee29f7266adc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -129,6 +132,9 @@
     <ClInclude Include="DDSTextureLoader12.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="AnimationManager.h">
+      <Filter>Resource\AnimationManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -185,6 +191,9 @@
     <ClCompile Include="DDSTextureLoader12.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="AnimationManager.cpp">
+      <Filter>Resource\AnimationManager</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Client.rc">
@@ -201,5 +210,8 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="RaytracingShader.hlsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="AnimationComputeShader.hlsl" />
   </ItemGroup>
 </Project>

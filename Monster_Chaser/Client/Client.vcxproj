@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AccelerationStructureManager.h" />
+    <ClInclude Include="AnimationManager.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="Component.h">
@@ -175,6 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AccelerationStructureManager.cpp" />
+    <ClCompile Include="AnimationManager.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="Component.cpp">
@@ -221,6 +223,17 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AnimationComputeShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <FileType>Document</FileType>
+    </None>
     <FxCompile Include="RaytracingShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Library</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Library</ShaderType>

@@ -34,6 +34,27 @@ void CAccelerationStructureManager::UpdateScene()
 			}
 		}
 	}
+	for (std::unique_ptr<CSkinningObject>& Skinning : m_pResourceManager->getSkinningObjectList()) {
+		std::vector<ComPtr<ID3D12Resource>>& skinningBLASs = Skinning->getBLAS();
+		std::vector<std::shared_ptr<Mesh>>& sMeshes = Skinning->getMeshes();
+		for (std::unique_ptr<CGameObject>& object : Skinning->getObjects()) {
+			int n = object->getMeshIndex();
+			if (n != -1) {
+				if (sMeshes[n]->getHasVertex()) {
+					m_pInstanceData[i].AccelerationStructure = skinningBLASs[n]->GetGPUVirtualAddress();
+					m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+					m_pInstanceData[i].InstanceID = i;
+					m_pInstanceData[i].InstanceMask = 1;
+					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
+					//XMStoreFloat3x4(ptr, XMMatrixTranspose(XMLoadFloat4x4(&object->getWorldMatrix())));
+					//XMStoreFloat3x4(ptr, XMMatrixIdentity());
+					++i;
+				}
+			}
+		}
+	}
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {
 		.DestAccelerationStructureData = m_TLAS->GetGPUVirtualAddress(),
@@ -71,7 +92,7 @@ void CAccelerationStructureManager::InitBLAS()
 		if (mesh->getHasVertex()) {
 			MakeBLAS(blas, mesh);
 		}
-		m_vBLASList.push_back(blas);
+		m_vBLASList.emplace_back(blas);
 	}
 }
 
@@ -95,7 +116,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 			desc.Triangles.IndexCount = mesh->getIndexCount(i);
 			desc.Triangles.IndexFormat = DXGI_FORMAT_R32_UINT;
 
-			GeometryDesc.push_back(desc);
+			GeometryDesc.emplace_back(desc);
 		}
 	}
 	else {
@@ -113,7 +134,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 		desc.Triangles.IndexCount = 0;
 		desc.Triangles.IndexFormat = DXGI_FORMAT_UNKNOWN;
 
-		GeometryDesc.push_back(desc);
+		GeometryDesc.emplace_back(desc);
 	}
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
@@ -163,6 +184,15 @@ void CAccelerationStructureManager::InitTLAS()
 		if (object->getMeshIndex() != -1) {
 			if (vMeshes[object->getMeshIndex()]->getHasVertex())
 				++m_nValidObject;
+		}
+	}
+	for (std::unique_ptr<CSkinningObject>& Skinning : m_pResourceManager->getSkinningObjectList()) {
+		std::vector<std::shared_ptr<Mesh>>& sMeshes = Skinning->getMeshes();
+		for (std::unique_ptr<CGameObject>& object : Skinning->getObjects()) {
+			if (object->getMeshIndex() != -1) {
+				if (sMeshes[object->getMeshIndex()]->getHasVertex())
+					++m_nValidObject;
+			}
 		}
 	}
 
@@ -216,7 +246,7 @@ void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRA
 	makeBuffer(asResource, preBuildInfo.ResultDataMaxSizeInBytes, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
 
 	ComPtr<ID3D12Resource> ScratchBuffer{};
-	makeBuffer(ScratchBuffer, preBuildInfo.ScratchDataSizeInBytes, D3D12_RESOURCE_STATE_GENERIC_READ);
+	makeBuffer(ScratchBuffer, preBuildInfo.ScratchDataSizeInBytes, D3D12_RESOURCE_STATE_COMMON);
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC ASDesc{};
 	ASDesc.Inputs = inputs;

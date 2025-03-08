@@ -16,9 +16,25 @@
 
 extern DXResources g_DxResource;
 
+class CHeightMapImage {
+public:
+	CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3 xmf3Scale);
+	float GetHeight(int x, int z);
+
+	std::unique_ptr<BYTE[]> m_pHeightMapPixels;
+
+	int m_nWidth;
+	int m_nLength;
+
+	XMFLOAT3 m_xmf3Scale;
+};
+
+// =============================================================================
+
 class Mesh {
 public:
 	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor-메시 즉시 생성					
+	Mesh(CHeightMapImage* heightmap, std::string strMeshName);	// 지형 메시를 만들때 사용
 
 	//void GetMeshNameFromFile(std::ifstream& inFile);
 	void GetBoundInfoFromFile(std::ifstream& inFile);
@@ -54,8 +70,11 @@ public:
 	bool getHasTangent() const;
 	bool getHasBiTangent() const;
 	bool getHasSubmesh() const;
+	bool getbSkinning() const { return m_bSkinningMesh; }
 
 	UINT getSubMeshCount() const;
+	
+	void setSkinning(bool bSkinning) { m_bSkinningMesh = bSkinning; }
 protected:
 private:
 	std::string m_MeshName{};							// Mesh의 이름
@@ -95,5 +114,5 @@ private:
 	std::vector<UINT> m_vIndices;						// 각 SubMesh에 대한 Index 개수, 이게 0이면 존재하지 않는다.
 	bool m_bHasSubMeshes = false;
 
-	
+	bool m_bSkinningMesh = false;
 };

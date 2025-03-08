@@ -26,10 +26,39 @@ bool CResourceManager::AddResourceFromFile(wchar_t* FilePath, std::string textur
 	return true;
 }
 
+bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront)
+{
+	std::ifstream inFile{ FilePath, std::ios::binary };
+	if (!inFile) {
+		OutputDebugString(L"Can't File Open!\n");
+		return false;
+	}
+	std::string strLabel{};
+	auto readLabel = [&]() {
+		char nStrLength{};
+		inFile.read(&nStrLength, sizeof(char));
+		strLabel.assign(nStrLength, ' ');
+		inFile.read(strLabel.data(), nStrLength);
+		};
+	m_vSkinningObject.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	m_vSkinningObject[m_vSkinningObject.size() - 1]->AddResourceFromFile(inFile, textureFilePathFront);
+
+	if (!inFile.eof()) {
+		readLabel();
+		if ("<Animation>:" == strLabel) {	// 애니메이션이 있으면 매니저 생성 & 오브젝트 지정
+			m_vAnimationManager.emplace_back(std::make_unique<CAnimationManager>(inFile));
+			m_vAnimationManager[m_vAnimationManager.size() - 1]->SetFramesPointerFromSkinningObject(m_vSkinningObject[m_vSkinningObject.size() - 1]->getObjects());
+			m_vAnimationManager[m_vAnimationManager.size() - 1]->MakeAnimationMatrixIndex(m_vSkinningObject[m_vSkinningObject.size() - 1].get());
+		}
+	}
+
+	return true;
+}
+
 void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentIndex)
 {
 	UINT nCurrentObjectIndex = m_vGameObjectList.size();
-	m_vGameObjectList.push_back(std::make_unique<CGameObject>());
+	m_vGameObjectList.emplace_back(std::make_unique<CGameObject>());
 	m_vGameObjectList[nCurrentObjectIndex]->InitializeObjectFromFile(inFile);
 
 	if (nParentIndex != -1) {		// 부모가 존재한다는 뜻
@@ -61,7 +90,7 @@ void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentI
 			}
 			else {	// 없으면 새로 생성과 동시에 인덱스 지정
 				m_vGameObjectList[nCurrentObjectIndex]->SetMeshIndex(m_vMeshList.size());
-				m_vMeshList.push_back(std::make_unique<Mesh>(inFile, strLabel));
+				m_vMeshList.emplace_back(std::make_unique<Mesh>(inFile, strLabel));
 			}
 		}
 		else if (strLabel == "<Materials>:") {
@@ -101,7 +130,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 		readLabel();
 		if (strLabel == "<Material>:") {
 			nCurrentMaterial = vMaterials.size();
-			vMaterials.push_back(Material());
+			vMaterials.emplace_back(Material());
 			inFile.read((char*)&tempData, sizeof(int));
 		}
 		else if (strLabel == "<AlbedoColor>:") {
@@ -155,7 +184,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -178,7 +207,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -201,7 +230,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -224,7 +253,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -247,7 +276,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -270,7 +299,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -293,7 +322,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
-				m_vTextureList.push_back(std::make_unique<CTexture>(wstr.c_str()));
+				m_vTextureList.emplace_back(std::make_unique<CTexture>(wstr.c_str()));
 				m_vTextureList[m_vTextureList.size() - 1]->SetTextureName(strLabel);
 			}
 		}
@@ -302,7 +331,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 	}
 	// 게임 오브젝트에 마테리얼 저장
 	for (int i = 0; i < vMaterials.size(); ++i) {
-		m_vGameObjectList[nCurrentIndex]->getMaterials().push_back(vMaterials[i]);
+		m_vGameObjectList[nCurrentIndex]->getMaterials().emplace_back(vMaterials[i]);
 	}
 }
 
@@ -310,6 +339,32 @@ void CResourceManager::InitializeGameObjectCBuffer()
 {
 	for (int i = 0; i < m_vGameObjectList.size(); ++i)
 		m_vGameObjectList[i]->InitializeConstanctBuffer(m_vMeshList);
+
+	for (int i = 0; i < m_vSkinningObject.size(); ++i)
+		m_vSkinningObject[i]->InitializeGameObjectCBuffer();
+}
+
+void CResourceManager::PrepareObject()
+{
+	for (std::unique_ptr<CSkinningObject>& object : m_vSkinningObject)
+		object->PrepareObject();
+}
+
+void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
+{
+	// 애니메이션이 없는 스키닝 객체면 문제가 생김
+	for (int i = 0; i < m_vAnimationManager.size(); ++i) {
+		m_vAnimationManager[i]->TimeIncrease(fElapsedTime);
+		m_vSkinningObject[i]->UpdateAnimationMatrixes();
+		m_vAnimationManager[i]->UpdateAnimationMatrix();
+		m_vSkinningObject[i]->UpdateObject(fElapsedTime);
+	}
+}
+
+void CResourceManager::ReBuildBLAS()
+{
+	for (std::unique_ptr<CSkinningObject>& object : m_vSkinningObject)
+		object->ReBuildBLAS();
 }
 
 void CResourceManager::UpdateWorldMatrix()
@@ -322,9 +377,23 @@ void CResourceManager::UpdateWorldMatrix()
 			object->SetWorlaMatrix(lmtx);
 		}
 		else {
-			object->UpdateWorldMatrix();
+			object->SetWorlaMatrix(object->getLocalMatrix());
 		}
-		//object->SetWorlaMatrix(object->getLocalMatrix());
+	}
+	for (std::unique_ptr<CSkinningObject>& Skinning : m_vSkinningObject) {
+		Skinning->UpdateFrameWorldMatrix();
+		//std::vector<std::unique_ptr<CGameObject>>& sObjects = Skinning->getObjects();
+		//for (std::unique_ptr<CGameObject>& object : sObjects) {
+		//	if (object->getParentIndex() != -1) {
+		//		XMFLOAT4X4 wmtx = sObjects[object->getParentIndex()]->getWorldMatrix();
+		//		XMFLOAT4X4 lmtx = object->getLocalMatrix();
+		//		XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
+		//		object->SetWorlaMatrix(lmtx);
+		//	}
+		//	else
+		//		object->SetWorlaMatrix(object->getLocalMatrix());
+		//		//object->UpdateWorldMatrix();
+		//}
 	}
 }
 

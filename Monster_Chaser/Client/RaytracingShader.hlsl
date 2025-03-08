@@ -2,6 +2,7 @@
 struct Payload
 {
     float3 RayColor;
+    bool bReflect;
 };
 
 struct CameraInfo
@@ -102,8 +103,10 @@ void RayGenShader()
     ray.TMax = 10000;
     
     Payload payload;
+    payload.bReflect = false;
     
-    TraceRay(g_Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, 0xFF, 0, 1, 0, ray, payload);
+    // RAY_FLAG_CULL_BACK_FACING_TRIANGLES
+    TraceRay(g_Scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
     
     uav[DispatchRaysIndex().xy] = float4(payload.RayColor, 1.0f);
 }
@@ -111,57 +114,75 @@ void RayGenShader()
 [shader("miss")]
 void Miss(inout Payload payload)
 {
-    float slope = normalize(WorldRayDirection()).y;
-    float t = saturate(slope * 5 + 0.5);
+    if (!payload.bReflect)
+    {
+        float slope = normalize(WorldRayDirection()).y;
+        float t = saturate(slope * 5 + 0.5);
     
-    float3 skyTop = float3(0.24, 0.44, 0.72);
-    float3 skyBottom = float3(0.75, 0.86, 0.93);
+        float3 skyTop = float3(0.24, 0.44, 0.72);
+        float3 skyBottom = float3(0.75, 0.86, 0.93);
     
-    payload.RayColor = lerp(skyBottom, skyTop, t);
+        payload.RayColor = lerp(skyBottom, skyTop, t);
+    }
 }
 
 [shader("closesthit")]
 void ClosestHit(inout Payload payload, BuiltInTriangleIntersectionAttributes attrib)
 {
     //payload.RayColor = float3(1.0, 0.0, 0.0);
-    
-    float2 uvs[3] = { float2(0.0, 0.0), float2(0.0, 0.0), float2(0.0, 0.0) };
-    uint index[3];
-    uint idx;
-    idx = PrimitiveIndex() * 3;
-    if (l_Mesh.bHasSubMeshes != 0)
+    if (payload.bReflect)
     {
-        index[0] = l_Indices[idx];
-        index[1] = l_Indices[idx + 1];
-        index[2] = l_Indices[idx + 2];
-        if (l_Mesh.bHasTex0 != 0)
-        {
-            uvs[0] = l_Tex0[index[0]];
-            uvs[1] = l_Tex0[index[1]];
-            uvs[2] = l_Tex0[index[2]];
-        }
+        payload.RayColor /= 2;
     }
     else
     {
-        if (l_Mesh.bHasTex0 != 0)
+        float2 uvs[3] = { float2(0.0, 0.0), float2(0.0, 0.0), float2(0.0, 0.0) };
+        uint index[3];
+        uint idx;
+        idx = PrimitiveIndex() * 3;
+        if (l_Mesh.bHasSubMeshes != 0)
         {
-            uvs[0] = l_Tex0[idx];
-            uvs[1] = l_Tex0[idx + 1];
-            uvs[2] = l_Tex0[idx + 2];
+            index[0] = l_Indices[idx];
+            index[1] = l_Indices[idx + 1];
+            index[2] = l_Indices[idx + 2];
+            if (l_Mesh.bHasTex0 != 0)
+            {
+                uvs[0] = l_Tex0[index[0]];
+                uvs[1] = l_Tex0[index[1]];
+                uvs[2] = l_Tex0[index[2]];
+            }
         }
-    }
+        else
+        {
+            if (l_Mesh.bHasTex0 != 0)
+            {
+                uvs[0] = l_Tex0[idx];
+                uvs[1] = l_Tex0[idx + 1];
+                uvs[2] = l_Tex0[idx + 2];
+            }
+        }
     
     
-    float2 texCoord = uvs[0] * (1.0f - attrib.barycentrics.x - attrib.barycentrics.y) +
+        float2 texCoord = uvs[0] * (1.0f - attrib.barycentrics.x - attrib.barycentrics.y) +
     uvs[1] * attrib.barycentrics.x + uvs[2] * attrib.barycentrics.y;
 
-    if (l_Material.bHasAlbedoMap != 0)
-    {
-        payload.RayColor = l_AlbedoMap.SampleLevel(g_Sampler, texCoord, 0).xyz;
+        if (l_Material.bHasAlbedoMap != 0)
+        {
+            payload.RayColor = l_AlbedoMap.SampleLevel(g_Sampler, texCoord, 0).xyz;
+        }
+        else if (l_Material.bHasAlbedoColor != 0)
+            payload.RayColor = l_Material.AlbedoColor.xyz;
+        else
+            payload.RayColor = float3(0.5, 1.0, 0.5);
+        
+        payload.bReflect = true;
+        float3 pos = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
+        RayDesc shadowRay;
+        shadowRay.Origin = pos;
+        shadowRay.Direction = normalize(float3(1.0, 1.0, 1.0));
+        shadowRay.TMin = 0.0001;
+        shadowRay.TMax = 1000;
+        
+        TraceRay(g_Scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, shadowRay, payload);
     }
-    else if(l_Material.bHasAlbedoColor != 0)
-        payload.RayColor = l_Material.AlbedoColor.xyz;
-    else
-        payload.RayColor = float3(0.5, 1.0, 0.5);
-    
 }

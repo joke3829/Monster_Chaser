@@ -1,44 +1,18 @@
 #include "Scene.h"
 
-void CRaytracingScene::SetUp()
-{
-	// Create Global & Local Root Signature
-	CreateRootSignature();
-
-	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
-	m_pRaytracingPipeline->Setup(1 + 1 + 1 + 2 + 1 + 1);
-	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"ClosestHit");
-	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 12);
-	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
-	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(3);
-	m_pRaytracingPipeline->MakePipelineState();
-
-	// Resource Ready
-	m_pResourceManager = std::make_unique<CResourceManager>();
-	// 여기에 파일 넣기 ========================================
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
-	// =========================================================
-	m_pResourceManager->InitializeGameObjectCBuffer();
-
-	// ShaderBindingTable
-	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
-	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
-	m_pShaderBindingTable->CreateSBT();
-
-	// AccelerationStructure
-	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
-	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
-	m_pAccelerationStructureManager->InitBLAS();
-	m_pAccelerationStructureManager->InitTLAS();
-}
-
 void CRaytracingScene::UpdateObject(float fElapsedTime)
 {
 	m_pCamera->UpdateViewMatrix();
-	m_pCamera->SetShaderVariable();
+	//m_pCamera->SetShaderVariable();
+
+	// compute shader & rootSignature set
+	g_DxResource.cmdList->SetPipelineState(m_pAnimationComputeShader.Get());
+	g_DxResource.cmdList->SetComputeRootSignature(m_pComputeRootSignature.Get());
+
+	m_pResourceManager->UpdateSkinningMesh(fElapsedTime);
+	Flush();
+	// BLAS 재빌드
+	m_pResourceManager->ReBuildBLAS();
 
 	m_pResourceManager->UpdateWorldMatrix();
 	m_pAccelerationStructureManager->UpdateScene();
@@ -52,6 +26,7 @@ void CRaytracingScene::PrepareRender()
 
 void CRaytracingScene::Render()
 {
+	m_pCamera->SetShaderVariable();
 	m_pAccelerationStructureManager->SetScene();
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
@@ -239,4 +214,272 @@ void CRaytracingScene::CreateRootSignature()
 		g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pLocalRootSignature.GetAddressOf()));
 		pBlob->Release();
 	}
+}
+
+void CRaytracingScene::CreateComputeRootSignature()
+{
+	D3D12_DESCRIPTOR_RANGE skinningRange[6]{};
+	{
+		skinningRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+		skinningRange[0].NumDescriptors = 1;
+		skinningRange[0].BaseShaderRegister = 0;
+		skinningRange[0].RegisterSpace = 0;
+		skinningRange[0].OffsetInDescriptorsFromTableStart = 0;
+
+		skinningRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		skinningRange[1].NumDescriptors = 1;
+		skinningRange[1].BaseShaderRegister = 0;
+		skinningRange[1].RegisterSpace = 0;
+		skinningRange[1].OffsetInDescriptorsFromTableStart = 1;
+
+		skinningRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		skinningRange[2].NumDescriptors = 1;
+		skinningRange[2].BaseShaderRegister = 1;
+		skinningRange[2].RegisterSpace = 0;
+		skinningRange[2].OffsetInDescriptorsFromTableStart = 2;
+
+		skinningRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		skinningRange[3].NumDescriptors = 1;
+		skinningRange[3].BaseShaderRegister = 2;
+		skinningRange[3].RegisterSpace = 0;
+		skinningRange[3].OffsetInDescriptorsFromTableStart = 3;
+
+		skinningRange[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		skinningRange[4].NumDescriptors = 1;
+		skinningRange[4].BaseShaderRegister = 3;
+		skinningRange[4].RegisterSpace = 0;
+		skinningRange[4].OffsetInDescriptorsFromTableStart = 4;
+
+		skinningRange[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		skinningRange[5].NumDescriptors = 1;
+		skinningRange[5].BaseShaderRegister = 4;
+		skinningRange[5].RegisterSpace = 0;
+		skinningRange[5].OffsetInDescriptorsFromTableStart = 5;
+	}
+
+	D3D12_DESCRIPTOR_RANGE uavRange{};
+	uavRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+	uavRange.NumDescriptors = 1;
+	uavRange.BaseShaderRegister = 0;
+	uavRange.RegisterSpace = 0;
+	uavRange.OffsetInDescriptorsFromTableStart = 0;
+
+	// 0 - ani info, 1 - InputVertex, 2 - OutputVertex
+	D3D12_ROOT_PARAMETER params[3]{};
+	params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[0].DescriptorTable.NumDescriptorRanges = 6;
+	params[0].DescriptorTable.pDescriptorRanges = skinningRange;
+
+	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	params[1].Descriptor.RegisterSpace = 0;
+	params[1].Descriptor.ShaderRegister = 5;
+
+	params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[2].DescriptorTable.NumDescriptorRanges = 1;
+	params[2].DescriptorTable.pDescriptorRanges = &uavRange;
+
+	//D3D12_ROOT_PARAMETER params[9]{};
+	//params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	//params[0].Descriptor.ShaderRegister = 0;
+
+	//params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[1].Descriptor.ShaderRegister = 0;
+
+	//params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[2].Descriptor.ShaderRegister = 1;
+
+	//params[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[3].Descriptor.ShaderRegister = 2;
+
+	//params[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[4].Descriptor.ShaderRegister = 3;
+
+	//params[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[5].Descriptor.ShaderRegister = 4;
+
+	//params[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[6].Descriptor.ShaderRegister = 5;
+
+	//params[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	//params[7].DescriptorTable.NumDescriptorRanges = 1;
+	//params[7].DescriptorTable.pDescriptorRanges = &uavRange;
+
+	//// test
+	//params[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	//params[8].Descriptor.ShaderRegister = 6;
+
+
+
+	D3D12_ROOT_SIGNATURE_DESC desc{};
+	desc.NumParameters = 3;
+	desc.pParameters = params;
+	desc.NumStaticSamplers = 0;
+	desc.pStaticSamplers = nullptr;
+	
+	ID3DBlob* pBlob{};
+	D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pComputeRootSignature.GetAddressOf()));
+	pBlob->Release();
+}
+
+void CRaytracingScene::CreateComputeShader()
+{
+	ID3DBlob* pBlob{};
+	ID3DBlob* errorb{};
+	D3DCompileFromFile(L"AnimationComputeShader.hlsl", nullptr, nullptr, "main", "cs_5_1", 0, 0, &pBlob, &errorb);
+	if (errorb)
+		OutputDebugStringA((char*)errorb->GetBufferPointer());
+
+
+	//D3D12_CACHED_PIPELINE_STATE tempState{};
+	D3D12_COMPUTE_PIPELINE_STATE_DESC desc{};
+	desc.pRootSignature = m_pComputeRootSignature.Get();
+	desc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	desc.CS.BytecodeLength = pBlob->GetBufferSize();
+	desc.CS.pShaderBytecode = pBlob->GetBufferPointer();
+
+	g_DxResource.device->CreateComputePipelineState(&desc, IID_PPV_ARGS(m_pAnimationComputeShader.GetAddressOf()));
+
+	pBlob->Release();
+}
+
+// =====================================================================================
+
+void CRaytracingTestScene::SetUp()
+{
+	// Create Global & Local Root Signature
+	CreateRootSignature();
+
+	// animation Pipeline Ready
+	CreateComputeRootSignature();
+	CreateComputeShader();
+
+	// Create And Set up PipelineState
+	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	m_pRaytracingPipeline->Setup(1 + 1 + 1 + 2 + 1 + 1);
+	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"ClosestHit");
+	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 16);
+	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
+	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(3);
+	m_pRaytracingPipeline->MakePipelineState();
+
+	// Resource Ready
+	m_pResourceManager = std::make_unique<CResourceManager>();
+	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
+	// =========================================================
+
+	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
+	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
+	// 완전히 새로운 객체 & skinning Object 복사는 여기서 ========================================
+	
+	// 복사 예시
+	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	skinned[2]->CopyFromOtherObject(skinned[1].get());
+	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[1].get()));
+	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
+	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
+	aManagers[2]->UpdateAnimation(0.5f);
+
+	// ===========================================================================================
+	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
+
+	// ShaderBindingTable
+	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
+	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
+	m_pShaderBindingTable->CreateSBT();
+
+	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
+	normalObjects.emplace_back(std::make_unique<CGameObject>(*normalObjects[3].get()));
+	normalObjects[normalObjects.size() - 1]->SetParentIndex(-1);
+	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3());
+
+	skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
+	skinned[2]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
+	// ==============================================================================
+
+	m_pResourceManager->PrepareObject();
+
+	// AccelerationStructure
+	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
+	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
+	m_pAccelerationStructureManager->InitBLAS();
+	m_pAccelerationStructureManager->InitTLAS();
+}
+
+
+void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+		switch (wParam) {
+		case '1':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '2':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(1);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '3':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		break;
+	}
+}
+
+void CRaytracingTestScene::ProcessInput(float fElapsedTime)
+{
+	UCHAR keyBuffer[256];
+	GetKeyboardState(keyBuffer);
+
+	if (keyBuffer['W'] & 0x80)
+		m_pCamera->Move(0, fElapsedTime);
+	if (keyBuffer['S'] & 0x80)
+		m_pCamera->Move(3, fElapsedTime);
+	if (keyBuffer[VK_SPACE] & 0x80)
+		m_pCamera->Move(1, fElapsedTime);
+	if (keyBuffer[VK_CONTROL] & 0x80)
+		m_pCamera->Move(2, fElapsedTime);
+
+
+	UINT t = m_pResourceManager->getGameObjectList().size();
+
+	if (keyBuffer[VK_UP] & 0x80) {
+		m_pResourceManager->getGameObjectList()[t - 1]->move(fElapsedTime);
+	}
+	if (keyBuffer[VK_LEFT] & 0x80) {
+		m_pResourceManager->getGameObjectList()[t - 1]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
+	}
+	if (keyBuffer[VK_DOWN] & 0x80) {
+
+	}
+	if (keyBuffer[VK_RIGHT] & 0x80) {
+		m_pResourceManager->getGameObjectList()[t - 1]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
+	}
+	if (keyBuffer['I'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 0);
+		m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(3);
+	}
+	else {
+		m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(1);
+	}
+	if (keyBuffer['J'] & 0x80)
+		m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
+	if (keyBuffer['K'] & 0x80)
+		m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 1);
+	if (keyBuffer['L'] & 0x80)
+		m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 }
