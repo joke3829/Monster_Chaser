@@ -100,13 +100,13 @@ void RayGenShader()
     ray.Origin = g_CameraInfo.cameraEye;
     ray.Direction = normalize(world.xyz - ray.Origin);
     ray.TMin = 0.001;
-    ray.TMax = 10000;
+    ray.TMax = 1000;
     
     Payload payload;
     payload.bReflect = false;
     
     // RAY_FLAG_CULL_BACK_FACING_TRIANGLES
-    TraceRay(g_Scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
+    TraceRay(g_Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, 0xFF, 0, 1, 0, ray, payload);
     
     uav[DispatchRaysIndex().xy] = float4(payload.RayColor, 1.0f);
 }
@@ -180,8 +180,8 @@ void ClosestHit(inout Payload payload, BuiltInTriangleIntersectionAttributes att
         RayDesc shadowRay;
         shadowRay.Origin = pos;
         shadowRay.Direction = normalize(float3(1.0, 1.0, 1.0));
-        shadowRay.TMin = 0.0001;
-        shadowRay.TMax = 1000;
+        shadowRay.TMin = 0.001;
+        shadowRay.TMax = 100;
         
         TraceRay(g_Scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, shadowRay, payload);
     }
