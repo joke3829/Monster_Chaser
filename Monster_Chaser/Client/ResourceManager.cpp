@@ -381,7 +381,7 @@ void CResourceManager::UpdateWorldMatrix()
 		}
 	}
 	for (std::unique_ptr<CSkinningObject>& Skinning : m_vSkinningObject) {
-		Skinning->UpdateWorldMatrix();
+		Skinning->UpdateFrameWorldMatrix();
 		//std::vector<std::unique_ptr<CGameObject>>& sObjects = Skinning->getObjects();
 		//for (std::unique_ptr<CGameObject>& object : sObjects) {
 		//	if (object->getParentIndex() != -1) {

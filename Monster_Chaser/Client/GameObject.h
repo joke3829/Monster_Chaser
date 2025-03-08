@@ -165,7 +165,7 @@ public:
 	}
 
 	void SetPosition(XMFLOAT3 pos);
-	void SetRotate(XMFLOAT3 rot);	// 각각 right, up, look 축으로 회전
+	void Rotate(XMFLOAT3 rot);	// 각각 right, up, look 축으로 회전
 	void SetScale(XMFLOAT3 scale);
 
 	void move(float fElapsedTime);	// test용
@@ -277,7 +277,12 @@ public:
 	void InitializeGameObjectCBuffer();
 	void setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 position);
 	void setPosition(XMFLOAT3 position);
+	void UpdateFrameWorldMatrix();
 	void UpdateWorldMatrix();
+
+	void SetPosition(XMFLOAT3 pos);
+	void Rotate(XMFLOAT3 rot);
+	void move(float fElapsedTime, short arrow);
 
 	std::string getName() const { return m_strObjectName; }
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();

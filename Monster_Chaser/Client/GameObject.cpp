@@ -10,8 +10,8 @@ CGameObject::CGameObject(const CGameObject& other)
 	m_xmf3Up = other.m_xmf3Up;
 	m_xmf3Look = other.m_xmf3Look;
 
-	m_xmf4x4LocalMatrix = other.m_xmf4x4LocalMatrix;
-	//UpdateLocalMatrix();
+	//m_xmf4x4LocalMatrix = other.m_xmf4x4LocalMatrix;
+	UpdateLocalMatrix();
 
 	// 복사는 SBT가 만들어지고 이루어지기때문에 Resource는 복사하지 않는다.
 	// index와 Material만 가져온다
@@ -35,8 +35,8 @@ CGameObject& CGameObject::operator=(const CGameObject& other)
 		m_xmf3Up = other.m_xmf3Up;
 		m_xmf3Look = other.m_xmf3Look;
 
-		//UpdateLocalMatrix();
-		m_xmf4x4LocalMatrix = other.m_xmf4x4LocalMatrix;
+		UpdateLocalMatrix();
+		//m_xmf4x4LocalMatrix = other.m_xmf4x4LocalMatrix;
 		// 복사는 SBT가 만들어지고 이루어지기때문에 Resource는 복사하지 않는다.
 		// index와 Material만 가져온다
 
@@ -106,7 +106,7 @@ void CGameObject::SetPosition(XMFLOAT3 pos)
 	UpdateLocalMatrix();
 }
 // 사용 주의
-void CGameObject::SetRotate(XMFLOAT3 rot)
+void CGameObject::Rotate(XMFLOAT3 rot)
 {
 	XMMATRIX mtx;
 	if (rot.x != 0.0f) {
@@ -784,7 +784,7 @@ void CSkinningObject::setPosition(XMFLOAT3 position)
 	m_xmf4x4WorldMatrix._43 = position.z;
 }
 
-void CSkinningObject::UpdateWorldMatrix()
+void CSkinningObject::UpdateFrameWorldMatrix()
 {
 	for (std::unique_ptr<CGameObject>& object : m_vObjects) {
 		if (object->getParentIndex() != -1) {
@@ -821,6 +821,48 @@ void CSkinningObject::UpdateAnimationMatrixes()
 		else
 			object->SetAnimationMatrix(object->getLocalMatrix());
 	}
+}
+
+void CSkinningObject::UpdateWorldMatrix()
+{
+	m_xmf4x4WorldMatrix._11 = m_xmf3Right.x; m_xmf4x4WorldMatrix._12 = m_xmf3Right.y; m_xmf4x4WorldMatrix._13 = m_xmf3Right.z; m_xmf4x4WorldMatrix._14 = 0;
+	m_xmf4x4WorldMatrix._21 = m_xmf3Up.x; m_xmf4x4WorldMatrix._22 = m_xmf3Up.y; m_xmf4x4WorldMatrix._23 = m_xmf3Up.z; m_xmf4x4WorldMatrix._24 = 0;
+	m_xmf4x4WorldMatrix._31 = m_xmf3Look.x; m_xmf4x4WorldMatrix._32 = m_xmf3Look.y; m_xmf4x4WorldMatrix._33 = m_xmf3Look.z; m_xmf4x4WorldMatrix._34 = 0;
+	m_xmf4x4WorldMatrix._41 = m_xmf3Position.x; m_xmf4x4WorldMatrix._42 = m_xmf3Position.y; m_xmf4x4WorldMatrix._43 = m_xmf3Position.z; m_xmf4x4WorldMatrix._44 = 1;
+}
+void CSkinningObject::SetPosition(XMFLOAT3 pos)
+{
+	m_xmf3Position = pos;
+	UpdateWorldMatrix();
+}
+// 사용 주의
+void CSkinningObject::Rotate(XMFLOAT3 rot)
+{
+	XMMATRIX mtx;
+	if (rot.x != 0.0f) {
+		mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Right), XMConvertToRadians(rot.x));
+		XMStoreFloat3(&m_xmf3Look, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Look), mtx));
+		XMStoreFloat3(&m_xmf3Up, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Up), mtx));
+	}
+	if (rot.y != 0.0f) {
+		mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(rot.y));
+		XMStoreFloat3(&m_xmf3Look, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Look), mtx));
+		XMStoreFloat3(&m_xmf3Right, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Right), mtx));
+	}
+	if (rot.z != 0.0f) {
+		mtx = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Look), XMConvertToRadians(rot.z));
+		XMStoreFloat3(&m_xmf3Right, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Right), mtx));
+		XMStoreFloat3(&m_xmf3Up, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Up), mtx));
+	}
+	UpdateWorldMatrix();
+}
+
+void CSkinningObject::move(float fElapsedTime, short arrow) {
+	if (0 == arrow)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 30.0f * fElapsedTime));
+	else
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -30.0f * fElapsedTime));
+	UpdateWorldMatrix();
 }
 
 std::vector<std::unique_ptr<CSkinningInfo>>& CSkinningObject::getSkinningInfo()

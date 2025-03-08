@@ -73,8 +73,8 @@ void CRaytracingScene::CreateRootSignature()
 		params[2].Descriptor.ShaderRegister = 0;
 
 		D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
-		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 		samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -369,10 +369,10 @@ void CRaytracingTestScene::SetUp()
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
@@ -402,8 +402,8 @@ void CRaytracingTestScene::SetUp()
 	normalObjects[normalObjects.size() - 1]->SetParentIndex(-1);
 	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3());
 
-	//skinned[0]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
+	skinned[2]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
@@ -461,12 +461,25 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_pResourceManager->getGameObjectList()[t - 1]->move(fElapsedTime);
 	}
 	if (keyBuffer[VK_LEFT] & 0x80) {
-		m_pResourceManager->getGameObjectList()[t - 1]->SetRotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
+		m_pResourceManager->getGameObjectList()[t - 1]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
 	}
 	if (keyBuffer[VK_DOWN] & 0x80) {
 
 	}
 	if (keyBuffer[VK_RIGHT] & 0x80) {
-		m_pResourceManager->getGameObjectList()[t - 1]->SetRotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
+		m_pResourceManager->getGameObjectList()[t - 1]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 	}
+	if (keyBuffer['I'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 0);
+		m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(3);
+	}
+	else {
+		m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(1);
+	}
+	if (keyBuffer['J'] & 0x80)
+		m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
+	if (keyBuffer['K'] & 0x80)
+		m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 1);
+	if (keyBuffer['L'] & 0x80)
+		m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 }

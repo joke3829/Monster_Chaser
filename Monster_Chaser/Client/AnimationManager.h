@@ -38,6 +38,7 @@ public:
 	void TimeIncrease(float fElapsedTime);			// 시간 증가
 	void UpdateAnimation(float fElapsedTime);		// 시간 지정
 	void UpdateAnimationMatrix();
+	void ChangeAnimation(UINT nSet);
 
 	void setCurrnetSet(UINT n) { m_nCurrnetSet = n; }
 	void setTimeZero() { m_fElapsedTime = 0.0f; }

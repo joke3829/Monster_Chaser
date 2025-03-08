@@ -14,9 +14,9 @@ CAnimationSet::CAnimationSet(std::ifstream& inFile, UINT nBones)
 
 	readLabel();	// <AnimationSet>:
 	inFile.read((char*)&tempInt, sizeof(UINT));
-	
+
 	readLabel();
-	m_AnimationName = strLabel;	
+	m_AnimationName = strLabel;
 
 	inFile.read((char*)&m_fLength, sizeof(float));
 	inFile.read((char*)&m_nFramePerSec, sizeof(int));
@@ -154,4 +154,12 @@ void CAnimationManager::UpdateAnimationMatrix()
 	for (int i = 0; i < m_vMatrixes.size(); ++i)
 		XMStoreFloat4x4(&m_vMatrixes[i], XMMatrixTranspose(XMLoadFloat4x4(&m_vFrames[i]->getAnimationMatrix())));
 	memcpy(m_pMappedPointer, m_vMatrixes.data(), sizeof(XMFLOAT4X4) * m_vMatrixes.size());
+}
+
+void CAnimationManager::ChangeAnimation(UINT nSet)
+{
+	if (nSet != m_nCurrnetSet) {
+		m_nCurrnetSet = nSet;
+		m_fElapsedTime = 0.0f;
+	}
 }
