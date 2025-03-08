@@ -19,7 +19,7 @@ void CRaytracingScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\samp.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
 	// =========================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();
 
@@ -98,8 +98,8 @@ void CRaytracingScene::CreateRootSignature()
 		params[2].Descriptor.ShaderRegister = 0;
 
 		D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
-		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
 		samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
