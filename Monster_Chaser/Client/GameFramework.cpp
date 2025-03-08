@@ -28,7 +28,7 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	if (m_bRayTracingSupport)
 		InitOutputBuffer();
 	
-	m_bRaster = true;
+	//m_bRaster = true;
 	g_DxResource.device = m_pd3dDevice.Get();
 	g_DxResource.cmdAlloc = m_pd3dCommandAllocator.Get();
 	g_DxResource.cmdList = m_pd3dCommandList.Get();
