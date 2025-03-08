@@ -370,9 +370,9 @@ void CRaytracingTestScene::SetUp()
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
@@ -398,12 +398,16 @@ void CRaytracingTestScene::SetUp()
 	m_pShaderBindingTable->CreateSBT();
 
 	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
+	skinned[1]->setPosition(XMFLOAT3(30.0f, 0.0f, 0.0f));
+	//skinned[1]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3()); //Lion
+	skinned[1]->setPreTransform(2, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3()); //Gorhorrid
 	normalObjects.emplace_back(std::make_unique<CGameObject>(*normalObjects[3].get()));
 	normalObjects[normalObjects.size() - 1]->SetParentIndex(-1);
 	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3());
 
 	skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
-	skinned[2]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[2]->setPreTransform(2, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3()); //Gorhorrid
+	//skinned[2]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3()); //Lion
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
@@ -431,6 +435,34 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			break;
 		case '3':
 			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '4':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(3);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '5':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(4);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '6':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '7':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(6);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '8':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(7);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '9':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(8);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '0':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(9);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
 		}
@@ -469,17 +501,17 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer[VK_RIGHT] & 0x80) {
 		m_pResourceManager->getGameObjectList()[t - 1]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 	}
-	if (keyBuffer['I'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 0);
-		m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(3);
-	}
-	else {
-		m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(1);
-	}
-	if (keyBuffer['J'] & 0x80)
-		m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
-	if (keyBuffer['K'] & 0x80)
-		m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 1);
-	if (keyBuffer['L'] & 0x80)
-		m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
+	//if (keyBuffer['I'] & 0x80) {
+	//	m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 0);
+	//	m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(3);
+	//}
+	//else {
+	//	m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(1);
+	//}
+	//if (keyBuffer['J'] & 0x80)
+	//	m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
+	//if (keyBuffer['K'] & 0x80)
+	//	m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 1);
+	//if (keyBuffer['L'] & 0x80)
+	//	m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 }
