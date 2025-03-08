@@ -382,12 +382,12 @@ void CRaytracingTestScene::SetUp()
 	// 완전히 새로운 객체 & skinning Object 복사는 여기서 ========================================
 	
 	// 복사 예시
-	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	skinned[2]->CopyFromOtherObject(skinned[1].get());
-	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[1].get()));
-	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
-	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
-	aManagers[2]->UpdateAnimation(0.5f);
+	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	//skinned[2]->CopyFromOtherObject(skinned[1].get());
+	//aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[1].get()));
+	//aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
+	//aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
+	//aManagers[2]->UpdateAnimation(0.5f);
 
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
@@ -398,15 +398,15 @@ void CRaytracingTestScene::SetUp()
 	m_pShaderBindingTable->CreateSBT();
 
 	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
-	skinned[1]->setPosition(XMFLOAT3(30.0f, 0.0f, 0.0f));
+	skinned[1]->SetPosition(XMFLOAT3(30.0f, 0.0f, 0.0f));
 	//skinned[1]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3()); //Lion
 	skinned[1]->setPreTransform(2, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3()); //Gorhorrid
 	normalObjects.emplace_back(std::make_unique<CGameObject>(*normalObjects[3].get()));
 	normalObjects[normalObjects.size() - 1]->SetParentIndex(-1);
 	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3());
 
-	skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
-	skinned[2]->setPreTransform(2, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3()); //Gorhorrid
+	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
+	//skinned[2]->setPreTransform(2, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3()); //Gorhorrid
 	//skinned[2]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3()); //Lion
 	// ==============================================================================
 
@@ -501,17 +501,17 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer[VK_RIGHT] & 0x80) {
 		m_pResourceManager->getGameObjectList()[t - 1]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 	}
-	//if (keyBuffer['I'] & 0x80) {
-	//	m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 0);
-	//	m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(3);
-	//}
-	//else {
-	//	m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(1);
-	//}
-	//if (keyBuffer['J'] & 0x80)
-	//	m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
-	//if (keyBuffer['K'] & 0x80)
-	//	m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 1);
-	//if (keyBuffer['L'] & 0x80)
-	//	m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
+	if (keyBuffer['I'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[1]->move(fElapsedTime, 0);
+		//m_pResourceManager->getAnimationManagers()[1]->ChangeAnimation(3);
+	}
+	else {
+		//m_pResourceManager->getAnimationManagers()[1]->ChangeAnimation(1);
+	}
+	if (keyBuffer['J'] & 0x80)
+		m_pResourceManager->getSkinningObjectList()[1]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
+	if (keyBuffer['K'] & 0x80)
+		m_pResourceManager->getSkinningObjectList()[1]->move(fElapsedTime, 1);
+	if (keyBuffer['L'] & 0x80)
+		m_pResourceManager->getSkinningObjectList()[1]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 }
