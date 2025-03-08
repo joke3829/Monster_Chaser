@@ -5,9 +5,16 @@
 
 #include "GameFramework.h"
 
+CGameFramework::~CGameFramework()
+{
+	::CloseHandle(m_hFenceHandle);
+}
+
 bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 {
 	m_hWnd = hWnd; m_hInstance = hInstance;
+
+	_tcscpy_s(m_pszFrameRate, _T("Client ("));
 
 	// device, fence 초기화
 	InitDevice();
@@ -27,13 +34,20 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	// UAV Buffer
 	if (m_bRayTracingSupport)
 		InitOutputBuffer();
+
+	// 필요하면 Scene을 초기화하는 단계도 추가한다.
 	
-	//m_bRaster = true;
 	g_DxResource.device = m_pd3dDevice.Get();
 	g_DxResource.cmdAlloc = m_pd3dCommandAllocator.Get();
 	g_DxResource.cmdList = m_pd3dCommandList.Get();
 	g_DxResource.cmdQueue = m_pd3dCommandQueue.Get();
 	g_DxResource.fence = m_pd3dFence.Get();
+	g_DxResource.pFenceHandle = &m_hFenceHandle;
+
+	m_pCamera = std::make_shared<CCamera>();
+	m_pCamera->Setup(2);
+
+	InitScene();
 
 	return true;
 }
@@ -52,6 +66,7 @@ void CGameFramework::InitDevice()
 
 	// Create Fence
 	m_pd3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_pd3dFence));
+	m_hFenceHandle = ::CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
 void CGameFramework::CheckRayTracingSupport()
@@ -137,7 +152,103 @@ void CGameFramework::InitRTVDSV()
 
 void CGameFramework::InitOutputBuffer()
 {
+	D3D12_DESCRIPTOR_HEAP_DESC heapdesc{};
+	heapdesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	heapdesc.NumDescriptors = 1;
+	heapdesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
+	m_pd3dDevice->CreateDescriptorHeap(&heapdesc, IID_PPV_ARGS(&m_pd3dOutputBufferView));
+
+	D3D12_RESOURCE_DESC desc = BASIC_BUFFER_DESC;
+	desc.Width = DEFINED_UAV_BUFFER_WIDTH;
+	desc.Height = DEFINED_UAV_BUFFER_HEIGHT;
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+
+	m_pd3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&m_pd3dOutputBuffer));
+
+	D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc{};
+	viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+	viewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	m_pd3dDevice->CreateUnorderedAccessView(m_pd3dOutputBuffer.Get(), nullptr, &viewDesc, m_pd3dOutputBufferView->GetCPUDescriptorHandleForHeapStart());
+
+}
+
+void CGameFramework::InitScene()
+{
+	m_pScene = std::make_unique<CRaytracingTestScene>();
+	m_pScene->SetUp();
+	m_pScene->SetCamera(m_pCamera);
+}
+
+LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+		KeyboardProcessing(hWnd, nMessage, wParam, lParam);
+		break;
+	case WM_MOUSEMOVE:
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+		MouseProcessing(hWnd, nMessage, wParam, lParam);
+		break;
+	}
+	return 0;
+}
+
+void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+		switch (wParam) {
+		case 'p':	// 임시로 설정
+		case 'P':
+			if (m_bRayTracingSupport) {
+				m_bRaster = !m_bRaster;
+			}
+			break;
+		default:
+			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		break;
+	}
+}
+
+void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_LBUTTONDOWN:
+		m_bHold = true;
+		GetCursorPos(&oldCursor);
+		break;
+	case WM_LBUTTONUP:
+		m_bHold = false;
+		break;
+	case WM_MOUSEMOVE:
+	{
+		POINT cursorpos;
+		if (m_bHold) {
+			GetCursorPos(&cursorpos);
+			m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
+			SetCursorPos(oldCursor.x, oldCursor.y);
+		}
+		break;
+	}
+	}
+}
+
+void CGameFramework::ProcessInput(float fElapsedTime)
+{
+	m_pScene->ProcessInput(fElapsedTime);
 }
 
 void CGameFramework::Render()
@@ -153,6 +264,7 @@ void CGameFramework::Render()
 
 			m_pd3dCommandList->ResourceBarrier(1, &resBarrier);
 		};
+	m_Timer.Tick(60.0f);
 	if (m_bRaster) {
 		m_pd3dCommandAllocator->Reset();
 		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
@@ -167,8 +279,10 @@ void CGameFramework::Render()
 
 		d3dCPUHandle = m_pd3dDepthStencilView->GetCPUDescriptorHandleForHeapStart();
 		m_pd3dCommandList->ClearDepthStencilView(d3dCPUHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-		// 여기에 렌더링 코드
+		
+		// 렌더링 작업(Set & Draw) ===================
 
+		// ===========================================
 
 		barrier(m_pd3dBackBuffer[nCurrentBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
@@ -178,7 +292,44 @@ void CGameFramework::Render()
 
 		m_pdxgiSwapChain->Present(0, 0);
 	}
-	else {
+	else {	// RayTracing
+		m_pd3dCommandAllocator->Reset();
+		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
 
+		ProcessInput(m_Timer.GetTimeElapsed());
+		// 렌더링 작업(Set & Draw) ===================
+
+		m_pScene->UpdateObject(m_Timer.GetTimeElapsed());
+
+		m_pScene->PrepareRender();
+
+		m_pd3dCommandList->SetDescriptorHeaps(1, m_pd3dOutputBufferView.GetAddressOf());
+		m_pd3dCommandList->SetComputeRootDescriptorTable(0, m_pd3dOutputBufferView->GetGPUDescriptorHandleForHeapStart());
+
+		m_pScene->Render();
+		// ===========================================
+
+		ID3D12Resource* backBuffer{};
+		m_pdxgiSwapChain->GetBuffer(m_pdxgiSwapChain->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&backBuffer));
+
+		barrier(m_pd3dOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE);
+		barrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST);
+
+		m_pd3dCommandList->CopyResource(backBuffer, m_pd3dOutputBuffer.Get());
+
+		barrier(m_pd3dOutputBuffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+		barrier(backBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+
+		backBuffer->Release();
+
+		m_pd3dCommandList->Close();
+		m_pd3dCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(m_pd3dCommandList.GetAddressOf()));
+
+		Flush();
+
+		m_pdxgiSwapChain->Present(0, 0);
 	}
+
+	m_Timer.GetFrameRate(m_pszFrameRate + 8, 37);
+	SetWindowText(m_hWnd, m_pszFrameRate);
 }

@@ -16,24 +16,37 @@
 
 // 필요한 헤더 및 라이브러리를 여기에 추가한다 =================================================
 
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <string>
+#include <fstream>
+#include <timeapi.h>
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
 
+#include <d3dcompiler.h>
+
 #include <DirectXMath.h>
 #include <DirectXCollision.h>
 
+#pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
+#pragma comment(lib, "Winmm.lib")
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
 // =============================================================================================
+
+// enumerate ============================================================================
+enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...?
+	ALBEDO_COLOR, EMISSIVE_COLOR, SPECULAR_COLOR, GLOSSINESS
+};
+//========================================================================================
 
 // 상수 정의 ===========================================================================
 
@@ -64,18 +77,11 @@ struct DXResources {
 	ID3D12GraphicsCommandList4* cmdList{ nullptr };
 	ID3D12CommandQueue* cmdQueue{ nullptr };
 	ID3D12Fence* fence{ nullptr };
+	HANDLE* pFenceHandle{ nullptr };
 };
 
-static DXResources g_DxResource{};
-
 // GPU 작업이 끝나기까지 기다린다.
-inline void Flush()
-{
-	static UINT64 nFenceValue = 1;
-	g_DxResource.cmdQueue->Signal(g_DxResource.fence, nFenceValue);
-	g_DxResource.fence->SetEventOnCompletion(nFenceValue++, nullptr);	
-	// 만약 비정상적으로 작동 시 WaitForSingleObject를 추가한다.
-}
+void Flush();
 
 // size를 alignment의 배수로 할당
 inline constexpr UINT Align(UINT size, UINT alignment)
