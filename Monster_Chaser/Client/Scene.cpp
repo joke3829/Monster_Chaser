@@ -387,7 +387,7 @@ void CRaytracingTestScene::SetUp()
 	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[1].get()));
 	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
 	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
-	aManagers[2]->UpdateAnimation(0.5f);
+	aManagers[2]->UpdateAnimation(0.5f);		// 필요 x
 
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
@@ -400,9 +400,11 @@ void CRaytracingTestScene::SetUp()
 	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
 	normalObjects.emplace_back(std::make_unique<CGameObject>(*normalObjects[3].get()));
 	normalObjects[normalObjects.size() - 1]->SetParentIndex(-1);
-	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3());
+	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(40.0f, 0.0f, 0.0f));
 
 	skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
+	skinned[1]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
 	skinned[2]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
