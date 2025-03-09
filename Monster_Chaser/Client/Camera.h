@@ -23,7 +23,7 @@ protected:
 	ComPtr<ID3D12Resource> m_pd3dCameraBuffer{};
 	CB_CAMERA_INFO* m_pCameraInfo{};
 
-	XMFLOAT3 m_xmf3Eye{ 0.0f, 0.0f, 0.0f };
+	XMFLOAT3 m_xmf3Eye{ 0.0f, 20.0f, 0.0f };
 	XMFLOAT3 m_xmf3At;
 	XMFLOAT3 m_xmf3Up{ 0.0f, 1.0f, 0.0f };
 
