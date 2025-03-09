@@ -199,15 +199,15 @@ protected:
 	std::string m_strName{};
 
 	XMFLOAT3 m_xmf3Pos{};
-	XMFLOAT3 m_xmf3Scale{};
+	XMFLOAT3 m_xmf3Scale{1.0f, 1.0f, 1.0f};
 
 	XMFLOAT4X4 m_xmf4x4LocalMatrix{};
 	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
 	XMFLOAT4X4 m_xmf4x4AnimationMatrix{};
 
-	XMFLOAT3 m_xmf3Right{};
-	XMFLOAT3 m_xmf3Up{};
-	XMFLOAT3 m_xmf3Look{};
+	XMFLOAT3 m_xmf3Right{1.0f, 0.0f, 0.0f};
+	XMFLOAT3 m_xmf3Up{0.0f, 1.0f, 0.0f};
+	XMFLOAT3 m_xmf3Look{0.0f, 0.0f, 1.0f};
 
 	std::vector<Material> m_vMaterials;
 	std::vector<ComPtr<ID3D12Resource>> m_vCBuffers;		// 상수 버퍼 모음
@@ -276,7 +276,6 @@ public:
 
 	void InitializeGameObjectCBuffer();
 	void setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 position);
-	void setPosition(XMFLOAT3 position);
 	void UpdateFrameWorldMatrix();
 	void UpdateWorldMatrix();
 

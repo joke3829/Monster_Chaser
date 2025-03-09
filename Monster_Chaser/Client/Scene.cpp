@@ -368,8 +368,8 @@ void CRaytracingTestScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
@@ -390,6 +390,17 @@ void CRaytracingTestScene::SetUp()
 	//aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
 	//aManagers[2]->UpdateAnimation(0.5f);		// 필요 x
 
+	// 객체 생성 예시
+	UINT finalindex = normalObjects.size();
+	UINT finalmesh = meshes.size();
+	Material tMaterial{};
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(10.0, 20.0, 5.0)));
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 0.4, 0.1, 1.0);
+	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
+	normalObjects[finalindex]->Rotate(XMFLOAT3(0.0, 30.0, 0.0));
+	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 30.0, 0.0));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 

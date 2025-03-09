@@ -68,6 +68,55 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 	std::vector<XMFLOAT3> test{};
 }
 
+Mesh::Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName)
+{
+	m_MeshName = meshName;
+	m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
+	
+	std::vector<XMFLOAT3> pos(8);
+	pos[0] = XMFLOAT3(center.x - extent.x, center.y - extent.y, center.z - extent.z);
+	pos[1] = XMFLOAT3(center.x + extent.x, center.y - extent.y, center.z - extent.z);
+	pos[2] = XMFLOAT3(center.x + extent.x, center.y - extent.y, center.z + extent.z);
+	pos[3] = XMFLOAT3(center.x - extent.x, center.y - extent.y, center.z + extent.z);
+	pos[4] = XMFLOAT3(center.x - extent.x, center.y + extent.y, center.z - extent.z);
+	pos[5] = XMFLOAT3(center.x + extent.x, center.y + extent.y, center.z - extent.z);
+	pos[6] = XMFLOAT3(center.x + extent.x, center.y + extent.y, center.z + extent.z);
+	pos[7] = XMFLOAT3(center.x - extent.x, center.y + extent.y, center.z + extent.z);
+
+
+	void* tempData{};
+	m_bHasVertex = true;
+	m_nVertexCount = 8;
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = sizeof(XMFLOAT3) * 8;
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr, IID_PPV_ARGS(m_pd3dVertexBuffer.GetAddressOf()));
+	m_pd3dVertexBuffer->Map(0, nullptr, &tempData);
+	memcpy(tempData, pos.data(), sizeof(XMFLOAT3) * 8);
+	m_pd3dVertexBuffer->Unmap(0, nullptr);
+
+	std::vector<UINT> index(36);
+	index[0] = 0; index[1] = 1; index[2] = 3; index[3] = 1; index[4] = 2; index[5] = 3;
+	index[6] = 0; index[7] = 4; index[8] = 1; index[9] = 4; index[10] = 5; index[11] = 1;
+	index[12] = 5; index[13] = 6; index[14] = 2; index[15] = 5; index[16] = 2; index[17] = 1;
+	index[18] = 6; index[19] = 7; index[20] = 3; index[21] = 6; index[22] = 3; index[23] = 2;
+	index[24] = 7; index[25] = 4; index[26] = 3; index[27] = 4; index[28] = 0; index[29] = 3;
+	index[30] = 7; index[31] = 6; index[32] = 4; index[33] = 4; index[34] = 6; index[35] = 5;
+
+	m_bHasSubMeshes = true;
+	ComPtr<ID3D12Resource> tempBuffer{};
+	desc.Width = sizeof(UINT) * 36;
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr, IID_PPV_ARGS(tempBuffer.GetAddressOf()));
+	tempBuffer->Map(0, nullptr, &tempData);
+	memcpy(tempData, index.data(), sizeof(UINT) * 36);
+	tempBuffer->Unmap(0, nullptr);
+
+	++m_nSubMeshesCount;
+	m_vIndices.emplace_back(36);
+	m_vSubMeshes.emplace_back(tempBuffer);
+}
+
 //void Mesh::GetMeshNameFromFile(std::ifstream& inFile)
 //{
 //	int temp;	// 정점의 수
