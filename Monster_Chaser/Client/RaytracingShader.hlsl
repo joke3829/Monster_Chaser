@@ -1,7 +1,7 @@
 
 struct Payload
 {
-    float3 RayColor;
+    float4 RayColor;
     bool bReflect;
 };
 
@@ -103,12 +103,13 @@ void RayGenShader()
     ray.TMax = 1000;
     
     Payload payload;
+    payload.RayColor = float4(0.0, 0.0, 0.0, 0.0);
     payload.bReflect = false;
     
     // RAY_FLAG_CULL_BACK_FACING_TRIANGLES
-    TraceRay(g_Scene, RAY_FLAG_CULL_BACK_FACING_TRIANGLES, 0xFF, 0, 1, 0, ray, payload);
+    TraceRay(g_Scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, ray, payload);
     
-    uav[DispatchRaysIndex().xy] = float4(payload.RayColor, 1.0f);
+    uav[DispatchRaysIndex().xy] = float4(payload.RayColor.xyz, 1.0f);
 }
 
 [shader("miss")]
@@ -121,18 +122,69 @@ void Miss(inout Payload payload)
     
         float3 skyTop = float3(0.24, 0.44, 0.72);
         float3 skyBottom = float3(0.75, 0.86, 0.93);
+        float3 skycolor = lerp(skyBottom, skyTop, t);
+        
+        
     
-        payload.RayColor = lerp(skyBottom, skyTop, t);
+        payload.RayColor.xyz = (payload.RayColor.xyz * payload.RayColor.a) + skycolor.xyz;
     }
 }
+
+/*[shader("anyhit")]
+void AnyHit(inout Payload payload, BuiltInTriangleIntersectionAttributes attrib)
+{
+    if (!payload.bReflect)
+    {
+        float2 uvs[3] = { float2(0.0, 0.0), float2(0.0, 0.0), float2(0.0, 0.0) };
+        uint index[3];
+        uint idx;
+        idx = PrimitiveIndex() * 3;
+        if (l_Mesh.bHasSubMeshes != 0)
+        {
+            index[0] = l_Indices[idx];
+            index[1] = l_Indices[idx + 1];
+            index[2] = l_Indices[idx + 2];
+            if (l_Mesh.bHasTex0 != 0)
+            {
+                uvs[0] = l_Tex0[index[0]];
+                uvs[1] = l_Tex0[index[1]];
+                uvs[2] = l_Tex0[index[2]];
+            }
+        }
+        else
+        {
+            if (l_Mesh.bHasTex0 != 0)
+            {
+                uvs[0] = l_Tex0[idx];
+                uvs[1] = l_Tex0[idx + 1];
+                uvs[2] = l_Tex0[idx + 2];
+            }
+        }
+        
+        float2 texCoord = uvs[0] * (1.0f - attrib.barycentrics.x - attrib.barycentrics.y) +
+    uvs[1] * attrib.barycentrics.x + uvs[2] * attrib.barycentrics.y;
+
+        if (l_Material.bHasAlbedoMap != 0)
+        {
+            payload.RayColor = l_AlbedoMap.SampleLevel(g_Sampler, texCoord, 0);
+        }
+        else if (l_Material.bHasAlbedoColor != 0)
+            payload.RayColor = l_Material.AlbedoColor;
+        else
+            payload.RayColor = float4(0.5, 1.0, 0.5, 1.0f);
+    
+        AcceptHitAndEndSearch();
+    }
+    else
+        AcceptHitAndEndSearch();
+}*/
 
 [shader("closesthit")]
 void ClosestHit(inout Payload payload, BuiltInTriangleIntersectionAttributes attrib)
 {
-    //payload.RayColor = float3(1.0, 0.0, 0.0);
     if (payload.bReflect)
     {
-        payload.RayColor /= 2;
+        payload.RayColor.xyz /= 2;
     }
     else
     {
@@ -166,22 +218,27 @@ void ClosestHit(inout Payload payload, BuiltInTriangleIntersectionAttributes att
         float2 texCoord = uvs[0] * (1.0f - attrib.barycentrics.x - attrib.barycentrics.y) +
     uvs[1] * attrib.barycentrics.x + uvs[2] * attrib.barycentrics.y;
 
+        float4 objectColor;
+        
         if (l_Material.bHasAlbedoMap != 0)
         {
-            payload.RayColor = l_AlbedoMap.SampleLevel(g_Sampler, texCoord, 0).xyz;
+            objectColor = l_AlbedoMap.SampleLevel(g_Sampler, texCoord, 0);
         }
         else if (l_Material.bHasAlbedoColor != 0)
-            payload.RayColor = l_Material.AlbedoColor.xyz;
+            objectColor = l_Material.AlbedoColor;
         else
-            payload.RayColor = float3(0.5, 1.0, 0.5);
+            objectColor = float4(0.5f, 1.0f, 0.5f, 1.0f);
         
-        payload.bReflect = true;
+        payload.RayColor = objectColor;
+        
         float3 pos = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
-        RayDesc shadowRay;
-        shadowRay.Origin = pos;
-        shadowRay.Direction = normalize(float3(1.0, 1.0, 1.0));
-        shadowRay.TMin = 0.001;
-        shadowRay.TMax = 100;
+        
+            payload.bReflect = true;
+            RayDesc shadowRay;
+            shadowRay.Origin = pos;
+            shadowRay.Direction = normalize(float3(1.0, 1.0, 1.0));
+            shadowRay.TMin = 0.001;
+            shadowRay.TMax = 100;
         
         TraceRay(g_Scene, RAY_FLAG_NONE, 0xFF, 0, 1, 0, shadowRay, payload);
     }

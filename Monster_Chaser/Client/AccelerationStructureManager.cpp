@@ -104,7 +104,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 		for (int i = 0; i < nSubMesh; ++i) {
 			D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 			desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// 임시
+			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;		// 임시
 			desc.Triangles.Transform3x4 = 0;
 			desc.Triangles.VertexBuffer = {
 				.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),

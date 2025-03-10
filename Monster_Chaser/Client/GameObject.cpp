@@ -476,6 +476,7 @@ void CSkinningObject::AddResourceFromFile(std::ifstream& inFile, std::string str
 void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 {
 	UINT nCurrentObjectIndex = m_vObjects.size();
+	bool bBoneBound = false;
 	m_vObjects.emplace_back(std::make_unique<CGameObject>());
 	m_vObjects[nCurrentObjectIndex]->InitializeObjectFromFile(inFile);
 
@@ -494,21 +495,49 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 	while (1) {
 		readLabel();
 		if (strLabel == "<Mesh>:") {
-			inFile.read((char*)&tempData, sizeof(int));
-			readLabel();	// 메시의 이름 읽기
-			auto p = std::find_if(m_vMeshes.begin(), m_vMeshes.end(), [&](std::shared_ptr<Mesh>& tempMesh) {
-				return tempMesh->getName() == strLabel;
-				});
-			if (p != m_vMeshes.end()) {	// 이미 리스트에 해당 이름을 가진 메시가 존재
-				// 주의할게 이름이 아예 중복이 없는지는 아직 확인을 못함
-				m_vObjects[nCurrentObjectIndex]->SetMeshIndex(std::distance(m_vMeshes.begin(), p));
-				// 중복 메시가 나와도 파일에는 전부 기록되어 있다.
-				Mesh* tempMesh = new Mesh(inFile, strLabel);	// 그 기록을 빼주는 작업
-				delete tempMesh;
+			if (!g_ShowBoundingBox) {
+				inFile.read((char*)&tempData, sizeof(int));
+				readLabel();	// 메시의 이름 읽기
+				auto p = std::find_if(m_vMeshes.begin(), m_vMeshes.end(), [&](std::shared_ptr<Mesh>& tempMesh) {
+					return tempMesh->getName() == strLabel;
+					});
+				if (p != m_vMeshes.end()) {	// 이미 리스트에 해당 이름을 가진 메시가 존재
+					// 주의할게 이름이 아예 중복이 없는지는 아직 확인을 못함
+					m_vObjects[nCurrentObjectIndex]->SetMeshIndex(std::distance(m_vMeshes.begin(), p));
+					// 중복 메시가 나와도 파일에는 전부 기록되어 있다.
+					Mesh* tempMesh = new Mesh(inFile, strLabel);	// 그 기록을 빼주는 작업
+					delete tempMesh;
+				}
+				else {	// 없으면 새로 생성과 동시에 인덱스 지정
+					m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
+					m_vMeshes.emplace_back(std::make_shared<Mesh>(inFile, strLabel));
+				}
 			}
-			else {	// 없으면 새로 생성과 동시에 인덱스 지정
-				m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
-				m_vMeshes.emplace_back(std::make_shared<Mesh>(inFile, strLabel));
+			else {
+				if(bBoneBound){
+					inFile.read((char*)&tempData, sizeof(int));
+					readLabel();	// 메시의 이름 읽기
+					Mesh* tempMesh = new Mesh(inFile, strLabel);	// 그 기록을 빼주는 작업
+					delete tempMesh;
+				}
+				else {
+					inFile.read((char*)&tempData, sizeof(int));
+					readLabel();	// 메시의 이름 읽기
+					auto p = std::find_if(m_vMeshes.begin(), m_vMeshes.end(), [&](std::shared_ptr<Mesh>& tempMesh) {
+						return tempMesh->getName() == strLabel;
+						});
+					if (p != m_vMeshes.end()) {	// 이미 리스트에 해당 이름을 가진 메시가 존재
+						// 주의할게 이름이 아예 중복이 없는지는 아직 확인을 못함
+						m_vObjects[nCurrentObjectIndex]->SetMeshIndex(std::distance(m_vMeshes.begin(), p));
+						// 중복 메시가 나와도 파일에는 전부 기록되어 있다.
+						Mesh* tempMesh = new Mesh(inFile, strLabel);	// 그 기록을 빼주는 작업
+						delete tempMesh;
+					}
+					else {	// 없으면 새로 생성과 동시에 인덱스 지정
+						m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
+						m_vMeshes.emplace_back(std::make_shared<Mesh>(inFile, strLabel));
+					}
+				}
 			}
 		}
 		else if (strLabel == "<SkinningInfo>:") {
@@ -517,6 +546,13 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 		else if (strLabel == "<Materials>:") {
 			inFile.read((char*)&tempData, sizeof(int));
 			AddMaterialFromFile(inFile, nCurrentObjectIndex);
+			if (g_ShowBoundingBox && bBoneBound) {
+				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
+				tempV.clear();
+				Material tempM;
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(1.0, 0.5, 0.7, 1.0);	// 랜덤 컬러
+				tempV.emplace_back(tempM);
+			}
 		}
 		else if (strLabel == "<Children>:") {
 			inFile.read((char*)&tempData, sizeof(int));
@@ -526,6 +562,29 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 					AddObjectFromFile(inFile, nCurrentObjectIndex);
 				}
 			}
+		}
+		else if (strLabel == "<Bound>:") {
+			XMFLOAT3 center, extent;
+			inFile.read((char*)&center, sizeof(XMFLOAT3));
+			inFile.read((char*)&extent, sizeof(XMFLOAT3));
+			m_vObjects[nCurrentObjectIndex]->SetBoundingOBB(center, extent);
+			if (g_ShowBoundingBox) {
+				bBoneBound = true;
+				m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
+				m_vMeshes.emplace_back(std::make_shared<Mesh>(center, extent));
+
+				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
+				tempV.clear();
+				Material tempM;
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(1.0, 0.5, 0.7, 1.0);	// 랜덤 컬러
+				tempV.emplace_back(tempM);
+			}
+		}
+		else if (strLabel == "<BoundingSphere>:") {
+			XMFLOAT3 center{}; float rad{};
+			inFile.read((char*)&center, sizeof(XMFLOAT3));
+			inFile.read((char*)&rad, sizeof(float));
+			m_vObjects[nCurrentObjectIndex]->SetBoundingSphere(center, rad);
 		}
 		else if (strLabel == "</Frame>")
 			break;
@@ -874,15 +933,17 @@ void CRayTracingSkinningObject::PrepareObject()
 
 void CRayTracingSkinningObject::UpdateObject(float fElapsedTime)
 {
-	for (int i = 0; i < m_vSkinningInfo.size(); ++i) {
-		m_vSkinningInfo[i]->SetShaderVariables();
-		UINT ref = m_vSkinningInfo[i]->getRefMeshIndex();
-		g_DxResource.cmdList->SetComputeRootShaderResourceView(1, m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress());
-		g_DxResource.cmdList->SetDescriptorHeaps(1, m_vUAV[ref].GetAddressOf());
-		g_DxResource.cmdList->SetComputeRootDescriptorTable(2, m_vUAV[ref]->GetGPUDescriptorHandleForHeapStart());
+	if (!g_ShowBoundingBox) {
+		for (int i = 0; i < m_vSkinningInfo.size(); ++i) {
+			m_vSkinningInfo[i]->SetShaderVariables();
+			UINT ref = m_vSkinningInfo[i]->getRefMeshIndex();
+			g_DxResource.cmdList->SetComputeRootShaderResourceView(1, m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress());
+			g_DxResource.cmdList->SetDescriptorHeaps(1, m_vUAV[ref].GetAddressOf());
+			g_DxResource.cmdList->SetComputeRootDescriptorTable(2, m_vUAV[ref]->GetGPUDescriptorHandleForHeapStart());
 
-		UINT dispatch = m_vMeshes[ref]->getVertexCount() / 32 + 1;
-		g_DxResource.cmdList->Dispatch(dispatch, 1, 1);
+			UINT dispatch = m_vMeshes[ref]->getVertexCount() / 32 + 1;
+			g_DxResource.cmdList->Dispatch(dispatch, 1, 1);
+		}
 	}
 }
 
@@ -899,7 +960,7 @@ void CRayTracingSkinningObject::ReBuildBLAS()
 				desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// 임시
 				desc.Triangles.Transform3x4 = 0;
 				desc.Triangles.VertexBuffer = {
-					.StartAddress = m_vOutputVertexBuffer[ref]->GetGPUVirtualAddress(),
+					.StartAddress = (g_ShowBoundingBox) ? m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress() : m_vOutputVertexBuffer[ref]->GetGPUVirtualAddress(),
 					.StrideInBytes = sizeof(float) * 3
 				};
 				desc.Triangles.VertexCount = m_vMeshes[ref]->getVertexCount();
@@ -917,7 +978,7 @@ void CRayTracingSkinningObject::ReBuildBLAS()
 			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// 임시
 			desc.Triangles.Transform3x4 = 0;
 			desc.Triangles.VertexBuffer = {
-				.StartAddress = m_vOutputVertexBuffer[ref]->GetGPUVirtualAddress(),
+				.StartAddress = (g_ShowBoundingBox) ? m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress() : m_vOutputVertexBuffer[ref]->GetGPUVirtualAddress(),
 				.StrideInBytes = sizeof(float) * 3
 			};
 			desc.Triangles.VertexCount = m_vMeshes[ref]->getVertexCount();

@@ -187,6 +187,8 @@ public:
 	void SetParentIndex(int index);
 	void SetHitGroupIndex(int index);
 	void SetFrameName(std::string& name) { m_strName = name; }
+	void SetBoundingOBB(XMFLOAT3& center, XMFLOAT3& extent) { m_bUseBoundingInfo |= 0x0011; m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0, 0.0, 0.0, 1.0)); }
+	void SetBoundingSphere(XMFLOAT3& center, float rad) { m_bUseBoundingInfo |= 0x1100, m_BoundingSphere = BoundingSphere(center, rad); }
 	void SetWorlaMatrix(XMFLOAT4X4& mtx);
 	void SetLocalMatrix(XMFLOAT4X4& ltx) { m_xmf4x4LocalMatrix = ltx; }
 	void SetLocalMatrixTranspose(XMFLOAT4X4& ltx) { XMStoreFloat4x4(&m_xmf4x4LocalMatrix, XMMatrixTranspose(XMLoadFloat4x4(&ltx))); }
@@ -197,6 +199,10 @@ public:
 protected:
 	void UpdateLocalMatrix();
 	std::string m_strName{};
+
+	unsigned short m_bUseBoundingInfo{};	// 바운딩 정보 유무 앞->Sphere, 뒤->OBB		
+	BoundingOrientedBox m_OBB{};
+	BoundingSphere m_BoundingSphere{};
 
 	XMFLOAT3 m_xmf3Pos{};
 	XMFLOAT3 m_xmf3Scale{1.0f, 1.0f, 1.0f};
