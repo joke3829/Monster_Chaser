@@ -481,10 +481,16 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_pCamera->Move(0, fElapsedTime);
 	if (keyBuffer['S'] & 0x80)
 		m_pCamera->Move(3, fElapsedTime);
+	if (keyBuffer['A'] & 0x80)
+		m_pCamera->Move(4, fElapsedTime);
+	if (keyBuffer['D'] & 0x80)
+		m_pCamera->Move(5, fElapsedTime);
 	if (keyBuffer[VK_SPACE] & 0x80)
 		m_pCamera->Move(1, fElapsedTime);
 	if (keyBuffer[VK_CONTROL] & 0x80)
 		m_pCamera->Move(2, fElapsedTime);
+	if (keyBuffer[VK_LSHIFT] & 0x80)
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1); //회피 애니메이션
 
 
 	UINT t = m_pResourceManager->getGameObjectList().size();
@@ -501,6 +507,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer[VK_RIGHT] & 0x80) {
 		m_pResourceManager->getGameObjectList()[t - 1]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 	}
+	//몬스터
 	if (keyBuffer['I'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[1]->move(fElapsedTime, 0);
 		//m_pResourceManager->getAnimationManagers()[1]->ChangeAnimation(3);

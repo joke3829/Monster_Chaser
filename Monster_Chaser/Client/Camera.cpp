@@ -37,8 +37,21 @@ void CCamera::Move(int arrow, float fElapsedTime)
 	else if (arrow == 2) {	// 아래
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * -10 * fElapsedTime));
 	}
-	else
+	else if (arrow == 3) { // 뒤
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -20 * fElapsedTime));
+	}
+	else if (arrow == 4) { // 왼쪽
+		// m_xmf3Dir와 m_xmf3Up의 외적을 계산하여 오른쪽 벡터를 구하고, 그 반대 방향으로 이동
+		XMFLOAT3 right;
+		XMStoreFloat3(&right, XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir)));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&right) * -20 * fElapsedTime));
+	}
+	else if (arrow == 5) { // 오른쪽
+		// m_xmf3Dir와 m_xmf3Up의 외적을 계산하여 오른쪽 벡터를 구함
+		XMFLOAT3 right;
+		XMStoreFloat3(&right, XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir)));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&right) * 20 * fElapsedTime));
+	}
 }
 
 void CCamera::UpdateViewMatrix()
