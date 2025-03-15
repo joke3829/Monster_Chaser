@@ -58,4 +58,6 @@ public:
 	void SetUp();
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 };

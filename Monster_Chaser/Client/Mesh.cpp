@@ -1,28 +1,26 @@
 #include "Mesh.h"
 
-CHeightMapImage::CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3 xmf3Scale)
+CHeightMapImage::CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3& xmf3Scale)
 {
 	m_nWidth = nWidth;
 	m_nLength = nLength;
 	m_xmf3Scale = xmf3Scale;
-	std::unique_ptr<BYTE[]> pHeightMapPixels = std::make_unique<BYTE[]>(m_nWidth * m_nLength);
-	HANDLE hFile = ::CreateFile(filePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_READONLY, NULL);
-	DWORD dwBytesRead;
-	::ReadFile(hFile, pHeightMapPixels.get(), (m_nWidth * m_nLength), &dwBytesRead, NULL);
-	::CloseHandle(hFile);
+	
+	std::ifstream inFile{ filePath, std::ios::binary };
+	std::vector<WORD> v(m_nWidth * m_nLength);
+	inFile.read((char*)v.data(), sizeof(WORD) * m_nLength * m_nWidth);
 
-	m_pHeightMapPixels = std::make_unique<BYTE[]>(m_nWidth * m_nLength);
+	m_pHeightMapPixels = std::make_unique<WORD[]>(m_nWidth * m_nLength);
 	for (int z = 0; z < m_nLength; ++z) {
 		for (int x = 0; x < m_nWidth; ++x) {
-			m_pHeightMapPixels[x + ((m_nLength - 1 - z) * m_nWidth)] = pHeightMapPixels[x + (z * m_nWidth)];
+			m_pHeightMapPixels[x + ((m_nLength - 1 - z) * m_nWidth)] = v[x + (z * m_nWidth)];//pHeightMapPixels[x + (z * m_nWidth)];
 		}
 	}
 }
 
 float CHeightMapImage::GetHeight(int x, int z)
 {
-	//float f = m_pHeightMapPixels[x + (z * m_nWidth)];
-	return m_pHeightMapPixels[x + (z * m_nWidth)];
+	return m_pHeightMapPixels[x + (z * m_nWidth)] * m_xmf3Scale.y;
 }
 
 Mesh::Mesh(std::ifstream& inFile, std::string strMeshName)
@@ -65,7 +63,73 @@ Mesh::Mesh(std::ifstream& inFile, std::string strMeshName)
 
 Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 {
-	std::vector<XMFLOAT3> test{};
+	XMFLOAT3 xmf3Scale = heightmap->m_xmf3Scale;
+	int Width = heightmap->m_nWidth; int Length = heightmap->m_nLength;
+	std::vector<XMFLOAT3> vertex{};
+	std::vector<XMFLOAT2> tex0{};
+	std::vector<XMFLOAT2> tex1{};
+	float fHeight;
+	for (int z = 0; z < Length; ++z) {
+		for (int x = 0; x < Width; ++x) {
+			fHeight = heightmap->GetHeight(x, z);
+			vertex.emplace_back(XMFLOAT3(x * xmf3Scale.x, fHeight, z * xmf3Scale.z));
+			tex0.emplace_back(float(x) / float(Width - 1), float(Length - 1 - z) / float(Length - 1));
+			tex1.emplace_back(float(x) / float(xmf3Scale.x * 0.5f), float(z) / float(xmf3Scale.z * 0.5f));
+		}
+	}
+
+	std::vector<UINT> index{};
+
+	for (int z = 0; z < Length - 1; ++z) {
+		for (int x = 0; x < Width - 1; ++x) {
+			index.emplace_back(UINT(x + (z * Width)));
+			index.emplace_back(UINT(x + (z * Width) + Width));
+			index.emplace_back(UINT(x + (z * Width) + 1));
+
+			index.emplace_back(x + (z * Width) + 1);
+			index.emplace_back(x + (z * Width) + Width);
+			index.emplace_back(x + (z * Width) + 1 + Width);
+		}
+	}
+
+	void* tempData{};
+	m_bHasVertex = true; m_nVertexCount = vertex.size();
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = sizeof(XMFLOAT3) * m_nVertexCount;
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr, IID_PPV_ARGS(m_pd3dVertexBuffer.GetAddressOf()));
+	m_pd3dVertexBuffer->Map(0, nullptr, &tempData);
+	memcpy(tempData, vertex.data(), sizeof(XMFLOAT3) * m_nVertexCount);
+	m_pd3dVertexBuffer->Unmap(0, nullptr);
+
+	m_bHasTex0 = true; m_nTexCoord0Count = tex0.size();
+	desc.Width = sizeof(XMFLOAT2) * m_nTexCoord0Count;
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr, IID_PPV_ARGS(m_pd3dTexCoord0Buffer.GetAddressOf()));
+	m_pd3dTexCoord0Buffer->Map(0, nullptr, &tempData);
+	memcpy(tempData, tex0.data(), sizeof(XMFLOAT2) * m_nTexCoord0Count);
+	m_pd3dTexCoord0Buffer->Unmap(0, nullptr);
+
+	m_bHasTex1 = true; m_nTexCoord1Count = tex1.size();
+	desc.Width = sizeof(XMFLOAT2) * m_nTexCoord1Count;
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr, IID_PPV_ARGS(m_pd3dTexCoord1Buffer.GetAddressOf()));
+	m_pd3dTexCoord1Buffer->Map(0, nullptr, &tempData);
+	memcpy(tempData, tex1.data(), sizeof(XMFLOAT2) * m_nTexCoord1Count);
+	m_pd3dTexCoord1Buffer->Unmap(0, nullptr);
+
+	m_bHasSubMeshes = true;
+	ComPtr<ID3D12Resource> tempBuffer{};
+	desc.Width = sizeof(UINT) * index.size();
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr, IID_PPV_ARGS(tempBuffer.GetAddressOf()));
+	tempBuffer->Map(0, nullptr, &tempData);
+	memcpy(tempData, index.data(), sizeof(UINT) * index.size());
+	tempBuffer->Unmap(0, nullptr);
+
+	++m_nSubMeshesCount;
+	m_vIndices.emplace_back(index.size());
+	m_vSubMeshes.emplace_back(tempBuffer);
 }
 
 Mesh::Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName)
