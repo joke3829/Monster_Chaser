@@ -84,18 +84,30 @@ void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentI
 			if (p != m_vMeshList.end()) {	// 이미 리스트에 해당 이름을 가진 메시가 존재
 				// 주의할게 이름이 아예 중복이 없는지는 아직 확인을 못함
 				m_vGameObjectList[nCurrentObjectIndex]->SetMeshIndex(std::distance(m_vMeshList.begin(), p));
-				// 중복 메시가 나와도 파일에는 전부 기록되어 있다. 뺴줘야해
+				// 중복메시 제거
 				Mesh* tempMesh = new Mesh(inFile, strLabel);
 				delete tempMesh;
 			}
 			else {	// 없으면 새로 생성과 동시에 인덱스 지정
 				m_vGameObjectList[nCurrentObjectIndex]->SetMeshIndex(m_vMeshList.size());
 				m_vMeshList.emplace_back(std::make_unique<Mesh>(inFile, strLabel));
+				if (g_ShowBoundingBox) {
+					int n = m_vGameObjectList[nCurrentObjectIndex]->getMeshIndex();
+					std::unique_ptr<Mesh> boundingbox = std::make_unique<Mesh>(m_vMeshList[n]->getOBB().Center, m_vMeshList[n]->getOBB().Extents, m_vMeshList[n]->getName());
+					m_vMeshList.pop_back();
+					m_vMeshList.emplace_back(std::move(boundingbox));
+				}
 			}
 		}
 		else if (strLabel == "<Materials>:") {
 			inFile.read((char*)&tempData, sizeof(int));
 			AddMaterialFromFile(inFile, nCurrentObjectIndex);
+			if (g_ShowBoundingBox) {
+				m_vGameObjectList[nCurrentObjectIndex]->getMaterials().clear();
+				Material tempM;
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// 랜덤 컬러
+				m_vGameObjectList[nCurrentObjectIndex]->getMaterials().emplace_back(tempM);
+			}
 		}
 		else if (strLabel == "<Children>:") {
 			inFile.read((char*)&tempData, sizeof(int));

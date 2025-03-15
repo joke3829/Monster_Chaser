@@ -49,6 +49,8 @@ public:
 	void GetSubMeshesFromFile(std::ifstream& inFile);
 	void MakeSubMesh(std::ifstream& inFile);
 
+	void SetMeshName(std::string& name) { m_MeshName = name; }
+
 	std::string getName() const;
 
 	ID3D12Resource* getVertexBuffer() const;
@@ -59,6 +61,7 @@ public:
 	ID3D12Resource* getTangentsBuffer() const;
 	ID3D12Resource* getBiTangentsBuffer() const;
 	ID3D12Resource* getIndexBuffer(UINT index) const;
+	BoundingOrientedBox& getOBB() { return m_OBB; }
 
 	UINT getVertexCount() const;
 	UINT getIndexCount(int index) const;

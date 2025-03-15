@@ -4,6 +4,9 @@
 
 extern DXResources g_DxResource;
 
+extern std::default_random_engine g_dre;
+extern std::uniform_real_distribution<float> g_unorm;
+
 struct Material {	// 명시적으로 쓸라고 이렇게 쓴 것
 	bool m_bHasAlbedoColor = false;
 	bool m_bHasEmissiveColor = false;

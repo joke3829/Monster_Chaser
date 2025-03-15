@@ -550,7 +550,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(1.0, 0.5, 0.7, 1.0);	// ·£´ý ÄÃ·¯
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ·£´ý ÄÃ·¯
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -576,7 +576,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(1.0, 0.5, 0.7, 1.0);	// ·£´ý ÄÃ·¯
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ·£´ý ÄÃ·¯
 				tempV.emplace_back(tempM);
 			}
 		}

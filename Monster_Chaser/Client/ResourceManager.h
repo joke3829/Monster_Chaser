@@ -4,6 +4,8 @@
 #include "AnimationManager.h"
 
 extern DXResources g_DxResource;
+extern std::default_random_engine g_dre;
+extern std::uniform_real_distribution<float> g_unorm;
 
 class CResourceManager {
 public:

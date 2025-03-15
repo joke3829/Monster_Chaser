@@ -413,7 +413,7 @@ void CRaytracingTestScene::SetUp()
 	/*skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
 	skinned[1]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));*/
-	skinned[0]->setPreTransform(5.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	//skinned[0]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
@@ -466,16 +466,16 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 
 	if (keyBuffer['I'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 0);
-		m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(3);
+		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3);
 	}
 	else {
-		//m_pResourceManager->getAnimationManagers()[2]->ChangeAnimation(1);
+		//m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1);
 	}
 	if (keyBuffer['J'] & 0x80)
-		m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
 	if (keyBuffer['K'] & 0x80)
-		m_pResourceManager->getSkinningObjectList()[2]->move(fElapsedTime, 1);
+		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
 	if (keyBuffer['L'] & 0x80)
-		m_pResourceManager->getSkinningObjectList()[2]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 }
