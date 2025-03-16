@@ -490,7 +490,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer[VK_CONTROL] & 0x80)
 		m_pCamera->Move(2, fElapsedTime);
 	if (keyBuffer[VK_LSHIFT] & 0x80)
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1); //회피 애니메이션
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5); //회피 애니메이션
 
 
 	UINT t = m_pResourceManager->getGameObjectList().size();
