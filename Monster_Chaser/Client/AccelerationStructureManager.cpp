@@ -15,24 +15,25 @@ void CAccelerationStructureManager::UpdateScene()
 {
 	std::vector<std::unique_ptr<CGameObject>>& objects = m_pResourceManager->getGameObjectList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
-	int i{};
-	
-	for (std::unique_ptr<CGameObject>& object : objects) {
-		int n = object->getMeshIndex();
-		if (n != -1) {
-			if (meshes[n]->getHasVertex()) {
-				m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-				m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-				m_pInstanceData[i].InstanceID = i;
-				m_pInstanceData[i].InstanceMask = 1;
-				m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-				auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-				XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
-				//XMStoreFloat3x4(ptr, XMMatrixTranspose(XMLoadFloat4x4(&object->getWorldMatrix())));
-				//XMStoreFloat3x4(ptr, XMMatrixIdentity());
-				++i;
+	int i = m_nStaticMesh;
+	if (m_bFirst) {
+		for (std::unique_ptr<CGameObject>& object : objects) {
+			int n = object->getMeshIndex();
+			if (n != -1) {
+				if (meshes[n]->getHasVertex()) {
+					m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
+					m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+					m_pInstanceData[i].InstanceID = i;
+					m_pInstanceData[i].InstanceMask = 1;
+					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
+					++i;
+				}
 			}
 		}
+		m_nStaticMesh = i;
+		m_bFirst = false;
 	}
 	for (std::unique_ptr<CSkinningObject>& Skinning : m_pResourceManager->getSkinningObjectList()) {
 		std::vector<ComPtr<ID3D12Resource>>& skinningBLASs = Skinning->getBLAS();
@@ -47,9 +48,7 @@ void CAccelerationStructureManager::UpdateScene()
 					m_pInstanceData[i].InstanceMask = 1;
 					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
 					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
-					//XMStoreFloat3x4(ptr, XMMatrixTranspose(XMLoadFloat4x4(&object->getWorldMatrix())));
-					//XMStoreFloat3x4(ptr, XMMatrixIdentity());
+					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
 					++i;
 				}
 			}
@@ -60,11 +59,12 @@ void CAccelerationStructureManager::UpdateScene()
 		.DestAccelerationStructureData = m_TLAS->GetGPUVirtualAddress(),
 		.Inputs = {
 			.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
-			.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+			.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE,
 			.NumDescs = m_nValidObject,
 			.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
 			.InstanceDescs = m_InstanceBuffer->GetGPUVirtualAddress()
 		},
+		.SourceAccelerationStructureData = m_TLAS->GetGPUVirtualAddress(),
 		.ScratchAccelerationStructureData = m_tlasUpdataeScratch->GetGPUVirtualAddress()
 	};
 
@@ -104,7 +104,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 		for (int i = 0; i < nSubMesh; ++i) {
 			D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 			desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// 임시
+			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;		// 임시
 			desc.Triangles.Transform3x4 = 0;
 			desc.Triangles.VertexBuffer = {
 				.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
@@ -201,17 +201,53 @@ void CAccelerationStructureManager::InitTLAS()
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &instanceDesc,
 		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_InstanceBuffer.GetAddressOf()));
 	m_InstanceBuffer->Map(0, nullptr, (void**)&m_pInstanceData);
-	
+
+	int i{};
+	// static Mehs 지금 지정
+	for (std::unique_ptr<CGameObject>& object : vObjects) {
+		int n = object->getMeshIndex();
+		if (n != -1) {
+			if (vMeshes[n]->getHasVertex()) {
+				m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
+				m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+				m_pInstanceData[i].InstanceID = i;
+				m_pInstanceData[i].InstanceMask = 1;
+				m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+				auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+				XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
+				++i;
+			}
+		}
+	}
+	for (std::unique_ptr<CSkinningObject>& Skinning : m_pResourceManager->getSkinningObjectList()) {
+		std::vector<ComPtr<ID3D12Resource>>& skinningBLASs = Skinning->getBLAS();
+		std::vector<std::shared_ptr<Mesh>>& sMeshes = Skinning->getMeshes();
+		for (std::unique_ptr<CGameObject>& object : Skinning->getObjects()) {
+			int n = object->getMeshIndex();
+			if (n != -1) {
+				if (sMeshes[n]->getHasVertex()) {
+					m_pInstanceData[i].AccelerationStructure = skinningBLASs[n]->GetGPUVirtualAddress();
+					m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+					m_pInstanceData[i].InstanceID = i;
+					m_pInstanceData[i].InstanceMask = 1;
+					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
+					++i;
+				}
+			}
+		}
+	}
 
 	UINT64 updateScratchSize;
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
 	inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-	inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+	inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
 	inputs.NumDescs = m_nValidObject;
 	inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 	inputs.InstanceDescs = m_InstanceBuffer->GetGPUVirtualAddress();
 
-	MakeAccelerationStructure(inputs, m_TLAS, &updateScratchSize);
+	MakeAccelerationStructure(inputs, m_TLAS, &updateScratchSize, true);
 
 	auto desc = BASIC_BUFFER_DESC;
 	desc.Width = (updateScratchSize >= 8ULL) ? updateScratchSize : 8ULL;
@@ -221,7 +257,7 @@ void CAccelerationStructureManager::InitTLAS()
 }
 
 // AS 생성
-void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, ComPtr<ID3D12Resource>& asResource, UINT64* updateScratchSize)
+void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, ComPtr<ID3D12Resource>& asResource, UINT64* updateScratchSize, bool allowUpdate)
 {
 	ID3D12Device5* device = g_DxResource.device;
 	ID3D12CommandAllocator* cmdAlloc = g_DxResource.cmdAlloc;
@@ -240,8 +276,10 @@ void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRA
 	device->GetRaytracingAccelerationStructurePrebuildInfo(&inputs, &preBuildInfo);
 
 	if (updateScratchSize)
-		*updateScratchSize = preBuildInfo.ScratchDataSizeInBytes;
-		//*updateScratchSize = preBuildInfo.UpdateScratchDataSizeInBytes;
+		if (allowUpdate)
+			*updateScratchSize = preBuildInfo.UpdateScratchDataSizeInBytes;
+		else
+			*updateScratchSize = preBuildInfo.ScratchDataSizeInBytes;
 
 	makeBuffer(asResource, preBuildInfo.ResultDataMaxSizeInBytes, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE);
 

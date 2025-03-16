@@ -18,10 +18,10 @@ extern DXResources g_DxResource;
 
 class CHeightMapImage {
 public:
-	CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3 xmf3Scale);
+	CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3& xmf3Scale);
 	float GetHeight(int x, int z);
 
-	std::unique_ptr<BYTE[]> m_pHeightMapPixels;
+	std::unique_ptr<WORD[]> m_pHeightMapPixels;
 
 	int m_nWidth;
 	int m_nLength;
@@ -33,8 +33,9 @@ public:
 
 class Mesh {
 public:
-	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor-메시 즉시 생성					
-	Mesh(CHeightMapImage* heightmap, std::string strMeshName);	// 지형 메시를 만들때 사용
+	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor-메시 즉시 생성	
+	Mesh(CHeightMapImage* heightmap, std::string strMeshName);
+	Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName = "noNameMesh");					// boundingOBB 만들때 사용
 
 	//void GetMeshNameFromFile(std::ifstream& inFile);
 	void GetBoundInfoFromFile(std::ifstream& inFile);
@@ -48,6 +49,8 @@ public:
 	void GetSubMeshesFromFile(std::ifstream& inFile);
 	void MakeSubMesh(std::ifstream& inFile);
 
+	void SetMeshName(std::string& name) { m_MeshName = name; }
+
 	std::string getName() const;
 
 	ID3D12Resource* getVertexBuffer() const;
@@ -58,6 +61,7 @@ public:
 	ID3D12Resource* getTangentsBuffer() const;
 	ID3D12Resource* getBiTangentsBuffer() const;
 	ID3D12Resource* getIndexBuffer(UINT index) const;
+	BoundingOrientedBox& getOBB() { return m_OBB; }
 
 	UINT getVertexCount() const;
 	UINT getIndexCount(int index) const;

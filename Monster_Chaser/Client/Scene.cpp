@@ -359,19 +359,20 @@ void CRaytracingTestScene::SetUp()
 	m_pRaytracingPipeline->Setup(1 + 1 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
 	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"ClosestHit");
-	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 16);
+	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(3);
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(31);
 	m_pRaytracingPipeline->MakePipelineState();
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_(2).bin", "src\\texture\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	// =========================================================
 
@@ -387,8 +388,21 @@ void CRaytracingTestScene::SetUp()
 	//aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[1].get()));
 	//aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
 	//aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
-	//aManagers[2]->UpdateAnimation(0.5f);
+	//aManagers[2]->UpdateAnimation(0.5f);		// 필요 x
 
+	// 객체 생성 예시
+	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.025f, 1.0f));
+
+	UINT finalindex = normalObjects.size();
+	UINT finalmesh = meshes.size();
+	Material tMaterial{};
+	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.2, 0.4, 1.0, 1.0);
+	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
+	//normalObjects[finalindex]->Rotate(XMFLOAT3(0.0, 30.0, 0.0));
+	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 
@@ -398,16 +412,10 @@ void CRaytracingTestScene::SetUp()
 	m_pShaderBindingTable->CreateSBT();
 
 	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
-	skinned[1]->SetPosition(XMFLOAT3(30.0f, 10.0f, 0.0f));
-	//skinned[1]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3()); //Lion
-	skinned[1]->setPreTransform(2, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3()); //Gorhorrid
-	normalObjects.emplace_back(std::make_unique<CGameObject>(*normalObjects[3].get()));
-	normalObjects[normalObjects.size() - 1]->SetParentIndex(-1);
-	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3());
-
-	skinned[0]->SetPosition(XMFLOAT3(0.0f, 10.0f, 50.0f));
-	//skinned[2]->setPreTransform(2, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3()); //Gorhorrid
-	//skinned[2]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3()); //Lion
+	/*skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
+	skinned[1]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));*/
+	//skinned[0]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
@@ -437,34 +445,6 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
-		case '4':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(3);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '5':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(4);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '6':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '7':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(6);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '8':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(7);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '9':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(8);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '0':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(9);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
 		}
 		break;
 	case WM_KEYUP:
@@ -481,44 +461,23 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_pCamera->Move(0, fElapsedTime);
 	if (keyBuffer['S'] & 0x80)
 		m_pCamera->Move(3, fElapsedTime);
-	if (keyBuffer['A'] & 0x80)
-		m_pCamera->Move(4, fElapsedTime);
-	if (keyBuffer['D'] & 0x80)
-		m_pCamera->Move(5, fElapsedTime);
 	if (keyBuffer[VK_SPACE] & 0x80)
 		m_pCamera->Move(1, fElapsedTime);
 	if (keyBuffer[VK_CONTROL] & 0x80)
 		m_pCamera->Move(2, fElapsedTime);
-	if (keyBuffer[VK_LSHIFT] & 0x80)
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5); //회피 애니메이션
 
 
-	UINT t = m_pResourceManager->getGameObjectList().size();
-
-	if (keyBuffer[VK_UP] & 0x80) {
-		m_pResourceManager->getGameObjectList()[t - 1]->move(fElapsedTime);
-	}
-	if (keyBuffer[VK_LEFT] & 0x80) {
-		m_pResourceManager->getGameObjectList()[t - 1]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
-	}
-	if (keyBuffer[VK_DOWN] & 0x80) {
-
-	}
-	if (keyBuffer[VK_RIGHT] & 0x80) {
-		m_pResourceManager->getGameObjectList()[t - 1]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
-	}
-	//몬스터
 	if (keyBuffer['I'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[1]->move(fElapsedTime, 0);
-		//m_pResourceManager->getAnimationManagers()[1]->ChangeAnimation(3);
+		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3);
 	}
 	else {
-		//m_pResourceManager->getAnimationManagers()[1]->ChangeAnimation(1);
+		//m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1);
 	}
 	if (keyBuffer['J'] & 0x80)
-		m_pResourceManager->getSkinningObjectList()[1]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
 	if (keyBuffer['K'] & 0x80)
-		m_pResourceManager->getSkinningObjectList()[1]->move(fElapsedTime, 1);
+		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
 	if (keyBuffer['L'] & 0x80)
-		m_pResourceManager->getSkinningObjectList()[1]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 }
