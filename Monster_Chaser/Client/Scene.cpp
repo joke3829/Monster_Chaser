@@ -2,7 +2,6 @@
 
 void CRaytracingScene::UpdateObject(float fElapsedTime)
 {
-	m_pCamera->UpdateViewMatrix();
 	//m_pCamera->SetShaderVariable();
 
 	// compute shader & rootSignature set
@@ -15,6 +14,8 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->ReBuildBLAS();
 
 	m_pResourceManager->UpdateWorldMatrix();
+
+	m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene();
 }
 
@@ -368,7 +369,7 @@ void CRaytracingTestScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
@@ -391,7 +392,7 @@ void CRaytracingTestScene::SetUp()
 	//aManagers[2]->UpdateAnimation(0.5f);		// 필요 x
 
 	// 객체 생성 예시
-	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.025f, 1.0f));
+	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.025f, 1.0f));
 
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
@@ -401,8 +402,7 @@ void CRaytracingTestScene::SetUp()
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);
 	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.2, 0.4, 1.0, 1.0);
 	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
-	//normalObjects[finalindex]->Rotate(XMFLOAT3(0.0, 30.0, 0.0));
-	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0));
+	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0));*/
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 
@@ -419,6 +419,11 @@ void CRaytracingTestScene::SetUp()
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
+
+	// 카메라 설정 ==============================================================
+	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetCameraLength(15.0f);
+	// ==========================================================================
 
 	// AccelerationStructure
 	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
@@ -469,7 +474,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if (keyBuffer['I'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3);
+		//m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3);
 	}
 	else {
 		//m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1);

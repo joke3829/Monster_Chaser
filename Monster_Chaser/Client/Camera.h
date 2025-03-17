@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stdafx.h"
+#include "GameObject.h"
 
 extern DXResources g_DxResource;
 
@@ -19,7 +20,16 @@ public:
 
 	void UpdateViewMatrix();
 	void SetShaderVariable();
+
+	void SetTarget(CGameObject* target);
+	void SetThirdPersonMode(bool bThirdPerson);
+	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }
+
 protected:
+	bool m_bThirdPerson = false;
+	CGameObject* m_pTarget = nullptr;
+
+
 	ComPtr<ID3D12Resource> m_pd3dCameraBuffer{};
 	CB_CAMERA_INFO* m_pCameraInfo{};
 
@@ -28,6 +38,7 @@ protected:
 	XMFLOAT3 m_xmf3Up{ 0.0f, 1.0f, 0.0f };
 
 	XMFLOAT3 m_xmf3Dir{ 0.0f, 0.0f, 1.0f };
+	XMFLOAT3 m_xmf3Offset{ 0.0f, 0.0f, -1.0f };
 
 	XMFLOAT4X4 m_xmf4x4View;
 	XMFLOAT4X4 m_xmf4x4Proj;
@@ -36,6 +47,9 @@ protected:
 	float m_fAspect = 960.0f / 540.0f;
 	float m_fNear = 0.1f;
 	float m_fFar = 1000.0f;
+
+	float m_fLimitcy{};
+	float m_fCameraLength{ 30.0f };		// 카메라 거리
 
 	int m_nRootParameterIndex{};
 };
