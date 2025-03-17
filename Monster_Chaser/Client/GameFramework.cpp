@@ -180,8 +180,8 @@ void CGameFramework::InitOutputBuffer()
 void CGameFramework::InitScene()
 {
 	m_pScene = std::make_unique<CRaytracingTestScene>();
-	m_pScene->SetUp();
 	m_pScene->SetCamera(m_pCamera);
+	m_pScene->SetUp();
 }
 
 LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
