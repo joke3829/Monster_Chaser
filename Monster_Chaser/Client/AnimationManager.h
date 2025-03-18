@@ -42,6 +42,7 @@ public:
 
 	void setCurrnetSet(UINT n) { m_nCurrnetSet = n; }
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
+
 protected:
 	UINT m_nAnimationSets{};
 	UINT m_nCurrnetSet{};
