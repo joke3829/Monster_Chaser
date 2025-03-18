@@ -463,26 +463,11 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	GetKeyboardState(keyBuffer);
 
 	if (keyBuffer['W'] & 0x80)
-		m_pCamera->Move(0, fElapsedTime);
-	if (keyBuffer['S'] & 0x80)
-		m_pCamera->Move(3, fElapsedTime);
-	if (keyBuffer[VK_SPACE] & 0x80)
-		m_pCamera->Move(1, fElapsedTime);
-	if (keyBuffer[VK_CONTROL] & 0x80)
-		m_pCamera->Move(2, fElapsedTime);
-
-
-	if (keyBuffer['I'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
-		//m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3);
-	}
-	else {
-		//m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1);
-	}
-	if (keyBuffer['J'] & 0x80)
+	if(keyBuffer['A'] & 0x80)
 		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
-	if (keyBuffer['K'] & 0x80)
+	if (keyBuffer['S'] & 0x80)
 		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
-	if (keyBuffer['L'] & 0x80)
+	if (keyBuffer['D'] & 0x80)
 		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 }
