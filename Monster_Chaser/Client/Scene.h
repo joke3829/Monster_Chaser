@@ -61,4 +61,6 @@ public:
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+private:
+	UCHAR m_PrevKeyBuffer[256] = { 0 }; // 이전 키 상태 저장
 };

@@ -39,9 +39,10 @@ public:
 	void UpdateAnimation(float fElapsedTime);		// 시간 지정
 	void UpdateAnimationMatrix();
 	void ChangeAnimation(UINT nSet);
-
+	void ChangeAnimation(UINT nSet, bool playOnce = false); // playOnce 옵션 추가
 	void setCurrnetSet(UINT n) { m_nCurrnetSet = n; }
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
+	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrnetSet]->getLength(); }
 
 protected:
 	UINT m_nAnimationSets{};
@@ -56,5 +57,7 @@ protected:
 	ComPtr<ID3D12Resource> m_pMatrixBuffer{};		// 애니메이션 행렬을 넣을 상수 버퍼
 	void* m_pMappedPointer{};
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// 애니메이션 행렬을 저장할 배열
+private:
+	bool m_bPlayOnce = false; // 한 번만 재생 여부
 };
 
