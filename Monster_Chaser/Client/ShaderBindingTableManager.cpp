@@ -2,7 +2,7 @@
 
 // 여기에 셰이더 이름을 사용할 개수 만큼 쓴다.
 const wchar_t* RayGenShaderNames[] = { L"RayGenShader" };
-const wchar_t* MissShaderNames[] = { L"Miss" };
+const wchar_t* MissShaderNames[] = { L"RadianceMiss", L"ShadowMiss"};
 
 struct LocalRootArg {
 	D3D12_GPU_VIRTUAL_ADDRESS CBufferGPUVirtualAddress;		// Material상수버퍼

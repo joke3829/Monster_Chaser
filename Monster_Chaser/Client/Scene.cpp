@@ -357,20 +357,21 @@ void CRaytracingTestScene::SetUp()
 
 	// Create And Set up PipelineState
 	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
-	m_pRaytracingPipeline->Setup(1 + 1 + 1 + 2 + 1 + 1);
+	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"ClosestHit");
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit");
 	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(31);
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(3);
 	m_pRaytracingPipeline->MakePipelineState();
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
@@ -400,9 +401,19 @@ void CRaytracingTestScene::SetUp()
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.2, 0.4, 1.0, 1.0);
+	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.2, 0.4, 0.2, 1.0);
 	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
 	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0));*/
+
+	/*UINT finalindex = normalObjects.size();
+	UINT finalmesh = meshes.size();
+	Material tMaterial{};
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(5.0f, 20.0f, 5.0f)));
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.2, 0.4, 0.2, 0.0);
+	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
+	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 30.0, 0.0)); */
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 
@@ -421,8 +432,8 @@ void CRaytracingTestScene::SetUp()
 	m_pResourceManager->PrepareObject();
 
 	// 카메라 설정 ==============================================================
-	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	m_pCamera->SetCameraLength(15.0f);
+	//m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	//m_pCamera->SetCameraLength(15.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
