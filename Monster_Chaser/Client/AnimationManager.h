@@ -11,6 +11,7 @@ public:
 	void UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime);
 
 	float getLength() const { return m_fLength; }
+
 private:
 	std::string m_AnimationName{};
 	float m_fLength{};
@@ -43,6 +44,7 @@ public:
 	void setCurrnetSet(UINT n) { m_nCurrnetSet = n; }
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
 	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrnetSet]->getLength(); }
+
 
 protected:
 	UINT m_nAnimationSets{};

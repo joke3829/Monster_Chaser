@@ -11,7 +11,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	auto& animationManagers = m_pResourceManager->getAnimationManagers();
 	for (auto& animationManager : animationManagers) {
 		if (animationManager->IsAnimationFinished()) {
-			animationManager->ChangeAnimation(2, false); // idle로 전환
+			animationManager->ChangeAnimation(24, false); // idle로 전환
 		}
 	}
 
@@ -378,8 +378,8 @@ void CRaytracingTestScene::SetUp()
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	// =========================================================
@@ -420,13 +420,13 @@ void CRaytracingTestScene::SetUp()
 
 	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
 	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
-	skinned[1]->setPreTransform(1.0, XMFLOAT3(00.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
-	skinned[0]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 90.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
-	m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
+	m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(24);
 
 	// 카메라 설정 ==============================================================
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
@@ -499,45 +499,45 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if (keyBuffer['W'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, false); // 반복 재생
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(4, false); // 반복 재생
 		m_PressKey = true;
 	}
 	else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2, false); // idle로 전환
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false); // idle로 전환
 	}
 
 	if (keyBuffer['A'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -90.0f * fElapsedTime, 0.0f));
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(10, false);
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f));
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(11, false);
 		m_PressKey = true;
 	}
 	else if (m_PrevKeyBuffer['A'] & 0x80) { // A 키를 뗐을 때
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2, false);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
 	}
 
 	if (keyBuffer['S'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(9, false);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, false);
 		m_PressKey = true;
 	}
 	else if (m_PrevKeyBuffer['S'] & 0x80) { // S 키를 뗐을 때
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2, false);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
 	}
 
 	if (keyBuffer['D'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(11, false);
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f));
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(12, false);
 		m_PressKey = true;
 	}
 	else if (m_PrevKeyBuffer['D'] & 0x80) { // D 키를 뗐을 때
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2, false);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
 	}
 	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(0, true);
 		m_PressKey = true;
 	}
 	if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1, true);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(10, true);
 		m_PressKey = true;
 	}
 	if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
@@ -549,11 +549,11 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_PressKey = true;
 	}
 	if ((keyBuffer['I'] & 0x80) && !(m_PrevKeyBuffer['I'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(4, true);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(22, true);
 		m_PressKey = true;
 	}
 	if ((keyBuffer['O'] & 0x80) && !(m_PrevKeyBuffer['O'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(23, true);
 		m_PressKey = true;
 	}
 

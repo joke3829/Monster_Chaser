@@ -161,7 +161,7 @@ void CAnimationManager::UpdateAnimation(float fElapsedTime)
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
-	m_fElapsedTime = fElapsedTime;
+	m_fElapsedTime += fElapsedTime;
 	float length = m_vAnimationSets[m_nCurrnetSet]->getLength();
 	if (m_bPlayOnce) {
 		if (m_fElapsedTime >= length) {
@@ -199,3 +199,5 @@ void CAnimationManager::ChangeAnimation(UINT nSet, bool playOnce)
 		m_bPlayOnce = playOnce;
 	}
 }
+
+
