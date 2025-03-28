@@ -264,7 +264,8 @@ void CGameFramework::Render()
 
 			m_pd3dCommandList->ResourceBarrier(1, &resBarrier);
 		};
-	m_Timer.Tick(60.0f);
+	//m_Timer.Tick(60.0f);
+	m_Timer.Tick();
 	if (m_bRaster) {
 		m_pd3dCommandAllocator->Reset();
 		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);

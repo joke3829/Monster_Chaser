@@ -300,6 +300,10 @@ public:
 	std::vector<std::shared_ptr<CTexture>>& getTextures() { return m_vTextures; }
 
 	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;
+	virtual ComPtr<ID3D12Resource>& getVertexOutputBuffer(int index) = 0;
+	virtual ComPtr<ID3D12Resource>& getNormalOutputBuffer(int index) = 0;
+	virtual ComPtr<ID3D12Resource>& getTangentOutputBuffer(int index) = 0;
+	virtual ComPtr<ID3D12Resource>& getBiTangentOutputBuffer(int index) = 0;
 protected:
 	std::string m_strObjectName{};
 
@@ -329,6 +333,11 @@ public:
 	void ReBuildBLAS();
 
 	std::vector<ComPtr<ID3D12Resource>>& getBLAS() { return m_vBLAS; }
+
+	ComPtr<ID3D12Resource>& getVertexOutputBuffer(int index) { return m_vOutputVertexBuffer[index]; }
+	ComPtr<ID3D12Resource>& getNormalOutputBuffer(int index) { return m_vOutputNormalBuffer[index]; }
+	ComPtr<ID3D12Resource>& getTangentOutputBuffer(int index) { return m_vOutputTangentsBuffer[index]; }
+	ComPtr<ID3D12Resource>& getBiTangentOutputBuffer(int index) { return m_vOutputBiTangentsBuffer[index]; }
 protected:
 	// ===================================================
 	void MakeBLAS();
@@ -340,6 +349,14 @@ protected:
 	ComPtr<ID3D12Resource> m_pScratchBuffer{};
 	UINT64 m_nScratchSize{};
 
+	std::vector<ComPtr<ID3D12Resource>> m_vInputConstantBuffer{};
+
 	std::vector<ComPtr<ID3D12Resource>> m_vOutputVertexBuffer{};
+	std::vector<ComPtr<ID3D12Resource>> m_vOutputNormalBuffer{};
+	std::vector<ComPtr<ID3D12Resource>> m_vOutputTangentsBuffer{};
+	std::vector<ComPtr<ID3D12Resource>> m_vOutputBiTangentsBuffer{};
+
 	std::vector<ComPtr<ID3D12DescriptorHeap>> m_vUAV{};
+	std::vector<ComPtr<ID3D12DescriptorHeap>> m_vInsertDescriptorHeap{};
+	ComPtr<ID3D12Resource> m_pNullResource{};
 };
