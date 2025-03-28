@@ -1,5 +1,5 @@
 constexpr int PORT_NUM = 3500;
-constexpr int BUF_SIZE = 200; 
+constexpr int BUF_SIZE = 256; 
 constexpr int NAME_SIZE = 20;
 
 constexpr int W_WIDTH = 8;
@@ -17,8 +17,11 @@ enum PACKET_TYPE {
 
 constexpr char SC_LOGIN_INFO = 2;
 constexpr char SC_ADD_PLAYER = 3;
-constexpr char SC_REMOVE_PLAYER = 4;
-constexpr char SC_MOVE_PLAYER = 5;
+constexpr char SC_MOVE_PLAYER = 4;
+
+
+
+
 
 #pragma pack (push, 1)
 struct CS_LOGIN_PACKET {
@@ -41,13 +44,12 @@ struct SC_UPDATE_PACKET {
 	} players[10];  // 최대 10명까지 동시 접속 가능 (필요시 확장)
 };
 #pragma pack(pop)
-struct CS_MOVE_PACKET {
+struct CS_MOVE_PACKET { 
 	short size;
 	short type;  // CS_MOVE
 	short id;    // 클라이언트 ID
 	char direction;  // 'W', 'A', 'S', 'D'
 };
-
 struct SC_LOGIN_INFO_PACKET {
 	unsigned char size;
 	char	type;
