@@ -30,7 +30,7 @@ public:
 	void InitTLAS();
 	// AccelerationStructure를 만든다.
 	void MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, 
-		ComPtr<ID3D12Resource>& asResource, UINT64* updateScratchSize = nullptr);
+		ComPtr<ID3D12Resource>& asResource, UINT64* updateScratchSize = nullptr, bool allowUpdate = false);
 
 private:
 	CResourceManager* m_pResourceManager{};
@@ -44,5 +44,7 @@ private:
 
 	UINT m_nValidObject{};			// 유효한 오브젝트(인스턴스) 개수
 	UINT m_nRootParameterIndex{};	// 루트 파라미터 인덱스
+	UINT m_nStaticMesh{};
+	bool m_bFirst = true;
 };
 

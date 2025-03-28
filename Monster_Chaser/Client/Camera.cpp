@@ -18,12 +18,27 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 	float cx = (float)cxDelta / 3.0f;
 	float cy = (float)cyDelta / 3.0f;
 
+	m_fLimitcy += cy;
+	if (m_fLimitcy > 50.0f) {
+		cy -= (m_fLimitcy - 50.0f);
+		m_fLimitcy = 50.0f;
+	}
+	if (m_fLimitcy < -50.0f) {
+		cy += -(m_fLimitcy + 50.0f);
+		m_fLimitcy = -50.0f;
+	}
+
 	XMMATRIX mtxrotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(cx));
 	XMStoreFloat3(&m_xmf3Dir, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Dir), mtxrotate));
+	XMStoreFloat3(&m_xmf3Offset, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Offset), mtxrotate));
 
 	XMVECTOR xmvRight = XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir));
 	mtxrotate = XMMatrixRotationAxis(xmvRight, XMConvertToRadians(cy));
 	XMStoreFloat3(&m_xmf3Dir, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Dir), mtxrotate));
+
+	xmvRight = XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Offset));
+	mtxrotate = XMMatrixRotationAxis(xmvRight, XMConvertToRadians(cy));
+	XMStoreFloat3(&m_xmf3Offset, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Offset), mtxrotate));
 }
 
 void CCamera::Move(int arrow, float fElapsedTime)
@@ -43,16 +58,36 @@ void CCamera::Move(int arrow, float fElapsedTime)
 
 void CCamera::UpdateViewMatrix()
 {
-	XMStoreFloat3(&m_xmf3At, (XMLoadFloat3(&m_xmf3Eye) + XMLoadFloat3(&m_xmf3Dir)));
-	XMStoreFloat4x4(&m_xmf4x4View, XMMatrixLookAtLH(XMLoadFloat3(&m_xmf3Eye), XMLoadFloat3(&m_xmf3At), XMLoadFloat3(&m_xmf3Up)));
+	if (m_bThirdPerson) {
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_pTarget->getPositionFromWMatrix()) + XMLoadFloat3(&m_xmf3Offset) * m_fCameraLength);
+		m_xmf3At = m_pTarget->getPositionFromWMatrix();
+	}
+	else {
+		XMStoreFloat3(&m_xmf3At, (XMLoadFloat3(&m_xmf3Eye) + XMLoadFloat3(&m_xmf3Dir)));
+	}
+		XMStoreFloat4x4(&m_xmf4x4View, XMMatrixLookAtLH(XMLoadFloat3(&m_xmf3Eye), XMLoadFloat3(&m_xmf3At), XMLoadFloat3(&m_xmf3Up)));
 
-	XMMATRIX viewProj = XMLoadFloat4x4(&m_xmf4x4View) * XMLoadFloat4x4(&m_xmf4x4Proj);
-	m_pCameraInfo->xmf3Eye = m_xmf3Eye;
-	XMStoreFloat4x4(&m_pCameraInfo->xmf4x4ViewProj, XMMatrixTranspose(viewProj));
-	XMStoreFloat4x4(&m_pCameraInfo->xmf4x4InverseViewProj, XMMatrixTranspose(XMMatrixInverse(nullptr, viewProj)));
+		XMMATRIX viewProj = XMLoadFloat4x4(&m_xmf4x4View) * XMLoadFloat4x4(&m_xmf4x4Proj);
+		m_pCameraInfo->xmf3Eye = m_xmf3Eye;
+		XMStoreFloat4x4(&m_pCameraInfo->xmf4x4ViewProj, XMMatrixTranspose(viewProj));
+		XMStoreFloat4x4(&m_pCameraInfo->xmf4x4InverseViewProj, XMMatrixTranspose(XMMatrixInverse(nullptr, viewProj)));
 }
 
 void CCamera::SetShaderVariable()
 {
 	g_DxResource.cmdList->SetComputeRootConstantBufferView(m_nRootParameterIndex, m_pd3dCameraBuffer->GetGPUVirtualAddress());
 }
+
+void CCamera::SetTarget(CGameObject* target)
+{
+	if (target) {
+		m_pTarget = target;
+		m_bThirdPerson = true;
+	}
+}
+
+void CCamera::SetThirdPersonMode(bool bThirdPerson)
+{
+	m_bThirdPerson = bThirdPerson;
+}
+

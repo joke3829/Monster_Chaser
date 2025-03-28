@@ -4,6 +4,9 @@
 
 extern DXResources g_DxResource;
 
+extern std::default_random_engine g_dre;
+extern std::uniform_real_distribution<float> g_unorm;
+
 struct Material {	// 명시적으로 쓸라고 이렇게 쓴 것
 	bool m_bHasAlbedoColor = false;
 	bool m_bHasEmissiveColor = false;
@@ -177,6 +180,7 @@ public:
 	int getParentIndex() const;
 	ID3D12Resource* getCbuffer(int index) const;
 	ID3D12Resource* getMeshCBuffer() const;
+	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Pos.x = m_xmf4x4WorldMatrix._41; m_xmf3Pos.y = m_xmf4x4WorldMatrix._42; m_xmf3Pos.z = m_xmf4x4WorldMatrix._43; return m_xmf3Pos; }
 
 
 	XMFLOAT4X4 getWorldMatrix();
@@ -187,6 +191,8 @@ public:
 	void SetParentIndex(int index);
 	void SetHitGroupIndex(int index);
 	void SetFrameName(std::string& name) { m_strName = name; }
+	void SetBoundingOBB(XMFLOAT3& center, XMFLOAT3& extent) { m_bUseBoundingInfo |= 0x0011; m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0, 0.0, 0.0, 1.0)); }
+	void SetBoundingSphere(XMFLOAT3& center, float rad) { m_bUseBoundingInfo |= 0x1100, m_BoundingSphere = BoundingSphere(center, rad); }
 	void SetWorlaMatrix(XMFLOAT4X4& mtx);
 	void SetLocalMatrix(XMFLOAT4X4& ltx) { m_xmf4x4LocalMatrix = ltx; }
 	void SetLocalMatrixTranspose(XMFLOAT4X4& ltx) { XMStoreFloat4x4(&m_xmf4x4LocalMatrix, XMMatrixTranspose(XMLoadFloat4x4(&ltx))); }
@@ -198,16 +204,20 @@ protected:
 	void UpdateLocalMatrix();
 	std::string m_strName{};
 
+	unsigned short m_bUseBoundingInfo{};	// 바운딩 정보 유무 앞->Sphere, 뒤->OBB		
+	BoundingOrientedBox m_OBB{};
+	BoundingSphere m_BoundingSphere{};
+
 	XMFLOAT3 m_xmf3Pos{};
-	XMFLOAT3 m_xmf3Scale{};
+	XMFLOAT3 m_xmf3Scale{1.0f, 1.0f, 1.0f};
 
 	XMFLOAT4X4 m_xmf4x4LocalMatrix{};
 	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
 	XMFLOAT4X4 m_xmf4x4AnimationMatrix{};
 
-	XMFLOAT3 m_xmf3Right{};
-	XMFLOAT3 m_xmf3Up{};
-	XMFLOAT3 m_xmf3Look{};
+	XMFLOAT3 m_xmf3Right{1.0f, 0.0f, 0.0f};
+	XMFLOAT3 m_xmf3Up{0.0f, 1.0f, 0.0f};
+	XMFLOAT3 m_xmf3Look{0.0f, 0.0f, 1.0f};
 
 	std::vector<Material> m_vMaterials;
 	std::vector<ComPtr<ID3D12Resource>> m_vCBuffers;		// 상수 버퍼 모음
@@ -276,7 +286,6 @@ public:
 
 	void InitializeGameObjectCBuffer();
 	void setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 position);
-	void setPosition(XMFLOAT3 position);
 	void UpdateFrameWorldMatrix();
 	void UpdateWorldMatrix();
 

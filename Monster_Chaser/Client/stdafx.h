@@ -22,6 +22,7 @@
 #include <string>
 #include <fstream>
 #include <timeapi.h>
+#include <random>
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -49,6 +50,9 @@ enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...
 //========================================================================================
 
 // 상수 정의 ===========================================================================
+
+// 바운딩 박스를 렌더링 여부-> 0 = false , 1 = true
+constexpr short g_ShowBoundingBox = 0;
 
 #define DEFINED_GAME_WINDOW_WIDTH 1920	
 #define DEFINED_GAME_WINDOW_HEIGHT 1080
