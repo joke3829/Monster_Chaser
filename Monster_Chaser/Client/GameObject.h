@@ -180,7 +180,7 @@ public:
 	int getParentIndex() const;
 	ID3D12Resource* getCbuffer(int index) const;
 	ID3D12Resource* getMeshCBuffer() const;
-	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Pos.x = m_xmf4x4WorldMatrix._14; m_xmf3Pos.y = m_xmf4x4WorldMatrix._24; m_xmf3Pos.z = m_xmf4x4WorldMatrix._34; return m_xmf3Pos; }
+	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Pos.x = m_xmf4x4WorldMatrix._41; m_xmf3Pos.y = m_xmf4x4WorldMatrix._42; m_xmf3Pos.z = m_xmf4x4WorldMatrix._43; return m_xmf3Pos; }
 	XMFLOAT3& getPositionFromLMatrix() { m_xmf3Pos.x = m_xmf4x4LocalMatrix._41; m_xmf3Pos.y = m_xmf4x4LocalMatrix._42; m_xmf3Pos.z = m_xmf4x4LocalMatrix._43; return m_xmf3Pos; }
 	XMFLOAT3& getPositionFromAMatrix() { m_xmf3Pos.x = m_xmf4x4AnimationMatrix._41; m_xmf3Pos.y = m_xmf4x4AnimationMatrix._42; m_xmf3Pos.z = m_xmf4x4AnimationMatrix._43; return m_xmf3Pos; }
 
@@ -303,6 +303,7 @@ public:
 
 	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;
 
+	XMFLOAT3& getPosition() { return m_xmf3Position; }
 	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Position.x = m_xmf4x4WorldMatrix._41; m_xmf3Position.y = m_xmf4x4WorldMatrix._42; m_xmf3Position.z = m_xmf4x4WorldMatrix._43; return m_xmf3Position; }
 protected:
 	std::string m_strObjectName{};

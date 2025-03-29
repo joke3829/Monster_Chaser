@@ -382,7 +382,7 @@ void CRaytracingTestScene::SetUp()
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	// =========================================================
 
@@ -422,9 +422,9 @@ void CRaytracingTestScene::SetUp()
 
 	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
 	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
-	skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-	skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
-	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 90.0f, 0.0f), XMFLOAT3());
+	//skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	//skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
+	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
@@ -518,7 +518,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	}
 
 	if (keyBuffer['S'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
+		//m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, false);
 		m_PressKey = true;
 	}

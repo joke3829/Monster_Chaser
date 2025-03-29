@@ -39,7 +39,7 @@ public:
 	void TimeIncrease(float fElapsedTime);			// 시간 증가
 	void UpdateAnimation(float fElapsedTime);		// 시간 지정
 	void UpdateAnimationMatrix();
-	void UpdateAnimationAndPosition(float fElapsedTime, CSkinningObject* player);
+	void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
 	void ChangeAnimation(UINT nSet);
 	void ChangeAnimation(UINT nSet, bool playOnce = false); // playOnce 옵션 추가
 	void setCurrnetSet(UINT n) { m_nCurrentSet = n; }
@@ -62,6 +62,6 @@ protected:
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// 애니메이션 행렬을 저장할 배열
 private:
 	bool m_bPlayOnce = false; // 한 번만 재생 여부
-	CSkinningObject* m_pSkinningObject = nullptr; // 연결용 포인터 추가
+	XMFLOAT3 prevPosition = { 0.0f, 0.0f, 50.0f }; // 이전 프레임 위치
 };
 

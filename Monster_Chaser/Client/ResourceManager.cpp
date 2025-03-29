@@ -379,7 +379,7 @@ void CResourceManager::UpdatePosition(float fElapsedTime)
 		if (m_vAnimationManager[i]) {
 			CSkinningObject* skinningObject = GetSkinningObject(i);
 			if (skinningObject) {
-				m_vAnimationManager[i]->UpdateAnimationAndPosition(fElapsedTime, skinningObject);
+				m_vAnimationManager[i]->UpdateAniPosition(fElapsedTime, skinningObject);
 			}
 		}
 	}

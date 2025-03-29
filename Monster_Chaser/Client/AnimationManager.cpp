@@ -183,7 +183,7 @@ void CAnimationManager::UpdateAnimationMatrix()
 	memcpy(m_pMappedPointer, m_vMatrixes.data(), sizeof(XMFLOAT4X4) * m_vMatrixes.size());
 }
 
-void CAnimationManager::UpdateAnimationAndPosition(float fElapsedTime, CSkinningObject* player)
+void CAnimationManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
 {
 	if (m_vFrames[0]) {
 		XMFLOAT3 currentPosition = m_vFrames[0]->getPositionFromWMatrix();
