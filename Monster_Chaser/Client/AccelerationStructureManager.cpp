@@ -60,7 +60,7 @@ void CAccelerationStructureManager::UpdateScene()
 		.Inputs = {
 			.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
 			.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE,
-			.NumDescs = m_nValidObject,
+			.NumDescs = m_nValidObject,						// °´Ã¼ °³¼ö?
 			.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
 			.InstanceDescs = m_InstanceBuffer->GetGPUVirtualAddress()
 		},
