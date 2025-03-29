@@ -139,7 +139,7 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
 	m_fElapsedTime += fElapsedTime; // 시간 누적
-	float length = m_vAnimationSets[m_nCurrnetSet]->getLength();
+	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 
 	if (m_bPlayOnce) {
 		if (m_fElapsedTime >= length) {
@@ -151,7 +151,7 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 			m_fElapsedTime -= length; // 반복 재생
 		}
 	}
-	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
+	m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
 }
 
 void CAnimationManager::UpdateAnimation(float fElapsedTime)
@@ -162,7 +162,7 @@ void CAnimationManager::UpdateAnimation(float fElapsedTime)
 		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
 	m_fElapsedTime += fElapsedTime;
-	float length = m_vAnimationSets[m_nCurrnetSet]->getLength();
+	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 	if (m_bPlayOnce) {
 		if (m_fElapsedTime >= length) {
 			m_fElapsedTime = length;
@@ -173,7 +173,7 @@ void CAnimationManager::UpdateAnimation(float fElapsedTime)
 			m_fElapsedTime -= length;
 		}
 	}
-	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
+	m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
 }
 
 void CAnimationManager::UpdateAnimationMatrix()
@@ -183,18 +183,26 @@ void CAnimationManager::UpdateAnimationMatrix()
 	memcpy(m_pMappedPointer, m_vMatrixes.data(), sizeof(XMFLOAT4X4) * m_vMatrixes.size());
 }
 
+void CAnimationManager::UpdateAnimationAndPosition(float fElapsedTime, CSkinningObject* player)
+{
+	if (m_vFrames[0]) {
+		XMFLOAT3 currentPosition = m_vFrames[0]->getPositionFromWMatrix();
+		player->SetPosition(currentPosition);
+	}
+}
+
 void CAnimationManager::ChangeAnimation(UINT nSet)
 {
-	if (nSet != m_nCurrnetSet) {
-		m_nCurrnetSet = nSet;
+	if (nSet != m_nCurrentSet) {
+		m_nCurrentSet = nSet;
 		m_fElapsedTime = 0.0f;
 	}
 }
 
 void CAnimationManager::ChangeAnimation(UINT nSet, bool playOnce)
 {
-	if (nSet != m_nCurrnetSet || m_bPlayOnce != playOnce) { // playOnce 변경도 반영
-		m_nCurrnetSet = nSet;
+	if (nSet != m_nCurrentSet || m_bPlayOnce != playOnce) { // playOnce 변경도 반영
+		m_nCurrentSet = nSet;
 		m_fElapsedTime = 0.0f;
 		m_bPlayOnce = playOnce;
 	}

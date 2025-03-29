@@ -22,6 +22,8 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
+	m_pResourceManager->UpdatePosition(fElapsedTime); //위치 업데이트
+
 	m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene();
 }
@@ -498,8 +500,8 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	m_PressKey = false;
 
 	if (keyBuffer['W'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, false); // 반복 재생
+		//m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, false); // 반복 재생
 		m_PressKey = true;
 	}
 	else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때

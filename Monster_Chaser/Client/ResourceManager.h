@@ -19,6 +19,7 @@ public:
 	void PrepareObject();
 
 	void UpdateSkinningMesh(float fElapsedTime);
+	void UpdatePosition(float fElapsedTime);
 	void ReBuildBLAS();
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
 

@@ -39,16 +39,17 @@ public:
 	void TimeIncrease(float fElapsedTime);			// 시간 증가
 	void UpdateAnimation(float fElapsedTime);		// 시간 지정
 	void UpdateAnimationMatrix();
+	void UpdateAnimationAndPosition(float fElapsedTime, CSkinningObject* player);
 	void ChangeAnimation(UINT nSet);
 	void ChangeAnimation(UINT nSet, bool playOnce = false); // playOnce 옵션 추가
-	void setCurrnetSet(UINT n) { m_nCurrnetSet = n; }
+	void setCurrnetSet(UINT n) { m_nCurrentSet = n; }
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
-	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrnetSet]->getLength(); }
+	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
 
 
 protected:
 	UINT m_nAnimationSets{};
-	UINT m_nCurrnetSet{};
+	UINT m_nCurrentSet{};
 	float m_fElapsedTime{};
 	std::vector<std::string> m_vFrameNames{};		// 한번 쓰고 버리나?
 	std::vector<std::shared_ptr<CAnimationSet>> m_vAnimationSets{};
@@ -61,5 +62,6 @@ protected:
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// 애니메이션 행렬을 저장할 배열
 private:
 	bool m_bPlayOnce = false; // 한 번만 재생 여부
+	CSkinningObject* m_pSkinningObject = nullptr; // 연결용 포인터 추가
 };
 

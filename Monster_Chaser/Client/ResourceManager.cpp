@@ -373,6 +373,18 @@ void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
 	}
 }
 
+void CResourceManager::UpdatePosition(float fElapsedTime)
+{
+	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
+		if (m_vAnimationManager[i]) {
+			CSkinningObject* skinningObject = GetSkinningObject(i);
+			if (skinningObject) {
+				m_vAnimationManager[i]->UpdateAnimationAndPosition(fElapsedTime, skinningObject);
+			}
+		}
+	}
+}
+
 void CResourceManager::ReBuildBLAS()
 {
 	for (std::unique_ptr<CSkinningObject>& object : m_vSkinningObject)
