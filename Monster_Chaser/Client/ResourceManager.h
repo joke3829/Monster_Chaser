@@ -29,6 +29,7 @@ public:
 
 	std::vector<std::unique_ptr<CSkinningObject>>& getSkinningObjectList() { return m_vSkinningObject; }
 	std::vector<std::unique_ptr<CAnimationManager>>& getAnimationManagers() { return m_vAnimationManager; }
+	CSkinningObject* GetSkinningObject(int index) {return m_vSkinningObject[index].get();}
 private:
 	std::string FilePathFront{};
 
