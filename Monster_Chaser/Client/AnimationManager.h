@@ -49,7 +49,7 @@ public:
 	{
 		float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 		float remainingTime = length - m_fElapsedTime;
-		return remainingTime <= margin && remainingTime >= 0.0f;
+		return remainingTime <= margin && remainingTime >= 0.0f; //끝나기 0.0 ~ 0.1초 전인지 확인
 	}
 
 protected:
