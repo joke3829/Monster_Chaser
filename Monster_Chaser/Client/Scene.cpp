@@ -8,12 +8,6 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	g_DxResource.cmdList->SetPipelineState(m_pAnimationComputeShader.Get());
 	g_DxResource.cmdList->SetComputeRootSignature(m_pComputeRootSignature.Get());
 
-	auto& animationManagers = m_pResourceManager->getAnimationManagers();
-	for (auto& animationManager : animationManagers) {
-		if (animationManager->IsAnimationFinished()) {
-			animationManager->ChangeAnimation(24, false); // idle로 전환
-		}
-	}
 
 	m_pResourceManager->UpdateSkinningMesh(fElapsedTime);
 	Flush();
@@ -22,6 +16,12 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
+	auto& animationManagers = m_pResourceManager->getAnimationManagers();
+	for (auto& animationManager : animationManagers) {
+		if (animationManager->IsAnimationFinished()) {
+			animationManager->ChangeAnimation(24, false); // idle로 전환
+		}
+	}
 	m_pResourceManager->UpdatePosition(fElapsedTime); //위치 업데이트
 
 	m_pCamera->UpdateViewMatrix();
