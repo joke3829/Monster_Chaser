@@ -36,45 +36,46 @@ void main( uint3 DTid : SV_DispatchThreadID )
     if (DTid.x < g_MeshInfo.vertexCount)
     {
         uint BonePerVertex = g_MeshInfo.BonePerVertex;
-        float3 weightPos = float3(0.0, 0.0, 0.0);
-        float3 weightNormal = float3(0.0, 0.0, 0.0);
-        float3 weightTangent = float3(0.0, 0.0, 0.0);
-        float3 weightBiTangent = float3(0.0, 0.0, 0.0);
+        float4x4 weightMatrix = (float4x4) 0.0f;
         if (0 != g_BufferInfo.bHasTangent)  // exist TBN coordinate
         {
             for (int i = 0; i < BonePerVertex; ++i)
             {
                 uint boneIndex = g_BoneIndices[(DTid.x * BonePerVertex) + i];
-                float boneWeight = g_BoneWeight[(DTid.x * BonePerVertex) + i];
-                float4x4 boneMatrix = mul(g_OffsetMatrix[boneIndex],
+                weightMatrix += g_BoneWeight[(DTid.x * BonePerVertex) + i] * mul(g_OffsetMatrix[boneIndex],
             g_AnimationMatrix[g_AnimationMatrixIndex[boneIndex]]);
-                weightPos += boneWeight * mul(float4(g_InsertVertexBuffer[DTid.x], 1.0f), boneMatrix).xyz;
-                weightNormal += boneWeight * mul(float4(g_InsertNormalBuffer[DTid.x], 1.0f), boneMatrix).xyz;
-                weightTangent += boneWeight * mul(float4(g_InsertTangentBuffer[DTid.x], 1.0f), boneMatrix).xyz;
-                weightBiTangent += boneWeight * mul(float4(g_InsertBiTangentBuffer[DTid.x], 1.0f), boneMatrix).xyz;
             }
-            g_OutputVertexBuffer[DTid.x] = weightPos;
-            g_OutputNormalBuffer[DTid.x] = weightNormal;
-            g_OutputTangentBuffer[DTid.x] = weightTangent;
-            g_OutputBiTangentBuffer[DTid.x] = weightBiTangent;
+            g_OutputVertexBuffer[DTid.x] = mul(float4(g_InsertVertexBuffer[DTid.x], 1.0), weightMatrix).xyz;
+            g_OutputNormalBuffer[DTid.x] = mul(g_InsertNormalBuffer[DTid.x], (float3x3)weightMatrix);
+            g_OutputTangentBuffer[DTid.x] = mul(g_InsertTangentBuffer[DTid.x], (float3x3) weightMatrix);
+            g_OutputBiTangentBuffer[DTid.x] = mul(g_InsertBiTangentBuffer[DTid.x], (float3x3) weightMatrix);
         }
         else if (0 != g_BufferInfo.bHasNormal)  // exist NormaBuffer
         {
             for (int i = 0; i < BonePerVertex; ++i)
             {
                 uint boneIndex = g_BoneIndices[(DTid.x * BonePerVertex) + i];
-                float boneWeight = g_BoneWeight[(DTid.x * BonePerVertex) + i];
-                float4x4 boneMatrix = mul(g_OffsetMatrix[boneIndex],
+                weightMatrix += g_BoneWeight[(DTid.x * BonePerVertex) + i] * mul(g_OffsetMatrix[boneIndex],
             g_AnimationMatrix[g_AnimationMatrixIndex[boneIndex]]);
-                weightPos += boneWeight * mul(float4(g_InsertVertexBuffer[DTid.x], 1.0f), boneMatrix).xyz;
-                weightNormal += boneWeight * mul(float4(g_InsertNormalBuffer[DTid.x], 1.0f), boneMatrix).xyz;
             }
-            g_OutputVertexBuffer[DTid.x] = weightPos;
-            g_OutputNormalBuffer[DTid.x] = weightNormal;
+            g_OutputVertexBuffer[DTid.x] = mul(float4(g_InsertVertexBuffer[DTid.x], 1.0), weightMatrix).xyz;
+            g_OutputNormalBuffer[DTid.x] = mul(g_InsertNormalBuffer[DTid.x], (float3x3) weightMatrix);
         }
         else                                    // only Vertex
         {
             for (int i = 0; i < BonePerVertex; ++i)
+            {
+                uint boneIndex = g_BoneIndices[(DTid.x * BonePerVertex) + i];
+                weightMatrix += g_BoneWeight[(DTid.x * BonePerVertex) + i] * mul(g_OffsetMatrix[boneIndex],
+            g_AnimationMatrix[g_AnimationMatrixIndex[boneIndex]]);
+            }
+            g_OutputVertexBuffer[DTid.x] = mul(float4(g_InsertVertexBuffer[DTid.x], 1.0), weightMatrix).xyz;
+        }
+    }
+}
+
+/*
+for (int i = 0; i < BonePerVertex; ++i)
             {
                 uint boneIndex = g_BoneIndices[(DTid.x * BonePerVertex) + i];
                 float boneWeight = g_BoneWeight[(DTid.x * BonePerVertex) + i];
@@ -85,6 +86,4 @@ void main( uint3 DTid : SV_DispatchThreadID )
                 weightPos += boneWeight * mul(input, boneMatrix).xyz;
             }
             g_OutputVertexBuffer[DTid.x] = weightPos;
-        }
-    }
-}
+*/

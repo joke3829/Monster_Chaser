@@ -423,8 +423,8 @@ void CRaytracingTestScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
@@ -542,6 +542,8 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer[VK_CONTROL] & 0x80)
 		m_pCamera->Move(2, fElapsedTime);
 
+	if (keyBuffer[VK_RIGHT] & 0x80)
+		m_pResourceManager->getAnimationManagers()[0]->TimeIncrease(fElapsedTime);
 
 	if (keyBuffer['I'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);

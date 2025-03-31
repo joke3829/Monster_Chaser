@@ -98,21 +98,80 @@ Texture2D l_DetailAlbedoMap : register(t2, space5);
 Texture2D l_DetailNormalMap : register(t2, space6);
 // =============================================================================
 
+void GetTex0FromBuffer(inout float2 uvs[3], in uint idx)
+{
+    if (0 != l_Mesh.bHasSubMeshes)
+    {
+        uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] };
+        uvs[0] = l_Tex0[index[0]]; uvs[1] = l_Tex0[index[1]]; uvs[2] = l_Tex0[index[2]];
+    }
+    else
+    {
+        uvs[0] = l_Tex0[idx]; uvs[1] = l_Tex0[idx + 1]; uvs[2] = l_Tex0[idx + 2];
+    }
+}
+
+void GetNormalFromBuffer(inout float3 normals[3], in uint idx)
+{
+    if (0 != l_Mesh.bHasSubMeshes)
+    {
+        uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] }; 
+        normals[0] = l_Normals[index[0]]; normals[1] = l_Normals[index[1]]; normals[2] = l_Normals[index[2]];
+    }
+    else
+    {
+        normals[0] = l_Normals[idx]; normals[1] = l_Normals[idx + 1]; normals[2] = l_Normals[idx + 2];
+    }
+}
+
+void GetTangentFromBuffer(inout float3 tangent[3], in uint idx)
+{
+    if (0 != l_Mesh.bHasSubMeshes)
+    {
+        uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] };
+        tangent[0] = l_Tangents[index[0]]; tangent[1] = l_Tangents[index[1]]; tangent[2] = l_Tangents[index[2]];
+    }
+    else
+    {
+        tangent[0] = l_Tangents[idx]; tangent[1] = l_Tangents[idx + 1]; tangent[2] = l_Tangents[idx + 2];
+    }
+}
+
+void GetBiTangentFromBuffer(inout float3 biTangent[3], in uint idx)
+{
+    if (0 != l_Mesh.bHasSubMeshes)
+    {
+        uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] };
+        biTangent[0] = l_BiTangents[index[0]]; biTangent[1] = l_BiTangents[index[1]]; biTangent[2] = l_BiTangents[index[2]];
+    }
+    else
+    {
+        biTangent[0] = l_BiTangents[idx]; biTangent[1] = l_BiTangents[idx + 1]; biTangent[2] = l_BiTangents[idx + 2];
+    }
+}
+
 inline float3 GetWorldPosition()
 {
     return WorldRayOrigin() + RayTCurrent() * WorldRayDirection();
 }
 
-float2 GetTexCoord(in float2 uvs[3], in float2 barycentrics)
+float2 GetInterpolationHitFloat2(in float2 f2[3], in float2 barycentrics)
 {
-    return uvs[0] * (1.0f - barycentrics.x - barycentrics.y) +
-    uvs[1] * barycentrics.x + uvs[2] * barycentrics.y;
+    return f2[0] * (1.0f - barycentrics.x - barycentrics.y) +
+    f2[1] * barycentrics.x + f2[2] * barycentrics.y;
 }
 
-float3 GetHitNormal(in float3 normals[3], in float2 barycentrics)
+float3 GetInterpolationHitFloat3(in float3 f3[3], in float2 barycentrics)
 {
-    return normals[0] * (1.0f - barycentrics.x - barycentrics.y) +
-    normals[1] * barycentrics.x + normals[2] * barycentrics.y;
+    return f3[0] * (1.0f - barycentrics.x - barycentrics.y) +
+    f3[1] * barycentrics.x + f3[2] * barycentrics.y;
+}
+
+float3 GetHitNormalFromNormalMap(float3 T, float3 B, float3 N, float2 uv)
+{
+    float3x3 TBN = float3x3(normalize(T), normalize(B), normalize(N));
+    float3 MappedNormal = normalize(l_NormalMap.SampleLevel(g_Sampler, uv, 0).rgb * 2.0f - 1.0f);
+    return normalize(mul(MappedNormal, TBN));
 }
 
 float4 TraceRadianceRay(in RayDesc ray, uint currentRayDepth)
@@ -141,7 +200,7 @@ float4 CalculatePhongModel(float4 diffuseColor, float3 normal)
     
     //float3 lightColor = float3(0.8, 0.4, 0.2);
     float3 lightColor = float3(0.8, 0.8, 0.8);
-    float3 light = normalize(float3(1.0, 1.0, 1.0));
+    float3 light = normalize(float3(0.5, 2.0, 0.7));
     
     float Diffuse = max(dot(normalW, light), 0.0f);
     float3 PhongD = Diffuse * lightColor * diffuseColor.xyz;
@@ -231,30 +290,11 @@ void RadianceAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectio
     uint index[3];
     uint idx;
     idx = PrimitiveIndex() * 3;
-    if (l_Mesh.bHasSubMeshes != 0)
-    {
-        index[0] = l_Indices[idx];
-        index[1] = l_Indices[idx + 1];
-        index[2] = l_Indices[idx + 2];
-        if (l_Mesh.bHasTex0 != 0)
-        {
-            uvs[0] = l_Tex0[index[0]];
-            uvs[1] = l_Tex0[index[1]];
-            uvs[2] = l_Tex0[index[2]];
-        }
-    }
-    else
-    {
-        if (l_Mesh.bHasTex0 != 0)
-        {
-            uvs[0] = l_Tex0[idx];
-            uvs[1] = l_Tex0[idx + 1];
-            uvs[2] = l_Tex0[idx + 2];
-        }
-    }
+    if(0 != l_Mesh.bHasTex0)
+        GetTex0FromBuffer(uvs, idx);
     
     float2 bary = float2(attrib.barycentrics.x, attrib.barycentrics.y);
-    float2 texCoord = GetTexCoord(uvs, bary);
+    float2 texCoord = GetInterpolationHitFloat2(uvs, bary);
 
     float AlphaValue;
         
@@ -275,51 +315,30 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
 {
     float2 uvs[3] = { float2(0.0, 0.0), float2(0.0, 0.0), float2(0.0, 0.0) };
     float3 normals[3] = { float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0) };
+    float3 tangent[3] = { float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0) };
+    float3 bitangent[3] = { float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0) };
     uint index[3];
     uint idx;
     idx = PrimitiveIndex() * 3;
-    if (l_Mesh.bHasSubMeshes != 0)
-    {
-        index[0] = l_Indices[idx];
-        index[1] = l_Indices[idx + 1];
-        index[2] = l_Indices[idx + 2];
-        if (l_Mesh.bHasTex0 != 0)
-        {
-            uvs[0] = l_Tex0[index[0]];
-            uvs[1] = l_Tex0[index[1]];
-            uvs[2] = l_Tex0[index[2]];
-        }
-        if (l_Mesh.bHasNormals)
-        {
-            normals[0] = l_Normals[index[0]];
-            normals[1] = l_Normals[index[1]];
-            normals[2] = l_Normals[index[2]];
-        }
-    }
-    else
-    {
-        if (l_Mesh.bHasTex0 != 0)
-        {
-            uvs[0] = l_Tex0[idx];
-            uvs[1] = l_Tex0[idx + 1];
-            uvs[2] = l_Tex0[idx + 2];
-        }
-        if (l_Mesh.bHasNormals)
-        {
-            normals[0] = l_Normals[idx];
-            normals[1] = l_Normals[idx + 1];
-            normals[2] = l_Normals[idx + 2];
-        }
-    }
+
+    if(0 != l_Mesh.bHasTex0)
+        GetTex0FromBuffer(uvs, idx);
+    if(0 != l_Mesh.bHasNormals)
+        GetNormalFromBuffer(normals, idx);
+    if(0 != l_Mesh.bHasTangenrs)
+        GetTangentFromBuffer(tangent, idx);
+    if(0 != l_Mesh.bHasBiTangents)
+        GetBiTangentFromBuffer(bitangent, idx);
     
     float2 bary = float2(attrib.barycentrics.x, attrib.barycentrics.y);
-    float2 texCoord = GetTexCoord(uvs, bary);
+    float2 texCoord = GetInterpolationHitFloat2(uvs, bary);
 
     float4 objectColor;
         
     if (l_Material.bHasAlbedoMap != 0)
     {
         objectColor = l_AlbedoMap.SampleLevel(g_Sampler, texCoord, 0);
+        //objectColor = float4(0.6, 0.6, 0.6, 1.0);   // LightTest
     }
     else if (l_Material.bHasAlbedoColor != 0)
         objectColor = l_Material.AlbedoColor;
@@ -334,7 +353,13 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     
     bool bShadow = CheckTheShadow(shadowray, payload.RayDepth + 1);
     
-    objectColor = CalculatePhongModel(objectColor, GetHitNormal(normals, bary));
+    float3 lightingNormal;
+    if(0 != l_Material.bHasNormalMap)
+        lightingNormal = GetHitNormalFromNormalMap(GetInterpolationHitFloat3(tangent, bary), GetInterpolationHitFloat3(bitangent, bary), GetInterpolationHitFloat3(normals, bary), texCoord);
+    else
+        lightingNormal = GetInterpolationHitFloat3(normals, bary);
+    
+    objectColor = CalculatePhongModel(objectColor, lightingNormal);
     if (bShadow)
         objectColor.xyz /= 2;
     
