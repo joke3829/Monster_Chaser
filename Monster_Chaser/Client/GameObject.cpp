@@ -197,7 +197,7 @@ void CGameObject::SetHitGroupIndex(int index)
 	m_nHitGroupIndex = index;
 }
 
-void CGameObject::SetWorlaMatrix(XMFLOAT4X4& mtx)
+void CGameObject::SetWorldMatrix(XMFLOAT4X4& mtx)
 {
 	m_xmf4x4WorldMatrix = mtx;
 }
@@ -833,24 +833,31 @@ void CSkinningObject::setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 pos
 
 void CSkinningObject::UpdateFrameWorldMatrix()
 {
+	if (m_bUsePreTransform)
+		XMStoreFloat4x4(&m_xmf4x4PreWorldMatrix, XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
+	else
+		m_xmf4x4PreWorldMatrix = m_xmf4x4WorldMatrix;
+
 	for (std::unique_ptr<CGameObject>& object : m_vObjects) {
 		if (object->getParentIndex() != -1) {
 			XMFLOAT4X4 wmtx = m_vObjects[object->getParentIndex()]->getWorldMatrix();
 			XMFLOAT4X4 lmtx = object->getLocalMatrix();
 			XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
-			object->SetWorlaMatrix(lmtx);
+			object->SetWorldMatrix(lmtx);
 		}
 		else {
 			XMFLOAT4X4 lmtx = object->getLocalMatrix();
-			if (m_bUsePreTransform) {
-				XMMATRIX mtx = XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix);
-				XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * mtx);
-				object->SetWorlaMatrix(lmtx);
-			}
-			else {
-				XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
-				object->SetWorlaMatrix(lmtx);
-			}
+			//if (m_bUsePreTransform) {
+			//	//XMMATRIX mtx = XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix);
+			//	XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&m_xmf4x4PreWorldMatrix));
+			//	object->SetWorldMatrix(lmtx);
+			//}
+			//else {
+			//	XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
+			//	object->SetWorldMatrix(lmtx);
+			//}
+			XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&m_xmf4x4PreWorldMatrix));
+			object->SetWorldMatrix(lmtx);
 		}
 	}
 }

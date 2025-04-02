@@ -48,7 +48,8 @@ void CAccelerationStructureManager::UpdateScene()
 					m_pInstanceData[i].InstanceMask = 1;
 					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
 					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
+					//XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
+					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&Skinning->getPreWorldMatrix()));
 					++i;
 				}
 			}

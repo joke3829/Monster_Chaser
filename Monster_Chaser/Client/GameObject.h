@@ -193,7 +193,7 @@ public:
 	void SetFrameName(std::string& name) { m_strName = name; }
 	void SetBoundingOBB(XMFLOAT3& center, XMFLOAT3& extent) { m_bUseBoundingInfo |= 0x0011; m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0, 0.0, 0.0, 1.0)); }
 	void SetBoundingSphere(XMFLOAT3& center, float rad) { m_bUseBoundingInfo |= 0x1100, m_BoundingSphere = BoundingSphere(center, rad); }
-	void SetWorlaMatrix(XMFLOAT4X4& mtx);
+	void SetWorldMatrix(XMFLOAT4X4& mtx);
 	void SetLocalMatrix(XMFLOAT4X4& ltx) { m_xmf4x4LocalMatrix = ltx; }
 	void SetLocalMatrixTranspose(XMFLOAT4X4& ltx) { XMStoreFloat4x4(&m_xmf4x4LocalMatrix, XMMatrixTranspose(XMLoadFloat4x4(&ltx))); }
 
@@ -298,6 +298,8 @@ public:
 	std::vector<std::unique_ptr<CGameObject>>& getObjects() { return m_vObjects; }
 	std::vector<std::shared_ptr<Mesh>>& getMeshes() { return m_vMeshes; }
 	std::vector<std::shared_ptr<CTexture>>& getTextures() { return m_vTextures; }
+	XMFLOAT4X4& getWorldMatrix() { return m_xmf4x4WorldMatrix; }
+	XMFLOAT4X4& getPreWorldMatrix() { return m_xmf4x4PreWorldMatrix; }
 
 	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;
 	virtual ComPtr<ID3D12Resource>& getVertexOutputBuffer(int index) = 0;
@@ -316,6 +318,8 @@ protected:
 	// XMFLOAT4X4
 	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
 	XMFLOAT4X4 m_xmf4x4PreTransformMatrix{};	// 메시의 방향을 정렬하기 위해 사용
+	XMFLOAT4X4 m_xmf4x4PreWorldMatrix{};		// test
+
 	bool m_bUsePreTransform = false;
 
 	XMFLOAT3 m_xmf3Right{};
