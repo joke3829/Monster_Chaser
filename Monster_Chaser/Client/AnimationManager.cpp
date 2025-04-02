@@ -189,7 +189,7 @@ void CAnimationManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* p
 	if (m_vFrames[2]) {
 		XMFLOAT3 targetPosition = m_vFrames[2]->getPositionFromWMatrix();
 		XMFLOAT3 currentPosition = player->getPosition(); // 현재 위치 가져오기 가정
-		const float lerpSpeed = 3.0f; // 보간 속도 (값이 클수록 빠르게 이동)
+		const float lerpSpeed = 4.0f; // 보간 속도 (값이 클수록 빠르게 이동)
 
 		// 선형 보간
 		XMFLOAT3 newPosition;
