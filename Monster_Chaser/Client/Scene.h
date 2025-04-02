@@ -16,6 +16,7 @@ public:
 	virtual void UpdateObject(float fElapsedTime) {};
 	
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
+	virtual void MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void ProcessInput(float fElapsedTime) {};
 
 	virtual void PrepareRender() {};
@@ -31,6 +32,7 @@ class CRaytracingScene : public CScene {
 public:
 	virtual void SetUp() {}
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
+	virtual void MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void ProcessInput(float fElapsedTime) {};
 
 	void UpdateObject(float fElapsedTime);
@@ -59,6 +61,7 @@ public:
 	void SetUp();
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 private:

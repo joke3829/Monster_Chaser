@@ -243,6 +243,9 @@ void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LP
 		}
 		break;
 	}
+	default:
+		m_pScene->MouseProcessing(hWnd, nMessage, wParam, lParam);
+		break;
 	}
 }
 

@@ -10,7 +10,8 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	auto& animationManagers = m_pResourceManager->getAnimationManagers();
 	for (auto& animationManager : animationManagers) {
-		if (animationManager->IsAnimationFinished()) {
+		animationManager->UpdateCombo(fElapsedTime);
+		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
 			animationManager->ChangeAnimation(24, false); // idle·Î ÀüÈ¯
 		}
 	}
@@ -490,6 +491,20 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 		//	break;
 		//}
 		break;
+	}
+}
+
+void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_LBUTTONDOWN:
+	{
+		auto& animationManagers = m_pResourceManager->getAnimationManagers();
+		for (auto& animationManager : animationManagers) {
+			animationManager->OnAttackInput();
+		}
+		break;
+	}
 	}
 }
 

@@ -210,4 +210,68 @@ void CAnimationManager::ChangeAnimation(UINT nSet, bool playOnce)
 	}
 }
 
+void CAnimationManager::StartCombo()
+{
+	m_bInCombo = true;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+
+	m_vComboAnimationSets = { 13,14,15,16 };
+
+	ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+}
+
+void CAnimationManager::OnAttackInput()
+{
+	if (!m_bInCombo) {
+		StartCombo(); // 첫 클릭
+		return;
+	}
+	
+	// 콤보 진행
+	if (!m_bWaitingForNextInput) {
+		m_bNextAttack = true; 
+	}
+	else {
+		m_CurrentComboStep = (m_CurrentComboStep + 1) % (m_vComboAnimationSets.size());
+		ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+		m_bWaitingForNextInput = false;
+		m_fComboTimer = 0.0f;
+		m_bNextAttack = false;
+	}
+}
+
+void CAnimationManager::UpdateCombo(float fElapsedTime)
+{
+	if (!m_bInCombo) return;
+
+	if (IsAnimationFinished()) {
+		if (m_bNextAttack) {
+			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+			ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+			m_bNextAttack = false;
+		}
+		else {
+			m_bWaitingForNextInput = true;
+			m_fComboTimer += fElapsedTime;
+
+			if (m_fComboTimer >= m_fComboWaitTime) {
+				ResetCombo();
+			}
+		}
+	}
+}
+
+void CAnimationManager::ResetCombo()
+{
+	m_bInCombo = false;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+	setTimeZero();
+	ChangeAnimation(24, false); // idle로 전환
+}
 
