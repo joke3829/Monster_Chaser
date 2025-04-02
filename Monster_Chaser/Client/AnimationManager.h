@@ -67,6 +67,5 @@ protected:
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// 애니메이션 행렬을 저장할 배열
 private:
 	bool m_bPlayOnce = false; // 한 번만 재생 여부
-	XMFLOAT3 prevPosition = { 0.0f, 0.0f, 50.0f }; // 이전 프레임 위치
 };
 
