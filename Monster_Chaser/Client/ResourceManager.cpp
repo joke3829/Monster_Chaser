@@ -366,7 +366,7 @@ void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
 {
 	// 애니메이션이 없는 스키닝 객체면 문제가 생김
 	for (int i = 0; i < m_vAnimationManager.size(); ++i) {
-		//m_vAnimationManager[i]->TimeIncrease(fElapsedTime);
+		m_vAnimationManager[i]->TimeIncrease(fElapsedTime);
 		m_vSkinningObject[i]->UpdateAnimationMatrixes();
 		m_vAnimationManager[i]->UpdateAnimationMatrix();
 		m_vSkinningObject[i]->UpdateObject(fElapsedTime);

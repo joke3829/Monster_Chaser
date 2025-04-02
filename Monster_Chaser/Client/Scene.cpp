@@ -423,10 +423,10 @@ void CRaytracingTestScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	// =========================================================
@@ -488,12 +488,12 @@ void CRaytracingTestScene::SetUp()
 	/*skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
 	skinned[1]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));*/
-	//skinned[0]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[0]->setPreTransform(2.0, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
 	// 카메라 설정 ==============================================================
-	//m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	//m_pCamera->SetCameraLength(15.0f);
+	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetCameraLength(15.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -519,6 +519,30 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			break;
 		case '3':
 			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '4':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(3);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '5':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(4);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '6':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '7':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(6);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '8':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(7);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '9':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(8);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
 		}

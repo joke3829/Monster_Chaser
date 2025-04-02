@@ -199,7 +199,8 @@ float4 CalculatePhongModel(float4 diffuseColor, float3 normal)
     float3 normalW = normalize(mul(normal, (float3x3) ObjectToWorld4x3()));
     
     //float3 lightColor = float3(0.8, 0.4, 0.2);
-    float3 lightColor = float3(0.8, 0.8, 0.8);
+    //float3 lightColor = float3(0.8, 0.8, 0.8);
+    float3 lightColor = float3(1.0, 0.2, 0.2);
     float3 light = normalize(float3(0.5, 2.0, 0.7));
     
     float Diffuse = max(dot(normalW, light), 0.0f);
