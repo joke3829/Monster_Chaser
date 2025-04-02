@@ -1,4 +1,5 @@
 #include "AnimationManager.h"
+#include "algorithm"
 
 CAnimationSet::CAnimationSet(std::ifstream& inFile, UINT nBones)
 {
@@ -185,9 +186,25 @@ void CAnimationManager::UpdateAnimationMatrix()
 
 void CAnimationManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
 {
-	if (m_vFrames[0] && IsAnimationNearEnd()) {
-		XMFLOAT3 currentPosition = m_vFrames[0]->getPositionFromWMatrix();
-		player->SetPosition(currentPosition);
+	if (m_vFrames[2]) {
+		XMFLOAT3 targetPosition = m_vFrames[2]->getPositionFromWMatrix();
+		XMFLOAT3 currentPosition = player->getPosition(); // 현재 위치 가져오기 가정
+		const float lerpSpeed = 3.0f; // 보간 속도 (값이 클수록 빠르게 이동)
+
+		// 선형 보간
+		XMFLOAT3 newPosition;
+		newPosition.x = currentPosition.x + (targetPosition.x - currentPosition.x) * fElapsedTime * lerpSpeed;
+		newPosition.y = currentPosition.y + (targetPosition.y - currentPosition.y) * fElapsedTime * lerpSpeed;
+		newPosition.z = currentPosition.z + (targetPosition.z - currentPosition.z) * fElapsedTime * lerpSpeed;
+
+		// 타겟 위치 근처에 가면 고정
+		if ((targetPosition.x - currentPosition.x) * (targetPosition.x - newPosition.x) <= 0.0f &&
+			(targetPosition.y - currentPosition.y) * (targetPosition.y - newPosition.y) <= 0.0f &&
+			(targetPosition.z - currentPosition.z) * (targetPosition.z - newPosition.z) <= 0.0f) {
+			newPosition = targetPosition;
+		}
+
+		player->SetPosition(newPosition);
 	}
 }
 
