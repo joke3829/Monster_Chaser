@@ -139,6 +139,7 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
+	XMFLOAT4X4 targetPosition;
 	m_fElapsedTime += fElapsedTime; // 시간 누적
 	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 
@@ -148,8 +149,8 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 		}
 	}
 	else {
-		while (m_fElapsedTime > length) {
-			m_fElapsedTime -= length; // 반복 재생
+		if (m_fElapsedTime > length) {
+			m_fElapsedTime -= length;
 		}
 	}
 	m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
@@ -188,7 +189,7 @@ void CAnimationManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* p
 {
 	if (m_vFrames[2]) {
 		XMFLOAT3 targetPosition = m_vFrames[2]->getPositionFromWMatrix();
-		XMFLOAT3 currentPosition = player->getPosition(); // 현재 위치 가져오기 가정
+		XMFLOAT3 currentPosition = player->getPosition(); // 현재 위치 가져오기
 		const float lerpSpeed = 4.0f; // 보간 속도 (값이 클수록 빠르게 이동)
 
 		// 선형 보간
