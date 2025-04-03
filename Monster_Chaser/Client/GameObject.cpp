@@ -839,9 +839,9 @@ void CSkinningObject::setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 pos
 void CSkinningObject::UpdateFrameWorldMatrix()
 {
 	if (m_bUsePreTransform)
-		XMStoreFloat4x4(&m_xmf4x4PreTransformMatrix, XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
+		XMStoreFloat4x4(&m_xmf4x4PreWorldMatrix, XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
 	else
-		m_xmf4x4PreTransformMatrix = m_xmf4x4WorldMatrix;
+		m_xmf4x4PreWorldMatrix = m_xmf4x4WorldMatrix;
 
 	for (std::unique_ptr<CGameObject>& object : m_vObjects) {
 		if (object->getParentIndex() != -1) {
