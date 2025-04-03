@@ -433,7 +433,7 @@ void CRaytracingTestScene::SetUp()
 
 	// 카메라 설정 ==============================================================
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	m_pCamera->SetCameraLength(15.0f);
+	m_pCamera->SetCameraLength(10.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
