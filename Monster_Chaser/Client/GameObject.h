@@ -195,7 +195,7 @@ public:
 	void SetFrameName(std::string& name) { m_strName = name; }
 	void SetBoundingOBB(XMFLOAT3& center, XMFLOAT3& extent) { m_bUseBoundingInfo |= 0x0011; m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0, 0.0, 0.0, 1.0)); }
 	void SetBoundingSphere(XMFLOAT3& center, float rad) { m_bUseBoundingInfo |= 0x1100, m_BoundingSphere = BoundingSphere(center, rad); }
-	void SetWorlaMatrix(XMFLOAT4X4& mtx);
+	void SetWorldMatrix(XMFLOAT4X4& mtx);
 	void SetLocalMatrix(XMFLOAT4X4& ltx) { m_xmf4x4LocalMatrix = ltx; }
 	void SetLocalMatrixTranspose(XMFLOAT4X4& ltx) { XMStoreFloat4x4(&m_xmf4x4LocalMatrix, XMMatrixTranspose(XMLoadFloat4x4(&ltx))); }
 
