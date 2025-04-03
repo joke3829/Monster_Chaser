@@ -58,6 +58,9 @@ public:
 	void ResetCombo();
 	bool IsInCombo() const { return m_bInCombo; } // 콤보 진행 중 여부
 
+	void StartSkill3();
+	void OnKey3Input();
+
 protected:
 	UINT m_nAnimationSets{};
 	UINT m_nCurrentSet{};
@@ -82,5 +85,7 @@ private:
 	const float m_fComboWaitTime= 0.5f;     // 다음 입력을 기다리는 시간
 	bool m_bWaitingForNextInput;         // 다음 입력 대기 여부
 	bool m_bNextAttack = false;			// 다음 공격 요청 여부
+
+	std::vector<UINT> m_vSkillAnimationSets;
 };
 

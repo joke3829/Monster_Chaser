@@ -449,47 +449,9 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 	switch (nMessage) {
 	case WM_KEYDOWN:
 		switch (wParam) {
-		case '1':
-			m_pResourceManager->getAnimationManagers()[1]->setCurrnetSet(0);
-			m_pResourceManager->getAnimationManagers()[1]->setTimeZero();
-			break;
-		case '2':
-			m_pResourceManager->getAnimationManagers()[1]->setCurrnetSet(1);
-			m_pResourceManager->getAnimationManagers()[1]->setTimeZero();
-			break;
 		case '3':
-			m_pResourceManager->getAnimationManagers()[1]->setCurrnetSet(2);
-			m_pResourceManager->getAnimationManagers()[1]->setTimeZero();
 			break;
 		}
-		break;
-	case WM_KEYUP:
-		//switch (wParam) {
-		//case 'J':
-		//	m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(0);
-		//	m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-		//	break;
-		//case 'K':
-		//	m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1);
-		//	m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-		//	break;
-		//case 'L':
-		//	m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2);
-		//	m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-		//	break;
-		//case 'U':
-		//	m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3);
-		//	m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-		//	break;
-		//case 'I':
-		//	m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(4);
-		//	m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-		//	break;
-		//case 'O':
-		//	m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5);
-		//	m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-		//	break;
-		//}
 		break;
 	}
 }
@@ -497,11 +459,13 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessage) {
-	case WM_LBUTTONDOWN:
+	case WM_RBUTTONDOWN:
 	{
-		auto& animationManagers = m_pResourceManager->getAnimationManagers();
-		for (auto& animationManager : animationManagers) {
-			animationManager->OnAttackInput();
+		if (!m_LockAnimation && !m_LockAnimation1) {
+			auto& animationManagers = m_pResourceManager->getAnimationManagers();
+			for (auto& animationManager : animationManagers) {
+				animationManager->OnAttackInput();
+			}
 		}
 		break;
 	}
@@ -512,12 +476,31 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 {
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
-	m_PressKey = false;
 
-	if (keyBuffer['W'] & 0x80) {
-		//m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, false); // 반복 재생
-		m_PressKey = true;
+	if (m_LockAnimation) {
+		if (m_pResourceManager->getAnimationManagers()[0]->IsInCombo()) {
+			m_LockAnimation = false;
+		}
+		else {
+			return;
+		}
+	}
+
+	if (m_LockAnimation1) {
+		if (m_pResourceManager->getAnimationManagers()[0]->IsAnimationFinished()) {
+			m_LockAnimation1 = false;
+		}
+		else {
+			return;
+		}
+	}
+
+	if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // 뛰는 애니메이션
+	}
+
+	else if (keyBuffer['W'] & 0x80) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // 반복 재생
 	}
 	else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false); // idle로 전환
@@ -525,16 +508,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if (keyBuffer['A'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f));
-		m_PressKey = true;
 	}
 	else if (m_PrevKeyBuffer['A'] & 0x80) { // A 키를 뗐을 때
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
 	}
 
 	if (keyBuffer['S'] & 0x80) {
-		//m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, false);
-		m_PressKey = true;
 	}
 	else if (m_PrevKeyBuffer['S'] & 0x80) { // S 키를 뗐을 때
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
@@ -542,36 +522,35 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if (keyBuffer['D'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f));
-		m_PressKey = true;
 	}
 	else if (m_PrevKeyBuffer['D'] & 0x80) { // D 키를 뗐을 때
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
 	}
 	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(0, true);
-		m_PressKey = true;
 	}
-	if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
+	if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(10, true);
-		m_PressKey = true;
+		m_LockAnimation1 = true;
 	}
 	if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2, true);
-		m_PressKey = true;
 	}
 	if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3, true);
-		m_PressKey = true;
 	}
-	if ((keyBuffer['I'] & 0x80) && !(m_PrevKeyBuffer['I'] & 0x80)) {
+	if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(22, true);
-		m_PressKey = true;
+		m_LockAnimation1 = true;
 	}
-	if ((keyBuffer['O'] & 0x80) && !(m_PrevKeyBuffer['O'] & 0x80)) {
+	if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(23, true);
-		m_PressKey = true;
+		m_LockAnimation1 = true;
 	}
-
+	if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->StartSkill3();
+		m_LockAnimation = true;
+	}
 	// 현재 키 상태를 이전 상태로 저장
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 }

@@ -231,15 +231,17 @@ void CAnimationManager::OnAttackInput()
 	}
 	
 	// 콤보 진행
-	if (!m_bWaitingForNextInput) {
-		m_bNextAttack = true; 
-	}
-	else {
-		m_CurrentComboStep = (m_CurrentComboStep + 1) % (m_vComboAnimationSets.size());
-		ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
-		m_bWaitingForNextInput = false;
-		m_fComboTimer = 0.0f;
-		m_bNextAttack = false;
+	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 13) {
+		if (!m_bWaitingForNextInput) {
+			m_bNextAttack = true; // 다음 공격 대기
+		}
+		else {
+			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+			ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+			m_bWaitingForNextInput = false;
+			m_fComboTimer = 0.0f;
+			m_bNextAttack = false;
+		}
 	}
 }
 
@@ -247,11 +249,23 @@ void CAnimationManager::UpdateCombo(float fElapsedTime)
 {
 	if (!m_bInCombo) return;
 
-	if (IsAnimationFinished()) {
-		if (m_bNextAttack) {
+	if (IsAnimationNearEnd()) {
+		if (m_bNextAttack && m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 13) {
+			// 콤보 모드
 			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
 			ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
 			m_bNextAttack = false;
+		}
+		else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 17) {
+			// 스킬 3
+			m_CurrentComboStep++;
+			if (m_CurrentComboStep < m_vSkillAnimationSets.size()) {
+				ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
+			}
+			else {
+				ResetCombo(); // 한 사이클 돌면 종료
+			}
+			m_fComboTimer = 0.0f;
 		}
 		else {
 			m_bWaitingForNextInput = true;
@@ -275,3 +289,21 @@ void CAnimationManager::ResetCombo()
 	ChangeAnimation(24, false); // idle로 전환
 }
 
+void CAnimationManager::StartSkill3()
+{
+	m_bInCombo = true;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+
+	m_vSkillAnimationSets = { 17, 18, 19, 20 , 21};
+	ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
+}
+
+void CAnimationManager::OnKey3Input()
+{
+	if (!m_bInCombo) {
+		StartSkill3();
+	}
+}

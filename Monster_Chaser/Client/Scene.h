@@ -22,7 +22,8 @@ public:
 	virtual void PrepareRender() {};
 	virtual void Render() {};
 protected:
-	bool m_PressKey = false;
+	bool m_LockAnimation = false;
+	bool m_LockAnimation1 = false;
 	bool m_bRayTracing = false;
 	ComPtr<ID3D12RootSignature> m_pGlobalRootSignature{};
 	std::shared_ptr<CCamera> m_pCamera{};
