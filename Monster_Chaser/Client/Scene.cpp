@@ -496,59 +496,59 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	}
 
 	if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // 뛰는 애니메이션
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // 뛰기
 	}
 
 	else if (keyBuffer['W'] & 0x80) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // 반복 재생
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // 걷기
 	}
 	else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false); // idle로 전환
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
 	}
 
 	if (keyBuffer['A'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f));
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f)); //좌회전
 	}
 	else if (m_PrevKeyBuffer['A'] & 0x80) { // A 키를 뗐을 때
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
 	}
 
 	if (keyBuffer['S'] & 0x80) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, false);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, false); //걷기
 	}
 	else if (m_PrevKeyBuffer['S'] & 0x80) { // S 키를 뗐을 때
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
 	}
 
 	if (keyBuffer['D'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f));
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //우회전
 	}
 	else if (m_PrevKeyBuffer['D'] & 0x80) { // D 키를 뗐을 때
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
 	}
 	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(0, true);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(0, true); //약하게 맞기
 	}
 	if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(10, true);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(10, true); //Dodge
 		m_LockAnimation1 = true;
 	}
 	if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2, true);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2, true); //강하게 맞기
 	}
 	if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3, true);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3, true); //강하게 맞고 죽기
 	}
 	if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(22, true);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(22, true); //스킬2
 		m_LockAnimation1 = true;
 	}
 	if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(23, true);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(23, true); //스킬1
 		m_LockAnimation1 = true;
 	}
 	if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->StartSkill3();
+		m_pResourceManager->getAnimationManagers()[0]->StartSkill3(); //스킬3
 		m_LockAnimation = true;
 	}
 	// 현재 키 상태를 이전 상태로 저장
