@@ -300,7 +300,8 @@ public:
 	std::vector<std::unique_ptr<CGameObject>>& getObjects() { return m_vObjects; }
 	std::vector<std::shared_ptr<Mesh>>& getMeshes() { return m_vMeshes; }
 	std::vector<std::shared_ptr<CTexture>>& getTextures() { return m_vTextures; }
-
+	XMFLOAT4X4& getWorldMatrix() { return m_xmf4x4WorldMatrix; }
+	XMFLOAT4X4& getPreWorldMatrix() { return m_xmf4x4PreWorldMatrix; }
 	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;
 
 	XMFLOAT3& getPosition() { return m_xmf3Position; }
@@ -317,6 +318,7 @@ protected:
 	// XMFLOAT4X4
 	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
 	XMFLOAT4X4 m_xmf4x4PreTransformMatrix{};	// 메시의 방향을 정렬하기 위해 사용
+	XMFLOAT4X4 m_xmf4x4PreWorldMatrix{};
 	bool m_bUsePreTransform = false;
 
 	XMFLOAT3 m_xmf3Right{};
