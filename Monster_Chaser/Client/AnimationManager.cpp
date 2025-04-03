@@ -187,7 +187,7 @@ void CAnimationManager::UpdateAnimationMatrix()
 
 void CAnimationManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
 {
-	if (m_vFrames[0] && IsAnimationNearEnd()) {
+	if (m_vFrames[0] && IsAnimationFinished()) {
 		XMFLOAT3 targetPosition = m_vFrames[0]->getPositionFromWMatrix();
 		player->SetPosition(targetPosition);
 	}
