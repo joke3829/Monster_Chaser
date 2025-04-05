@@ -52,14 +52,14 @@ public:
 		return remainingTime <= margin && remainingTime >= 0.0f; //끝나기 0.0 ~ 0.1초 전인지 확인
 	}
 
-	void StartCombo();
-	void OnAttackInput();
-	void UpdateCombo(float fElapsedTime);
-	void ResetCombo();
+	virtual void StartCombo() {};
+	virtual void OnAttackInput() {};
+	virtual void UpdateCombo(float fElapsedTime) {};
+	virtual void ResetCombo() {};
 	bool IsInCombo() const { return m_bInCombo; } // 콤보 진행 중 여부
 
-	void StartSkill3();
-	void OnKey3Input();
+	virtual void StartSkill3() {};
+	virtual void OnKey3Input() {};
 
 protected:
 	UINT m_nAnimationSets{};
@@ -74,7 +74,7 @@ protected:
 	ComPtr<ID3D12Resource> m_pMatrixBuffer{};		// 애니메이션 행렬을 넣을 상수 버퍼
 	void* m_pMappedPointer{};
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// 애니메이션 행렬을 저장할 배열
-private:
+
 	bool m_bPlayOnce = false; // 한 번만 재생 여부
 
 	// 콤보
@@ -82,10 +82,21 @@ private:
 	int m_CurrentComboStep;               // 현재 콤보 단계
 	std::vector<UINT> m_vComboAnimationSets; // 콤보 애니메이션 세트
 	float m_fComboTimer;                   // 콤보 입력 대기 시간
-	const float m_fComboWaitTime= 0.5f;     // 다음 입력을 기다리는 시간
+	const float m_fComboWaitTime = 0.5f;     // 다음 입력을 기다리는 시간
 	bool m_bWaitingForNextInput;         // 다음 입력 대기 여부
 	bool m_bNextAttack = false;			// 다음 공격 요청 여부
 
-	std::vector<UINT> m_vSkillAnimationSets;
+	std::vector<UINT> m_vSkillAnimationSets; //스킬 애니메이션 세트
 };
 
+class CMageManager : public CAnimationManager //마법사 전용
+{
+public:
+	virtual void StartCombo();
+	virtual void OnAttackInput();
+	virtual void UpdateCombo(float fElapsedTime);
+	virtual void ResetCombo();
+
+	virtual void StartSkill3();
+	virtual void OnKey3Input();
+};

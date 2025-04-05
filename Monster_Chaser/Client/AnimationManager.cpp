@@ -210,7 +210,7 @@ void CAnimationManager::ChangeAnimation(UINT nSet, bool playOnce)
 	}
 }
 
-void CAnimationManager::StartCombo()
+void CMageManager::StartCombo()
 {
 	m_bInCombo = true;
 	m_CurrentComboStep = 0;
@@ -223,13 +223,13 @@ void CAnimationManager::StartCombo()
 	ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
 }
 
-void CAnimationManager::OnAttackInput()
+void CMageManager::OnAttackInput()
 {
 	if (!m_bInCombo) {
 		StartCombo(); // 첫 클릭
 		return;
 	}
-	
+
 	// 콤보 진행
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 13) {
 		if (!m_bWaitingForNextInput) {
@@ -245,7 +245,7 @@ void CAnimationManager::OnAttackInput()
 	}
 }
 
-void CAnimationManager::UpdateCombo(float fElapsedTime)
+void CMageManager::UpdateCombo(float fElapsedTime)
 {
 	if (!m_bInCombo) return;
 
@@ -278,7 +278,7 @@ void CAnimationManager::UpdateCombo(float fElapsedTime)
 	}
 }
 
-void CAnimationManager::ResetCombo()
+void CMageManager::ResetCombo()
 {
 	m_bInCombo = false;
 	m_CurrentComboStep = 0;
@@ -289,7 +289,7 @@ void CAnimationManager::ResetCombo()
 	ChangeAnimation(24, false); // idle로 전환
 }
 
-void CAnimationManager::StartSkill3()
+void CMageManager::StartSkill3()
 {
 	m_bInCombo = true;
 	m_CurrentComboStep = 0;
@@ -297,11 +297,11 @@ void CAnimationManager::StartSkill3()
 	m_bWaitingForNextInput = false;
 	m_bNextAttack = false;
 
-	m_vSkillAnimationSets = { 17, 18, 19, 20 , 21};
+	m_vSkillAnimationSets = { 17, 18, 19, 20 , 21 };
 	ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
 }
 
-void CAnimationManager::OnKey3Input()
+void CMageManager::OnKey3Input()
 {
 	if (!m_bInCombo) {
 		StartSkill3();
