@@ -52,6 +52,25 @@ public:
 		return remainingTime <= margin && remainingTime >= 0.0f; //끝나기 0.0 ~ 0.1초 전인지 확인
 	}
 
+	bool IsLoopAnimation()const
+	{
+		if (m_nCurrentSet == 5 || m_nCurrentSet == 8)return true;
+		else { return false; }
+	}
+
+	void PauseAnimation() {
+		m_isPaused = true; // 애니메이션 일시정지
+	}
+
+	void ResumeAnimation() {
+		m_isPaused = false; // 애니메이션 재개
+	}
+
+	bool IsAnimationPaused() const {
+		return m_isPaused; // 현재 일시정지 상태 반환
+	}
+
+
 	virtual void StartCombo() {};
 	virtual void OnAttackInput() {};
 	virtual void UpdateCombo(float fElapsedTime) {};
@@ -76,6 +95,7 @@ protected:
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// 애니메이션 행렬을 저장할 배열
 
 	bool m_bPlayOnce = false; // 한 번만 재생 여부
+	bool m_isPaused = false; // 정지 여부
 
 	// 콤보
 	bool m_bInCombo;                     // 콤보 진행 중 여부

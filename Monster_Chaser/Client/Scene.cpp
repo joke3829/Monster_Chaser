@@ -497,14 +497,17 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // ¶Ù±â
+		m_pResourceManager->getAnimationManagers()[0]->ResumeAnimation();
 	}
 
 	else if (keyBuffer['W'] & 0x80) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // °È±â
+		m_pResourceManager->getAnimationManagers()[0]->ResumeAnimation();
 	}
 
 	else if (m_PrevKeyBuffer['W'] & 0x80) { // W Å°¸¦ ¶ÃÀ» ¶§
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
+		m_pResourceManager->getAnimationManagers()[0]->PauseAnimation();
 	}
 
 	if (keyBuffer['A'] & 0x80) {
@@ -513,10 +516,12 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if (keyBuffer['S'] & 0x80) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, false); //°È±â
+		m_pResourceManager->getAnimationManagers()[0]->ResumeAnimation();
 	}
 
 	else if (m_PrevKeyBuffer['S'] & 0x80) { // S Å°¸¦ ¶ÃÀ» ¶§
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
+		m_pResourceManager->getAnimationManagers()[0]->PauseAnimation();
 	}
 
 	if (keyBuffer['D'] & 0x80) {
