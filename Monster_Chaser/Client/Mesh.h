@@ -20,6 +20,7 @@ class CHeightMapImage {
 public:
 	CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3& xmf3Scale);
 	float GetHeight(int x, int z);
+	XMFLOAT3 GetNormal(int x, int z);
 
 	std::unique_ptr<WORD[]> m_pHeightMapPixels;
 
