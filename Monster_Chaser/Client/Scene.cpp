@@ -8,22 +8,27 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	g_DxResource.cmdList->SetPipelineState(m_pAnimationComputeShader.Get());
 	g_DxResource.cmdList->SetComputeRootSignature(m_pComputeRootSignature.Get());
 
-	auto& animationManagers = m_pResourceManager->getAnimationManagers();
-	for (auto& animationManager : animationManagers) {
-		animationManager->UpdateCombo(fElapsedTime);
-		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
-			animationManager->ChangeAnimation(24, false); // idle로 전환
-		}
-	}
 
 	m_pResourceManager->UpdateSkinningMesh(fElapsedTime);
 	Flush();
 	// BLAS 재빌드
 	m_pResourceManager->ReBuildBLAS();
 
+	bool test = false;
+	auto& animationManagers = m_pResourceManager->getAnimationManagers();
+	for (auto& animationManager : animationManagers) {
+		animationManager->UpdateCombo(fElapsedTime);
+		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
+			animationManager->ChangeAnimation(24, false); // idle로 전환
+			test = true;
+		}
+	}
+
 	m_pResourceManager->UpdateWorldMatrix();
 
-	m_pResourceManager->UpdatePosition(fElapsedTime); //위치 업데이트
+	if (test) {
+		m_pResourceManager->UpdatePosition(fElapsedTime); //위치 업데이트
+	}
 
 	m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene();
@@ -503,9 +508,9 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // 걷기
 	}
 
-	else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
-	}
+	//else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때
+	//	m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
+	//}
 
 	if (keyBuffer['A'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f)); //좌회전
