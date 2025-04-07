@@ -179,7 +179,7 @@ void CGameFramework::InitOutputBuffer()
 
 void CGameFramework::InitScene()
 {
-	m_pScene = std::make_unique<CRaytracingTestScene>();
+	m_pScene = std::make_unique<CRaytracingMaterialTestScene>();
 	m_pScene->SetCamera(m_pCamera);
 	m_pScene->SetUp();
 }
@@ -207,6 +207,9 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 	switch (nMessage) {
 	case WM_KEYDOWN:
 		switch (wParam) {
+		case VK_ESCAPE:
+			PostQuitMessage(0);
+			break;
 		case 'p':	// 임시로 설정
 		case 'P':
 			if (m_bRayTracingSupport) {

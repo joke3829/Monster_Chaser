@@ -210,6 +210,7 @@
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="RaytracingShader.hlsl" />
+    <FxCompile Include="PBR_RayTracing.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AnimationComputeShader.hlsl" />

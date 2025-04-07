@@ -417,7 +417,7 @@ void CRaytracingTestScene::SetUp()
 	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(3);
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
 	m_pRaytracingPipeline->MakePipelineState();
 
 	// Resource Ready
@@ -425,8 +425,8 @@ void CRaytracingTestScene::SetUp()
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	// =========================================================
@@ -458,8 +458,10 @@ void CRaytracingTestScene::SetUp()
 	
 	UINT txtIndex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_NORM.dds"));
 
 	tMaterial.m_bHasAlbedoMap = true; tMaterial.m_nAlbedoMapIndex = txtIndex;
+	tMaterial.m_bHasNormalMap = true; tMaterial.m_nNormalMapIndex = txtIndex + 1;
 	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
 	normalObjects[finalindex]->SetScale(XMFLOAT3(-1.0f, 1.0f, 1.0f));
 	normalObjects[finalindex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
@@ -471,9 +473,13 @@ void CRaytracingTestScene::SetUp()
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(5.0f, 20.0f, 5.0f)));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.2, 0.4, 0.2, 0.0);
+	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.2, 0.4, 0.2, 1.0);
+	tMaterial.m_bHasGlossyReflection = true; tMaterial.m_fGlossyReflection = 1.0f;
 	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
 	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 30.0, 0.0)); */
+	/*skinned[0]->getObjects()[98]->getMaterials()[0].m_bHasEmissionMap = true;
+	skinned[0]->getObjects()[98]->getMaterials()[0].m_nEmissionMapIndex = skinned[0]->getTextures().size();
+	skinned[0]->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Gorhorrid\\T_Gorhorrid_Emissive.dds"));*/
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
@@ -488,12 +494,13 @@ void CRaytracingTestScene::SetUp()
 	/*skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
 	skinned[1]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));*/
-	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	//skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	
 	// ==============================================================================
 
 	// 카메라 설정 ==============================================================
-	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	m_pCamera->SetCameraLength(10.0f);
+	//m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	//m_pCamera->SetCameraLength(10.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -545,6 +552,10 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(8);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
+		case 'n':
+		case 'N':
+			m_pCamera->toggleNormalMapping();
+			break;
 		}
 		break;
 	case WM_KEYUP:
@@ -560,7 +571,11 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer['W'] & 0x80)
 		m_pCamera->Move(0, fElapsedTime);
 	if (keyBuffer['S'] & 0x80)
+		m_pCamera->Move(5, fElapsedTime);
+	if (keyBuffer['D'] & 0x80)
 		m_pCamera->Move(3, fElapsedTime);
+	if (keyBuffer['A'] & 0x80)
+		m_pCamera->Move(4, fElapsedTime);
 	if (keyBuffer[VK_SPACE] & 0x80)
 		m_pCamera->Move(1, fElapsedTime);
 	if (keyBuffer[VK_CONTROL] & 0x80)
@@ -582,4 +597,112 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
 	if (keyBuffer['L'] & 0x80)
 		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
+}
+
+
+// ==============================================================================
+
+void CRaytracingMaterialTestScene::SetUp()
+{
+	// Create Global & Local Root Signature
+	CreateRootSignature();
+
+	// animation Pipeline Ready
+	CreateComputeRootSignature();
+	CreateComputeShader();
+
+	// Create And Set up PipelineState
+	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
+	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit");
+	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
+	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
+	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
+	m_pRaytracingPipeline->MakePipelineState();
+
+	// Resource Ready
+	m_pResourceManager = std::make_unique<CResourceManager>();
+	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	// =========================================================
+
+	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
+	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
+	// 완전히 새로운 객체 & skinning Object 복사는 여기서 ========================================
+
+	// 객체 생성 예시
+
+	UINT finalindex = normalObjects.size();
+	UINT finalmesh = meshes.size();
+	Material tMaterial{};
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 10.0f));
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.75, 0.75, 0.75, 1.0);
+	tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	tMaterial.m_bHasSpecularHighlight = true; tMaterial.m_fSpecularHighlight = 1;
+	tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.5;
+	//tMaterial.m_bHasGlossyReflection = true; tMaterial.m_fGlossyReflection = 0.1f;
+	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
+	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0)); 
+	// ===========================================================================================
+	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
+	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
+
+
+	// ShaderBindingTable
+	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
+	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
+	m_pShaderBindingTable->CreateSBT();
+
+	// 여기서 필요한 객체(normalObject) 복사 & 행렬 조작 ===============================
+
+	// ==============================================================================
+
+	// 카메라 설정 ==============================================================
+	m_pCamera->SetTarget(normalObjects[finalindex].get());
+	m_pCamera->SetThirdPersonMode(30.0f);
+	// ==========================================================================
+
+	// AccelerationStructure
+	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
+	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
+	m_pAccelerationStructureManager->InitBLAS();
+	m_pAccelerationStructureManager->InitTLAS();
+}
+
+
+void CRaytracingMaterialTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+		break;
+	case WM_KEYUP:
+		break;
+	}
+}
+
+void CRaytracingMaterialTestScene::ProcessInput(float fElapsedTime)
+{
+	UCHAR keyBuffer[256];
+	GetKeyboardState(keyBuffer);
+
+	if (keyBuffer['W'] & 0x80)
+		m_pCamera->Move(0, fElapsedTime);
+	if (keyBuffer['S'] & 0x80)
+		m_pCamera->Move(5, fElapsedTime);
+	if (keyBuffer['D'] & 0x80)
+		m_pCamera->Move(3, fElapsedTime);
+	if (keyBuffer['A'] & 0x80)
+		m_pCamera->Move(4, fElapsedTime);
+	if (keyBuffer[VK_SPACE] & 0x80)
+		m_pCamera->Move(1, fElapsedTime);
+	if (keyBuffer[VK_CONTROL] & 0x80)
+		m_pCamera->Move(2, fElapsedTime);
 }

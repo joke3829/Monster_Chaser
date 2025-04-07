@@ -106,11 +106,15 @@ void GetTex0FromBuffer(inout float2 uvs[3], in uint idx)
     if (0 != l_Mesh.bHasSubMeshes)
     {
         uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] };
-        uvs[0] = l_Tex0[index[0]]; uvs[1] = l_Tex0[index[1]]; uvs[2] = l_Tex0[index[2]];
+        uvs[0] = l_Tex0[index[0]];
+        uvs[1] = l_Tex0[index[1]];
+        uvs[2] = l_Tex0[index[2]];
     }
     else
     {
-        uvs[0] = l_Tex0[idx]; uvs[1] = l_Tex0[idx + 1]; uvs[2] = l_Tex0[idx + 2];
+        uvs[0] = l_Tex0[idx];
+        uvs[1] = l_Tex0[idx + 1];
+        uvs[2] = l_Tex0[idx + 2];
     }
 }
 
@@ -118,12 +122,16 @@ void GetNormalFromBuffer(inout float3 normals[3], in uint idx)
 {
     if (0 != l_Mesh.bHasSubMeshes)
     {
-        uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] }; 
-        normals[0] = l_Normals[index[0]]; normals[1] = l_Normals[index[1]]; normals[2] = l_Normals[index[2]];
+        uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] };
+        normals[0] = l_Normals[index[0]];
+        normals[1] = l_Normals[index[1]];
+        normals[2] = l_Normals[index[2]];
     }
     else
     {
-        normals[0] = l_Normals[idx]; normals[1] = l_Normals[idx + 1]; normals[2] = l_Normals[idx + 2];
+        normals[0] = l_Normals[idx];
+        normals[1] = l_Normals[idx + 1];
+        normals[2] = l_Normals[idx + 2];
     }
 }
 
@@ -132,11 +140,15 @@ void GetTangentFromBuffer(inout float3 tangent[3], in uint idx)
     if (0 != l_Mesh.bHasSubMeshes)
     {
         uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] };
-        tangent[0] = l_Tangents[index[0]]; tangent[1] = l_Tangents[index[1]]; tangent[2] = l_Tangents[index[2]];
+        tangent[0] = l_Tangents[index[0]];
+        tangent[1] = l_Tangents[index[1]];
+        tangent[2] = l_Tangents[index[2]];
     }
     else
     {
-        tangent[0] = l_Tangents[idx]; tangent[1] = l_Tangents[idx + 1]; tangent[2] = l_Tangents[idx + 2];
+        tangent[0] = l_Tangents[idx];
+        tangent[1] = l_Tangents[idx + 1];
+        tangent[2] = l_Tangents[idx + 2];
     }
 }
 
@@ -145,11 +157,15 @@ void GetBiTangentFromBuffer(inout float3 biTangent[3], in uint idx)
     if (0 != l_Mesh.bHasSubMeshes)
     {
         uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] };
-        biTangent[0] = l_BiTangents[index[0]]; biTangent[1] = l_BiTangents[index[1]]; biTangent[2] = l_BiTangents[index[2]];
+        biTangent[0] = l_BiTangents[index[0]];
+        biTangent[1] = l_BiTangents[index[1]];
+        biTangent[2] = l_BiTangents[index[2]];
     }
     else
     {
-        biTangent[0] = l_BiTangents[idx]; biTangent[1] = l_BiTangents[idx + 1]; biTangent[2] = l_BiTangents[idx + 2];
+        biTangent[0] = l_BiTangents[idx];
+        biTangent[1] = l_BiTangents[idx + 1];
+        biTangent[2] = l_BiTangents[idx + 2];
     }
 }
 
@@ -196,64 +212,43 @@ float4 TraceRadianceRay(in RayDesc ray, uint currentRayDepth)
     return payload.RayColor;
 }
 
-float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow, in float2 uv = float2(0.0, 0.0))
+float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow)
 {
     
     float3 normalW = normalize(mul(normal, (float3x3) ObjectToWorld4x3()));
-    float shadowFactor = 1.0f; //isShadow ? 0.35f : 1.0f;
-    
-    float3 PhongE = float3(0.0, 0.0, 0.0);
-    float3 emissiveColor = float3(0.0, 0.0, 0.0);
-    float3 emissiveMapColor = float3(0.0, 0.0, 0.0);
-    bool bEmission = false;
-    if (0 != l_Material.bHasEmissionMap)
-    {
-        emissiveMapColor = l_EmissionMap.SampleLevel(g_Sampler, uv, 0).xyz;
-        if(emissiveMapColor.x >= 0.02 || emissiveMapColor.y  >= 0.02 || emissiveMapColor.z >= 0.02)
-            bEmission = true;
-    }
-    if(0!= l_Material.bHasEmissiveColor)
-        emissiveColor = l_Material.EmissiveColor;
-    
-    PhongE = emissiveColor * emissiveMapColor;
+    float shadowFactor = isShadow ? 0.35f : 1.0f;
     
     //float3 lightColor = float3(0.8, 0.4, 0.2);
-    float3 lightColor = float3(1.0, 1.0, 1.0);
-    //float3 lightColor = float3(0.2, 0.2, 0.2);
-    float3 light = normalize(float3(1.0, 1.0, 1.0));
-    //float3 light = normalize(float3(0.0, 10.0, 0.0) - GetWorldPosition());
+    float3 lightColor = float3(0.8, 0.8, 0.8);
+    //float3 lightColor = float3(1.0, 0.2, 0.2);
+    float3 light = normalize(float3(0.5, 2.0, 0.7));
     
     float Diffuse = max(dot(normalW, light), 0.0f);
-    if(isShadow && !bEmission && Diffuse > 0.0f)
-        shadowFactor = 0.35f;
-    
     float3 PhongD = shadowFactor * Diffuse * lightColor * diffuseColor.xyz;
     
     float3 PhongS = float3(0.0, 0.0, 0.0);
     if (l_Material.bHasSpecularHighlight && !isShadow)
     {
-        //float3 Ref1 = 2.0f * normalW * dot(normalW, light) - light;
+        float3 Ref1 = 2.0f * normalW * dot(normalW, light) - light;
         float3 View = normalize(g_CameraInfo.cameraEye - GetWorldPosition());
-        float3 halfV = normalize(View + light);
         float rh = 1.0f;
         if (0 != l_Material.bHasGlossiness)
         {
             rh = l_Material.Glossiness;
         }
-        else if(0 != l_Material.bHasSmoothness)
+        else if (0 != l_Material.bHasSmoothness)
         {
             rh = l_Material.Smoothness;
         }
-        //float Specular = pow(max(dot(Ref1, View), 0.0f), 256.0);
-        float Specular = pow(max(0.0f, dot(normalW, halfV)), 512);
-
+        float Specular = pow(max(dot(Ref1, View), 0.0f), rh);
+        if (Diffuse <= 0.0f)
+            Specular = 0.0f;
         PhongS = Specular * l_Material.SpecularHighlight * l_Material.SpecularColor.xyz * lightColor;
     }
     
     float3 PhongA = 0.4f * diffuseColor.xyz;
     
-    
-    return saturate(float4(PhongD + PhongS + PhongA + PhongE, 1.0f));
+    return float4(PhongD + PhongS + PhongA, 1.0f);
 }
 
 bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
@@ -273,6 +268,159 @@ bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
     ray, payload);
     
     return payload.bShadow;
+}
+
+// =============================================================================
+
+/*float D_GGX(float3 N, float3 H, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = saturate(dot(N, H));
+    float NdotH2 = NdotH * NdotH;
+    
+    float denom = NdotH2 * (a2 - 1.0) + 1.0;
+    return a2 / (PI * denom * denom);
+}
+
+float3 F_Schlick(float3 F0, float cosTheta)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+float G_Smith(float3 N, float3 V, float3 L, float roughness)
+{
+    float k = pow(roughness + 1.0, 2.0) / 8.0;
+    
+    float NdotV = saturate(dot(N, V));
+    float NdotL = saturate(dot(N, L));
+
+    float G_V = NdotV / (NdotV * (1.0 - k) + k);
+    float G_L = NdotL / (NdotL * (1.0 - k) + k);
+
+    return G_V * G_L;
+}
+
+float3 CookTorranceBRDF(float3 N, float3 V, float3 L, float3 albedo, float roughness, float metallic)
+{
+    float3 H = normalize(V + L);
+    
+    float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
+
+    float D = D_GGX(N, H, roughness);
+    float3 F = F_Schlick(F0, saturate(dot(H, V)));
+    float G = G_Smith(N, V, L, roughness);
+
+    float NdotV = max(dot(N, V), 0.001);
+    float NdotL = max(dot(N, L), 0.001);
+
+    float3 numerator = D * F * G;
+    float denominator = 4.0 * NdotV * NdotL + 0.001;
+
+    float3 specular = numerator / denominator;
+
+    float3 kS = F;
+    float3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+
+    return (kD * albedo / PI + specular) * NdotL;
+}*/
+
+// Schlick의 근사에 의한 Fresnel
+float3 FresnelSchlick(float cosTheta, float3 F0)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+// GGX NDF (Normal Distribution Function)
+float DistributionGGX(float3 N, float3 H, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH * NdotH;
+
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    return a2 / (PI * denom * denom);
+}
+
+// Geometry function (Smith의 Schlick-GGX)
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+    return NdotV / (NdotV * (1.0 - k) + k);
+}
+
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx1 = GeometrySchlickGGX(NdotV, roughness);
+    float ggx2 = GeometrySchlickGGX(NdotL, roughness);
+    return ggx1 * ggx2;
+}
+
+float3 CalculateCookTorranceLighting(float3 albedo, float3 N, float3 V, float3 L, float3 lightColor, float metallic, float roughness)
+{
+    float3 H = normalize(V + L);
+
+    float NDF = DistributionGGX(N, H, roughness);
+    float G = GeometrySmith(N, V, L, roughness);
+    
+    float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
+    float3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
+    
+    float3 nominator = NDF * G * F;
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; // 방지용 offset
+    float3 specular = nominator / denominator;
+
+    float3 kS = F;
+    float3 kD = 1.0 - kS;
+    kD *= 1.0 - metallic;
+
+    float NdotL = max(dot(N, L), 0.0);
+    return (kD * albedo / PI + specular) * lightColor * NdotL;
+}
+
+float3 ImportanceSampleHemisphere(float2 xi, float3 normal)
+{
+    // xi는 0~1 사이의 난수 (각 샘플마다 다르게 줘야 함)
+
+    float phi = 2.0f * PI * xi.x;
+    float cosTheta = sqrt(1.0f - xi.y);
+    float sinTheta = sqrt(1.0f - cosTheta * cosTheta);
+
+    // 로컬 방향
+    float3 localDir = float3(
+        cos(phi) * sinTheta,
+        sin(phi) * sinTheta,
+        cosTheta
+    );
+
+    // 로컬 -> 월드 변환 (Tangent Space to World)
+    float3 up = abs(normal.z) < 0.999 ? float3(0, 0, 1) : float3(1, 0, 0);
+    float3 tangent = normalize(cross(up, normal));
+    float3 bitangent = cross(normal, tangent);
+
+    float3 worldDir = localDir.x * tangent + localDir.y * bitangent + localDir.z * normal;
+
+    return normalize(worldDir);
+}
+
+uint ReverseBits(uint bits)
+{
+    bits = (bits << 16) | (bits >> 16);
+    bits = ((bits & 0x00ff00ff) << 8) | ((bits & 0xff00ff00) >> 8);
+    bits = ((bits & 0x0f0f0f0f) << 4) | ((bits & 0xf0f0f0f0) >> 4);
+    bits = ((bits & 0x33333333) << 2) | ((bits & 0xcccccccc) >> 2);
+    bits = ((bits & 0x55555555) << 1) | ((bits & 0xaaaaaaaa) >> 1);
+    return bits;
+}
+
+float2 Hammersley(uint i, uint N)
+{
+    return float2((float) i / (float) N, ReverseBits(i) * 2.3283064365386963e-10); // 2^-32
 }
 
 // =============================================================================
@@ -325,7 +473,7 @@ void RadianceAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectio
     uint index[3];
     uint idx;
     idx = PrimitiveIndex() * 3;
-    if(0 != l_Mesh.bHasTex0)
+    if (0 != l_Mesh.bHasTex0)
         GetTex0FromBuffer(uvs, idx);
     
     float2 bary = float2(attrib.barycentrics.x, attrib.barycentrics.y);
@@ -341,7 +489,7 @@ void RadianceAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectio
         AlphaValue = l_Material.AlbedoColor.a;
     else
         AlphaValue = 1.0f;
-    if(AlphaValue <= 0.01)
+    if (AlphaValue <= 0.01)
         IgnoreHit();
 }
 
@@ -356,13 +504,13 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     uint idx;
     idx = PrimitiveIndex() * 3;
 
-    if(0 != l_Mesh.bHasTex0)
+    if (0 != l_Mesh.bHasTex0)
         GetTex0FromBuffer(uvs, idx);
-    if(0 != l_Mesh.bHasNormals)
+    if (0 != l_Mesh.bHasNormals)
         GetNormalFromBuffer(normals, idx);
-    if(0 != l_Mesh.bHasTangenrs)
+    if (0 != l_Mesh.bHasTangenrs)
         GetTangentFromBuffer(tangent, idx);
-    if(0 != l_Mesh.bHasBiTangents)
+    if (0 != l_Mesh.bHasBiTangents)
         GetBiTangentFromBuffer(bitangent, idx);
     
     float2 bary = float2(attrib.barycentrics.x, attrib.barycentrics.y);
@@ -372,7 +520,7 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     float4 albedoColor = float4(1.0, 1.0, 1.0, 1.0);
     float4 objectColor;
     
-    if(0 != l_Material.bHasAlbedoColor)
+    if (0 != l_Material.bHasAlbedoColor)
         albedoColor = l_Material.AlbedoColor;
         
     if (l_Material.bHasAlbedoMap != 0)
@@ -382,8 +530,6 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     }
     else
         objectColor = albedoColor;
-    
-    //objectColor = float4(0.6, 0.6, 0.6, 1.0);   // lighting Test
     
     
     
@@ -398,38 +544,29 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     RayDesc shadowray;
     shadowray.Origin = GetWorldPosition() + normalW * 0.001f;
     shadowray.Direction = normalize(float3(1.0, 1.0, 1.0));
-    //shadowray.Direction = normalize(float3(0.0, 10.0, 0.0) - GetWorldPosition());
     shadowray.TMin = 0.001;
-    shadowray.TMax = 1000.0f;
+    shadowray.TMax = 1000;
     
     bool bShadow = CheckTheShadow(shadowray, payload.RayDepth + 1);
     
-    objectColor = CalculatePhongModel(objectColor, lightingNormal, bShadow, texCoord);
+    float3 viewDir = normalize(g_CameraInfo.cameraEye - GetWorldPosition());
+    float3 lightDir = normalize(float3(1.0, 1.0, 1.0)); // 실제 조명 방향으로 변경 가능
+    float3 lightColor = float3(4.0, 4.0, 4.0);
+
+    float roughness = 1.0 - l_Material.Smoothness;
+    float metallic = l_Material.Metallic;
+
+    float3 color = CalculateCookTorranceLighting(objectColor.rgb, normalW, viewDir, lightDir, lightColor, metallic, roughness);
+
+// 그림자 적용
+    if (bShadow)
+        color *= 0.1; // 그림자 강도 조절
+
+    float ambientStrength = 0.1 + 0.2 * pow(saturate(dot(normalW, float3(0, 1, 0))), 1.5);
+    float3 ambientColor = float3(0.4, 0.5, 0.7);
+    color += objectColor.rgb * ambientColor * ambientStrength;
     
-    /*float4 reflectColor = float4(0.0, 0.0, 0.0, 1.0);
-    if (0 != l_Material.bHasGlossyReflection && l_Material.GlossyReflection > 0.01f)
-    {
-        float3 viewDir = normalize(GetWorldPosition() - g_CameraInfo.cameraEye);
-        RayDesc reflectRay;
-        reflectRay.Origin = GetWorldPosition() + normalW + 0.001f;
-        reflectRay.Direction = reflect(viewDir, normalW);
-        reflectRay.TMin = 0.001f;
-        reflectRay.TMax = 1000.0f;
-        
-        reflectColor = TraceRadianceRay(reflectRay, payload.RayDepth + 1);
-        
-        float reflectionFactor = saturate(l_Material.GlossyReflection);
-        payload.RayColor = lerp(objectColor, reflectColor, reflectionFactor);
-    }
-    else
-    {
-        payload.RayColor = objectColor;
-    }*/
-    //objectColor = CalculateCookTorranceLighting(objectColor, lightingNormal, bShadow);
-    //lightingNormal = normalize(mul(lightingNormal, (float3x3) ObjectToWorld4x3()));
-    //objectColor.xyz = (lightingNormal.xyz + 1.0f) / 2.0f;
-    
-    payload.RayColor = objectColor;
+    payload.RayColor = float4(color, 1.0);
 }
 
 [shader("closesthit")]

@@ -1195,7 +1195,7 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 
 				sDesc.Buffer.NumElements = mesh->getVertexCount();
 				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
-				g_DxResource.device->CreateShaderResourceView(mesh->getVertexBuffer(), &sDesc, insertHandle);
+				g_DxResource.device->CreateShaderResourceView(mesh->getNormalsBuffer(), &sDesc, insertHandle);
 			}
 			else {
 				pMap->x = 0;

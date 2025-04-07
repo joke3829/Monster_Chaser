@@ -9,6 +9,7 @@ void CCamera::Setup(int nRootParameterIndex)
 	desc.Width = Align(sizeof(CB_CAMERA_INFO), 256);
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dCameraBuffer.GetAddressOf()));
 	m_pd3dCameraBuffer->Map(0, nullptr, (void**)&m_pCameraInfo);
+	m_pCameraInfo->bNormalMapping = ~0;
 
 	XMStoreFloat4x4(&m_xmf4x4Proj, XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fFOV), m_fAspect, m_fNear, m_fFar));
 }
@@ -52,7 +53,15 @@ void CCamera::Move(int arrow, float fElapsedTime)
 	else if (arrow == 2) {	// 아래
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * -10 * fElapsedTime));
 	}
-	else
+	else if (3 == arrow) {	// 우
+		XMVECTOR right = XMVector3Normalize(XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir)));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * 20 * fElapsedTime));
+	}
+	else if (4 == arrow) {
+		XMVECTOR right = XMVector3Normalize(XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir)));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * -20 * fElapsedTime));
+	}
+	else   // 뒤
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -20 * fElapsedTime));
 }
 

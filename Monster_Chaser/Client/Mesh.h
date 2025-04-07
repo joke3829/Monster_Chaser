@@ -36,6 +36,7 @@ public:
 	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor-메시 즉시 생성	
 	Mesh(CHeightMapImage* heightmap, std::string strMeshName);
 	Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName = "noNameMesh");					// boundingOBB 만들때 사용
+	Mesh(XMFLOAT3& center, float radius, std::string meshName = "noNameMesh");
 
 	//void GetMeshNameFromFile(std::ifstream& inFile);
 	void GetBoundInfoFromFile(std::ifstream& inFile);

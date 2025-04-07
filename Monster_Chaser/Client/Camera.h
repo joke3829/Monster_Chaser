@@ -9,6 +9,7 @@ struct CB_CAMERA_INFO {
 	XMFLOAT4X4 xmf4x4ViewProj;
 	XMFLOAT4X4 xmf4x4InverseViewProj;
 	XMFLOAT3 xmf3Eye;
+	int bNormalMapping;
 };
 
 class CCamera {
@@ -24,6 +25,8 @@ public:
 	void SetTarget(CGameObject* target);
 	void SetThirdPersonMode(bool bThirdPerson);
 	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }
+
+	void toggleNormalMapping() { m_pCameraInfo->bNormalMapping = ~m_pCameraInfo->bNormalMapping; }
 
 protected:
 	bool m_bThirdPerson = false;
