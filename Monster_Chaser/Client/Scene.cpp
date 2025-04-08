@@ -21,6 +21,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
 			animationManager->ChangeAnimation(24, false); // idle로 전환
 			test = true;
+			m_LockAnimation1 = false;
 		}
 	}
 
@@ -504,7 +505,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		// 1-1. W만 눌리다가 Shift 추가로 눌림 (뛰기로 전환)
 		if (!(m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // 뛰기
-			m_pResourceManager->UpdatePosition(0.0f);
+			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		// 1-2. W + Shift 유지
 		else {
@@ -514,7 +515,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // 걷기 + Shift 뗀 순간 위치 고정
-		m_pResourceManager->UpdatePosition(0.0f);
+		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
 
 	else if (keyBuffer['W'] & 0x80) {
@@ -523,7 +524,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
-		m_pResourceManager->UpdatePosition(0.0f);
+		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
 
 	if (keyBuffer['A'] & 0x80) {
