@@ -26,7 +26,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
-	if (test || m_StopAnimaiton) {
+	if (test) {
 		m_pResourceManager->UpdatePosition(fElapsedTime); //위치 업데이트
 	}
 
@@ -501,18 +501,29 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	}
 
 	if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // 뛰기
-		m_StopAnimaiton = false;
+		// 1-1. W만 눌리다가 Shift 추가로 눌림 (뛰기로 전환)
+		if (!(m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // 뛰기
+			m_pResourceManager->UpdatePosition(0.0f);
+		}
+		// 1-2. W + Shift 유지
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // 뛰기 유지
+		}
+	}
+
+	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // 걷기 + Shift 뗀 순간 위치 고정
+		m_pResourceManager->UpdatePosition(0.0f);
 	}
 
 	else if (keyBuffer['W'] & 0x80) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // 걷기
-		m_StopAnimaiton = false;
 	}
 
 	else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
-		m_StopAnimaiton = true;
+		m_pResourceManager->UpdatePosition(0.0f);
 	}
 
 	if (keyBuffer['A'] & 0x80) {
