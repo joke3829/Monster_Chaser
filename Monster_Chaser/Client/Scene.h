@@ -24,6 +24,7 @@ public:
 protected:
 	bool m_LockAnimation = false;
 	bool m_LockAnimation1 = false;
+	bool m_StopAnimaiton = false;
 	bool m_bRayTracing = false;
 	ComPtr<ID3D12RootSignature> m_pGlobalRootSignature{};
 	std::shared_ptr<CCamera> m_pCamera{};

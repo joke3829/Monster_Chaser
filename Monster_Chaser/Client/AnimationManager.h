@@ -58,16 +58,16 @@ public:
 		else { return false; }
 	}
 
-	void PauseAnimation() {
-		m_isPaused = true; // 애니메이션 일시정지
+	void onWalking() {
+		m_isWalk = true;
 	}
 
-	void ResumeAnimation() {
-		m_isPaused = false; // 애니메이션 재개
+	void StopWalking() {
+		m_isWalk = false;
 	}
 
-	bool IsAnimationPaused() const {
-		return m_isPaused; // 현재 일시정지 상태 반환
+	bool IsWalking() const {
+		return m_isWalk; // 현재 걷기  상태 반환
 	}
 
 
@@ -95,7 +95,7 @@ protected:
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// 애니메이션 행렬을 저장할 배열
 
 	bool m_bPlayOnce = false; // 한 번만 재생 여부
-	bool m_isPaused = false; // 정지 여부
+	bool m_isWalk = false; // 걷기 여부
 
 	// 콤보
 	bool m_bInCombo;                     // 콤보 진행 중 여부

@@ -26,7 +26,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
-	if (test) {
+	if (test || m_StopAnimaiton) {
 		m_pResourceManager->UpdatePosition(fElapsedTime); //위치 업데이트
 	}
 
@@ -502,15 +502,18 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // 뛰기
+		m_StopAnimaiton = false;
 	}
 
 	else if (keyBuffer['W'] & 0x80) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // 걷기
+		m_StopAnimaiton = false;
 	}
 
-	//else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때
-	//	m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
-	//}
+	else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
+		m_StopAnimaiton = true;
+	}
 
 	if (keyBuffer['A'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f)); //좌회전
