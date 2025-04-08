@@ -218,7 +218,7 @@ void CMageManager::StartCombo()
 	m_bWaitingForNextInput = false;
 	m_bNextAttack = false;
 
-	m_vComboAnimationSets = { 26,27,28,29 };
+	m_vComboAnimationSets = { 22,23,24,25 };
 
 	ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
 }
@@ -286,7 +286,7 @@ void CMageManager::ResetCombo()
 	m_bWaitingForNextInput = false;
 	m_bNextAttack = false;
 	setTimeZero();
-	ChangeAnimation(24, false); // idle로 전환
+	ChangeAnimation(0, false); // idle로 전환
 }
 
 void CMageManager::StartSkill3()
@@ -297,7 +297,7 @@ void CMageManager::StartSkill3()
 	m_bWaitingForNextInput = false;
 	m_bNextAttack = false;
 
-	m_vSkillAnimationSets = { 30, 31, 32, 33 , 34 };
+	m_vSkillAnimationSets = { 26, 27, 28, 29 , 30 };
 	ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
 }
 

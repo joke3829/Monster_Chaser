@@ -501,15 +501,55 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		}
 	}
 
+	if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
+		if (keyBuffer[VK_LSHIFT] & 0x80) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(16, true); // 뛰기: 왼쪽 대각선 위
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(6, true); // 걷기: 왼쪽 대각선 위
+		}
+		m_pResourceManager->UpdatePosition(fElapsedTime); // 위치 업데이트 추가
+	}
+	// W + D (오른쪽 대각선 위)
+	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
+		if (keyBuffer[VK_LSHIFT] & 0x80) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(17, true); // 뛰기: 오른쪽 대각선 위
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(7, true); // 걷기: 오른쪽 대각선 위
+		}
+		m_pResourceManager->UpdatePosition(fElapsedTime); // 위치 업데이트 추가
+	}
+	// S + A (왼쪽 대각선 뒤)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
+		if (keyBuffer[VK_LSHIFT] & 0x80) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(18, true); // 뛰기: 왼쪽 대각선 뒤
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(11, true); // 걷기: 왼쪽 대각선 뒤
+		}
+		m_pResourceManager->UpdatePosition(fElapsedTime); // 위치 업데이트 추가
+	}
+	// S + D (오른쪽 대각선 뒤)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
+		if (keyBuffer[VK_LSHIFT] & 0x80) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(19, true); // 뛰기: 오른쪽 대각선 뒤
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(12, true); // 걷기: 오른쪽 대각선 뒤
+		}
+		m_pResourceManager->UpdatePosition(fElapsedTime); // 위치 업데이트 추가
+	}
+
 	if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		// 1-1. W만 눌리다가 Shift 추가로 눌림 (뛰기로 전환)
 		if (!(m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(15, true); // 뛰기
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(13, true); // 뛰기
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		// 1-2. W + Shift 유지
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(15, true); // 뛰기 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(13, true); // 뛰기 유지
 		}
 	}
 
@@ -528,19 +568,20 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	}
 
 	if (keyBuffer['A'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f)); //좌회전
+		//m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f)); //좌회전
 	}
 
 	if (keyBuffer['S'] & 0x80) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); //걷기
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(10, true); //걷기
 	}
 
 	else if (m_PrevKeyBuffer['S'] & 0x80) { // S 키를 뗐을 때
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(24, false);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(0, false);
+		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
 
 	if (keyBuffer['D'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //우회전
+		//m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //우회전
 	}
 
 	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
@@ -552,7 +593,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	}
 
 	if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(25, true); //Dodge
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(21, true); //Dodge
 		m_LockAnimation1 = true;
 	}
 
@@ -565,12 +606,12 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	}
 
 	if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(35, true); //스킬2
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(31, true); //스킬2
 		m_LockAnimation1 = true;
 	}
 
 	if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(36, true); //스킬1
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(32, true); //스킬1
 		m_LockAnimation1 = true;
 	}
 
