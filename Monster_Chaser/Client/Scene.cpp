@@ -501,87 +501,293 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		}
 	}
 
-	if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
-		if (keyBuffer[VK_LSHIFT] & 0x80) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(16, true); // 뛰기: 왼쪽 대각선 위
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(6, true); // 걷기: 왼쪽 대각선 위
-		}
-		m_pResourceManager->UpdatePosition(fElapsedTime); // 위치 업데이트 추가
-	}
-	// W + D (오른쪽 대각선 위)
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
-		if (keyBuffer[VK_LSHIFT] & 0x80) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(17, true); // 뛰기: 오른쪽 대각선 위
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(7, true); // 걷기: 오른쪽 대각선 위
-		}
-		m_pResourceManager->UpdatePosition(fElapsedTime); // 위치 업데이트 추가
-	}
-	// S + A (왼쪽 대각선 뒤)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
-		if (keyBuffer[VK_LSHIFT] & 0x80) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(18, true); // 뛰기: 왼쪽 대각선 뒤
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(11, true); // 걷기: 왼쪽 대각선 뒤
-		}
-		m_pResourceManager->UpdatePosition(fElapsedTime); // 위치 업데이트 추가
-	}
-	// S + D (오른쪽 대각선 뒤)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
-		if (keyBuffer[VK_LSHIFT] & 0x80) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(19, true); // 뛰기: 오른쪽 대각선 뒤
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(12, true); // 걷기: 오른쪽 대각선 뒤
-		}
-		m_pResourceManager->UpdatePosition(fElapsedTime); // 위치 업데이트 추가
-	}
-
-	if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		// 1-1. W만 눌리다가 Shift 추가로 눌림 (뛰기로 전환)
-		if (!(m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(13, true); // 뛰기
+	// W + A (왼쪽 대각선 위)
+	if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // 뛰기: 왼쪽 대각선 위
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
-		// 1-2. W + Shift 유지
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(13, true); // 뛰기 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // 뛰기 유지
 		}
 	}
-
+	// W + A + Shift 뗀 순간 (왼쪽 대각선 위 걷기로 전환)
+	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // 걷기: 왼쪽 대각선 위
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// W + A 단독 (왼쪽 대각선 위 걷기)
+	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
+		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // 걷기: 왼쪽 대각선 위
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // 걷기 유지
+		}
+	}
+	// W + A + Shift에서 A 뗀 순간 (전진 뛰기로 전환)
+	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // 뛰기: 전진
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// W + A에서 A 뗀 순간 (전진 걷기로 전환)
+	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // 걷기: 전진
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// W + A에서 W 뗀 순간 (좌측 걷기로 전환)
+	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // 걷기: 좌측 (가정: 8)
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// W + D + Shift (오른쪽 대각선 위 뛰기)
+	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // 뛰기: 오른쪽 대각선 위
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // 뛰기 유지
+		}
+	}
+	// W + D + Shift 뗀 순간 (오른쪽 대각선 위 걷기로 전환)
+	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // 걷기: 오른쪽 대각선 위
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// W + D 단독 (오른쪽 대각선 위 걷기)
+	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
+		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // 걷기: 오른쪽 대각선 위
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // 걷기 유지
+		}
+	}
+	// W + D + Shift에서 D 뗀 순간 (전진 뛰기로 전환)
+	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // 뛰기: 전진
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// W + D에서 D 뗀 순간 (전진 걷기로 전환)
+	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // 걷기: 전진
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// W + D에서 W 뗀 순간 (우측 걷기로 전환)
+	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // 걷기: 우측 (가정: 9)
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// S + A + Shift (왼쪽 대각선 뒤 뛰기)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // 뛰기: 왼 쪽 대각선 뒤
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // 뛰기 유지
+		}
+	}
+	// S + A + Shift 뗀 순간 (왼쪽 대각선 뒤 걷기로 전환)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // 걷기: 왼쪽 대각선 뒤
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// S + A 단독 (왼쪽 대각선 뒤 걷기)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
+		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // 걷기: 왼쪽 대각선 뒤
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // 걷기 유지
+		}
+	}
+	// S + A + Shift에서 A 뗀 순간 (후진 뛰기로 전환)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // 뛰기: 후진 (가정: 20)
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// S + A에서 A 뗀 순간 (후진 걷기로 전환)
+	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // 걷기: 후진
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// S + A에서 S 뗀 순간 (좌측 걷기로 전환)
+	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // 걷기: 좌측 (가정: 8)
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// S + D + Shift (오른쪽 대각선 뒤 뛰기)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // 뛰기: 오른쪽 대각선 뒤
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // 뛰기 유지
+		}
+	}
+	// S + D + Shift 뗀 순간 (오른쪽 대각선 뒤 걷기로 전환)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // 걷기: 오른쪽 대각선 뒤
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// S + D 단독 (오른쪽 대각선 뒤 걷기)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
+		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // 걷기: 오른쪽 대각선 뒤
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // 걷기 유지
+		}
+	}
+	// S + D + Shift에서 D 뗀 순간 (후진 뛰기로 전환)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // 뛰기: 후진 (가정: 20)
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// S + D에서 D 뗀 순간 (후진 걷기로 전환)
+	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // 걷기: 후진
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// S + D에서 S 뗀 순간 (우측 걷기로 전환)
+	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // 걷기: 우측 (가정: 9)
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// W + Shift (전진 뛰기)
+	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // 뛰기: 전진
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // 뛰기 유지
+		}
+	}
+	// W + Shift 뗀 순간 (전진 걷기로 전환)
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // 걷기 + Shift 뗀 순간 위치 고정
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // 걷기: 전진
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-
+	// W 단독 (전진 걷기)
 	else if (keyBuffer['W'] & 0x80) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(5, true); // 걷기
+		if (!(m_PrevKeyBuffer['W'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // 걷기: 전진
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // 걷기 유지
+		}
 	}
-
-	else if (m_PrevKeyBuffer['W'] & 0x80) { // W 키를 뗐을 때
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(0, false);
+	// S + Shift (후진 뛰기)
+	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // 뛰기: 후진 (가정: 20)
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // 뛰기 유지
+		}
+	}
+	// S + Shift 뗀 순간 (후진 걷기로 전환)
+	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // 걷기: 후진
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// S 단독 (후진 걷기)
+	else if (keyBuffer['S'] & 0x80) {
+		if (!(m_PrevKeyBuffer['S'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // 걷기: 후진
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // 걷기 유지
+		}
+	}
+	// A + Shift (좌측 뛰기)
+	else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+		if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // 뛰기: 좌측 (가정: 18)
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // 뛰기 유지
+		}
+	}
+	// A + Shift 뗀 순간 (좌측 걷기로 전환)
+	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // 걷기: 좌측 (가정: 8)
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// A 단독 (좌측 걷기)
+	else if (keyBuffer['A'] & 0x80) {
+		if (!(m_PrevKeyBuffer['A'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // 걷기: 좌측 (가정: 8)
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // 걷기 유지
+		}
+	}
+	// D + Shift (우측 뛰기)
+	else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+		if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // 뛰기: 우측 (가정: 19)
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // 뛰기 유지
+		}
+	}
+	// D + Shift 뗀 순간 (우측 걷기로 전환)
+	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // 걷기: 우측 (가정: 9)
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// D 단독 (우측 걷기)
+	else if (keyBuffer['D'] & 0x80) {
+		if (!(m_PrevKeyBuffer['D'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // 걷기: 우측 (가정: 9)
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // 걷기 유지
+		}
+	}
+	// W 뗀 순간 (IDLE로 전환)
+	else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// S 뗀 순간 (IDLE로 전환)
+	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// A 뗀 순간 (IDLE로 전환)
+	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
+		m_pResourceManager->UpdatePosition(fElapsedTime);
+	}
+	// D 뗀 순간 (IDLE로 전환)
+	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
 
-	if (keyBuffer['A'] & 0x80) {
-		//m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f)); //좌회전
+	if (keyBuffer['G'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f)); //좌회전
 	}
-
-	if (keyBuffer['S'] & 0x80) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(10, true); //걷기
-	}
-
-	else if (m_PrevKeyBuffer['S'] & 0x80) { // S 키를 뗐을 때
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(0, false);
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-
-	if (keyBuffer['D'] & 0x80) {
-		//m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //우회전
+	
+	if (keyBuffer['H'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //우회전
 	}
 
 	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
