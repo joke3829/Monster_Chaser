@@ -792,10 +792,12 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1, true); //약하게 맞기
+		m_LockAnimation1 = true;
 	}
 
 	if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2, true); //약하게 맞고 죽기
+		m_LockAnimation1 = true;
 	}
 
 	if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
@@ -805,10 +807,12 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3, true); //강하게 맞기
+		m_LockAnimation1 = true;
 	}
 
 	if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(4, true); //강하게 맞고 죽기
+		m_LockAnimation1 = true;
 	}
 
 	if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
