@@ -2,7 +2,7 @@
 
 // 여기에 셰이더 이름을 사용할 개수 만큼 쓴다.
 const wchar_t* RayGenShaderNames[] = { L"RayGenShader" };
-const wchar_t* MissShaderNames[] = { L"Miss" };
+const wchar_t* MissShaderNames[] = { L"RadianceMiss", L"ShadowMiss"};
 
 struct LocalRootArg {
 	D3D12_GPU_VIRTUAL_ADDRESS CBufferGPUVirtualAddress;		// Material상수버퍼
@@ -379,7 +379,10 @@ void CShaderBindingTableManager::CreateSBT()
 										args.CBufferGPUVirtualAddress = object->getCbuffer(i)->GetGPUVirtualAddress();
 										args.MeshCBufferGPUVirtualAddress = object->getMeshCBuffer()->GetGPUVirtualAddress();
 										// 정점
-										args.VertexBuffer = sMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
+										if (SkinningObject->getVertexOutputBuffer(n))	// 레이트레이싱 Skinning이 아닐때를 확인 못함
+											args.VertexBuffer = SkinningObject->getVertexOutputBuffer(n)->GetGPUVirtualAddress();
+										else
+											args.VertexBuffer = sMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
 										// 컬러
 										if (sMeshes[n]->getHasColor())
 											args.ColorsBuffer = sMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
@@ -396,18 +399,30 @@ void CShaderBindingTableManager::CreateSBT()
 										else
 											args.TexCoord1Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 										// Normal
-										if (sMeshes[n]->getHasNormal())
-											args.NormalsBuffer = sMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
+										if (sMeshes[n]->getHasNormal()) {
+											if (SkinningObject->getNormalOutputBuffer(n))
+												args.NormalsBuffer = SkinningObject->getNormalOutputBuffer(n)->GetGPUVirtualAddress();
+											else
+												args.NormalsBuffer = sMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
+										}
 										else
 											args.NormalsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 										// Tangent
-										if (sMeshes[n]->getHasTangent())
-											args.TangentBuffer = sMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
+										if (sMeshes[n]->getHasTangent()) {
+											if (SkinningObject->getTangentOutputBuffer(n))
+												args.TangentBuffer = SkinningObject->getTangentOutputBuffer(n)->GetGPUVirtualAddress();
+											else
+												args.TangentBuffer = sMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
+										}
 										else
 											args.TangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 										// BiTangent
-										if (sMeshes[n]->getHasBiTangent())
-											args.BiTangentBuffer = sMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
+										if (sMeshes[n]->getHasBiTangent()) {
+											if (SkinningObject->getBiTangentOutputBuffer(n))
+												args.BiTangentBuffer = SkinningObject->getBiTangentOutputBuffer(n)->GetGPUVirtualAddress();
+											else
+												args.BiTangentBuffer = sMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
+										}
 										else
 											args.BiTangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 										// Index
@@ -466,7 +481,10 @@ void CShaderBindingTableManager::CreateSBT()
 									args.CBufferGPUVirtualAddress = object->getCbuffer(0)->GetGPUVirtualAddress();
 									args.MeshCBufferGPUVirtualAddress = object->getMeshCBuffer()->GetGPUVirtualAddress();
 									// 정점
-									args.VertexBuffer = sMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
+									if (SkinningObject->getVertexOutputBuffer(n))	// 레이트레이싱 Skinning이 아닐때를 확인 못함
+										args.VertexBuffer = SkinningObject->getVertexOutputBuffer(n)->GetGPUVirtualAddress();
+									else
+										args.VertexBuffer = sMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
 									// 컬러
 									if (sMeshes[n]->getHasColor())
 										args.ColorsBuffer = sMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
@@ -483,18 +501,30 @@ void CShaderBindingTableManager::CreateSBT()
 									else
 										args.TexCoord1Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 									// Normal
-									if (sMeshes[n]->getHasNormal())
-										args.NormalsBuffer = sMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
+									if (sMeshes[n]->getHasNormal()) {
+										if (SkinningObject->getNormalOutputBuffer(n))
+											args.NormalsBuffer = SkinningObject->getNormalOutputBuffer(n)->GetGPUVirtualAddress();
+										else
+											args.NormalsBuffer = sMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
+									}
 									else
 										args.NormalsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 									// Tangent
-									if (sMeshes[n]->getHasTangent())
-										args.TangentBuffer = sMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
+									if (sMeshes[n]->getHasTangent()) {
+										if (SkinningObject->getTangentOutputBuffer(n))
+											args.TangentBuffer = SkinningObject->getTangentOutputBuffer(n)->GetGPUVirtualAddress();
+										else
+											args.TangentBuffer = sMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
+									}
 									else
 										args.TangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 									// BiTangent
-									if (sMeshes[n]->getHasBiTangent())
-										args.BiTangentBuffer = sMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
+									if (sMeshes[n]->getHasBiTangent()) {
+										if (SkinningObject->getBiTangentOutputBuffer(n))
+											args.BiTangentBuffer = SkinningObject->getBiTangentOutputBuffer(n)->GetGPUVirtualAddress();
+										else
+											args.BiTangentBuffer = sMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
+									}
 									else
 										args.BiTangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
 									// Index

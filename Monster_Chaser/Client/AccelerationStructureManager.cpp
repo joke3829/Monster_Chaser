@@ -48,7 +48,10 @@ void CAccelerationStructureManager::UpdateScene()
 					m_pInstanceData[i].InstanceMask = 1;
 					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
 					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
+					if(sMeshes[n]->getbSkinning())
+						XMStoreFloat3x4(ptr, XMLoadFloat4x4(&Skinning->getPreWorldMatrix()));
+					else
+						XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
 					++i;
 				}
 			}
@@ -60,13 +63,25 @@ void CAccelerationStructureManager::UpdateScene()
 		.Inputs = {
 			.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
 			.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE,
-			.NumDescs = m_nValidObject,
+			.NumDescs = m_nValidObject,						// 객체 개수?
 			.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
 			.InstanceDescs = m_InstanceBuffer->GetGPUVirtualAddress()
 		},
 		.SourceAccelerationStructureData = m_TLAS->GetGPUVirtualAddress(),
 		.ScratchAccelerationStructureData = m_tlasUpdataeScratch->GetGPUVirtualAddress()
 	};
+
+	/*D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {
+		.DestAccelerationStructureData = m_TLAS->GetGPUVirtualAddress(),
+		.Inputs = {
+			.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
+			.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE,
+			.NumDescs = m_nValidObject,
+			.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
+			.InstanceDescs = m_InstanceBuffer->GetGPUVirtualAddress()
+		},
+		.ScratchAccelerationStructureData = m_tlasUpdataeScratch->GetGPUVirtualAddress()
+	};*/
 
 	g_DxResource.cmdList->BuildRaytracingAccelerationStructure(&desc, 0, nullptr);
 	D3D12_RESOURCE_BARRIER barrier = { .Type = D3D12_RESOURCE_BARRIER_TYPE_UAV, .UAV = {.pResource = m_TLAS.Get()} };
@@ -122,7 +137,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 	else {
 		D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 		desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-		desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// 임시
+		desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;		// 임시
 		desc.Triangles.Transform3x4 = 0;
 		desc.Triangles.VertexBuffer = {
 			.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
@@ -243,11 +258,13 @@ void CAccelerationStructureManager::InitTLAS()
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
 	inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
 	inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_ALLOW_UPDATE;
+	//inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
 	inputs.NumDescs = m_nValidObject;
 	inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 	inputs.InstanceDescs = m_InstanceBuffer->GetGPUVirtualAddress();
 
 	MakeAccelerationStructure(inputs, m_TLAS, &updateScratchSize, true);
+	//MakeAccelerationStructure(inputs, m_TLAS, &updateScratchSize);
 
 	auto desc = BASIC_BUFFER_DESC;
 	desc.Width = (updateScratchSize >= 8ULL) ? updateScratchSize : 8ULL;

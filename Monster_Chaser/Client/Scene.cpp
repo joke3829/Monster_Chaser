@@ -258,12 +258,65 @@ void CRaytracingScene::CreateComputeRootSignature()
 		skinningRange[5].OffsetInDescriptorsFromTableStart = 5;
 	}
 
-	D3D12_DESCRIPTOR_RANGE uavRange{};
-	uavRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-	uavRange.NumDescriptors = 1;
-	uavRange.BaseShaderRegister = 0;
-	uavRange.RegisterSpace = 0;
-	uavRange.OffsetInDescriptorsFromTableStart = 0;
+	D3D12_DESCRIPTOR_RANGE insertRange[5]{};
+	{
+		insertRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+		insertRange[0].NumDescriptors = 1;
+		insertRange[0].BaseShaderRegister = 1;
+		insertRange[0].RegisterSpace = 0;
+		insertRange[0].OffsetInDescriptorsFromTableStart = 0;
+
+		insertRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		insertRange[1].NumDescriptors = 1;
+		insertRange[1].BaseShaderRegister = 5;
+		insertRange[1].RegisterSpace = 0;
+		insertRange[1].OffsetInDescriptorsFromTableStart = 1;
+
+		insertRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		insertRange[2].NumDescriptors = 1;
+		insertRange[2].BaseShaderRegister = 6;
+		insertRange[2].RegisterSpace = 0;
+		insertRange[2].OffsetInDescriptorsFromTableStart = 2;
+
+		insertRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		insertRange[3].NumDescriptors = 1;
+		insertRange[3].BaseShaderRegister = 7;
+		insertRange[3].RegisterSpace = 0;
+		insertRange[3].OffsetInDescriptorsFromTableStart = 3;
+
+		insertRange[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		insertRange[4].NumDescriptors = 1;
+		insertRange[4].BaseShaderRegister = 8;
+		insertRange[4].RegisterSpace = 0;
+		insertRange[4].OffsetInDescriptorsFromTableStart = 4;
+	}
+
+	D3D12_DESCRIPTOR_RANGE uavRange[4]{};
+	{
+		uavRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		uavRange[0].NumDescriptors = 1;
+		uavRange[0].BaseShaderRegister = 0;
+		uavRange[0].RegisterSpace = 0;
+		uavRange[0].OffsetInDescriptorsFromTableStart = 0;
+
+		uavRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		uavRange[1].NumDescriptors = 1;
+		uavRange[1].BaseShaderRegister = 1;
+		uavRange[1].RegisterSpace = 0;
+		uavRange[1].OffsetInDescriptorsFromTableStart = 1;
+
+		uavRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		uavRange[2].NumDescriptors = 1;
+		uavRange[2].BaseShaderRegister = 2;
+		uavRange[2].RegisterSpace = 0;
+		uavRange[2].OffsetInDescriptorsFromTableStart = 2;
+
+		uavRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		uavRange[3].NumDescriptors = 1;
+		uavRange[3].BaseShaderRegister = 3;
+		uavRange[3].RegisterSpace = 0;
+		uavRange[3].OffsetInDescriptorsFromTableStart = 3;
+	}
 
 	// 0 - ani info, 1 - InputVertex, 2 - OutputVertex
 	D3D12_ROOT_PARAMETER params[3]{};
@@ -271,13 +324,13 @@ void CRaytracingScene::CreateComputeRootSignature()
 	params[0].DescriptorTable.NumDescriptorRanges = 6;
 	params[0].DescriptorTable.pDescriptorRanges = skinningRange;
 
-	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
-	params[1].Descriptor.RegisterSpace = 0;
-	params[1].Descriptor.ShaderRegister = 5;
+	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[1].DescriptorTable.NumDescriptorRanges = 5;
+	params[1].DescriptorTable.pDescriptorRanges = insertRange;
 
 	params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	params[2].DescriptorTable.NumDescriptorRanges = 1;
-	params[2].DescriptorTable.pDescriptorRanges = &uavRange;
+	params[2].DescriptorTable.NumDescriptorRanges = 4;
+	params[2].DescriptorTable.pDescriptorRanges = uavRange;
 
 	//D3D12_ROOT_PARAMETER params[9]{};
 	//params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
@@ -357,13 +410,14 @@ void CRaytracingTestScene::SetUp()
 
 	// Create And Set up PipelineState
 	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
-	m_pRaytracingPipeline->Setup(1 + 1 + 1 + 2 + 1 + 1);
+	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"ClosestHit");
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit");
 	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(31);
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(3);
 	m_pRaytracingPipeline->MakePipelineState();
 
 	// Resource Ready
@@ -371,8 +425,8 @@ void CRaytracingTestScene::SetUp()
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	// =========================================================
@@ -380,16 +434,17 @@ void CRaytracingTestScene::SetUp()
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
 	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// 완전히 새로운 객체 & skinning Object 복사는 여기서 ========================================
 	
 	// 복사 예시
 	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	//skinned[2]->CopyFromOtherObject(skinned[1].get());
-	//aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[1].get()));
-	//aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
-	//aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
-	//aManagers[2]->UpdateAnimation(0.5f);		// 필요 x
+	//skinned[1]->CopyFromOtherObject(skinned[0].get());
+	//aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
+	//aManagers[1]->SetFramesPointerFromSkinningObject(skinned[1]->getObjects());
+	//aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
+	//aManagers[1]->UpdateAnimation(0.5f);		// 필요 x
 
 	// 객체 생성 예시
 	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.025f, 1.0f));
@@ -400,29 +455,45 @@ void CRaytracingTestScene::SetUp()
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.2, 0.4, 1.0, 1.0);
+	
+	UINT txtIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
+
+	tMaterial.m_bHasAlbedoMap = true; tMaterial.m_nAlbedoMapIndex = txtIndex;
 	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
-	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0));*/
+	normalObjects[finalindex]->SetScale(XMFLOAT3(-1.0f, 1.0f, 1.0f));
+	normalObjects[finalindex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	normalObjects[finalindex]->SetPosition(XMFLOAT3(-1024.0, 0.0, 1024.0));*/
+
+	/*UINT finalindex = normalObjects.size();
+	UINT finalmesh = meshes.size();
+	Material tMaterial{};
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(5.0f, 20.0f, 5.0f)));
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.2, 0.4, 0.2, 0.0);
+	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
+	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 30.0, 0.0)); */
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
+	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
+
 
 	// ShaderBindingTable
 	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
 	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
 	m_pShaderBindingTable->CreateSBT();
 
-	// 여기서 필요한 객체 복사 & 행렬 조작 ======================================================
+	// 여기서 필요한 객체(normalObject) 복사 & 행렬 조작 ===============================
 	/*skinned[0]->setPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
 	skinned[1]->setPreTransform(0.2, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));*/
-	//skinned[0]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
-
-	m_pResourceManager->PrepareObject();
 
 	// 카메라 설정 ==============================================================
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	m_pCamera->SetCameraLength(15.0f);
+	m_pCamera->SetCameraLength(10.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -450,6 +521,30 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
+		case '4':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(3);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '5':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(4);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '6':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '7':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(6);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '8':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(7);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '9':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(8);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
 		}
 		break;
 	case WM_KEYUP:
@@ -471,6 +566,8 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer[VK_CONTROL] & 0x80)
 		m_pCamera->Move(2, fElapsedTime);
 
+	if (keyBuffer[VK_RIGHT] & 0x80)
+		m_pResourceManager->getAnimationManagers()[0]->TimeIncrease(fElapsedTime);
 
 	if (keyBuffer['I'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);

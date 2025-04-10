@@ -197,7 +197,7 @@ void CGameObject::SetHitGroupIndex(int index)
 	m_nHitGroupIndex = index;
 }
 
-void CGameObject::SetWorlaMatrix(XMFLOAT4X4& mtx)
+void CGameObject::SetWorldMatrix(XMFLOAT4X4& mtx)
 {
 	m_xmf4x4WorldMatrix = mtx;
 }
@@ -419,11 +419,6 @@ void CSkinningInfo::SetShaderVariables()
 {
 	g_DxResource.cmdList->SetDescriptorHeaps(1, m_pd3dDesciptorHeap.GetAddressOf());
 	g_DxResource.cmdList->SetComputeRootDescriptorTable(0, m_pd3dDesciptorHeap->GetGPUDescriptorHandleForHeapStart());
-	/*g_DxResource.cmdList->SetComputeRootConstantBufferView(0, m_pConstantBuffer->GetGPUVirtualAddress());
-	g_DxResource.cmdList->SetComputeRootShaderResourceView(1, m_pOffsetMatrixBuffer->GetGPUVirtualAddress());
-	g_DxResource.cmdList->SetComputeRootShaderResourceView(2, m_pBoneIndicesBuffer->GetGPUVirtualAddress());
-	g_DxResource.cmdList->SetComputeRootShaderResourceView(3, m_pBoneWeightBuffer->GetGPUVirtualAddress());
-	g_DxResource.cmdList->SetComputeRootShaderResourceView(4, m_pAnimationMatrixIndexBuffer->GetGPUVirtualAddress());*/
 }
 
 // ============================================================================
@@ -838,24 +833,31 @@ void CSkinningObject::setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 pos
 
 void CSkinningObject::UpdateFrameWorldMatrix()
 {
+	if (m_bUsePreTransform)
+		XMStoreFloat4x4(&m_xmf4x4PreWorldMatrix, XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
+	else
+		m_xmf4x4PreWorldMatrix = m_xmf4x4WorldMatrix;
+
 	for (std::unique_ptr<CGameObject>& object : m_vObjects) {
 		if (object->getParentIndex() != -1) {
 			XMFLOAT4X4 wmtx = m_vObjects[object->getParentIndex()]->getWorldMatrix();
 			XMFLOAT4X4 lmtx = object->getLocalMatrix();
 			XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
-			object->SetWorlaMatrix(lmtx);
+			object->SetWorldMatrix(lmtx);
 		}
 		else {
 			XMFLOAT4X4 lmtx = object->getLocalMatrix();
-			if (m_bUsePreTransform) {
-				XMMATRIX mtx = XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix);
-				XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * mtx);
-				object->SetWorlaMatrix(lmtx);
-			}
-			else {
-				XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
-				object->SetWorlaMatrix(lmtx);
-			}
+			//if (m_bUsePreTransform) {
+			//	//XMMATRIX mtx = XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix);
+			//	XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&m_xmf4x4PreWorldMatrix));
+			//	object->SetWorldMatrix(lmtx);
+			//}
+			//else {
+			//	XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
+			//	object->SetWorldMatrix(lmtx);
+			//}
+			XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&m_xmf4x4PreWorldMatrix));
+			object->SetWorldMatrix(lmtx);
 		}
 	}
 }
@@ -937,7 +939,9 @@ void CRayTracingSkinningObject::UpdateObject(float fElapsedTime)
 		for (int i = 0; i < m_vSkinningInfo.size(); ++i) {
 			m_vSkinningInfo[i]->SetShaderVariables();
 			UINT ref = m_vSkinningInfo[i]->getRefMeshIndex();
-			g_DxResource.cmdList->SetComputeRootShaderResourceView(1, m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress());
+			//g_DxResource.cmdList->SetComputeRootShaderResourceView(1, m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress());
+			g_DxResource.cmdList->SetDescriptorHeaps(1, m_vInsertDescriptorHeap[ref].GetAddressOf());
+			g_DxResource.cmdList->SetComputeRootDescriptorTable(1, m_vInsertDescriptorHeap[ref]->GetGPUDescriptorHandleForHeapStart());
 			g_DxResource.cmdList->SetDescriptorHeaps(1, m_vUAV[ref].GetAddressOf());
 			g_DxResource.cmdList->SetComputeRootDescriptorTable(2, m_vUAV[ref]->GetGPUDescriptorHandleForHeapStart());
 
@@ -1108,32 +1112,174 @@ void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::
 
 void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 {
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = sizeof(XMFLOAT3);
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(m_pNullResource.GetAddressOf()));
+
+
 	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo)
 		m_vMeshes[info->getRefMeshIndex()]->setSkinning(true);
 	for (std::shared_ptr<Mesh>& mesh : m_vMeshes) {
-		ComPtr<ID3D12Resource> resource{};
-		ComPtr<ID3D12DescriptorHeap> descriptorHeap{};
+		ComPtr<ID3D12Resource> constResource{};
+		ComPtr<ID3D12Resource> vResource{};
+		ComPtr<ID3D12Resource> nResource{};
+		ComPtr<ID3D12Resource> tResource{};
+		ComPtr<ID3D12Resource> biResource{};
+
+		ComPtr<ID3D12DescriptorHeap> uav{};
+		ComPtr<ID3D12DescriptorHeap> insert{};
 		if (mesh->getbSkinning()) {
-			auto desc = BASIC_BUFFER_DESC;
-			desc.Width = mesh->getVertexCount() * sizeof(XMFLOAT3);
-			desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-			g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(resource.GetAddressOf()));
+			// 상수 버퍼
+			desc.Width = Align(sizeof(XMINT3), 256);
+			desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+			g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(constResource.GetAddressOf()));
+			XMINT3* pMap{};
+			constResource->Map(0, nullptr, (void**)&pMap);
 
 			D3D12_DESCRIPTOR_HEAP_DESC hDesc{};
 			hDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 			hDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			hDesc.NumDescriptors = 1;
+			hDesc.NumDescriptors = 4;
 
-			g_DxResource.device->CreateDescriptorHeap(&hDesc, IID_PPV_ARGS(descriptorHeap.GetAddressOf()));
+			g_DxResource.device->CreateDescriptorHeap(&hDesc, IID_PPV_ARGS(uav.GetAddressOf()));
+
+			hDesc.NumDescriptors = 5;
+			g_DxResource.device->CreateDescriptorHeap(&hDesc, IID_PPV_ARGS(insert.GetAddressOf()));
+
+			D3D12_CPU_DESCRIPTOR_HANDLE uavHandle = uav->GetCPUDescriptorHandleForHeapStart();
+			D3D12_CPU_DESCRIPTOR_HANDLE insertHandle = insert->GetCPUDescriptorHandleForHeapStart();
+			UINT incrementSize = g_DxResource.device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+			// 상수버퍼를 먼저 insert의 앞에 지정
+			D3D12_CONSTANT_BUFFER_VIEW_DESC cDesc{};
+			cDesc.BufferLocation = constResource->GetGPUVirtualAddress(); cDesc.SizeInBytes = Align(sizeof(XMINT3), 256);
+			g_DxResource.device->CreateConstantBufferView(&cDesc, insertHandle);
+			insertHandle.ptr += incrementSize;
 
 			D3D12_UNORDERED_ACCESS_VIEW_DESC vDesc{};
 			vDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-			vDesc.Buffer.NumElements = mesh->getVertexCount();
-			vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
 
-			g_DxResource.device->CreateUnorderedAccessView(resource.Get(), nullptr, &vDesc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+			D3D12_SHADER_RESOURCE_VIEW_DESC sDesc{};
+			sDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+			sDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			sDesc.Buffer.FirstElement = 0;
+			sDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+			{	// vertex
+				desc.Width = mesh->getVertexCount() * sizeof(XMFLOAT3);
+				desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+				g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(vResource.GetAddressOf()));
+
+				vDesc.Buffer.NumElements = mesh->getVertexCount();
+				vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateUnorderedAccessView(vResource.Get(), nullptr, &vDesc, uavHandle);
+
+				sDesc.Buffer.NumElements = mesh->getVertexCount();
+				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateShaderResourceView(mesh->getVertexBuffer(), &sDesc, insertHandle);
+			}
+			uavHandle.ptr += incrementSize;
+			insertHandle.ptr += incrementSize;
+
+			if (mesh->getHasNormal()) {	// exist Normal buffer
+				pMap->x = 1;
+
+				desc.Width = mesh->getVertexCount() * sizeof(XMFLOAT3);
+				desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+				g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(nResource.GetAddressOf()));
+
+				vDesc.Buffer.NumElements = mesh->getVertexCount();
+				vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateUnorderedAccessView(nResource.Get(), nullptr, &vDesc, uavHandle);
+
+				sDesc.Buffer.NumElements = mesh->getVertexCount();
+				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateShaderResourceView(mesh->getVertexBuffer(), &sDesc, insertHandle);
+			}
+			else {
+				pMap->x = 0;
+
+				vDesc.Buffer.NumElements = 1;
+				vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateUnorderedAccessView(m_pNullResource.Get(), nullptr, &vDesc, uavHandle);
+
+				sDesc.Buffer.NumElements = 1;
+				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateShaderResourceView(m_pNullResource.Get(), &sDesc, insertHandle);
+			}
+			uavHandle.ptr += incrementSize;
+			insertHandle.ptr += incrementSize;
+
+			if (mesh->getHasTangent()) {	// exist Tangent buffer
+				pMap->y = 1;
+
+				desc.Width = mesh->getVertexCount() * sizeof(XMFLOAT3);
+				desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+				g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(tResource.GetAddressOf()));
+
+				vDesc.Buffer.NumElements = mesh->getVertexCount();
+				vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateUnorderedAccessView(tResource.Get(), nullptr, &vDesc, uavHandle);
+
+				sDesc.Buffer.NumElements = mesh->getVertexCount();
+				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateShaderResourceView(mesh->getTangentsBuffer(), &sDesc, insertHandle);
+			}
+			else {
+				pMap->y = 0;
+
+				vDesc.Buffer.NumElements = 1;
+				vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateUnorderedAccessView(m_pNullResource.Get(), nullptr, &vDesc, uavHandle);
+
+				sDesc.Buffer.NumElements = 1;
+				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateShaderResourceView(m_pNullResource.Get(), &sDesc, insertHandle);
+			}
+			uavHandle.ptr += incrementSize;
+			insertHandle.ptr += incrementSize;
+
+			if (mesh->getHasBiTangent()) {	// exist BiTangent buffer
+				pMap->z = 1;
+
+				desc.Width = mesh->getVertexCount() * sizeof(XMFLOAT3);
+				desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+				g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(biResource.GetAddressOf()));
+
+				vDesc.Buffer.NumElements = mesh->getVertexCount();
+				vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateUnorderedAccessView(biResource.Get(), nullptr, &vDesc, uavHandle);
+
+				sDesc.Buffer.NumElements = mesh->getVertexCount();
+				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateShaderResourceView(mesh->getBiTangentsBuffer(), &sDesc, insertHandle);
+			}
+			else {
+				pMap->z = 0;
+
+				vDesc.Buffer.NumElements = 1;
+				vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateUnorderedAccessView(m_pNullResource.Get(), nullptr, &vDesc, uavHandle);
+
+				sDesc.Buffer.NumElements = 1;
+				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
+				g_DxResource.device->CreateShaderResourceView(m_pNullResource.Get(), &sDesc, insertHandle);
+			}
+			uavHandle.ptr += incrementSize;
+			insertHandle.ptr += incrementSize;
+
+			constResource->Unmap(0, nullptr);
+		
+
 		}
-		m_vOutputVertexBuffer.emplace_back(resource);
-		m_vUAV.emplace_back(descriptorHeap);
+		m_vInputConstantBuffer.emplace_back(constResource);
+		m_vOutputVertexBuffer.emplace_back(vResource);
+		m_vOutputNormalBuffer.emplace_back(nResource);
+		m_vOutputTangentsBuffer.emplace_back(tResource);
+		m_vOutputBiTangentsBuffer.emplace_back(biResource);
+
+		m_vUAV.emplace_back(uav);
+		m_vInsertDescriptorHeap.emplace_back(insert);
 	}
 }

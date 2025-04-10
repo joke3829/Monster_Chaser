@@ -151,7 +151,7 @@ void CAnimationManager::UpdateAnimation(float fElapsedTime)
 
 void CAnimationManager::UpdateAnimationMatrix()
 {
-	for (int i = 0; i < m_vMatrixes.size(); ++i)
+	for (int i = 0; i < m_vMatrixes.size(); ++i) 
 		XMStoreFloat4x4(&m_vMatrixes[i], XMMatrixTranspose(XMLoadFloat4x4(&m_vFrames[i]->getAnimationMatrix())));
 	memcpy(m_pMappedPointer, m_vMatrixes.data(), sizeof(XMFLOAT4X4) * m_vMatrixes.size());
 }

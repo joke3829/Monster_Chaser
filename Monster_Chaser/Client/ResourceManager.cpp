@@ -386,10 +386,10 @@ void CResourceManager::UpdateWorldMatrix()
 			XMFLOAT4X4 wmtx = m_vGameObjectList[object->getParentIndex()]->getWorldMatrix();
 			XMFLOAT4X4 lmtx = object->getLocalMatrix();
 			XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
-			object->SetWorlaMatrix(lmtx);
+			object->SetWorldMatrix(lmtx);
 		}
 		else {
-			object->SetWorlaMatrix(object->getLocalMatrix());
+			object->SetWorldMatrix(object->getLocalMatrix());
 		}
 	}
 	for (std::unique_ptr<CSkinningObject>& Skinning : m_vSkinningObject) {
