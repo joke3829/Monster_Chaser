@@ -930,8 +930,7 @@ void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position);
 	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse);
 
-	// 중심점의 로컬 Y축 기준 회전 (또는 글로벌 Y축 선택 가능)
-	// 여기서는 중심점의 로컬 Y축을 사용
+	// 중심점의 로컬 Y축 기준 회전
 	XMFLOAT3 centerUp = frame.getUp(); // 중심점의 Up 벡터
 	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp);
 	XMFLOAT3 tempUp;
@@ -953,6 +952,7 @@ void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 	XMStoreFloat3(&m_xmf3Look, XMVector3Normalize(newLook));
 	XMStoreFloat3(&m_xmf3Right, XMVector3Normalize(newRight));
 	m_xmf3Up = tempUp;
+
 	// 월드 행렬 업데이트
 	UpdateWorldMatrix();
 }
