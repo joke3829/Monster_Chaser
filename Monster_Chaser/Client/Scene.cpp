@@ -783,11 +783,23 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	}
 
 	if (keyBuffer['G'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f)); //좌회전
+		auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
+		if (animationManager && !animationManager->getFrame().empty()) {
+			CGameObject* frame = animationManager->getFrame()[0];
+			m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f), *frame);
+		}
 	}
 	
 	if (keyBuffer['H'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //우회전
+	}
+
+	if (keyBuffer['T'] & 0x80) {
+		auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
+		if (animationManager && !animationManager->getFrame().empty()) {
+			CGameObject* frame = animationManager->getFrame()[0];
+			m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f),*frame);
+		}
 	}
 
 	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {

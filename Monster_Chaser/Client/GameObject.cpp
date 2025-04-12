@@ -1,5 +1,6 @@
 #include "GameObject.h"
 
+
 CGameObject::CGameObject(const CGameObject& other)
 {
 	m_strName = other.m_strName;	
@@ -913,6 +914,46 @@ void CSkinningObject::Rotate(XMFLOAT3 rot)
 		XMStoreFloat3(&m_xmf3Right, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Right), mtx));
 		XMStoreFloat3(&m_xmf3Up, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Up), mtx));
 	}
+	UpdateWorldMatrix();
+}
+
+void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
+{
+	// m_vFrames[0]의 월드 행렬 가져오기
+	XMFLOAT4X4 centerWorldMatrix = frame.getWorldMatrix();
+	XMMATRIX centerMatrix = XMLoadFloat4x4(&centerWorldMatrix);
+
+	// 중심점의 역행렬 계산
+	XMMATRIX centerInverse = XMMatrixInverse(nullptr, centerMatrix);
+
+	// 현재 위치를 로컬 좌표계로 변환
+	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position);
+	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse);
+
+	// 중심점의 로컬 Y축 기준 회전 (또는 글로벌 Y축 선택 가능)
+	// 여기서는 중심점의 로컬 Y축을 사용
+	XMFLOAT3 centerUp = frame.getUp(); // 중심점의 Up 벡터
+	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp);
+	XMFLOAT3 tempUp;
+	XMStoreFloat3(&tempUp, rotationAxis);
+	XMMATRIX orbitMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(rot.y));
+
+	// 로컬 좌표계에서 회전 적용
+	XMVECTOR newLocalPos = XMVector3Transform(localPos, orbitMatrix);
+
+	// 다시 월드 좌표계로 변환
+	XMVECTOR newPos = XMVector3Transform(newLocalPos, centerMatrix);
+	XMStoreFloat3(&m_xmf3Position, newPos);
+
+	// 방향 벡터 갱신으로 자전 효과
+	XMVECTOR oldLook = XMLoadFloat3(&m_xmf3Look);
+	XMVECTOR oldRight = XMLoadFloat3(&m_xmf3Right);
+	XMVECTOR newLook = XMVector3TransformNormal(oldLook, orbitMatrix);
+	XMVECTOR newRight = XMVector3TransformNormal(oldRight, orbitMatrix);
+	XMStoreFloat3(&m_xmf3Look, XMVector3Normalize(newLook));
+	XMStoreFloat3(&m_xmf3Right, XMVector3Normalize(newRight));
+	m_xmf3Up = tempUp;
+	// 월드 행렬 업데이트
 	UpdateWorldMatrix();
 }
 

@@ -184,6 +184,7 @@ public:
 	XMFLOAT3& getPositionFromLMatrix() { m_xmf3Pos.x = m_xmf4x4LocalMatrix._41; m_xmf3Pos.y = m_xmf4x4LocalMatrix._42; m_xmf3Pos.z = m_xmf4x4LocalMatrix._43; return m_xmf3Pos; }
 	XMFLOAT3& getPositionFromAMatrix() { m_xmf3Pos.x = m_xmf4x4AnimationMatrix._41; m_xmf3Pos.y = m_xmf4x4AnimationMatrix._42; m_xmf3Pos.z = m_xmf4x4AnimationMatrix._43; return m_xmf3Pos; }
 
+	XMFLOAT3 getUp() const { return m_xmf3Up; }
 
 	XMFLOAT4X4 getWorldMatrix();
 	XMFLOAT4X4 getLocalMatrix();
@@ -293,6 +294,7 @@ public:
 
 	void SetPosition(XMFLOAT3 pos);
 	void Rotate(XMFLOAT3 rot);
+	void Rotation(XMFLOAT3 rot, CGameObject& frame);
 	void move(float fElapsedTime, short arrow);
 
 	std::string getName() const { return m_strObjectName; }

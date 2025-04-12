@@ -80,6 +80,7 @@ public:
 	virtual void StartSkill3() {};
 	virtual void OnKey3Input() {};
 
+	const std::vector<CGameObject*>& getFrame()const { return m_vFrames; }
 protected:
 	UINT m_nAnimationSets{};
 	UINT m_nCurrentSet{};
