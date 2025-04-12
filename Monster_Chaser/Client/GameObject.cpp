@@ -919,29 +919,23 @@ void CSkinningObject::Rotate(XMFLOAT3 rot)
 
 void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 {
-	// m_vFrames[0]의 월드 행렬 가져오기
-	XMFLOAT4X4 centerWorldMatrix = frame.getWorldMatrix();
-	XMMATRIX centerMatrix = XMLoadFloat4x4(&centerWorldMatrix);
+	XMFLOAT4X4 centerWorldMatrix = frame.getWorldMatrix(); // m_vFrames[0]의 월드 행렬 가져오기
+	XMMATRIX centerMatrix = XMLoadFloat4x4(&centerWorldMatrix); // 연산이 가능하게 변환
+	
+	XMMATRIX centerInverse = XMMatrixInverse(nullptr, centerMatrix); // 중심점의 월드 행렬의 역행렬 계산
 
-	// 중심점의 역행렬 계산
-	XMMATRIX centerInverse = XMMatrixInverse(nullptr, centerMatrix);
+	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position); //현재 위치를 XMVECTOR로 로드
+	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse); // 현재 위치를 로컬 좌표계로 변환
 
-	// 현재 위치를 로컬 좌표계로 변환
-	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position);
-	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse);
-
-	// 중심점의 로컬 Y축 기준 회전
-	XMFLOAT3 centerUp = frame.getUp(); // 중심점의 Up 벡터
-	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp);
-	XMFLOAT3 tempUp;
+	XMFLOAT3 centerUp = frame.getUp(); // 중심점의 Up 벡터 가져오기
+	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp); //Up벡터 XMVECTOR로 변환
+	XMFLOAT3 tempUp; // rotationAxis를 XMFLOAT3 타입으로 저장
 	XMStoreFloat3(&tempUp, rotationAxis);
-	XMMATRIX orbitMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(rot.y));
+	XMMATRIX orbitMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(rot.y)); // Y축을 기준으로 회전 행렬 생성
 
-	// 로컬 좌표계에서 회전 적용
-	XMVECTOR newLocalPos = XMVector3Transform(localPos, orbitMatrix);
+	XMVECTOR newLocalPos = XMVector3Transform(localPos, orbitMatrix); // 로컬 좌표계에서 캐릭터 위치를 회전
 
-	// 다시 월드 좌표계로 변환
-	XMVECTOR newPos = XMVector3Transform(newLocalPos, centerMatrix);
+	XMVECTOR newPos = XMVector3Transform(newLocalPos, centerMatrix); // 회전된 로컬 위치를 월드 좌표계로 변환
 	XMStoreFloat3(&m_xmf3Position, newPos);
 
 	// 방향 벡터 갱신으로 자전 효과
