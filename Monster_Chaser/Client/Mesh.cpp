@@ -185,8 +185,8 @@ Mesh::Mesh(XMFLOAT3& center, float radius, std::string meshName)
 {
 	m_MeshName = meshName;
 
-	const UINT sliceCount = 40;
-	const UINT stackCount = 40;
+	const UINT sliceCount = 80;
+	const UINT stackCount = 80;
 
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;

@@ -417,7 +417,7 @@ void CRaytracingTestScene::SetUp()
 	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(4);
 	m_pRaytracingPipeline->MakePipelineState();
 
 	// Resource Ready
@@ -626,7 +626,10 @@ void CRaytracingMaterialTestScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\w.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
@@ -638,19 +641,32 @@ void CRaytracingMaterialTestScene::SetUp()
 
 	// 객체 생성 예시
 
-	UINT finalindex = normalObjects.size();
-	UINT finalmesh = meshes.size();
-	Material tMaterial{};
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 10.0f));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.75, 0.75, 0.75, 1.0);
-	tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
-	tMaterial.m_bHasSpecularHighlight = true; tMaterial.m_fSpecularHighlight = 1;
-	tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.5;
-	//tMaterial.m_bHasGlossyReflection = true; tMaterial.m_fGlossyReflection = 0.1f;
-	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
-	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0)); 
+	//UINT finalindex = normalObjects.size();
+	//UINT finalmesh = meshes.size();
+	//meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 10.0f));
+	//normalObjects.emplace_back(std::make_unique<CGameObject>());
+	//normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	//normalObjects[finalindex]->getMaterials().emplace_back();
+	//Material& tMaterial = normalObjects[finalindex]->getMaterials()[0];
+	//tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	//tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
+	////tMaterial.m_bHasMetallic = true; tMaterial.m_fMetallic = 0.0f;
+	//tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.5;
+	//tMaterial.m_bHasSpecularHighlight = true; tMaterial.m_fSpecularHighlight = 1;
+	//tMaterial.m_bHasGlossyReflection = true; tMaterial.m_fGlossyReflection = 1;
+	//normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0)); 
+
+	//meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(1000.0f, 0.001, 1000.0f)));
+	//normalObjects.emplace_back(std::make_unique<CGameObject>());
+	//normalObjects[finalindex + 1]->SetMeshIndex(finalmesh + 1);
+	//normalObjects[finalindex + 1]->getMaterials().emplace_back();
+	//Material& tt = normalObjects[finalindex + 1]->getMaterials()[0];
+	//tt.m_bHasAlbedoColor = true; tt.m_xmf4AlbedoColor = XMFLOAT4(0.75, 0.35, 0.75, 1.0);
+	////tt.m_bHasSpecularColor = true; tt.m_xmf4SpecularColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	//tt.m_bHasSpecularHighlight = true; tt.m_fSpecularHighlight = 1;
+	//tt.m_bHasGlossiness = true; tt.m_fGlossiness = 0.5;
+	//tt.m_bHasGlossyReflection = true; tt.m_fGlossyReflection = 1.0f;
+	//normalObjects[finalindex + 1]->SetPosition(XMFLOAT3(0.0, -30.0, 0.0));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
@@ -666,8 +682,8 @@ void CRaytracingMaterialTestScene::SetUp()
 	// ==============================================================================
 
 	// 카메라 설정 ==============================================================
-	m_pCamera->SetTarget(normalObjects[finalindex].get());
-	m_pCamera->SetThirdPersonMode(30.0f);
+	//m_pCamera->SetTarget(normalObjects[0].get());
+	//m_pCamera->SetCameraLength(1.2f);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -682,6 +698,12 @@ void CRaytracingMaterialTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT n
 {
 	switch (nMessage) {
 	case WM_KEYDOWN:
+		switch (wParam) {
+		case 'n':
+		case 'N':
+			m_pCamera->toggleNormalMapping();
+			break;
+		}
 		break;
 	case WM_KEYUP:
 		break;

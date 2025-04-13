@@ -60,7 +60,7 @@ struct HasMesh
     int bHasSubMeshes;
 };
 
-#define MAX_RAY_DEPTH 6
+#define MAX_RAY_DEPTH 4
 #define RADIANCE_OFFSET 0
 #define RADIANCE_MISS_OFFSET 0
 #define SHADOW_OFFSET 1
@@ -179,7 +179,7 @@ float3 GetHitNormalFromNormalMap(float3 T, float3 B, float3 N, float2 uv)
 
 float4 TraceRadianceRay(in RayDesc ray, uint currentRayDepth)
 {
-    if (currentRayDepth >= MAX_RAY_DEPTH)
+    if (currentRayDepth + 1 > MAX_RAY_DEPTH)
     {
         return float4(0.0f, 0.0f, 0.0f, 0.0f);
     }
@@ -212,8 +212,15 @@ float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow, in
         if(emissiveMapColor.x >= 0.02 || emissiveMapColor.y  >= 0.02 || emissiveMapColor.z >= 0.02)
             bEmission = true;
     }
-    if(0!= l_Material.bHasEmissiveColor)
+    if (0 != l_Material.bHasEmissiveColor)
+    {
+        /*if (l_Material.EmissiveColor.x >= 0.02 || l_Material.EmissiveColor.y >= 0.02 || l_Material.EmissiveColor.z >= 0.02)
+        {
+            bEmission = true;
+            emissiveColor = l_Material.EmissiveColor;
+        }*/
         emissiveColor = l_Material.EmissiveColor;
+    }
     
     PhongE = emissiveColor * emissiveMapColor;
     
@@ -224,6 +231,9 @@ float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow, in
     //float3 light = normalize(float3(0.0, 10.0, 0.0) - GetWorldPosition());
     
     float Diffuse = max(dot(normalW, light), 0.0f);
+    // Half-Lambert
+    //float Diffuse = dot(normalW, light) * 0.5 + 0.5;
+    //Diffuse = pow(Diffuse, 3);
     if(isShadow && !bEmission && Diffuse > 0.0f)
         shadowFactor = 0.35f;
     
@@ -250,7 +260,7 @@ float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow, in
         PhongS = Specular * l_Material.SpecularHighlight * l_Material.SpecularColor.xyz * lightColor;
     }
     
-    float3 PhongA = 0.4f * diffuseColor.xyz;
+    float3 PhongA = 0.2f * diffuseColor.xyz;
     
     
     return saturate(float4(PhongD + PhongS + PhongA + PhongE, 1.0f));
@@ -258,14 +268,14 @@ float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow, in
 
 bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
 {
-    if (currentRayDepth >= MAX_RAY_DEPTH)
+    if (currentRayDepth + 1 > MAX_RAY_DEPTH)
         return false;
     
     // 조명 개수에 따라 검사하도록 코드 예정
     
     ShadowPayload payload = { false };
     TraceRay(g_Scene,
-    RAY_FLAG_FORCE_OPAQUE,
+    RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_CULL_BACK_FACING_TRIANGLES,
     ~0,
     SHADOW_OFFSET,
     GEOMETRY_STRIDE,
@@ -274,7 +284,11 @@ bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
     
     return payload.bShadow;
 }
-
+float3 FresnelReflectanceSchlick(in float3 I, in float3 N, in float3 f0)
+{
+    float cosi = saturate(dot(-I, N));
+    return f0 + (1 - f0) * pow(1 - cosi, 5);
+}
 // =============================================================================
 
 [shader("raygeneration")]
@@ -399,35 +413,41 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     shadowray.Origin = GetWorldPosition() + normalW * 0.001f;
     shadowray.Direction = normalize(float3(1.0, 1.0, 1.0));
     //shadowray.Direction = normalize(float3(0.0, 10.0, 0.0) - GetWorldPosition());
-    shadowray.TMin = 0.001;
+    shadowray.TMin = 0.0f;
     shadowray.TMax = 1000.0f;
     
-    bool bShadow = CheckTheShadow(shadowray, payload.RayDepth + 1);
+    bool bShadow = CheckTheShadow(shadowray, payload.RayDepth);
     
     objectColor = CalculatePhongModel(objectColor, lightingNormal, bShadow, texCoord);
     
     /*float4 reflectColor = float4(0.0, 0.0, 0.0, 1.0);
-    if (0 != l_Material.bHasGlossyReflection && l_Material.GlossyReflection > 0.01f)
+    if (payload.RayDepth < MAX_RAY_DEPTH && 0 != l_Material.GlossyReflection)
     {
-        float3 viewDir = normalize(GetWorldPosition() - g_CameraInfo.cameraEye);
+        float3 viewDir = normalize(WorldRayDirection());
         RayDesc reflectRay;
-        reflectRay.Origin = GetWorldPosition() + normalW + 0.001f;
+        reflectRay.Origin = GetWorldPosition() + normalW * 0.001f;
         reflectRay.Direction = reflect(viewDir, normalW);
-        reflectRay.TMin = 0.001f;
+        reflectRay.TMin = 0.0f;
         reflectRay.TMax = 1000.0f;
+        float3 fresnel = FresnelReflectanceSchlick(WorldRayDirection(), lightingNormal, float3(0.0, 1.0, 0.0));
         
-        reflectColor = TraceRadianceRay(reflectRay, payload.RayDepth + 1);
+        reflectColor = TraceRadianceRay(reflectRay, payload.RayDepth);
         
-        float reflectionFactor = saturate(l_Material.GlossyReflection);
-        payload.RayColor = lerp(objectColor, reflectColor, reflectionFactor);
+        float reflectionFactor = 1.0f;
+        payload.RayColor = objectColor + (reflectionFactor * float4(fresnel, 1.0f) * reflectColor);
+        //payload.RayColor = objectColor + (reflectionFactor * reflectColor);
+        //payload.RayColor = lerp(objectColor, reflectColor, reflectionFactor);
     }
     else
     {
         payload.RayColor = objectColor;
     }*/
     //objectColor = CalculateCookTorranceLighting(objectColor, lightingNormal, bShadow);
+    
     //lightingNormal = normalize(mul(lightingNormal, (float3x3) ObjectToWorld4x3()));
     //objectColor.xyz = (lightingNormal.xyz + 1.0f) / 2.0f;
+    //float3 fresnel = FresnelReflectanceSchlick(WorldRayDirection(), lightingNormal, float3(0.0, 0.0, 0.0));
+    //objectColor.xyz = fresnel;
     
     payload.RayColor = objectColor;
 }

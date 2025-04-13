@@ -60,14 +60,20 @@ struct HasMesh
     int bHasSubMeshes;
 };
 
-#define MAX_RAY_DEPTH 6
-#define RADIANCE_OFFSET 0
-#define RADIANCE_MISS_OFFSET 0
-#define SHADOW_OFFSET 1
-#define SHADOW_MISS_OFFSET 1
-#define GEOMETRY_STRIDE 2       // num RayType
+#define MAX_RAY_DEPTH               4
+#define RADIANCE_OFFSET             0
+#define RADIANCE_MISS_OFFSET        0
+#define SHADOW_OFFSET               1
+#define SHADOW_MISS_OFFSET          1
+#define GEOMETRY_STRIDE             2           // num RayType
 
-#define PI 3.141592
+#define PI                          3.14159265358979323846264
+
+#define SHADER_TYPE_METALLIC        0
+#define SHADER_TYPE_SPECULAR        1
+#define SHADER_TYPE_METALLIC_MAP    2
+#define SHADER_TYPE_SPECULAR_MAP    3
+#define SHADER_TYPE_UNKNOWN         4
 
 // Global Root Signature ============================================
 RaytracingAccelerationStructure g_Scene : register(t0, space0);
@@ -195,7 +201,7 @@ float3 GetHitNormalFromNormalMap(float3 T, float3 B, float3 N, float2 uv)
 
 float4 TraceRadianceRay(in RayDesc ray, uint currentRayDepth)
 {
-    if (currentRayDepth >= MAX_RAY_DEPTH)
+    if (currentRayDepth + 1 > MAX_RAY_DEPTH)
     {
         return float4(0.0f, 0.0f, 0.0f, 0.0f);
     }
@@ -212,25 +218,203 @@ float4 TraceRadianceRay(in RayDesc ray, uint currentRayDepth)
     return payload.RayColor;
 }
 
-float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow)
+
+float3 GetFresnelusingSchlick(in float3 r0, in float VdotH)
+{
+    //float3 f0 = pow((1 - 0.3) / (1 + 0.3), 2);
+    return r0 + (1 - r0) * pow((1 - VdotH), 5);
+}
+
+float D_GGX(in float roughness, in float NdotH)
+{
+    //if (NdotH <= 0.0f)
+        //return 0.0f;
+    float a2 = pow(roughness, 4);
+    float denom = (NdotH * NdotH) * (a2 - 1.0f) + 1.0f;
+    return a2 / (PI * denom * denom);
+}
+
+float3 SmithJointApprox(in float roughness, in float NdotV, in float NdotL)
+{
+    float r = roughness + 1;
+    float k = pow(r, 2) / 8;
+    //float v1 = NdotL * (NdotV * (1 - roughness) + roughness);
+    //float v2 = NdotV * (NdotL * (1 - roughness) + roughness);
+    //return 0.5 * rcp(v1 + v2);
+    float g1L = NdotL / (NdotL * (1 - k) + k);
+    float g1V = NdotV / (NdotV * (1 - k) + k);
+    return g1L * g1V;
+
+}
+
+float4 CalculateLighting(inout RadiancePayload payload, in float3 N, uint ShaderType = 0, float2 uv = float2(0.0, 0.0))
+{
+    // 조명 개수 만큼
+    float3 V = normalize(-WorldRayDirection());
+    float NdotV = saturate(dot(N, V));
+    float roughness = 0.0f;
+    
+    float3 albedoColor = float3(1.0, 1.0, 1.0);
+    if(0!= l_Material.bHasAlbedoColor) 
+        albedoColor = l_Material.AlbedoColor.xyz;
+    if(0 != l_Material.bHasAlbedoMap)
+        albedoColor *= l_AlbedoMap.SampleLevel(g_Sampler, uv, 0).xyz;
+    
+    float3 finalColor = float3(0.0, 0.0, 0.0);
+    switch (ShaderType)
+    {
+        case SHADER_TYPE_SPECULAR_MAP:{
+                float3 resultColor = float3(0.0, 0.0, 0.0);
+                float4 smSample = l_SpecularMap.SampleLevel(g_Sampler, uv, 0);
+                roughness = smSample.a;
+                for (int i = 0; i < 1; ++i)
+                {
+                    float3 L = normalize(float3(1.0, 3.0, 1.0));
+                    float3 lightColor = float3(1.0, 1.0, 1.0);
+                
+                    float3 H = normalize(V + L);
+                    float NdotH = saturate(dot(N, H));
+                    float NdotL = saturate(dot(N, L));
+                                
+                    float3 F = GetFresnelusingSchlick(smSample.rgb, NdotV);
+                    float3 D = D_GGX(roughness, NdotH);
+                    float3 G = SmithJointApprox(roughness, NdotV, NdotL);
+                    //float G = GeoS(NdotH, NdotV, NdotL, VdotH);
+                    
+                    float3 Specular = (F * G * D) / (4 * NdotL * NdotV);
+                    
+                    //Specular = float3(D, D, D);
+                    //Specular = F;
+                    //resultColor += Specular;
+                
+                    float3 diffuseTerm = NdotL * albedoColor.rgb * lightColor;
+                    resultColor += NdotL * (albedoColor.rgb + (1 - albedoColor.rgb) * Specular);
+                    //resultColor = Specular + (float3(0.6, 0.6, 0.6) * 0.4);
+                }
+                finalColor = resultColor;
+                break;
+            }
+        case SHADER_TYPE_SPECULAR:{
+                if (0 != l_Material.bHasGlossiness) roughness = max(1.0f - l_Material.Glossiness, 0.001f);
+                else if (0 != l_Material.bHasSmoothness) roughness = max(1.0f - l_Material.Smoothness, 0.001f);
+                float3 resultColor = float3(0.0, 0.0, 0.0);
+                roughness = 1.0f;
+                for (int i = 0; i < 1; ++i)
+                {
+                    float3 L = normalize(float3(1.0, 1.0, 1.0));
+                    float3 lightColor = float3(1.0, 1.0, 1.0);
+                
+                    float3 H = normalize(V + L);
+                    float NdotH = saturate(dot(N, H));
+                    float NdotL = saturate(dot(N, L));
+                                
+                    float3 F = GetFresnelusingSchlick(l_Material.SpecularColor.rgb, NdotV);
+                    float3 D = D_GGX(roughness, NdotH);
+                    float3 G = SmithJointApprox(roughness, NdotV, NdotL);
+                    //float G = GeoS(NdotH, NdotV, NdotL, VdotH);
+                    
+                    float3 Specular = (F * G * D) / (4 * NdotL * NdotV);
+                    
+                    //Specular = float3(D, D, D);
+                    //Specular = F;
+                    //resultColor += Specular;
+                
+                    float3 diffuseTerm = NdotL * albedoColor.rgb * lightColor;
+                    resultColor += NdotL * (albedoColor.rgb + (1 - albedoColor.rgb) * Specular);
+                    //resultColor = F;
+                }
+                finalColor = resultColor;
+                break;
+            }
+        case SHADER_TYPE_METALLIC_MAP:{
+                float3 resultColor = float3(0.0, 0.0, 0.0);
+                float4 metallicSample = l_MetallicMap.SampleLevel(g_Sampler, uv, 0);
+                roughness = metallicSample.a;
+                for (int i = 0; i < 1; ++i)
+                {
+                    float3 L = normalize(float3(1.0, 3.0, 1.0));
+                    float3 lightColor = float3(1.0, 1.0, 1.0);
+                
+                    float3 H = normalize(V + L);
+                    float NdotH = saturate(dot(N, H));
+                    float NdotL = saturate(dot(N, L));
+                                
+                    float3 F = GetFresnelusingSchlick(metallicSample.rrr, NdotV);
+                    float3 D = D_GGX(roughness, NdotH);
+                    float3 G = SmithJointApprox(roughness, NdotV, NdotL);
+                    //float G = GeoS(NdotH, NdotV, NdotL, VdotH);
+                    
+                    float3 Specular = (F * G * D) / (4 * NdotL * NdotV);
+                    
+                    //Specular = float3(D, D, D);
+                    //Specular = F;
+                    //resultColor += Specular;
+                
+                    float3 diffuseTerm = NdotL * albedoColor.rgb * lightColor;
+                    resultColor += NdotL * (albedoColor.rgb + (1 - albedoColor.rgb) * Specular);
+                    //resultColor = Specular + (float3(0.6, 0.6, 0.6) * 0.4);
+                }
+                finalColor = resultColor + (albedoColor.rgb * 0.5);
+                break;
+            }
+        case SHADER_TYPE_METALLIC:{
+                break;
+            }
+    }
+    
+    
+    return float4(finalColor, 1.0);
+}
+
+float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow, in float2 uv = float2(0.0, 0.0))
 {
     
     float3 normalW = normalize(mul(normal, (float3x3) ObjectToWorld4x3()));
-    float shadowFactor = isShadow ? 0.35f : 1.0f;
+    float shadowFactor = 1.0f; //isShadow ? 0.35f : 1.0f;
+    
+    float3 PhongE = float3(0.0, 0.0, 0.0);
+    float3 emissiveColor = float3(0.0, 0.0, 0.0);
+    float3 emissiveMapColor = float3(0.0, 0.0, 0.0);
+    bool bEmission = false;
+    if (0 != l_Material.bHasEmissionMap)
+    {
+        emissiveMapColor = l_EmissionMap.SampleLevel(g_Sampler, uv, 0).xyz;
+        if (emissiveMapColor.x >= 0.02 || emissiveMapColor.y >= 0.02 || emissiveMapColor.z >= 0.02)
+            bEmission = true;
+    }
+    if (0 != l_Material.bHasEmissiveColor)
+    {
+        /*if (l_Material.EmissiveColor.x >= 0.02 || l_Material.EmissiveColor.y >= 0.02 || l_Material.EmissiveColor.z >= 0.02)
+        {
+            bEmission = true;
+            emissiveColor = l_Material.EmissiveColor;
+        }*/
+        emissiveColor = l_Material.EmissiveColor;
+    }
+    
+    PhongE = emissiveColor * emissiveMapColor;
     
     //float3 lightColor = float3(0.8, 0.4, 0.2);
-    float3 lightColor = float3(0.8, 0.8, 0.8);
-    //float3 lightColor = float3(1.0, 0.2, 0.2);
-    float3 light = normalize(float3(0.5, 2.0, 0.7));
+    float3 lightColor = float3(1.0, 1.0, 1.0);
+    //float3 lightColor = float3(0.2, 0.2, 0.2);
+    float3 light = normalize(float3(1.0, 1.0, 1.0));
+    //float3 light = normalize(float3(0.0, 10.0, 0.0) - GetWorldPosition());
     
     float Diffuse = max(dot(normalW, light), 0.0f);
+    // Half-Lambert
+    //float Diffuse = dot(normalW, light) * 0.5 + 0.5;
+    //Diffuse = pow(Diffuse, 3);
+    if (isShadow && !bEmission && Diffuse > 0.0f)
+        shadowFactor = 0.35f;
+    
     float3 PhongD = shadowFactor * Diffuse * lightColor * diffuseColor.xyz;
     
     float3 PhongS = float3(0.0, 0.0, 0.0);
     if (l_Material.bHasSpecularHighlight && !isShadow)
     {
-        float3 Ref1 = 2.0f * normalW * dot(normalW, light) - light;
+        //float3 Ref1 = 2.0f * normalW * dot(normalW, light) - light;
         float3 View = normalize(g_CameraInfo.cameraEye - GetWorldPosition());
+        float3 halfV = normalize(View + light);
         float rh = 1.0f;
         if (0 != l_Material.bHasGlossiness)
         {
@@ -240,27 +424,28 @@ float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow)
         {
             rh = l_Material.Smoothness;
         }
-        float Specular = pow(max(dot(Ref1, View), 0.0f), rh);
-        if (Diffuse <= 0.0f)
-            Specular = 0.0f;
+        //float Specular = pow(max(dot(Ref1, View), 0.0f), 256.0);
+        float Specular = pow(max(0.0f, dot(normalW, halfV)), 512);
+
         PhongS = Specular * l_Material.SpecularHighlight * l_Material.SpecularColor.xyz * lightColor;
     }
     
-    float3 PhongA = 0.4f * diffuseColor.xyz;
+    float3 PhongA = 0.2f * diffuseColor.xyz;
     
-    return float4(PhongD + PhongS + PhongA, 1.0f);
+    
+    return saturate(float4(PhongD + PhongS + PhongA + PhongE, 1.0f));
 }
 
 bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
 {
-    if (currentRayDepth >= MAX_RAY_DEPTH)
+    if (currentRayDepth + 1 > MAX_RAY_DEPTH)
         return false;
     
     // 조명 개수에 따라 검사하도록 코드 예정
     
     ShadowPayload payload = { false };
     TraceRay(g_Scene,
-    RAY_FLAG_FORCE_OPAQUE,
+    RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_CULL_BACK_FACING_TRIANGLES,
     ~0,
     SHADOW_OFFSET,
     GEOMETRY_STRIDE,
@@ -268,159 +453,6 @@ bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
     ray, payload);
     
     return payload.bShadow;
-}
-
-// =============================================================================
-
-/*float D_GGX(float3 N, float3 H, float roughness)
-{
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH = saturate(dot(N, H));
-    float NdotH2 = NdotH * NdotH;
-    
-    float denom = NdotH2 * (a2 - 1.0) + 1.0;
-    return a2 / (PI * denom * denom);
-}
-
-float3 F_Schlick(float3 F0, float cosTheta)
-{
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
-
-float G_Smith(float3 N, float3 V, float3 L, float roughness)
-{
-    float k = pow(roughness + 1.0, 2.0) / 8.0;
-    
-    float NdotV = saturate(dot(N, V));
-    float NdotL = saturate(dot(N, L));
-
-    float G_V = NdotV / (NdotV * (1.0 - k) + k);
-    float G_L = NdotL / (NdotL * (1.0 - k) + k);
-
-    return G_V * G_L;
-}
-
-float3 CookTorranceBRDF(float3 N, float3 V, float3 L, float3 albedo, float roughness, float metallic)
-{
-    float3 H = normalize(V + L);
-    
-    float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
-
-    float D = D_GGX(N, H, roughness);
-    float3 F = F_Schlick(F0, saturate(dot(H, V)));
-    float G = G_Smith(N, V, L, roughness);
-
-    float NdotV = max(dot(N, V), 0.001);
-    float NdotL = max(dot(N, L), 0.001);
-
-    float3 numerator = D * F * G;
-    float denominator = 4.0 * NdotV * NdotL + 0.001;
-
-    float3 specular = numerator / denominator;
-
-    float3 kS = F;
-    float3 kD = 1.0 - kS;
-    kD *= 1.0 - metallic;
-
-    return (kD * albedo / PI + specular) * NdotL;
-}*/
-
-// Schlick의 근사에 의한 Fresnel
-float3 FresnelSchlick(float cosTheta, float3 F0)
-{
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
-
-// GGX NDF (Normal Distribution Function)
-float DistributionGGX(float3 N, float3 H, float roughness)
-{
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH * NdotH;
-
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    return a2 / (PI * denom * denom);
-}
-
-// Geometry function (Smith의 Schlick-GGX)
-float GeometrySchlickGGX(float NdotV, float roughness)
-{
-    float r = roughness + 1.0;
-    float k = (r * r) / 8.0;
-    return NdotV / (NdotV * (1.0 - k) + k);
-}
-
-float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
-{
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx1 = GeometrySchlickGGX(NdotV, roughness);
-    float ggx2 = GeometrySchlickGGX(NdotL, roughness);
-    return ggx1 * ggx2;
-}
-
-float3 CalculateCookTorranceLighting(float3 albedo, float3 N, float3 V, float3 L, float3 lightColor, float metallic, float roughness)
-{
-    float3 H = normalize(V + L);
-
-    float NDF = DistributionGGX(N, H, roughness);
-    float G = GeometrySmith(N, V, L, roughness);
-    
-    float3 F0 = lerp(float3(0.04, 0.04, 0.04), albedo, metallic);
-    float3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
-    
-    float3 nominator = NDF * G * F;
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; // 방지용 offset
-    float3 specular = nominator / denominator;
-
-    float3 kS = F;
-    float3 kD = 1.0 - kS;
-    kD *= 1.0 - metallic;
-
-    float NdotL = max(dot(N, L), 0.0);
-    return (kD * albedo / PI + specular) * lightColor * NdotL;
-}
-
-float3 ImportanceSampleHemisphere(float2 xi, float3 normal)
-{
-    // xi는 0~1 사이의 난수 (각 샘플마다 다르게 줘야 함)
-
-    float phi = 2.0f * PI * xi.x;
-    float cosTheta = sqrt(1.0f - xi.y);
-    float sinTheta = sqrt(1.0f - cosTheta * cosTheta);
-
-    // 로컬 방향
-    float3 localDir = float3(
-        cos(phi) * sinTheta,
-        sin(phi) * sinTheta,
-        cosTheta
-    );
-
-    // 로컬 -> 월드 변환 (Tangent Space to World)
-    float3 up = abs(normal.z) < 0.999 ? float3(0, 0, 1) : float3(1, 0, 0);
-    float3 tangent = normalize(cross(up, normal));
-    float3 bitangent = cross(normal, tangent);
-
-    float3 worldDir = localDir.x * tangent + localDir.y * bitangent + localDir.z * normal;
-
-    return normalize(worldDir);
-}
-
-uint ReverseBits(uint bits)
-{
-    bits = (bits << 16) | (bits >> 16);
-    bits = ((bits & 0x00ff00ff) << 8) | ((bits & 0xff00ff00) >> 8);
-    bits = ((bits & 0x0f0f0f0f) << 4) | ((bits & 0xf0f0f0f0) >> 4);
-    bits = ((bits & 0x33333333) << 2) | ((bits & 0xcccccccc) >> 2);
-    bits = ((bits & 0x55555555) << 1) | ((bits & 0xaaaaaaaa) >> 1);
-    return bits;
-}
-
-float2 Hammersley(uint i, uint N)
-{
-    return float2((float) i / (float) N, ReverseBits(i) * 2.3283064365386963e-10); // 2^-32
 }
 
 // =============================================================================
@@ -496,77 +528,47 @@ void RadianceAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectio
 [shader("closesthit")]
 void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleIntersectionAttributes attrib)
 {
-    float2 uvs[3] = { float2(0.0, 0.0), float2(0.0, 0.0), float2(0.0, 0.0) };
-    float3 normals[3] = { float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0) };
-    float3 tangent[3] = { float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0) };
-    float3 bitangent[3] = { float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0) };
-    uint index[3];
-    uint idx;
-    idx = PrimitiveIndex() * 3;
+    uint ShaderType = 0;
+    if (0 != l_Material.bHasSpecularMap) ShaderType = SHADER_TYPE_SPECULAR_MAP;
+    else if (0 != l_Material.bHasMetallicMap) ShaderType = SHADER_TYPE_METALLIC_MAP;
+    else if (0 != l_Material.bHasSpecularColor) ShaderType = SHADER_TYPE_SPECULAR;
+    else if (0 != l_Material.bHasMetallic) ShaderType = SHADER_TYPE_METALLIC;
+    else ShaderType = SHADER_TYPE_UNKNOWN;
 
-    if (0 != l_Mesh.bHasTex0)
-        GetTex0FromBuffer(uvs, idx);
-    if (0 != l_Mesh.bHasNormals)
-        GetNormalFromBuffer(normals, idx);
-    if (0 != l_Mesh.bHasTangenrs)
-        GetTangentFromBuffer(tangent, idx);
-    if (0 != l_Mesh.bHasBiTangents)
-        GetBiTangentFromBuffer(bitangent, idx);
-    
     float2 bary = float2(attrib.barycentrics.x, attrib.barycentrics.y);
-    float2 texCoord = GetInterpolationHitFloat2(uvs, bary);
 
-    float4 albedoMapColor = float4(0.0, 0.0, 0.0, 1.0);
-    float4 albedoColor = float4(1.0, 1.0, 1.0, 1.0);
-    float4 objectColor;
+    uint idx = PrimitiveIndex() * 3;
+    float2 uvs[3];
+    float3 normals[3];
     
-    if (0 != l_Material.bHasAlbedoColor)
-        albedoColor = l_Material.AlbedoColor;
-        
-    if (l_Material.bHasAlbedoMap != 0)
+    float2 texCoord0;
+    float3 lightNormal;
+    if (0 != l_Mesh.bHasTex0)
     {
-        albedoMapColor = l_AlbedoMap.SampleLevel(g_Sampler, texCoord, 0);
-        objectColor = saturate(albedoColor * albedoMapColor);
+        GetTex0FromBuffer(uvs, idx);
+        texCoord0 = GetInterpolationHitFloat2(uvs, bary);
     }
-    else
-        objectColor = albedoColor;
+    if (0 != l_Mesh.bHasNormals)
+    {
+        GetNormalFromBuffer(normals, idx);
+        lightNormal = normalize(GetInterpolationHitFloat3(normals, bary));
+    }
     
+    if (0 != l_Material.bHasNormalMap && 0 != g_CameraInfo.bNormalMapping)
+    {
+        float3 tangents[3], bitangents[3];
+        GetTangentFromBuffer(tangents, idx);
+        GetBiTangentFromBuffer(bitangents, idx);
+        float3 HitTangent = GetInterpolationHitFloat3(tangents, bary);
+        float3 HitBiTangent = GetInterpolationHitFloat3(bitangents, bary);
+        lightNormal = GetHitNormalFromNormalMap(HitTangent, HitBiTangent, lightNormal, texCoord0);
+    }
+    lightNormal = normalize(mul(lightNormal, (float3x3) ObjectToWorld4x3()));
+    //float3 testColor = float3(lightNormal.x * 0.5 + 0.5, lightNormal.y * 0.5 + 0.5, lightNormal.z * 0.5 + 0.5);
     
+    //payload.RayColor = float4(testColor, 1.0f);
     
-    float3 lightingNormal;
-    if ((0 != l_Material.bHasNormalMap) && (0 != g_CameraInfo.bNormalMapping))
-        lightingNormal = GetHitNormalFromNormalMap(GetInterpolationHitFloat3(tangent, bary), GetInterpolationHitFloat3(bitangent, bary), GetInterpolationHitFloat3(normals, bary), texCoord);
-    else
-        lightingNormal = normalize(GetInterpolationHitFloat3(normals, bary));
-
-    float3 normalW = normalize(mul(lightingNormal, (float3x3) ObjectToWorld4x3()));
-    
-    RayDesc shadowray;
-    shadowray.Origin = GetWorldPosition() + normalW * 0.001f;
-    shadowray.Direction = normalize(float3(1.0, 1.0, 1.0));
-    shadowray.TMin = 0.001;
-    shadowray.TMax = 1000;
-    
-    bool bShadow = CheckTheShadow(shadowray, payload.RayDepth + 1);
-    
-    float3 viewDir = normalize(g_CameraInfo.cameraEye - GetWorldPosition());
-    float3 lightDir = normalize(float3(1.0, 1.0, 1.0)); // 실제 조명 방향으로 변경 가능
-    float3 lightColor = float3(4.0, 4.0, 4.0);
-
-    float roughness = 1.0 - l_Material.Smoothness;
-    float metallic = l_Material.Metallic;
-
-    float3 color = CalculateCookTorranceLighting(objectColor.rgb, normalW, viewDir, lightDir, lightColor, metallic, roughness);
-
-// 그림자 적용
-    if (bShadow)
-        color *= 0.1; // 그림자 강도 조절
-
-    float ambientStrength = 0.1 + 0.2 * pow(saturate(dot(normalW, float3(0, 1, 0))), 1.5);
-    float3 ambientColor = float3(0.4, 0.5, 0.7);
-    color += objectColor.rgb * ambientColor * ambientStrength;
-    
-    payload.RayColor = float4(color, 1.0);
+    payload.RayColor = CalculateLighting(payload, lightNormal, ShaderType, texCoord0);
 }
 
 [shader("closesthit")]
