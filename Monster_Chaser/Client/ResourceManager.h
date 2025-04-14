@@ -3,6 +3,25 @@
 //#include "GameObject.h"
 #include "AnimationManager.h"
 
+struct Light
+{
+	UINT    Type;
+	XMFLOAT3  Position;
+	float   Intensity;
+	XMFLOAT3  Direction;
+	float   Range;
+	float   SpotAngle;
+	XMFLOAT2 padding;
+	XMFLOAT4  Color;
+};
+
+struct Lights
+{
+	UINT numLights;
+	XMFLOAT3 padding;
+	Light lights[MAX_LIGHTS];
+};
+
 extern DXResources g_DxResource;
 extern std::default_random_engine g_dre;
 extern std::uniform_real_distribution<float> g_unorm;
@@ -22,6 +41,8 @@ public:
 	void ReBuildBLAS();
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
 
+	void LightTest();
+
 	// getter
 	std::vector<std::unique_ptr<CGameObject>>& getGameObjectList();
 	std::vector<std::unique_ptr<Mesh>>& getMeshList();
@@ -29,12 +50,17 @@ public:
 
 	std::vector<std::unique_ptr<CSkinningObject>>& getSkinningObjectList() { return m_vSkinningObject; }
 	std::vector<std::unique_ptr<CAnimationManager>>& getAnimationManagers() { return m_vAnimationManager; }
+
+	ComPtr<ID3D12Resource>& getLightBuffer() { return m_pLights; }
 private:
 	std::string FilePathFront{};
 
 	std::vector<std::unique_ptr<CGameObject>> m_vGameObjectList;
 	std::vector<std::unique_ptr<Mesh>> m_vMeshList;
 	std::vector<std::unique_ptr<CTexture>> m_vTextureList;
+
+	// Lights
+	ComPtr<ID3D12Resource> m_pLights;
 
 	// Skinning animation
 	std::vector<std::unique_ptr<CSkinningObject>> m_vSkinningObject;

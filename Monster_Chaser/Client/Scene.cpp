@@ -29,6 +29,7 @@ void CRaytracingScene::Render()
 {
 	m_pCamera->SetShaderVariable();
 	m_pAccelerationStructureManager->SetScene();
+	g_DxResource.cmdList->SetComputeRootConstantBufferView(3, m_pResourceManager->getLightBuffer()->GetGPUVirtualAddress());
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
 	raydesc.Depth = 1;
@@ -59,8 +60,8 @@ void CRaytracingScene::CreateRootSignature()
 		rootRange.BaseShaderRegister = 0;
 		rootRange.RegisterSpace = 0;
 
-		// 0. uavBuffer, 1. AS, 2. camera
-		D3D12_ROOT_PARAMETER params[3] = {};
+		// 0. uavBuffer, 1. AS, 2. camera, 3. Lights
+		D3D12_ROOT_PARAMETER params[4] = {};
 		params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;	// u0
 		params[0].DescriptorTable.NumDescriptorRanges = 1;
 		params[0].DescriptorTable.pDescriptorRanges = &rootRange;
@@ -69,9 +70,13 @@ void CRaytracingScene::CreateRootSignature()
 		params[1].Descriptor.RegisterSpace = 0;
 		params[1].Descriptor.ShaderRegister = 0;
 
-		params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;				// b0
+		params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;				// b0, space0
 		params[2].Descriptor.RegisterSpace = 0;
 		params[2].Descriptor.ShaderRegister = 0;
+
+		params[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;				// b0, space1
+		params[3].Descriptor.RegisterSpace = 1;
+		params[3].Descriptor.ShaderRegister = 0;
 
 		D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
 		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -85,7 +90,7 @@ void CRaytracingScene::CreateRootSignature()
 		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 		D3D12_ROOT_SIGNATURE_DESC rtDesc{};
-		rtDesc.NumParameters = 3;
+		rtDesc.NumParameters = 4;
 		rtDesc.NumStaticSamplers = 1;
 		rtDesc.pParameters = params;
 		rtDesc.pStaticSamplers = &samplerDesc;
@@ -628,8 +633,10 @@ void CRaytracingMaterialTestScene::SetUp()
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\w.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	// 조명 추가
+	m_pResourceManager->LightTest();
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
@@ -699,6 +706,42 @@ void CRaytracingMaterialTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT n
 	switch (nMessage) {
 	case WM_KEYDOWN:
 		switch (wParam) {
+		case '1':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '2':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(1);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '3':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '4':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(3);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '5':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(4);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '6':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '7':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(6);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '8':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(7);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '9':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(8);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
 		case 'n':
 		case 'N':
 			m_pCamera->toggleNormalMapping();

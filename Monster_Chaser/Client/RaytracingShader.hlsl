@@ -255,7 +255,7 @@ float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow, in
             rh = l_Material.Smoothness;
         }
         //float Specular = pow(max(dot(Ref1, View), 0.0f), 256.0);
-        float Specular = pow(max(0.0f, dot(normalW, halfV)), 512);
+        float Specular = pow(max(0.0f, dot(normalW, halfV)), 256);
 
         PhongS = Specular * l_Material.SpecularHighlight * l_Material.SpecularColor.xyz * lightColor;
     }

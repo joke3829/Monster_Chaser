@@ -421,3 +421,28 @@ std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 {
 	return m_vTextureList;
 }
+
+void CResourceManager::LightTest()
+{
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = Align(sizeof(Lights), 256);
+
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pLights.GetAddressOf()));
+
+	Lights testLight{};
+	testLight.numLights = 1;
+	testLight.lights[0].Type = DIRECTIONAL_LIGHT;
+	testLight.lights[0].Intensity = 1.0f;
+	testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
+	testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
+
+	/*testLight.lights[1].Type = DIRECTIONAL_LIGHT;
+	testLight.lights[1].Intensity = 1;
+	testLight.lights[1].Color = XMFLOAT4(1.0f, 0.0f ,1.0f, 1.0f);
+	testLight.lights[1].Direction = XMFLOAT3(-0.7527212f, 0.6549893f, 0.06633252f);*/
+
+	Lights* mapptr{};
+	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
+	memcpy(mapptr, &testLight, sizeof(Lights));
+	m_pLights->Unmap(0, nullptr);
+}
