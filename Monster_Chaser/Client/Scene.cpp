@@ -29,7 +29,7 @@ void CRaytracingScene::Render()
 {
 	m_pCamera->SetShaderVariable();
 	m_pAccelerationStructureManager->SetScene();
-	g_DxResource.cmdList->SetComputeRootConstantBufferView(3, m_pResourceManager->getLightBuffer()->GetGPUVirtualAddress());
+	m_pResourceManager->SetLights();
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
 	raydesc.Depth = 1;
@@ -630,10 +630,12 @@ void CRaytracingMaterialTestScene::SetUp()
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
+	m_pResourceManager->SetUp(3);
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\w.bin", "src\\texture\\Lion\\");
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	// 조명 추가
 	m_pResourceManager->LightTest();
@@ -690,7 +692,7 @@ void CRaytracingMaterialTestScene::SetUp()
 
 	// 카메라 설정 ==============================================================
 	//m_pCamera->SetTarget(normalObjects[0].get());
-	//m_pCamera->SetCameraLength(1.2f);
+	//m_pCamera->SetCameraLength(20.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -745,6 +747,10 @@ void CRaytracingMaterialTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT n
 		case 'n':
 		case 'N':
 			m_pCamera->toggleNormalMapping();
+			break;
+		case 'm':
+		case 'M':
+			m_pCamera->toggleAlbedoColor();
 			break;
 		}
 		break;

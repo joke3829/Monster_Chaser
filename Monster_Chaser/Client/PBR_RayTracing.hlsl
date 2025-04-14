@@ -265,77 +265,6 @@ inline float3 GetSmithGeometry(in float roughness, in float NdotV, in float Ndot
     return g1L * g1V;
 }
 
-
-float4 CalculatePhongModel(float4 diffuseColor, float3 normal, bool isShadow, in float2 uv = float2(0.0, 0.0))
-{
-    
-    float3 normalW = normalize(mul(normal, (float3x3) ObjectToWorld4x3()));
-    float shadowFactor = 1.0f; //isShadow ? 0.35f : 1.0f;
-    
-    float3 PhongE = float3(0.0, 0.0, 0.0);
-    float3 emissiveColor = float3(0.0, 0.0, 0.0);
-    float3 emissiveMapColor = float3(0.0, 0.0, 0.0);
-    bool bEmission = false;
-    if (0 != l_Material.bHasEmissionMap)
-    {
-        emissiveMapColor = l_EmissionMap.SampleLevel(g_Sampler, uv, 0).xyz;
-        if (emissiveMapColor.x >= 0.02 || emissiveMapColor.y >= 0.02 || emissiveMapColor.z >= 0.02)
-            bEmission = true;
-    }
-    if (0 != l_Material.bHasEmissiveColor)
-    {
-        /*if (l_Material.EmissiveColor.x >= 0.02 || l_Material.EmissiveColor.y >= 0.02 || l_Material.EmissiveColor.z >= 0.02)
-        {
-            bEmission = true;
-            emissiveColor = l_Material.EmissiveColor;
-        }*/
-        emissiveColor = l_Material.EmissiveColor;
-    }
-    
-    PhongE = emissiveColor * emissiveMapColor;
-    
-    //float3 lightColor = float3(0.8, 0.4, 0.2);
-    float3 lightColor = float3(1.0, 1.0, 1.0);
-    //float3 lightColor = float3(0.2, 0.2, 0.2);
-    float3 light = normalize(float3(1.0, 1.0, 1.0));
-    //float3 light = normalize(float3(0.0, 10.0, 0.0) - GetWorldPosition());
-    
-    float Diffuse = max(dot(normalW, light), 0.0f);
-    // Half-Lambert
-    //float Diffuse = dot(normalW, light) * 0.5 + 0.5;
-    //Diffuse = pow(Diffuse, 3);
-    if (isShadow && !bEmission && Diffuse > 0.0f)
-        shadowFactor = 0.35f;
-    
-    float3 PhongD = shadowFactor * Diffuse * lightColor * diffuseColor.xyz;
-    
-    float3 PhongS = float3(0.0, 0.0, 0.0);
-    if (l_Material.bHasSpecularHighlight && !isShadow)
-    {
-        //float3 Ref1 = 2.0f * normalW * dot(normalW, light) - light;
-        float3 View = normalize(g_CameraInfo.cameraEye - GetWorldPosition());
-        float3 halfV = normalize(View + light);
-        float rh = 1.0f;
-        if (0 != l_Material.bHasGlossiness)
-        {
-            rh = l_Material.Glossiness;
-        }
-        else if (0 != l_Material.bHasSmoothness)
-        {
-            rh = l_Material.Smoothness;
-        }
-        //float Specular = pow(max(dot(Ref1, View), 0.0f), 256.0);
-        float Specular = pow(max(0.0f, dot(normalW, halfV)), 512);
-
-        PhongS = Specular * l_Material.SpecularHighlight * l_Material.SpecularColor.xyz * lightColor;
-    }
-    
-    float3 PhongA = 0.2f * diffuseColor.xyz;
-    
-    
-    return saturate(float4(PhongD + PhongS + PhongA + PhongE, 1.0f));
-}
-
 bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
 {
     if (currentRayDepth + 1 > MAX_RAY_DEPTH)
@@ -360,8 +289,8 @@ inline float3 CalculateCookTorranceSpecular(in float roughness, in float3 R0, in
     float3 F = GetFresnelusingSchlick(R0, NdotV);
     float D = D_GGX(roughness, NdotH);
     float3 G = GetSmithGeometry(roughness, NdotV, NdotL);
-    
-    return (F * G * D) / (4 * NdotL * NdotV);
+    float denom = max(4 * NdotL * NdotV, 0.00001f);
+    return (F * G * D) / denom;
 }
 
 float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float roughness, in float3 R0, float3 AlbedoColor)
@@ -384,8 +313,11 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                     if (NdotL > 0.0f)
                     {
                         float3 diffuseTerm = NdotL * AlbedoColor.rgb * (g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity);
-                        float Specular = CalculateCookTorranceSpecular(roughness, R0, NdotV, NdotH, NdotL);
-                        finalColor += diffuseTerm + (NdotL * (AlbedoColor.rgb + (1 - AlbedoColor.rgb) * Specular));
+                        float3 Specular = CalculateCookTorranceSpecular(roughness, R0, NdotV, NdotH, NdotL);
+                        if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
+                            finalColor += diffuseTerm + (NdotL * (AlbedoColor.rgb + (1 - AlbedoColor.rgb) * Specular));
+                        else
+                            finalColor += Specular;
                     }
                 }
                 break;
@@ -403,7 +335,10 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
         }
     }
     
-    return (AlbedoColor.rgb * 0.2) + finalColor;
+    if(g_CameraInfo.bNormalMapping & 0x0000FFFF)
+        return (AlbedoColor.rgb * 0.2) + finalColor;
+    else
+        return (float3(0.6, 0.6, 0.6) * 0.2) + finalColor;
 }
 
 float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, uint ShaderType = 0, float2 uv = float2(0.0, 0.0))
@@ -430,7 +365,6 @@ float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, uint Shad
                 if (0 != l_Material.bHasGlossiness) roughness = 1.0f - l_Material.Glossiness;
                 else if (0 != l_Material.bHasSmoothness) roughness = 1.0f - l_Material.Smoothness;
                 R0 = l_Material.SpecularColor;
-                roughness = 1.0f;
                 break;
             }
         case SHADER_TYPE_METALLIC_MAP:{
@@ -440,6 +374,9 @@ float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, uint Shad
                 break;
             }
         case SHADER_TYPE_METALLIC:{
+                if (0 != l_Material.bHasGlossiness) roughness = 1.0f - l_Material.Glossiness;
+                else if (0 != l_Material.bHasSmoothness) roughness = 1.0f - l_Material.Smoothness;
+                R0 = lerp(float3(0.04, 0.04, 0.04), albedoColor.rgb, l_Material.Metallic);
                 break;
             }
     }
@@ -547,7 +484,7 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
         lightNormal = normalize(GetInterpolationHitFloat3(normals, bary));
     }
     
-    if (0 != l_Material.bHasNormalMap && 0 != g_CameraInfo.bNormalMapping)
+    if (0 != l_Material.bHasNormalMap && g_CameraInfo.bNormalMapping & 0xFFFF0000)
     {
         float3 tangents[3], bitangents[3];
         GetTangentFromBuffer(tangents, idx);

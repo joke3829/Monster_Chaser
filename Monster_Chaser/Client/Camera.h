@@ -9,7 +9,7 @@ struct CB_CAMERA_INFO {
 	XMFLOAT4X4 xmf4x4ViewProj;
 	XMFLOAT4X4 xmf4x4InverseViewProj;
 	XMFLOAT3 xmf3Eye;
-	int bNormalMapping;
+	int bNormalMapping;	// ¾Õ 2byte normal, µÚ 2byte albedo
 };
 
 class CCamera {
@@ -26,7 +26,22 @@ public:
 	void SetThirdPersonMode(bool bThirdPerson);
 	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }
 
-	void toggleNormalMapping() { m_pCameraInfo->bNormalMapping = ~m_pCameraInfo->bNormalMapping; }
+	void toggleNormalMapping() 
+	{ 
+		unsigned int fBytes = m_pCameraInfo->bNormalMapping & 0xFFFF0000;
+		unsigned int bBytes = m_pCameraInfo->bNormalMapping & 0x0000FFFF;
+		fBytes = ~fBytes & 0XFFFF0000;
+		m_pCameraInfo->bNormalMapping = fBytes | bBytes;
+		//m_pCameraInfo->bNormalMapping = ~m_pCameraInfo->bNormalMapping; 
+	}
+	void toggleAlbedoColor() 
+	{ 
+		unsigned int fByte = m_pCameraInfo->bNormalMapping & 0xFFFF0000;
+		unsigned int bByte = ~(m_pCameraInfo->bNormalMapping & 0x0000FFFF) & 0x0000FFFF;
+
+		m_pCameraInfo->bNormalMapping = fByte | bByte;
+		//m_pCameraInfo->bNormalMapping |= 0x0000; 
+	}
 
 protected:
 	bool m_bThirdPerson = false;

@@ -28,6 +28,7 @@ extern std::uniform_real_distribution<float> g_unorm;
 
 class CResourceManager {
 public:
+	void SetUp(unsigned int nLightRootParameterIndex);		// Light Buffer Ready
 	bool AddResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront);
 	bool AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront);
 
@@ -42,6 +43,7 @@ public:
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
 
 	void LightTest();
+	inline void SetLights() { g_DxResource.cmdList->SetComputeRootConstantBufferView(m_nLightRootParameterIndex, m_pLights->GetGPUVirtualAddress()); }
 
 	// getter
 	std::vector<std::unique_ptr<CGameObject>>& getGameObjectList();
@@ -61,6 +63,7 @@ private:
 
 	// Lights
 	ComPtr<ID3D12Resource> m_pLights;
+	UINT m_nLightRootParameterIndex{};
 
 	// Skinning animation
 	std::vector<std::unique_ptr<CSkinningObject>> m_vSkinningObject;
