@@ -1,110 +1,82 @@
 #include "stdafx.h"
 #include "Network.h"
+#include <MSWSock.h>
+std::vector<Room> Network::rooms;
 
 
-Network::Network() : listenSocket(INVALID_SOCKET) {}
 
-Network::~Network() {
-    closesocket(listenSocket);
-    WSACleanup();
+EXP_OVER::EXP_OVER(IO_OP op) : io_op(op) {
+    ZeroMemory(&over, sizeof(over));
+    wsabuf[0].buf = buffer;
+    wsabuf[0].len = BUF_SIZE;
+    accept_socket = INVALID_SOCKET;
 }
 
-bool Network::Run() {
-    if (!InitializeSocket()) {
-        cerr << "소켓 초기화 실패!" << endl;
-        return false;
-    }
-
-    cout << "서버가 실행 중입니다..." << endl;
-    AcceptClient(); // 클라이언트 수락
-    return true;
+SESSION::SESSION(int i, SOCKET s) : id(i), socket(s) {
+    recv_over = new EXP_OVER(IO_RECV);
+    do_recv();
 }
 
-// 소켓 초기화
-bool Network::InitializeSocket() {
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        cerr << "WSAStartup 실패" << endl;
-        return false;
-    }
-
-    listenSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
-    if (listenSocket == INVALID_SOCKET) {
-        cerr << "소켓 생성 실패" << endl;
-        return false;
-    }
-
-    sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(SERVER_PORT);
-    serverAddr.sin_addr.s_addr = INADDR_ANY;
-
-    if (bind(listenSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        cerr << "바인딩 실패" << endl;
-        return false;
-    }
-
-    if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
-        cerr << "리스닝 실패" << endl;
-        return false;
-    }
-
-    cout << "서버가 포트 " << SERVER_PORT << "에서 리스닝 중..." << endl;
-    return true;
+SESSION::~SESSION() {
+    closesocket(socket);
+    delete recv_over;
 }
 
-// 클라이언트 수락
-void Network::AcceptClient() {
-    sockaddr_in clientAddr;
-    int addrSize = sizeof(sockaddr_in);
-
-    SOCKET clientSocket = accept(listenSocket, (sockaddr*)&clientAddr, &addrSize);
-    if (clientSocket == INVALID_SOCKET) {
-        cerr << "클라이언트 연결 실패" << endl;
-        return;
-    }
-
-    cout << "클라이언트 연결 성공! IP: " << inet_ntoa(clientAddr.sin_addr) << endl;
-
-    // 클라이언트 세션 생성
-    ClientSession* session = new ClientSession();
-    session->socket = clientSocket;
-
-    // 비동기 데이터 수신 시작
-
+void SESSION::do_recv() {
+    DWORD flags = 0;
+    recv_over->wsabuf[0].buf = recv_over->buffer;
+    recv_over->wsabuf[0].len = BUF_SIZE;
+    WSARecv(socket, recv_over->wsabuf, 1, nullptr, &flags, &recv_over->over, nullptr);
 }
 
-// 비동기 데이터 수신 (WSARecv 사용)
-void Network::ReceiveData(ClientSession* session) {
-    session->wsabuf.buf = session->buffer;
-    session->wsabuf.len = BUF_SIZE;
-
-    DWORD bytesReceived = 0, flags = 0;
-    memset(&session->overlapped, 0, sizeof(OVERLAPPED));
-
-    if (WSARecv(session->socket, &session->wsabuf, 1, &bytesReceived, &flags, &session->overlapped, NULL) == SOCKET_ERROR) {
-        if (WSAGetLastError() != WSA_IO_PENDING) {
-            cerr << "WSARecv 실패!" << endl;
-            closesocket(session->socket);
-            delete session;
-            return;
-        }
-    }
-
-    // 수신 완료 후 송신 (에코)
-    SendData(session);
+void SESSION::do_send(void* packet) {
+    EXP_OVER* over = new EXP_OVER(IO_SEND);
+    int len = reinterpret_cast<unsigned char*>(packet)[0];
+    memcpy(over->buffer, packet, len);
+    over->wsabuf[0].len = len;
+    WSASend(socket, over->wsabuf, 1, nullptr, 0, &over->over, nullptr);
 }
 
-// 비동기 데이터 송신 (WSASend 사용)
-void Network::SendData(ClientSession* session) {
-    DWORD bytesSent = 0;
-    memset(&session->overlapped, 0, sizeof(OVERLAPPED));
-
-    if (WSASend(session->socket, &session->wsabuf, 1, &bytesSent, 0, &session->overlapped, NULL) == SOCKET_ERROR) {
-        if (WSAGetLastError() != WSA_IO_PENDING) {
-            cerr << "WSASend 실패!" << endl;
-            closesocket(session->socket);
-            delete session;
-        }
+void SESSION::process_packet(char* p) {
+    char type = p[1];
+    switch (type) {
+    case C2S_P_ENTER_ROOM: {
+        cs_packet_enter_room* pkt = (cs_packet_enter_room*)p;
+        room_num = pkt->room_number;
+        is_ready = false;
+        Room& room = Network::rooms[room_num];
+        room.AddPlayer(this);
+        room.BroadcastRoomInfo();
+        break;
+    }
+    case C2S_P_READY: {
+        is_ready = true;
+        Room& room = Network::rooms[room_num];
+        room.BroadcastReady(id);
+        break;
+    }
     }
 }
+
+void Network::Init() {
+    WSAData wsa;
+    WSAStartup(MAKEWORD(2, 2), &wsa);
+
+    listen_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_OVERLAPPED);
+    SOCKADDR_IN addr{};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(SERVER_PORT);
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    bind(listen_socket, (sockaddr*)&addr, sizeof(addr));
+    listen(listen_socket, SOMAXCONN);
+
+    iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+    CreateIoCompletionPort((HANDLE)listen_socket, iocp, 0, 0);
+
+    for (int i = 0; i < MAX_ROOM; ++i)
+        rooms.emplace_back(i);
+
+    std::cout << "[서버 초기화 완료]" << std::endl;
+}
+
+

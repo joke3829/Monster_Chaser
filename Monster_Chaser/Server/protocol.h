@@ -1,81 +1,94 @@
+#pragma once
+
+
 constexpr int PORT_NUM = 3500;
 constexpr int BUF_SIZE = 256; 
 constexpr int NAME_SIZE = 20;
-
 constexpr int W_WIDTH = 8;
 constexpr int W_HEIGHT = 8;
-
-// Packet ID
-
-
-// 패킷 타입 정의
-enum PACKET_TYPE {
-	CS_LOGIN = 0,
-	CS_MOVE = 1,   // 클라이언트 → 서버 : 이동 요청
-	SC_UPDATE = 2  // 서버 → 클라이언트 : 전체 플레이어 위치 업데이트
-};
-
-constexpr char SC_LOGIN_INFO = 2;
-constexpr char SC_ADD_PLAYER = 3;
-constexpr char SC_MOVE_PLAYER = 4;
+constexpr int MAX_ROOM = 10;
+constexpr int MAX_ROOM_MEMBER = 3;
 
 
 
+constexpr char MAX_ID_LEN = 20;
+//Packet 
+constexpr char S2C_P_AVATAR_INFO = 1;
+constexpr char S2C_P_MOVE = 2;
+constexpr char S2C_P_ENTER = 3;
+constexpr char S2C_P_LEAVE = 4;
 
+constexpr char C2S_P_LOGIN = 5;
+constexpr char C2S_P_MOVE = 6;
 
-#pragma pack (push, 1)
-struct CS_LOGIN_PACKET {
-	unsigned char size;
-	char	type;
-	char	name[NAME_SIZE];
-};
-#pragma pack(pop)
+constexpr char C2S_P_ENTER_ROOM = 10;
+constexpr char C2S_P_READY = 11;
+constexpr char S2C_P_ROOM_INFO = 12;
+constexpr char S2C_P_READY_BROADCAST = 13;
 
-// 서버 → 클라이언트 : 전체 플레이어 위치 패킷
 #pragma pack(push, 1)
-struct SC_UPDATE_PACKET {
-	short size;
-	short type;  // SC_UPDATE
-	short playerCount; // 현재 접속 중인 플레이어 수
-	struct PlayerData {
-		short id;
-		int x;
-		int y;
-	} players[10];  // 최대 10명까지 동시 접속 가능 (필요시 확장)
+struct sc_packet_avatar_info {
+	unsigned char size;
+	char type;
+	long long  id;
+	short x, y;
+	short hp;
+	short level;
+	int   exp;
 };
+struct sc_packet_move {
+	unsigned char size;
+	char type; 
+	long long id; 
+	short x, y;
+};
+struct sc_packet_enter {
+	unsigned char size;
+	char type;
+	long long  id;
+	char name[MAX_ID_LEN]; 
+	char o_type;
+	short x, y;
+};
+struct sc_packet_leave {
+	unsigned char size;
+	char type; long long  id;
+};
+struct cs_packet_login {
+	unsigned char  size;
+	char  type;
+	char  name[MAX_ID_LEN];
+};
+
+struct cs_packet_move {
+    unsigned char  size;
+    char  type;
+    char  direction;
+};
+
+struct cs_packet_enter_room {
+    unsigned char size;
+    char type;
+    char room_number;
+};
+
+struct cs_packet_ready {
+    unsigned char size;
+    char type;
+};
+
+struct s2c_packet_room_info {
+    unsigned char size;
+    char type;
+    char room_number;
+    char player_count;
+};
+
+struct s2c_packet_ready_broadcast {
+    unsigned char size;
+    char type;
+    int client_id;
+    char room_number;
+};
+
 #pragma pack(pop)
-struct CS_MOVE_PACKET { 
-	short size;
-	short type;  // CS_MOVE
-	short id;    // 클라이언트 ID
-	char direction;  // 'W', 'A', 'S', 'D'
-};
-struct SC_LOGIN_INFO_PACKET {
-	unsigned char size;
-	char	type;
-	short	id;
-	short	x, y;
-};
-
-struct SC_ADD_PLAYER_PACKET {
-	unsigned char size;
-	char	type;
-	short	id;
-	short	x, y;
-	char	name[NAME_SIZE];
-};
-
-struct SC_REMOVE_PLAYER_PACKET {		
-	unsigned char size;
-	char	type;
-	short	id;
-};
-
-struct SC_MOVE_PLAYER_PACKET {
-	unsigned char size;
-	char	type;
-	short	id;
-	short	x, y;
-};
-
-#pragma pack (pop)

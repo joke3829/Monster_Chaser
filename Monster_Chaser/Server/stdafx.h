@@ -1,11 +1,13 @@
 #pragma once
 #include <iostream>
 #include <WS2tcpip.h>
+
 #include <vector>
 #include <string>
 #include <unordered_map>
 #include <WinSock2.h>
 #include <thread>
+#include <algorithm>
 enum 직업 {
 	전사 = 0,
 	마법사,
