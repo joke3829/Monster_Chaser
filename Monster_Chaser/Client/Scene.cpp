@@ -484,12 +484,12 @@ void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wPar
 		if (oldPos.x != 0 || oldPos.y != 0) {
 			float deltaX = static_cast<float>(xPos - oldPos.x);
 
-			m_pCamera->Rotate(deltaX * 3.0f, 0.0f); // 카메라 회전에 /3.0f 해주니까 그냥 곱해서 캐릭터 회전이랑 값을 맞춘다.
+			m_pCamera->Rotate(deltaX * 3.0f * 0.5f, 0.0f); // 카메라 회전에 /3.0f 해주니까 그냥 곱해서 캐릭터 회전이랑 값을 맞춘다.
 
 			auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
 			if (animationManager && !animationManager->getFrame().empty()) {
 				CGameObject* frame = animationManager->getFrame()[0];
-				m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX , 0.0f),*frame);
+				m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX *0.5f , 0.0f),*frame);
 			}
 		}
 
