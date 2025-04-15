@@ -42,6 +42,7 @@ public:
 		m_pCameraInfo->bNormalMapping = fByte | bByte;
 		//m_pCameraInfo->bNormalMapping |= 0x0000; 
 	}
+	bool getThirdPersonState() const { return m_bThirdPerson; }
 
 protected:
 	bool m_bThirdPerson = false;

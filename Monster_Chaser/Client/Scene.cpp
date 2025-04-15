@@ -11,7 +11,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateSkinningMesh(fElapsedTime);
 	Flush();
-	// BLAS ï¿½ï¿½ï¿½ï¿½ï¿½
+	// BLAS RebBuild
 	m_pResourceManager->ReBuildBLAS();
 
 	bool test = false;
@@ -443,8 +443,8 @@ void CRaytracingTestScene::SetUp()
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
-	m_pResourceManager->SetUp(3);
-	// ï¿½ï¿½ï¿½â¿¡ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö±ï¿½ ========================================	! ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð±ï¿½ !
+	m_pResourceManager->SetUp(3);								// LightBufferReady
+	// Read File Here ========================================	! All Files Are Read Once !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
@@ -459,17 +459,17 @@ void CRaytracingTestScene::SetUp()
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
-	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½ï¿½Ã¼ & skinning Object ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½â¼­ ========================================
+	// Create new Objects, Copy SkinningObject here ========================================
 	
-	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	// Copy Example
 	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 	//skinned[1]->CopyFromOtherObject(skinned[0].get());
 	//aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
 	//aManagers[1]->SetFramesPointerFromSkinningObject(skinned[1]->getObjects());
 	//aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
-	//aManagers[1]->UpdateAnimation(0.5f);		// ï¿½Ê¿ï¿½ x
+	//aManagers[1]->UpdateAnimation(0.5f);		// Not Need
 
-	// ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	// Create new Object Example
 	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.025f, 1.0f));
 
 	UINT finalindex = normalObjects.size();
@@ -504,7 +504,7 @@ void CRaytracingTestScene::SetUp()
 	skinned[0]->getObjects()[98]->getMaterials()[0].m_nEmissionMapIndex = skinned[0]->getTextures().size();
 	skinned[0]->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Gorhorrid\\T_Gorhorrid_Emissive.dds"));*/
 	// ===========================================================================================
-	m_pResourceManager->InitializeGameObjectCBuffer();	// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ & ï¿½Ê±ï¿½È­
+	m_pResourceManager->InitializeGameObjectCBuffer();	// CBV RAII
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
 
 
@@ -513,7 +513,7 @@ void CRaytracingTestScene::SetUp()
 	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
 	m_pShaderBindingTable->CreateSBT();
 
-	// ï¿½ï¿½ï¿½â¼­ ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ & ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ======================================================
+	// Normal Object Copy & Manipulation Matrix Here ================================
 	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
 	//skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	//skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
@@ -523,9 +523,9 @@ void CRaytracingTestScene::SetUp()
 	m_pResourceManager->PrepareObject();
 	m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
 
-	// Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ï¿½ ==============================================================
-	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	m_pCamera->SetCameraLength(10.0f);
+	// Setting Camera ==============================================================
+	//m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	//m_pCamera->SetCameraLength(10.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -570,6 +570,10 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 		case 'n':
 		case 'N':
 			m_pCamera->toggleNormalMapping();
+			break;
+		case 'm':
+		case 'M':
+			m_pCamera->toggleAlbedoColor();
 			break;
 		}
 		break;
@@ -619,23 +623,22 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
-/*
-	if (keyBuffer['W'] & 0x80)
-		m_pCamera->Move(0, fElapsedTime);
-	if (keyBuffer['S'] & 0x80)
-		m_pCamera->Move(5, fElapsedTime);
-	if (keyBuffer['D'] & 0x80)
-		m_pCamera->Move(3, fElapsedTime);
-	if (keyBuffer['A'] & 0x80)
-		m_pCamera->Move(4, fElapsedTime);
-	if (keyBuffer[VK_SPACE] & 0x80)
-		m_pCamera->Move(1, fElapsedTime);
-	if (keyBuffer[VK_CONTROL] & 0x80)
-		m_pCamera->Move(2, fElapsedTime);
 
-	if (keyBuffer[VK_RIGHT] & 0x80)
-		m_pResourceManager->getAnimationManagers()[0]->TimeIncrease(fElapsedTime);
-*/
+	if (!m_pCamera->getThirdPersonState()) {
+		if (keyBuffer['W'] & 0x80)
+			m_pCamera->Move(0, fElapsedTime);
+		if (keyBuffer['S'] & 0x80)
+			m_pCamera->Move(5, fElapsedTime);
+		if (keyBuffer['D'] & 0x80)
+			m_pCamera->Move(3, fElapsedTime);
+		if (keyBuffer['A'] & 0x80)
+			m_pCamera->Move(4, fElapsedTime);
+		if (keyBuffer[VK_SPACE] & 0x80)
+			m_pCamera->Move(1, fElapsedTime);
+		if (keyBuffer[VK_CONTROL] & 0x80)
+			m_pCamera->Move(2, fElapsedTime);
+	}
+
 	if (m_LockAnimation) {
 		if (m_pResourceManager->getAnimationManagers()[0]->IsInCombo()) {
 			m_LockAnimation = false;
@@ -653,82 +656,82 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			return;
 		}
 	}
-		// W + A (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½)
+	// W + A (¿ÞÂÊ ´ë°¢¼± À§)
 	if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // ¶Ù±â: ¿ÞÂÊ ´ë°¢¼± À§
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // ¶Ù±â À¯Áö
 		}
 	}
-	// W + A + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// W + A + Shift ¶¾ ¼ø°£ (¿ÞÂÊ ´ë°¢¼± À§ °È±â·Î ÀüÈ¯)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // °È±â: ¿ÞÂÊ ´ë°¢¼± À§
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½)
+	// W + A ´Üµ¶ (¿ÞÂÊ ´ë°¢¼± À§ °È±â)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // °È±â: ¿ÞÂÊ ´ë°¢¼± À§
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // °È±â À¯Áö
 		}
 	}
-	// W + A + Shiftï¿½ï¿½ï¿½ï¿½ A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// W + A + Shift¿¡¼­ A ¶¾ ¼ø°£ (ÀüÁø ¶Ù±â·Î ÀüÈ¯)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // ¶Ù±â: ÀüÁø
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + Aï¿½ï¿½ï¿½ï¿½ A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// W + A¿¡¼­ A ¶¾ ¼ø°£ (ÀüÁø °È±â·Î ÀüÈ¯)
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // °È±â: ÀüÁø
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + Aï¿½ï¿½ï¿½ï¿½ W ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// W + A¿¡¼­ W ¶¾ ¼ø°£ (ÁÂÃø °È±â·Î ÀüÈ¯)
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 8)
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // °È±â: ÁÂÃø (°¡Á¤: 8)
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D + Shift (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù±ï¿½)
+	// W + D + Shift (¿À¸¥ÂÊ ´ë°¢¼± À§ ¶Ù±â)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // ¶Ù±â: ¿À¸¥ÂÊ ´ë°¢¼± À§
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // ¶Ù±â À¯Áö
 		}
 	}
-	// W + D + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// W + D + Shift ¶¾ ¼ø°£ (¿À¸¥ÂÊ ´ë°¢¼± À§ °È±â·Î ÀüÈ¯)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // °È±â: ¿À¸¥ÂÊ ´ë°¢¼± À§
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½)
+	// W + D ´Üµ¶ (¿À¸¥ÂÊ ´ë°¢¼± À§ °È±â)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // °È±â: ¿À¸¥ÂÊ ´ë°¢¼± À§
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // °È±â À¯Áö
 		}
 	}
-	// W + D + Shiftï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// W + D + Shift¿¡¼­ D ¶¾ ¼ø°£ (ÀüÁø ¶Ù±â·Î ÀüÈ¯)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + Dï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// W + Dï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + Dï¿½ï¿½ï¿½ï¿½ W ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// W + Dï¿½ï¿½ï¿½ï¿½ W ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
 		m_pResourceManager->UpdatePosition(fElapsedTime);
@@ -743,7 +746,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 	}
-	// S + A + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// S + A + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
 		m_pResourceManager->UpdatePosition(fElapsedTime);
@@ -758,17 +761,17 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 	}
-	// S + A + Shiftï¿½ï¿½ï¿½ï¿½ A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// S + A + Shiftï¿½ï¿½ï¿½ï¿½ A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 20)
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + Aï¿½ï¿½ï¿½ï¿½ A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// S + Aï¿½ï¿½ï¿½ï¿½ A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + Aï¿½ï¿½ï¿½ï¿½ S ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// S + Aï¿½ï¿½ï¿½ï¿½ S ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 8)
 		m_pResourceManager->UpdatePosition(fElapsedTime);
@@ -783,7 +786,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 	}
-	// S + D + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// S + D + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
 		m_pResourceManager->UpdatePosition(fElapsedTime);
@@ -798,17 +801,17 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 	}
-	// S + D + Shiftï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// S + D + Shiftï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 20)
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + Dï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// S + Dï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + Dï¿½ï¿½ï¿½ï¿½ S ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// S + Dï¿½ï¿½ï¿½ï¿½ S ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
 		m_pResourceManager->UpdatePosition(fElapsedTime);
@@ -823,7 +826,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 	}
-	// W + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// W + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
 		m_pResourceManager->UpdatePosition(fElapsedTime);
@@ -848,7 +851,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 	}
-	// S + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// S + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
 		m_pResourceManager->UpdatePosition(fElapsedTime);
@@ -873,7 +876,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 	}
-	// A + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// A + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 8)
 		m_pResourceManager->UpdatePosition(fElapsedTime);
@@ -898,7 +901,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
 		}
 	}
-	// D + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿½ ï¿½ï¿½È¯)
+	// D + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
 		m_pResourceManager->UpdatePosition(fElapsedTime);
@@ -1024,13 +1027,12 @@ void CRaytracingMaterialTestScene::SetUp()
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);
-	// ï¿½ï¿½ï¿½â¿¡ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö±ï¿½ ========================================	! ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð±ï¿½ !
+	// Read File Here ========================================	! All Files Are Read Once !
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\w.bin", "src\\texture\\Lion\\");
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
-	// ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
 	m_pResourceManager->LightTest();
 	// =========================================================
 
@@ -1039,9 +1041,7 @@ void CRaytracingMaterialTestScene::SetUp()
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
-	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½ï¿½Ã¼ & skinning Object ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½â¼­ ========================================
-
-	// ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	// Create new Objects, Copy SkinningObject here  ========================================
 
 	//UINT finalindex = normalObjects.size();
 	//UINT finalmesh = meshes.size();
@@ -1070,7 +1070,7 @@ void CRaytracingMaterialTestScene::SetUp()
 	//tt.m_bHasGlossyReflection = true; tt.m_fGlossyReflection = 1.0f;
 	//normalObjects[finalindex + 1]->SetPosition(XMFLOAT3(0.0, -30.0, 0.0));
 	// ===========================================================================================
-	m_pResourceManager->InitializeGameObjectCBuffer();	// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ & ï¿½Ê±ï¿½È­
+	m_pResourceManager->InitializeGameObjectCBuffer();	// CBV RAII
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
 
 
@@ -1079,11 +1079,11 @@ void CRaytracingMaterialTestScene::SetUp()
 	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
 	m_pShaderBindingTable->CreateSBT();
 
-	// ï¿½ï¿½ï¿½â¼­ ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼(normalObject) ï¿½ï¿½ï¿½ï¿½ & ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ===============================
+	// Normal Object Copy & Manipulation Matrix Here  ===============================
 
 	// ==============================================================================
 
-	// Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½ï¿½ ==============================================================
+	// Setting Camera ==============================================================
 	//m_pCamera->SetTarget(normalObjects[0].get());
 	//m_pCamera->SetCameraLength(20.0f);
 	// ==========================================================================
