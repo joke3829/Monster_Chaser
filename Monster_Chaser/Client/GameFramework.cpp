@@ -241,11 +241,14 @@ void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LP
 		POINT cursorpos;
 		if (m_bHold) {
 			GetCursorPos(&cursorpos);
-			m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
+			m_pCamera->Rotate(cursorpos.x - oldCursor.x, 0); //cursorpos.y - oldCursor.y
 			SetCursorPos(oldCursor.x, oldCursor.y);
 		}
 		break;
 	}
+	default:
+		m_pScene->MouseProcessing(hWnd, nMessage, wParam, lParam);
+		break;
 	}
 }
 

@@ -23,6 +23,31 @@ float CHeightMapImage::GetHeight(int x, int z)
 	return m_pHeightMapPixels[x + (z * m_nWidth)] * m_xmf3Scale.y;
 }
 
+XMFLOAT3 CHeightMapImage::GetNormal(int x, int z)
+{
+	int x0 = max(x - 1, 0);
+	int x1 = min(x + 1, m_nWidth - 1);
+	int z0 = max(z - 1, 0);
+	int z1 = min(z + 1, m_nLength - 1);
+
+	float hl = GetHeight(x0, z);
+	float hr = GetHeight(x1, z);
+	float hd = GetHeight(x, z0);
+	float hu = GetHeight(x, z1);
+
+	XMFLOAT3 tangentX = XMFLOAT3((x1 - x0) * m_xmf3Scale.x, hr - hl, 0.0f);
+	XMFLOAT3 tangentZ = XMFLOAT3(0.0f, hu - hd, (z1 - z0) * m_xmf3Scale.z);
+
+	XMVECTOR vx = XMLoadFloat3(&tangentX);
+	XMVECTOR vz = XMLoadFloat3(&tangentZ);
+	XMVECTOR normal = XMVector3Cross(vz, vx);
+	normal = XMVector3Normalize(normal);
+
+	XMFLOAT3 xmf3Normal;
+	XMStoreFloat3(&xmf3Normal, normal);
+	return xmf3Normal;
+}
+
 Mesh::Mesh(std::ifstream& inFile, std::string strMeshName)
 {
 	std::string strLabel{};

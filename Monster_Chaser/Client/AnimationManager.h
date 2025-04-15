@@ -11,6 +11,7 @@ public:
 	void UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime);
 
 	float getLength() const { return m_fLength; }
+
 private:
 	std::string m_AnimationName{};
 	float m_fLength{};
@@ -38,13 +39,51 @@ public:
 	void TimeIncrease(float fElapsedTime);			// 시간 증가
 	void UpdateAnimation(float fElapsedTime);		// 시간 지정
 	void UpdateAnimationMatrix();
+	void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
 	void ChangeAnimation(UINT nSet);
-
-	void setCurrnetSet(UINT n) { m_nCurrnetSet = n; }
+	void ChangeAnimation(UINT nSet, bool playOnce = false); // playOnce 옵션 추가
+	void setCurrnetSet(UINT n) { m_nCurrentSet = n; }
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
+	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
+	bool IsAnimationNearEnd(float margin = 0.1f) const
+	{
+		float length = m_vAnimationSets[m_nCurrentSet]->getLength();
+		float remainingTime = length - m_fElapsedTime;
+		return remainingTime <= margin && remainingTime >= 0.0f; //끝나기 0.0 ~ 0.1초 전인지 확인
+	}
+
+	bool IsLoopAnimation()const
+	{
+		if (m_nCurrentSet == 5 || m_nCurrentSet == 8)return true;
+		else { return false; }
+	}
+
+	void onWalking() {
+		m_isWalk = true;
+	}
+
+	void StopWalking() {
+		m_isWalk = false;
+	}
+
+	bool IsWalking() const {
+		return m_isWalk; // 현재 걷기  상태 반환
+	}
+
+
+	virtual void StartCombo() {};
+	virtual void OnAttackInput() {};
+	virtual void UpdateCombo(float fElapsedTime) {};
+	virtual void ResetCombo() {};
+	bool IsInCombo() const { return m_bInCombo; } // 콤보 진행 중 여부
+
+	virtual void StartSkill3() {};
+	virtual void OnKey3Input() {};
+
+	const std::vector<CGameObject*>& getFrame()const { return m_vFrames; }
 protected:
 	UINT m_nAnimationSets{};
-	UINT m_nCurrnetSet{};
+	UINT m_nCurrentSet{};
 	float m_fElapsedTime{};
 	std::vector<std::string> m_vFrameNames{};		// 한번 쓰고 버리나?
 	std::vector<std::shared_ptr<CAnimationSet>> m_vAnimationSets{};
@@ -55,5 +94,30 @@ protected:
 	ComPtr<ID3D12Resource> m_pMatrixBuffer{};		// 애니메이션 행렬을 넣을 상수 버퍼
 	void* m_pMappedPointer{};
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// 애니메이션 행렬을 저장할 배열
+
+	bool m_bPlayOnce = false; // 한 번만 재생 여부
+	bool m_isWalk = false; // 걷기 여부
+
+	// 콤보
+	bool m_bInCombo;                     // 콤보 진행 중 여부
+	int m_CurrentComboStep;               // 현재 콤보 단계
+	std::vector<UINT> m_vComboAnimationSets; // 콤보 애니메이션 세트
+	float m_fComboTimer;                   // 콤보 입력 대기 시간
+	const float m_fComboWaitTime = 0.5f;     // 다음 입력을 기다리는 시간
+	bool m_bWaitingForNextInput;         // 다음 입력 대기 여부
+	bool m_bNextAttack = false;			// 다음 공격 요청 여부
+
+	std::vector<UINT> m_vSkillAnimationSets; //스킬 애니메이션 세트
 };
 
+class CMageManager : public CAnimationManager //마법사 전용
+{
+public:
+	virtual void StartCombo();
+	virtual void OnAttackInput();
+	virtual void UpdateCombo(float fElapsedTime);
+	virtual void ResetCombo();
+
+	virtual void StartSkill3();
+	virtual void OnKey3Input();
+};

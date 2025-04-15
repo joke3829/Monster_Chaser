@@ -39,6 +39,7 @@ public:
 	void PrepareObject();
 
 	void UpdateSkinningMesh(float fElapsedTime);
+	void UpdatePosition(float fElapsedTime);
 	void ReBuildBLAS();
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
 
@@ -54,6 +55,9 @@ public:
 	std::vector<std::unique_ptr<CAnimationManager>>& getAnimationManagers() { return m_vAnimationManager; }
 
 	ComPtr<ID3D12Resource>& getLightBuffer() { return m_pLights; }
+
+	// ================================================
+	CSkinningObject* GetSkinningObject(int index) {return m_vSkinningObject[index].get();} //?
 private:
 	std::string FilePathFront{};
 

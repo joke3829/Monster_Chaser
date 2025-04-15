@@ -44,16 +44,16 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 
 void CCamera::Move(int arrow, float fElapsedTime)
 {
-	if (arrow == 0) {	// ¾Õ
+	if (arrow == 0) {	// ï¿½ï¿½
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * 20 * fElapsedTime));
 	}
-	else if (arrow == 1) { // À§
+	else if (arrow == 1) { // ï¿½ï¿½
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * 10 * fElapsedTime));
 	}
-	else if (arrow == 2) {	// ¾Æ·¡
+	else if (arrow == 2) {	// ï¿½Æ·ï¿½
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * -10 * fElapsedTime));
 	}
-	else if (3 == arrow) {	// ¿ì
+	else if (3 == arrow) {	// ï¿½ï¿½
 		XMVECTOR right = XMVector3Normalize(XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir)));
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * 20 * fElapsedTime));
 	}
@@ -61,8 +61,9 @@ void CCamera::Move(int arrow, float fElapsedTime)
 		XMVECTOR right = XMVector3Normalize(XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir)));
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * -20 * fElapsedTime));
 	}
-	else   // µÚ
+	else   // ï¿½ï¿½
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -20 * fElapsedTime));
+	}
 }
 
 void CCamera::UpdateViewMatrix()

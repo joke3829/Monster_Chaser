@@ -1,4 +1,5 @@
 #include "AnimationManager.h"
+#include "algorithm"
 
 CAnimationSet::CAnimationSet(std::ifstream& inFile, UINT nBones)
 {
@@ -133,20 +134,48 @@ void CAnimationManager::MakeAnimationMatrixIndex(CSkinningObject* pSkinningObjec
 
 void CAnimationManager::TimeIncrease(float fElapsedTime)
 {
-	m_fElapsedTime += fElapsedTime;
+	/*m_fElapsedTime += fElapsedTime;
 	float length = m_vAnimationSets[m_nCurrnetSet]->getLength();
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
-	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
+	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
+	XMFLOAT4X4 targetPosition;
+	m_fElapsedTime += fElapsedTime; // 시간 누적
+	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
+
+	if (m_bPlayOnce) {
+		if (m_fElapsedTime >= length) {
+			m_fElapsedTime = length; // 한 번 재생 시 종료
+		}
+	}
+	else {
+		if (m_fElapsedTime > length) {
+			m_fElapsedTime -= length;
+		}
+	}
+	m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
 }
 
 void CAnimationManager::UpdateAnimation(float fElapsedTime)
 {
-	m_fElapsedTime = fElapsedTime;
+	/*m_fElapsedTime = fElapsedTime;
 	float length = m_vAnimationSets[m_nCurrnetSet]->getLength();
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
-	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
+	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
+	m_fElapsedTime += fElapsedTime;
+	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
+	if (m_bPlayOnce) {
+		if (m_fElapsedTime >= length) {
+			m_fElapsedTime = length;
+		}
+	}
+	else {
+		while (m_fElapsedTime > length) {
+			m_fElapsedTime -= length;
+		}
+	}
+	m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
 }
 
 void CAnimationManager::UpdateAnimationMatrix()
@@ -156,10 +185,125 @@ void CAnimationManager::UpdateAnimationMatrix()
 	memcpy(m_pMappedPointer, m_vMatrixes.data(), sizeof(XMFLOAT4X4) * m_vMatrixes.size());
 }
 
+void CAnimationManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
+{
+	if (m_vFrames[0]) {
+		XMFLOAT3 targetPosition = m_vFrames[0]->getPositionFromWMatrix();
+		player->SetPosition(targetPosition);
+	}
+}
+
 void CAnimationManager::ChangeAnimation(UINT nSet)
 {
-	if (nSet != m_nCurrnetSet) {
-		m_nCurrnetSet = nSet;
+	if (nSet != m_nCurrentSet) {
+		m_nCurrentSet = nSet;
 		m_fElapsedTime = 0.0f;
+	}
+}
+
+void CAnimationManager::ChangeAnimation(UINT nSet, bool playOnce)
+{
+	if (nSet != m_nCurrentSet || m_bPlayOnce != playOnce) { // playOnce 변경도 반영
+		m_nCurrentSet = nSet;
+		m_fElapsedTime = 0.0f;
+		m_bPlayOnce = playOnce;
+	}
+}
+
+void CMageManager::StartCombo()
+{
+	m_bInCombo = true;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+
+	m_vComboAnimationSets = { 22,23,24,25 };
+
+	ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+}
+
+void CMageManager::OnAttackInput()
+{
+	if (!m_bInCombo) {
+		StartCombo(); // 첫 클릭
+		return;
+	}
+
+	// 콤보 진행
+	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 13) {
+		if (!m_bWaitingForNextInput) {
+			m_bNextAttack = true; // 다음 공격 대기
+		}
+		else {
+			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+			ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+			m_bWaitingForNextInput = false;
+			m_fComboTimer = 0.0f;
+			m_bNextAttack = false;
+		}
+	}
+}
+
+void CMageManager::UpdateCombo(float fElapsedTime)
+{
+	if (!m_bInCombo) return;
+
+	if (IsAnimationNearEnd()) {
+		if (m_bNextAttack && m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 13) {
+			// 콤보 모드
+			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+			ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+			m_bNextAttack = false;
+		}
+		else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 17) {
+			// 스킬 3
+			m_CurrentComboStep++;
+			if (m_CurrentComboStep < m_vSkillAnimationSets.size()) {
+				ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
+			}
+			else {
+				ResetCombo(); // 한 사이클 돌면 종료
+			}
+			m_fComboTimer = 0.0f;
+		}
+		else {
+			m_bWaitingForNextInput = true;
+			m_fComboTimer += fElapsedTime;
+
+			if (m_fComboTimer >= m_fComboWaitTime) {
+				ResetCombo();
+			}
+		}
+	}
+}
+
+void CMageManager::ResetCombo()
+{
+	m_bInCombo = false;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+	setTimeZero();
+	ChangeAnimation(0, false); // idle로 전환
+}
+
+void CMageManager::StartSkill3()
+{
+	m_bInCombo = true;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+
+	m_vSkillAnimationSets = { 26, 27, 28, 29 , 30 };
+	ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
+}
+
+void CMageManager::OnKey3Input()
+{
+	if (!m_bInCombo) {
+		StartSkill3();
 	}
 }

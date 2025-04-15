@@ -1,5 +1,6 @@
 #include "GameObject.h"
 
+
 CGameObject::CGameObject(const CGameObject& other)
 {
 	m_strName = other.m_strName;	
@@ -13,8 +14,8 @@ CGameObject::CGameObject(const CGameObject& other)
 	//m_xmf4x4LocalMatrix = other.m_xmf4x4LocalMatrix;
 	UpdateLocalMatrix();
 
-	// º¹»ç´Â SBT°¡ ¸¸µé¾îÁö°í ÀÌ·ç¾îÁö±â¶§¹®¿¡ Resource´Â º¹»çÇÏÁö ¾Ê´Â´Ù.
-	// index¿Í Material¸¸ °¡Á®¿Â´Ù
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ SBTï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì·ï¿½ï¿½ï¿½ï¿½ï¿½â¶§ï¿½ï¿½ï¿½ï¿½ Resourceï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½.
+	// indexï¿½ï¿½ Materialï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Â´ï¿½
 
 	for (int i = 0; i < other.m_vMaterials.size(); ++i)
 		m_vMaterials.emplace_back(other.m_vMaterials[i]);
@@ -37,8 +38,8 @@ CGameObject& CGameObject::operator=(const CGameObject& other)
 
 		UpdateLocalMatrix();
 		//m_xmf4x4LocalMatrix = other.m_xmf4x4LocalMatrix;
-		// º¹»ç´Â SBT°¡ ¸¸µé¾îÁö°í ÀÌ·ç¾îÁö±â¶§¹®¿¡ Resource´Â º¹»çÇÏÁö ¾Ê´Â´Ù.
-		// index¿Í Material¸¸ °¡Á®¿Â´Ù
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ SBTï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì·ï¿½ï¿½ï¿½ï¿½ï¿½â¶§ï¿½ï¿½ï¿½ï¿½ Resourceï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½.
+		// indexï¿½ï¿½ Materialï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Â´ï¿½
 
 		for (int i = 0; i < other.m_vMaterials.size(); ++i)
 			m_vMaterials.emplace_back(other.m_vMaterials[i]);
@@ -52,11 +53,11 @@ CGameObject& CGameObject::operator=(const CGameObject& other)
 
 bool CGameObject::InitializeObjectFromFile(std::ifstream& inFile)
 {
-	int temp;	// ºÒÇÊ¿äÇÑ Á¤º¸µéÀ» »©³½´Ù.
-	inFile.read((char*)&temp, sizeof(int));	// ÇÁ·¹ÀÓ ¹øÈ£
-	inFile.read((char*)&temp, sizeof(int));	// ÅØ½ºÃÄ ¼ö
+	int temp;	// ï¿½ï¿½ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
+	inFile.read((char*)&temp, sizeof(int));	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È£
+	inFile.read((char*)&temp, sizeof(int));	// ï¿½Ø½ï¿½ï¿½ï¿½ ï¿½ï¿½
 
-	// ÀÌ¸§ ÀÐ°í ÀúÀå
+	// ï¿½Ì¸ï¿½ ï¿½Ð°ï¿½ ï¿½ï¿½ï¿½ï¿½
 	char strLength{};
 	inFile.read(&strLength, sizeof(char));
 	m_strName.assign(strLength, ' ');
@@ -105,7 +106,7 @@ void CGameObject::SetPosition(XMFLOAT3 pos)
 	m_xmf3Pos = pos;
 	UpdateLocalMatrix();
 }
-// »ç¿ë ÁÖÀÇ
+// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 void CGameObject::Rotate(XMFLOAT3 rot)
 {
 	XMMATRIX mtx;
@@ -248,14 +249,14 @@ CSkinningInfo::CSkinningInfo(std::ifstream& inFile, UINT nRefMesh)
 		};
 	m_nRefMesh = nRefMesh;
 
-	readLabel();	// ÀÌ¸§
+	readLabel();	// ï¿½Ì¸ï¿½
 	while (1) {
 		readLabel();
 		if (strLabel == "</SkinningInfo>")
 			break;
 		else if ("<BonesPerVertex>:" == strLabel)
 			inFile.read((char*)&m_nBonesPerVertex, sizeof(int));
-		else if ("<Bounds>:" == strLabel) { // ¹Ù¿îµù ¹Ú½º Á¤º¸, ÇÊ¿äÇÏ¸é °¡Á®°£´Ù
+		else if ("<Bounds>:" == strLabel) { // ï¿½Ù¿ï¿½ï¿½ ï¿½Ú½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½Ê¿ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			XMFLOAT3 tempData{};
 			inFile.read((char*)&tempData, sizeof(XMFLOAT3));
 			inFile.read((char*)&tempData, sizeof(XMFLOAT3));
@@ -304,7 +305,7 @@ CSkinningInfo::CSkinningInfo(const CSkinningInfo& other)
 	for (int i = 0; i < other.m_vBoneWeight.size(); ++i)
 		m_vBoneWeight.emplace_back(other.m_vBoneWeight[i]);
 
-	// ÇØ´ç Á¤º¸´Â animaitonManager°¡ Ã¤¿öÁØ´Ù.
+	// ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ animaitonManagerï¿½ï¿½ Ã¤ï¿½ï¿½ï¿½Ø´ï¿½.
 	//for (int i = 0; i < other.m_vAnimationMatrixIndex.size(); ++i)
 	//	m_vAnimationMatrixIndex.emplace_back(other.m_vAnimationMatrixIndex[i]);
 }
@@ -327,7 +328,7 @@ void CSkinningInfo::MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixB
 
 	void* tempData{};
 
-	// »ó¼ö ¹öÆÛ
+	// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	auto desc = BASIC_BUFFER_DESC;
 	
 	desc.Width = Align(sizeof(UINT) * 2, 256);
@@ -338,7 +339,7 @@ void CSkinningInfo::MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixB
 	memcpy(tempData, &m_nBonesPerVertex, sizeof(UINT));
 	m_pConstantBuffer->Unmap(0, nullptr);
 
-	// ¿ÀÇÁ¼Â Çà·Ä
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 	desc.Width = sizeof(XMFLOAT4X4) * m_vOffsetMatrix.size();
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pOffsetMatrixBuffer.GetAddressOf()));
 	m_pOffsetMatrixBuffer->Map(0, nullptr, &tempData);
@@ -347,21 +348,21 @@ void CSkinningInfo::MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixB
 	memcpy(tempData, m_vOffsetMatrix.data(), sizeof(XMFLOAT4X4) * m_vOffsetMatrix.size());
 	m_pOffsetMatrixBuffer->Unmap(0, nullptr);
 
-	// »À ÀÎµ¦½º
+	// ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½
 	desc.Width = sizeof(UINT) * m_vBoneIndices.size();
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pBoneIndicesBuffer.GetAddressOf()));
 	m_pBoneIndicesBuffer->Map(0, nullptr, &tempData);
 	memcpy(tempData, m_vBoneIndices.data(), sizeof(UINT) * m_vBoneIndices.size());
 	m_pBoneIndicesBuffer->Unmap(0, nullptr);
 
-	// »À °¡ÁßÄ¡
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ä¡
 	desc.Width = sizeof(float) * m_vBoneWeight.size();
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pBoneWeightBuffer.GetAddressOf()));
 	m_pBoneWeightBuffer->Map(0, nullptr, &tempData);
 	memcpy(tempData, m_vBoneWeight.data(), sizeof(float) * m_vBoneWeight.size());
 	m_pBoneWeightBuffer->Unmap(0, nullptr);
 
-	// ¾Ö´Ï¸ÞÀÌ¼Ç Çà·Ä ÀÎµ¦½º
+	// ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½
 	desc.Width = sizeof(UINT) * m_vAnimationMatrixIndex.size();
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pAnimationMatrixIndexBuffer.GetAddressOf()));
 	m_pAnimationMatrixIndexBuffer->Map(0, nullptr, &tempData);
@@ -373,7 +374,7 @@ void CSkinningInfo::MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixB
 
 	UINT incrementSize = g_DxResource.device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cDesc{};
-	// »ó¼ö¹öÆÛ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	cDesc.BufferLocation = m_pConstantBuffer->GetGPUVirtualAddress();
 	cDesc.SizeInBytes = Align(sizeof(UINT) * 2, 256);
 	g_DxResource.device->CreateConstantBufferView(&cDesc, handle);
@@ -385,31 +386,31 @@ void CSkinningInfo::MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixB
 	vDesc.Buffer.FirstElement = 0;
 	vDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-	// ¿ÀÇÁ¼Â Çà·Ä
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 	vDesc.Buffer.NumElements = m_vOffsetMatrix.size();
 	vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT4X4);
 	g_DxResource.device->CreateShaderResourceView(m_pOffsetMatrixBuffer.Get(), &vDesc, handle);
 	handle.ptr += incrementSize;
 
-	// »À ÀÎµ¦½º
+	// ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½
 	vDesc.Buffer.NumElements = m_vBoneIndices.size();
 	vDesc.Buffer.StructureByteStride = sizeof(UINT);
 	g_DxResource.device->CreateShaderResourceView(m_pBoneIndicesBuffer.Get(), &vDesc, handle);
 	handle.ptr += incrementSize;
 
-	// »À °¡ÁßÄ¡
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ä¡
 	vDesc.Buffer.NumElements = m_vBoneWeight.size();
 	vDesc.Buffer.StructureByteStride = sizeof(float);
 	g_DxResource.device->CreateShaderResourceView(m_pBoneWeightBuffer.Get(), &vDesc, handle);
 	handle.ptr += incrementSize;
 
-	// ¾Ö´Ï¸ÞÀÌ¼Ç Çà·Ä ÀÎµ¦½º
+	// ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½
 	vDesc.Buffer.NumElements = m_vAnimationMatrixIndex.size();
 	vDesc.Buffer.StructureByteStride = sizeof(UINT);
 	g_DxResource.device->CreateShaderResourceView(m_pAnimationMatrixIndexBuffer.Get(), &vDesc, handle);
 	handle.ptr += incrementSize;
 
-	// ¾Ö´Ï¸ÞÀÌ¼Ç Çà·Ä
+	// ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½
 	vDesc.Buffer.NumElements = nElements;
 	vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT4X4);
 	g_DxResource.device->CreateShaderResourceView(pMatrixBuffer.Get(), &vDesc, handle);
@@ -434,7 +435,7 @@ CSkinningObject::CSkinningObject()
 
 void CSkinningObject::CopyFromOtherObject(CSkinningObject* other)
 {
-	m_strObjectName = other->getName();	// º¹»ç·Î ¹Þ¾ÒÀ¸´Ï ÀÌ¸§ º¯°æ ÇÊ¿ä
+	m_strObjectName = other->getName();	// ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Þ¾ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½
 
 	for (std::unique_ptr<CGameObject>& Frame : other->getObjects())
 		m_vObjects.emplace_back(std::make_unique<CGameObject>(*Frame.get()));
@@ -475,7 +476,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 	m_vObjects.emplace_back(std::make_unique<CGameObject>());
 	m_vObjects[nCurrentObjectIndex]->InitializeObjectFromFile(inFile);
 
-	if (nParentIndex != -1) {		// ºÎ¸ð°¡ Á¸ÀçÇÑ´Ù´Â ¶æ
+	if (nParentIndex != -1) {		// ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´Ù´ï¿½ ï¿½ï¿½
 		m_vObjects[nCurrentObjectIndex]->SetParentIndex(nParentIndex);
 	}
 
@@ -492,18 +493,18 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 		if (strLabel == "<Mesh>:") {
 			if (!g_ShowBoundingBox) {
 				inFile.read((char*)&tempData, sizeof(int));
-				readLabel();	// ¸Þ½ÃÀÇ ÀÌ¸§ ÀÐ±â
+				readLabel();	// ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½Ð±ï¿½
 				auto p = std::find_if(m_vMeshes.begin(), m_vMeshes.end(), [&](std::shared_ptr<Mesh>& tempMesh) {
 					return tempMesh->getName() == strLabel;
 					});
-				if (p != m_vMeshes.end()) {	// ÀÌ¹Ì ¸®½ºÆ®¿¡ ÇØ´ç ÀÌ¸§À» °¡Áø ¸Þ½Ã°¡ Á¸Àç
-					// ÁÖÀÇÇÒ°Ô ÀÌ¸§ÀÌ ¾Æ¿¹ Áßº¹ÀÌ ¾ø´ÂÁö´Â ¾ÆÁ÷ È®ÀÎÀ» ¸øÇÔ
+				if (p != m_vMeshes.end()) {	// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Ø´ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½
+					// ï¿½ï¿½ï¿½ï¿½ï¿½Ò°ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½Æ¿ï¿½ ï¿½ßºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 					m_vObjects[nCurrentObjectIndex]->SetMeshIndex(std::distance(m_vMeshes.begin(), p));
-					// Áßº¹ ¸Þ½Ã°¡ ³ª¿Íµµ ÆÄÀÏ¿¡´Â ÀüºÎ ±â·ÏµÇ¾î ÀÖ´Ù.
-					Mesh* tempMesh = new Mesh(inFile, strLabel);	// ±× ±â·ÏÀ» »©ÁÖ´Â ÀÛ¾÷
+					// ï¿½ßºï¿½ ï¿½Þ½Ã°ï¿½ ï¿½ï¿½ï¿½Íµï¿½ ï¿½ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ÏµÇ¾ï¿½ ï¿½Ö´ï¿½.
+					Mesh* tempMesh = new Mesh(inFile, strLabel);	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½Û¾ï¿½
 					delete tempMesh;
 				}
-				else {	// ¾øÀ¸¸é »õ·Î »ý¼º°ú µ¿½Ã¿¡ ÀÎµ¦½º ÁöÁ¤
+				else {	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ã¿ï¿½ ï¿½Îµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 					m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
 					m_vMeshes.emplace_back(std::make_shared<Mesh>(inFile, strLabel));
 				}
@@ -511,24 +512,24 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			else {
 				if(bBoneBound){
 					inFile.read((char*)&tempData, sizeof(int));
-					readLabel();	// ¸Þ½ÃÀÇ ÀÌ¸§ ÀÐ±â
-					Mesh* tempMesh = new Mesh(inFile, strLabel);	// ±× ±â·ÏÀ» »©ÁÖ´Â ÀÛ¾÷
+					readLabel();	// ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½Ð±ï¿½
+					Mesh* tempMesh = new Mesh(inFile, strLabel);	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½Û¾ï¿½
 					delete tempMesh;
 				}
 				else {
 					inFile.read((char*)&tempData, sizeof(int));
-					readLabel();	// ¸Þ½ÃÀÇ ÀÌ¸§ ÀÐ±â
+					readLabel();	// ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½Ð±ï¿½
 					auto p = std::find_if(m_vMeshes.begin(), m_vMeshes.end(), [&](std::shared_ptr<Mesh>& tempMesh) {
 						return tempMesh->getName() == strLabel;
 						});
-					if (p != m_vMeshes.end()) {	// ÀÌ¹Ì ¸®½ºÆ®¿¡ ÇØ´ç ÀÌ¸§À» °¡Áø ¸Þ½Ã°¡ Á¸Àç
-						// ÁÖÀÇÇÒ°Ô ÀÌ¸§ÀÌ ¾Æ¿¹ Áßº¹ÀÌ ¾ø´ÂÁö´Â ¾ÆÁ÷ È®ÀÎÀ» ¸øÇÔ
+					if (p != m_vMeshes.end()) {	// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Ø´ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½
+						// ï¿½ï¿½ï¿½ï¿½ï¿½Ò°ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½Æ¿ï¿½ ï¿½ßºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 						m_vObjects[nCurrentObjectIndex]->SetMeshIndex(std::distance(m_vMeshes.begin(), p));
-						// Áßº¹ ¸Þ½Ã°¡ ³ª¿Íµµ ÆÄÀÏ¿¡´Â ÀüºÎ ±â·ÏµÇ¾î ÀÖ´Ù.
-						Mesh* tempMesh = new Mesh(inFile, strLabel);	// ±× ±â·ÏÀ» »©ÁÖ´Â ÀÛ¾÷
+						// ï¿½ßºï¿½ ï¿½Þ½Ã°ï¿½ ï¿½ï¿½ï¿½Íµï¿½ ï¿½ï¿½ï¿½Ï¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ÏµÇ¾ï¿½ ï¿½Ö´ï¿½.
+						Mesh* tempMesh = new Mesh(inFile, strLabel);	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½Û¾ï¿½
 						delete tempMesh;
 					}
-					else {	// ¾øÀ¸¸é »õ·Î »ý¼º°ú µ¿½Ã¿¡ ÀÎµ¦½º ÁöÁ¤
+					else {	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ã¿ï¿½ ï¿½Îµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 						m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
 						m_vMeshes.emplace_back(std::make_shared<Mesh>(inFile, strLabel));
 					}
@@ -545,7 +546,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ·£´ý ÄÃ·¯
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -553,7 +554,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			inFile.read((char*)&tempData, sizeof(int));
 			if (tempData > 0) {
 				for (int i = 0; i < tempData; ++i) {
-					readLabel();	// <Frame>: ºÎºÐÀ» »©ÁØ´Ù
+					readLabel();	// <Frame>: ï¿½Îºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ø´ï¿½
 					AddObjectFromFile(inFile, nCurrentObjectIndex);
 				}
 			}
@@ -571,7 +572,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ·£´ý ÄÃ·¯
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -598,7 +599,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 	int tempData{};
 	std::vector<Material> vMaterials;
 
-	std::string FilePathBack{ ".dds" };				// Æ÷¸Ëµµ ¹Ù²ð ¼ö ÀÖ´Ù.
+	std::string FilePathBack{ ".dds" };				// ï¿½ï¿½ï¿½Ëµï¿½ ï¿½Ù²ï¿½ ï¿½ï¿½ ï¿½Ö´ï¿½.
 
 	int nCurrentMaterial{};
 	while (1) {
@@ -642,7 +643,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 		}
 		else if (strLabel == "<AlbedoMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	// ÀÌ¹Ì Á¸ÀçÇÔ
+			if (strLabel[0] == '@') {	// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -650,10 +651,10 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				vMaterials[nCurrentMaterial].m_bHasAlbedoMap = true;
 				vMaterials[nCurrentMaterial].m_nAlbedoMapIndex = std::distance(m_vTextures.begin(), p);
 			}
-			else if (strLabel == "null") {	// nullÀÌ¸é »ç¿ë ¾ÈÇÑ´Ü ¶æ
+			else if (strLabel == "null") {	// nullï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½ ï¿½ï¿½
 				continue;
 			}
-			else {	// ¾øÀ¸´Ï »õ·Î ¸¸µé¾î¶ó
+			else {	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				vMaterials[nCurrentMaterial].m_bHasAlbedoMap = true;
 				vMaterials[nCurrentMaterial].m_nAlbedoMapIndex = m_vTextures.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -665,20 +666,20 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 		}
 		else if (strLabel == "<SpecularMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	// ÀÌ¹Ì Á¸ÀçÇÔ
+			if (strLabel[0] == '@') {	// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
 					});
 				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;
-				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = std::distance(m_vTextures.begin(), p);	// ¿©±â
+				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = std::distance(m_vTextures.begin(), p);	// ï¿½ï¿½ï¿½ï¿½
 			}
-			else if (strLabel == "null") {	// nullÀÌ¸é »ç¿ë ¾ÈÇÑ´Ü ¶æ
+			else if (strLabel == "null") {	// nullï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½ ï¿½ï¿½
 				continue;
 			}
-			else {	// ¾øÀ¸´Ï »õ·Î ¸¸µé¾î¶ó
-				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;	// ¿©±â
-				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = m_vTextures.size();	// ¿©±â
+			else {	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;	// ï¿½ï¿½ï¿½ï¿½
+				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = m_vTextures.size();	// ï¿½ï¿½ï¿½ï¿½
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
@@ -688,7 +689,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 		}
 		else if (strLabel == "<MetallicMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	// ÀÌ¹Ì Á¸ÀçÇÔ
+			if (strLabel[0] == '@') {	// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -696,10 +697,10 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				vMaterials[nCurrentMaterial].m_bHasMetallicMap = true;
 				vMaterials[nCurrentMaterial].m_nMetallicMapIndex = std::distance(m_vTextures.begin(), p);
 			}
-			else if (strLabel == "null") {	// nullÀÌ¸é »ç¿ë ¾ÈÇÑ´Ü ¶æ
+			else if (strLabel == "null") {	// nullï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½ ï¿½ï¿½
 				continue;
 			}
-			else {	// ¾øÀ¸´Ï »õ·Î ¸¸µé¾î¶ó
+			else {	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				vMaterials[nCurrentMaterial].m_bHasMetallicMap = true;
 				vMaterials[nCurrentMaterial].m_nMetallicMapIndex = m_vTextures.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -711,7 +712,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 		}
 		else if (strLabel == "<NormalMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	// ÀÌ¹Ì Á¸ÀçÇÔ
+			if (strLabel[0] == '@') {	// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -719,10 +720,10 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				vMaterials[nCurrentMaterial].m_bHasNormalMap = true;
 				vMaterials[nCurrentMaterial].m_nNormalMapIndex = std::distance(m_vTextures.begin(), p);
 			}
-			else if (strLabel == "null") {	// nullÀÌ¸é »ç¿ë ¾ÈÇÑ´Ü ¶æ
+			else if (strLabel == "null") {	// nullï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½ ï¿½ï¿½
 				continue;
 			}
-			else {	// ¾øÀ¸´Ï »õ·Î ¸¸µé¾î¶ó
+			else {	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				vMaterials[nCurrentMaterial].m_bHasNormalMap = true;
 				vMaterials[nCurrentMaterial].m_nNormalMapIndex = m_vTextures.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -734,7 +735,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 		}
 		else if (strLabel == "<EmissionMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	// ÀÌ¹Ì Á¸ÀçÇÔ
+			if (strLabel[0] == '@') {	// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -742,10 +743,10 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				vMaterials[nCurrentMaterial].m_bHasEmissionMap = true;
 				vMaterials[nCurrentMaterial].m_nEmissionMapIndex = std::distance(m_vTextures.begin(), p);
 			}
-			else if (strLabel == "null") {	// nullÀÌ¸é »ç¿ë ¾ÈÇÑ´Ü ¶æ
+			else if (strLabel == "null") {	// nullï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½ ï¿½ï¿½
 				continue;
 			}
-			else {	// ¾øÀ¸´Ï »õ·Î ¸¸µé¾î¶ó
+			else {	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				vMaterials[nCurrentMaterial].m_bHasEmissionMap = true;
 				vMaterials[nCurrentMaterial].m_nEmissionMapIndex = m_vTextures.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -757,7 +758,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 		}
 		else if (strLabel == "<DetailAlbedoMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	// ÀÌ¹Ì Á¸ÀçÇÔ
+			if (strLabel[0] == '@') {	// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -765,10 +766,10 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				vMaterials[nCurrentMaterial].m_bHasDetailAlbedoMap = true;
 				vMaterials[nCurrentMaterial].m_nDetailAlbedoMapIndex = std::distance(m_vTextures.begin(), p);
 			}
-			else if (strLabel == "null") {	// nullÀÌ¸é »ç¿ë ¾ÈÇÑ´Ü ¶æ
+			else if (strLabel == "null") {	// nullï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½ ï¿½ï¿½
 				continue;
 			}
-			else {	// ¾øÀ¸´Ï »õ·Î ¸¸µé¾î¶ó
+			else {	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				vMaterials[nCurrentMaterial].m_bHasDetailAlbedoMap = true;
 				vMaterials[nCurrentMaterial].m_nDetailAlbedoMapIndex = m_vTextures.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -780,7 +781,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 		}
 		else if (strLabel == "<DetailNormalMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	// ÀÌ¹Ì Á¸ÀçÇÔ
+			if (strLabel[0] == '@') {	// ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextures.begin(), m_vTextures.end(), [&](std::shared_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -788,10 +789,10 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				vMaterials[nCurrentMaterial].m_bHasDetailNormalMap = true;
 				vMaterials[nCurrentMaterial].m_nDetailNormalMapIndex = std::distance(m_vTextures.begin(), p);
 			}
-			else if (strLabel == "null") {	// ÀÖ´õ¶ó°í nullÀÌ¸é »ç¿ë ¾ÈÇÑ´Ü ¶æ
+			else if (strLabel == "null") {	// ï¿½Ö´ï¿½ï¿½ï¿½ï¿½ nullï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ñ´ï¿½ ï¿½ï¿½
 				continue;
 			}
-			else {	// ¾øÀ¸´Ï »õ·Î ¸¸µé¾î¶ó
+			else {	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				vMaterials[nCurrentMaterial].m_bHasDetailNormalMap = true;
 				vMaterials[nCurrentMaterial].m_nDetailNormalMapIndex = m_vTextures.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -804,7 +805,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 		else if (strLabel == "</Materials>")
 			break;
 	}
-	// °ÔÀÓ ¿ÀºêÁ§Æ®¿¡ ¸¶Å×¸®¾ó ÀúÀå
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½×¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	for (int i = 0; i < vMaterials.size(); ++i) {
 		m_vObjects[nCurrentIndex]->getMaterials().emplace_back(vMaterials[i]);
 	}
@@ -889,7 +890,7 @@ void CSkinningObject::SetPosition(XMFLOAT3 pos)
 	m_xmf3Position = pos;
 	UpdateWorldMatrix();
 }
-// »ç¿ë ÁÖÀÇ
+// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 void CSkinningObject::Rotate(XMFLOAT3 rot)
 {
 	XMMATRIX mtx;
@@ -908,6 +909,40 @@ void CSkinningObject::Rotate(XMFLOAT3 rot)
 		XMStoreFloat3(&m_xmf3Right, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Right), mtx));
 		XMStoreFloat3(&m_xmf3Up, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Up), mtx));
 	}
+	UpdateWorldMatrix();
+}
+
+void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
+{
+	XMFLOAT4X4 centerWorldMatrix = frame.getWorldMatrix(); // m_vFrames[0]ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	XMMATRIX centerMatrix = XMLoadFloat4x4(&centerWorldMatrix); // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½È¯
+	
+	XMMATRIX centerInverse = XMMatrixInverse(nullptr, centerMatrix); // ï¿½ß½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+
+	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position); //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ XMVECTORï¿½ï¿½ ï¿½Îµï¿½
+	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
+
+	XMFLOAT3 centerUp = frame.getUp(); // ï¿½ß½ï¿½ï¿½ï¿½ï¿½ï¿½ Up ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp); //Upï¿½ï¿½ï¿½ï¿½ XMVECTORï¿½ï¿½ ï¿½ï¿½È¯
+	XMFLOAT3 tempUp; // rotationAxisï¿½ï¿½ XMFLOAT3 Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	XMStoreFloat3(&tempUp, rotationAxis);
+	XMMATRIX orbitMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(rot.y)); // Yï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+
+	XMVECTOR newLocalPos = XMVector3Transform(localPos, orbitMatrix); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ï¿½è¿¡ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ È¸ï¿½ï¿½
+
+	XMVECTOR newPos = XMVector3Transform(newLocalPos, centerMatrix); // È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ç¥ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
+	XMStoreFloat3(&m_xmf3Position, newPos);
+
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È¿ï¿½ï¿½
+	XMVECTOR oldLook = XMLoadFloat3(&m_xmf3Look);
+	XMVECTOR oldRight = XMLoadFloat3(&m_xmf3Right);
+	XMVECTOR newLook = XMVector3TransformNormal(oldLook, orbitMatrix);
+	XMVECTOR newRight = XMVector3TransformNormal(oldRight, orbitMatrix);
+	XMStoreFloat3(&m_xmf3Look, XMVector3Normalize(newLook));
+	XMStoreFloat3(&m_xmf3Right, XMVector3Normalize(newRight));
+	m_xmf3Up = tempUp;
+
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
 	UpdateWorldMatrix();
 }
 
@@ -961,7 +996,7 @@ void CRayTracingSkinningObject::ReBuildBLAS()
 			for (int i = 0; i < nSubMesh; ++i) {
 				D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 				desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-				desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// ÀÓ½Ã
+				desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// ï¿½Ó½ï¿½
 				desc.Triangles.Transform3x4 = 0;
 				desc.Triangles.VertexBuffer = {
 					.StartAddress = (g_ShowBoundingBox) ? m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress() : m_vOutputVertexBuffer[ref]->GetGPUVirtualAddress(),
@@ -979,7 +1014,7 @@ void CRayTracingSkinningObject::ReBuildBLAS()
 		else {
 			D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 			desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// ÀÓ½Ã
+			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// ï¿½Ó½ï¿½
 			desc.Triangles.Transform3x4 = 0;
 			desc.Triangles.VertexBuffer = {
 				.StartAddress = (g_ShowBoundingBox) ? m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress() : m_vOutputVertexBuffer[ref]->GetGPUVirtualAddress(),
@@ -1039,7 +1074,7 @@ void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::
 		for (int i = 0; i < nSubMesh; ++i) {
 			D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 			desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// ÀÓ½Ã
+			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// ï¿½Ó½ï¿½
 			desc.Triangles.Transform3x4 = 0;
 			desc.Triangles.VertexBuffer = {
 				.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
@@ -1057,7 +1092,7 @@ void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::
 	else {
 		D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 		desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-		desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// ÀÓ½Ã
+		desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;		// ï¿½Ó½ï¿½
 		desc.Triangles.Transform3x4 = 0;
 		desc.Triangles.VertexBuffer = {
 			.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
@@ -1130,7 +1165,7 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 		ComPtr<ID3D12DescriptorHeap> uav{};
 		ComPtr<ID3D12DescriptorHeap> insert{};
 		if (mesh->getbSkinning()) {
-			// »ó¼ö ¹öÆÛ
+			// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			desc.Width = Align(sizeof(XMINT3), 256);
 			desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 			g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(constResource.GetAddressOf()));
@@ -1151,7 +1186,7 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 			D3D12_CPU_DESCRIPTOR_HANDLE insertHandle = insert->GetCPUDescriptorHandleForHeapStart();
 			UINT incrementSize = g_DxResource.device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-			// »ó¼ö¹öÆÛ¸¦ ¸ÕÀú insertÀÇ ¾Õ¿¡ ÁöÁ¤
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û¸ï¿½ ï¿½ï¿½ï¿½ï¿½ insertï¿½ï¿½ ï¿½Õ¿ï¿½ ï¿½ï¿½ï¿½ï¿½
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cDesc{};
 			cDesc.BufferLocation = constResource->GetGPUVirtualAddress(); cDesc.SizeInBytes = Align(sizeof(XMINT3), 256);
 			g_DxResource.device->CreateConstantBufferView(&cDesc, insertHandle);
