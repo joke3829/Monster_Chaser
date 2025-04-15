@@ -228,28 +228,7 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 
 void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	switch (nMessage) {
-	case WM_LBUTTONDOWN:
-		m_bHold = true;
-		GetCursorPos(&oldCursor);
-		break;
-	case WM_LBUTTONUP:
-		m_bHold = false;
-		break;
-	case WM_MOUSEMOVE:
-	{
-		POINT cursorpos;
-		if (m_bHold) {
-			GetCursorPos(&cursorpos);
-			m_pCamera->Rotate(cursorpos.x - oldCursor.x, 0); //cursorpos.y - oldCursor.y
-			SetCursorPos(oldCursor.x, oldCursor.y);
-		}
-		break;
-	}
-	default:
-		m_pScene->MouseProcessing(hWnd, nMessage, wParam, lParam);
-		break;
-	}
+	m_pScene->MouseProcessing(hWnd, nMessage, wParam, lParam);
 }
 
 void CGameFramework::ProcessInput(float fElapsedTime)
