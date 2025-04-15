@@ -15,8 +15,14 @@
 #include <tchar.h>
 
 // 필요한 헤더 및 라이브러리를 여기에 추가한다 =================================================
+#include <unordered_map>
+#include <WinSock2.h>
+#include <thread>
+
+
 
 #include <iostream>
+#include <WS2tcpip.h>
 #include <vector>
 #include <algorithm>
 #include <string>
@@ -37,6 +43,7 @@
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "Winmm.lib")
+#pragma comment(lib, "ws2_32.lib")
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;

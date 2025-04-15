@@ -35,7 +35,7 @@ public:
     bool is_ready = false;
     EXP_OVER* recv_over;
     unsigned char remained = 0;
-    short x = 0, y = 0;
+   // short x = 0, y = 0;
     std::string name;
 
     SESSION(int i, SOCKET s);
@@ -54,6 +54,6 @@ public:
 
     HANDLE iocp;
     std::unordered_map<int, SESSION*> users;
-    int next_client_id = 1;
+    int next_client_id = 0;
     SOCKET listen_socket;
 };

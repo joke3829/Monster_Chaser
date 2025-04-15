@@ -5,6 +5,7 @@
 #include "Client.h"
 #include "GameFramework.h"
 
+
 #define MAX_LOADSTRING 100
 
 // 전역 변수:
@@ -18,7 +19,28 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+SOCKET gSocket;
 
+void ConnectToServer() {
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+
+    gSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
+
+    sockaddr_in serverAddr{};
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(3500);
+    inet_pton(AF_INET, "127.0.0.1", &serverAddr.sin_addr);
+
+    if (WSAConnect(gSocket, (sockaddr*)&serverAddr, sizeof(serverAddr), NULL, NULL, NULL, NULL) == SOCKET_ERROR) {
+        MessageBoxA(nullptr, "서버 연결 실패", "오류", MB_ICONERROR);
+        closesocket(gSocket);
+        WSACleanup();
+    }
+    else {
+        OutputDebugStringA("서버 연결 성공\n");
+    }
+}
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -53,6 +75,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }*/
+
 
     for (MSG msg;;) {
         while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -124,6 +147,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    }
    if (!gGameFramework.OnInit(hWnd, hInstance))
        exit(0);
+   ConnectToServer();
+ 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
@@ -180,3 +205,4 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
+

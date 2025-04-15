@@ -24,8 +24,8 @@ SESSION::~SESSION() {
 
 void SESSION::do_recv() {
     DWORD flags = 0;
-    recv_over->wsabuf[0].buf = recv_over->buffer;
-    recv_over->wsabuf[0].len = BUF_SIZE;
+    recv_over->wsabuf[0].buf = recv_over->buffer + remained;
+    recv_over->wsabuf[0].len = BUF_SIZE - remained;
     WSARecv(socket, recv_over->wsabuf, 1, nullptr, &flags, &recv_over->over, nullptr);
 }
 
@@ -47,12 +47,35 @@ void SESSION::process_packet(char* p) {
         Room& room = Network::rooms[room_num];
         room.AddPlayer(this);
         room.BroadcastRoomInfo();
+        
+        std::cout << "[클라이언트 " << id << "]이 " << (int)room_num << "번 방에 입장했습니다." << std::endl;
         break;
     }
     case C2S_P_READY: {
         is_ready = true;
         Room& room = Network::rooms[room_num];
         room.BroadcastReady(id);
+        std::cout << "[클라이언트 " << id << "]이 " << (int)room_num << "번 방에서 준비완료했습니다." << std::endl;
+        break;
+    }
+    case C2S_P_READY_Cancel: {
+        is_ready = false;
+        Room& room = Network::rooms[room_num];
+        room.BroadcastReady(id);  // Existing broadcasts can use
+        std::cout << "[클라이언트 " << id << "]이 준비를 취소했습니다." << std::endl;
+        break;
+    }
+
+    case C2S_P_ROOM_REFRESH: {
+        // Every rooms state send
+        for (int i = 0; i < MAX_ROOM; ++i) {
+            s2c_packet_room_info pkt;
+            pkt.size = sizeof(pkt);
+            pkt.type = S2C_P_ROOM_INFO;
+            pkt.room_number = static_cast<char>(i);
+            pkt.player_count = static_cast<char>(Network::rooms[i].GetPlayerCount());
+            do_send(&pkt);
+        }
         break;
     }
     }
@@ -62,7 +85,7 @@ void Network::Init() {
     WSAData wsa;
     WSAStartup(MAKEWORD(2, 2), &wsa);
 
-    listen_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, nullptr, 0, WSA_FLAG_OVERLAPPED);
+    listen_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
     SOCKADDR_IN addr{};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(SERVER_PORT);
@@ -71,7 +94,7 @@ void Network::Init() {
     listen(listen_socket, SOMAXCONN);
 
     iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-    CreateIoCompletionPort((HANDLE)listen_socket, iocp, 0, 0);
+    CreateIoCompletionPort(reinterpret_cast<HANDLE>(listen_socket), iocp, 0, 0);
 
     for (int i = 0; i < MAX_ROOM; ++i)
         rooms.emplace_back(i);

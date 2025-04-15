@@ -12,9 +12,7 @@ public:
     bool AddPlayer(SESSION* player);
     void BroadcastRoomInfo();
     void BroadcastReady(int player_id);
-    int GetPlayerCount() const {
-        return static_cast<int>(players.size());
-    }
+    int GetPlayerCount() const;
 private:
     int room_number;
     std::vector<SESSION*> players;

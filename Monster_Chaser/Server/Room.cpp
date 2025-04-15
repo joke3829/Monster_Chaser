@@ -31,6 +31,12 @@ void Room::BroadcastReady(int player_id) {
     pkt.room_number = static_cast<char>(room_number);
 
     for (auto* player : players) {
+        if (player->id == player_id) {
+            pkt.is_ready = player->is_ready ? 1 : 0;
+            break;
+        }
+    }
+    for (auto* player : players) {
         player->do_send(&pkt);
     }
 }
