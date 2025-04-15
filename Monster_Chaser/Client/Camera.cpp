@@ -63,7 +63,6 @@ void CCamera::Move(int arrow, float fElapsedTime)
 	}
 	else   // ��
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -20 * fElapsedTime));
-	}
 }
 
 void CCamera::UpdateViewMatrix()

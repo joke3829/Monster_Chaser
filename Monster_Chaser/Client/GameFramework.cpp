@@ -179,7 +179,7 @@ void CGameFramework::InitOutputBuffer()
 
 void CGameFramework::InitScene()
 {
-	m_pScene = std::make_unique<CRaytracingMaterialTestScene>();
+	m_pScene = std::make_unique<CRaytracingTestScene>();
 	m_pScene->SetCamera(m_pCamera);
 	m_pScene->SetUp();
 }
