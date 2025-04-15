@@ -23,6 +23,31 @@ float CHeightMapImage::GetHeight(int x, int z)
 	return m_pHeightMapPixels[x + (z * m_nWidth)] * m_xmf3Scale.y;
 }
 
+XMFLOAT3 CHeightMapImage::GetNormal(int x, int z)
+{
+	int x0 = max(x - 1, 0);
+	int x1 = min(x + 1, m_nWidth - 1);
+	int z0 = max(z - 1, 0);
+	int z1 = min(z + 1, m_nLength - 1);
+
+	float hl = GetHeight(x0, z);
+	float hr = GetHeight(x1, z);
+	float hd = GetHeight(x, z0);
+	float hu = GetHeight(x, z1);
+
+	XMFLOAT3 tangentX = XMFLOAT3((x1 - x0) * m_xmf3Scale.x, hr - hl, 0.0f);
+	XMFLOAT3 tangentZ = XMFLOAT3(0.0f, hu - hd, (z1 - z0) * m_xmf3Scale.z);
+
+	XMVECTOR vx = XMLoadFloat3(&tangentX);
+	XMVECTOR vz = XMLoadFloat3(&tangentZ);
+	XMVECTOR normal = XMVector3Cross(vz, vx);
+	normal = XMVector3Normalize(normal);
+
+	XMFLOAT3 xmf3Normal;
+	XMStoreFloat3(&xmf3Normal, normal);
+	return xmf3Normal;
+}
+
 Mesh::Mesh(std::ifstream& inFile, std::string strMeshName)
 {
 	std::string strLabel{};
@@ -180,6 +205,138 @@ Mesh::Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName)
 	m_vIndices.emplace_back(36);
 	m_vSubMeshes.emplace_back(tempBuffer);
 }
+
+Mesh::Mesh(XMFLOAT3& center, float radius, std::string meshName)
+{
+	m_MeshName = meshName;
+
+	const UINT sliceCount = 80;
+	const UINT stackCount = 80;
+
+	std::vector<XMFLOAT3> positions;
+	std::vector<XMFLOAT3> normals;
+	std::vector<UINT> indices;
+
+	// Top vertex
+	positions.emplace_back(center.x, center.y + radius, center.z);
+	normals.emplace_back(0.0f, 1.0f, 0.0f);
+
+	// Generate vertices
+	for (UINT stack = 1; stack < stackCount; ++stack)
+	{
+		float phi = XM_PI * stack / stackCount;
+		float y = radius * cosf(phi);
+		float r = radius * sinf(phi);
+
+		for (UINT slice = 0; slice <= sliceCount; ++slice)
+		{
+			float theta = 2.0f * XM_PI * slice / sliceCount;
+			float x = r * cosf(theta);
+			float z = r * sinf(theta);
+
+			positions.emplace_back(center.x + x, center.y + y, center.z + z);
+			normals.emplace_back(x / radius, y / radius, z / radius);
+		}
+	}
+
+	// Bottom vertex
+	positions.emplace_back(center.x, center.y - radius, center.z);
+	normals.emplace_back(0.0f, -1.0f, 0.0f);
+
+	// Top cap indices
+	for (UINT i = 1; i <= sliceCount; ++i)
+	{
+		indices.push_back(0);
+		indices.push_back(i + 1);
+		indices.push_back(i);
+	}
+
+	// Middle quads (converted to two triangles)
+	UINT baseIndex = 1;
+	UINT ringVertexCount = sliceCount + 1;
+	for (UINT stack = 0; stack < stackCount - 2; ++stack)
+	{
+		for (UINT slice = 0; slice < sliceCount; ++slice)
+		{
+			UINT a = baseIndex + stack * ringVertexCount + slice;
+			UINT b = baseIndex + (stack + 1) * ringVertexCount + slice;
+			UINT c = baseIndex + (stack + 1) * ringVertexCount + slice + 1;
+			UINT d = baseIndex + stack * ringVertexCount + slice + 1;
+
+			// Triangle 1
+			indices.push_back(a);
+			indices.push_back(c);
+			indices.push_back(b);
+
+			// Triangle 2
+			indices.push_back(a);
+			indices.push_back(d);
+			indices.push_back(c);
+		}
+	}
+
+	// Bottom cap indices
+	UINT southPoleIndex = (UINT)positions.size() - 1;
+	baseIndex = southPoleIndex - ringVertexCount;
+	for (UINT i = 0; i < sliceCount; ++i)
+	{
+		indices.push_back(southPoleIndex);
+		indices.push_back(baseIndex + i);
+		indices.push_back(baseIndex + i + 1);
+	}
+
+	m_bHasVertex = true;
+	m_nVertexCount = static_cast<UINT>(positions.size());
+
+	// Create Vertex Buffer
+	{
+		D3D12_RESOURCE_DESC desc = BASIC_BUFFER_DESC;
+		desc.Width = sizeof(XMFLOAT3) * m_nVertexCount;
+		g_DxResource.device->CreateCommittedResource(
+			&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr, IID_PPV_ARGS(m_pd3dVertexBuffer.GetAddressOf()));
+
+		void* tempData{};
+		m_pd3dVertexBuffer->Map(0, nullptr, &tempData);
+		memcpy(tempData, positions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
+		m_pd3dVertexBuffer->Unmap(0, nullptr);
+	}
+
+	m_bHasNormals = true;
+	m_nNormalsCount = static_cast<UINT>(normals.size());
+	// Create Normal Buffer
+	{
+		D3D12_RESOURCE_DESC desc = BASIC_BUFFER_DESC;
+		desc.Width = sizeof(XMFLOAT3) * m_nVertexCount;
+		g_DxResource.device->CreateCommittedResource(
+			&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr, IID_PPV_ARGS(m_pd3dNormalsBuffer.GetAddressOf()));
+
+		void* tempData{};
+		m_pd3dNormalsBuffer->Map(0, nullptr, &tempData);
+		memcpy(tempData, normals.data(), sizeof(XMFLOAT3) * m_nVertexCount);
+		m_pd3dNormalsBuffer->Unmap(0, nullptr);
+	}
+
+	// Create Index Buffer
+	m_bHasSubMeshes = true;
+	ComPtr<ID3D12Resource> tempBuffer{};
+	D3D12_RESOURCE_DESC desc = BASIC_BUFFER_DESC;
+	desc.Width = sizeof(UINT) * (UINT)indices.size();
+	g_DxResource.device->CreateCommittedResource(
+		&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr, IID_PPV_ARGS(tempBuffer.GetAddressOf()));
+
+	void* tempData{};
+	tempBuffer->Map(0, nullptr, &tempData);
+	memcpy(tempData, indices.data(), sizeof(UINT) * indices.size());
+	tempBuffer->Unmap(0, nullptr);
+
+	++m_nSubMeshesCount;
+	m_vIndices.emplace_back((UINT)indices.size());
+	m_vSubMeshes.emplace_back(tempBuffer);
+}
+
 
 //void Mesh::GetMeshNameFromFile(std::ifstream& inFile)
 //{

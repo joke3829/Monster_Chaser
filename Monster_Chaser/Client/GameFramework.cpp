@@ -207,6 +207,9 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 	switch (nMessage) {
 	case WM_KEYDOWN:
 		switch (wParam) {
+		case VK_ESCAPE:
+			PostQuitMessage(0);
+			break;
 		case 'p':	// 임시로 설정
 		case 'P':
 			if (m_bRayTracingSupport) {
@@ -225,24 +228,28 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 
 void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	switch (nMessage) {
-	case WM_LBUTTONDOWN:
-		m_bHold = true;
-		GetCursorPos(&oldCursor);
-		break;
-	case WM_LBUTTONUP:
-		m_bHold = false;
-		break;
-	case WM_MOUSEMOVE:
-	{
-		POINT cursorpos;
-		if (m_bHold) {
-			GetCursorPos(&cursorpos);
-			m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
-			SetCursorPos(oldCursor.x, oldCursor.y);
+	if(m_pCamera->getThirdPersonState())
+		m_pScene->MouseProcessing(hWnd, nMessage, wParam, lParam);
+	else {
+		switch (nMessage) {
+		case WM_LBUTTONDOWN:
+			m_bHold = true;
+			GetCursorPos(&oldCursor);
+			break;
+		case WM_LBUTTONUP:
+			m_bHold = false;
+			break;
+		case WM_MOUSEMOVE:
+		{
+			POINT cursorpos;
+			if (m_bHold) {
+				GetCursorPos(&cursorpos);
+				m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
+				SetCursorPos(oldCursor.x, oldCursor.y);
+			}
+			break;
 		}
-		break;
-	}
+		}
 	}
 }
 

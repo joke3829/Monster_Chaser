@@ -61,11 +61,18 @@ enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...
 // 바운딩 박스를 렌더링 여부-> 0 = false , 1 = true
 constexpr short g_ShowBoundingBox = 0;
 
-#define DEFINED_GAME_WINDOW_WIDTH 1920	
-#define DEFINED_GAME_WINDOW_HEIGHT 1080
-#define DEFINED_UAV_BUFFER_WIDTH 960
-#define DEFINED_UAV_BUFFER_HEIGHT 540
+constexpr unsigned short DEFINED_GAME_WINDOW_WIDTH = 1920;
+constexpr unsigned short DEFINED_GAME_WINDOW_HEIGHT = 1080;
+constexpr unsigned short DEFINED_UAV_BUFFER_WIDTH = 960;
+constexpr unsigned short DEFINED_UAV_BUFFER_HEIGHT = 540;
 // 위 네개 정의는 바뀔 수 있다.
+
+// 조명 관련 정의
+constexpr int MAX_LIGHTS = 64;
+
+constexpr unsigned int DIRECTIONAL_LIGHT = 0;
+constexpr unsigned int POINT_LIGHT = 1;
+constexpr unsigned int SPOT_LIGHT = 2;
 
 // 자주 쓰이는 설정들을 미리 지정
 constexpr DXGI_SAMPLE_DESC NO_AA = { .Count = 1, .Quality = 0 };	// no anti_aliasing

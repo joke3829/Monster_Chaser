@@ -30,6 +30,39 @@ RWStructuredBuffer<float3> g_OutputNormalBuffer : register(u1, space0);
 RWStructuredBuffer<float3> g_OutputTangentBuffer : register(u2, space0);
 RWStructuredBuffer<float3> g_OutputBiTangentBuffer : register(u3, space0);
 
+float3x3 InverseFloat3x3(float3x3 m)
+{
+    float a00 = m[0][0], a01 = m[0][1], a02 = m[0][2];
+    float a10 = m[1][0], a11 = m[1][1], a12 = m[1][2];
+    float a20 = m[2][0], a21 = m[2][1], a22 = m[2][2];
+
+    float b01 = a22 * a11 - a12 * a21;
+    float b11 = -a22 * a10 + a12 * a20;
+    float b21 = a21 * a10 - a11 * a20;
+
+    float det = a00 * b01 + a01 * b11 + a02 * b21;
+
+    // 너무 작은 행렬이면 그냥 단위행렬 반환
+    if (abs(det) < 1e-5)
+        return float3x3(1, 0, 0, 0, 1, 0, 0, 0, 1);
+
+    float invDet = 1.0 / det;
+
+    float3x3 inv;
+    inv[0][0] = b01 * invDet;
+    inv[0][1] = (-a22 * a01 + a02 * a21) * invDet;
+    inv[0][2] = (a12 * a01 - a02 * a11) * invDet;
+    inv[1][0] = b11 * invDet;
+    inv[1][1] = (a22 * a00 - a02 * a20) * invDet;
+    inv[1][2] = (-a12 * a00 + a02 * a10) * invDet;
+    inv[2][0] = b21 * invDet;
+    inv[2][1] = (-a21 * a00 + a01 * a20) * invDet;
+    inv[2][2] = (a11 * a00 - a01 * a10) * invDet;
+
+    return inv;
+}
+
+
 [numthreads(32, 1, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
@@ -45,10 +78,12 @@ void main( uint3 DTid : SV_DispatchThreadID )
                 weightMatrix += g_BoneWeight[(DTid.x * BonePerVertex) + i] * mul(g_OffsetMatrix[boneIndex],
             g_AnimationMatrix[g_AnimationMatrixIndex[boneIndex]]);
             }
+            float3x3 normalMatrix = transpose(InverseFloat3x3((float3x3) weightMatrix));
+
             g_OutputVertexBuffer[DTid.x] = mul(float4(g_InsertVertexBuffer[DTid.x], 1.0), weightMatrix).xyz;
-            g_OutputNormalBuffer[DTid.x] = mul(g_InsertNormalBuffer[DTid.x], (float3x3)weightMatrix);
-            g_OutputTangentBuffer[DTid.x] = mul(g_InsertTangentBuffer[DTid.x], (float3x3) weightMatrix);
-            g_OutputBiTangentBuffer[DTid.x] = mul(g_InsertBiTangentBuffer[DTid.x], (float3x3) weightMatrix);
+            g_OutputNormalBuffer[DTid.x] = mul(g_InsertNormalBuffer[DTid.x], normalMatrix);
+            g_OutputTangentBuffer[DTid.x] = mul(g_InsertTangentBuffer[DTid.x], normalMatrix);
+            g_OutputBiTangentBuffer[DTid.x] = mul(g_InsertBiTangentBuffer[DTid.x], normalMatrix);
         }
         else if (0 != g_BufferInfo.bHasNormal)  // exist NormaBuffer
         {
@@ -58,8 +93,11 @@ void main( uint3 DTid : SV_DispatchThreadID )
                 weightMatrix += g_BoneWeight[(DTid.x * BonePerVertex) + i] * mul(g_OffsetMatrix[boneIndex],
             g_AnimationMatrix[g_AnimationMatrixIndex[boneIndex]]);
             }
+            float3x3 normalMatrix = transpose(InverseFloat3x3((float3x3) weightMatrix));
+
             g_OutputVertexBuffer[DTid.x] = mul(float4(g_InsertVertexBuffer[DTid.x], 1.0), weightMatrix).xyz;
-            g_OutputNormalBuffer[DTid.x] = mul(g_InsertNormalBuffer[DTid.x], (float3x3) weightMatrix);
+            //g_OutputNormalBuffer[DTid.x] = mul(g_InsertNormalBuffer[DTid.x], (float3x3)weightMatrix);
+            g_OutputNormalBuffer[DTid.x] = mul(g_InsertNormalBuffer[DTid.x], normalMatrix);
         }
         else                                    // only Vertex
         {

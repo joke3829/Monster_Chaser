@@ -63,7 +63,7 @@ void CAccelerationStructureManager::UpdateScene()
 		.Inputs = {
 			.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL,
 			.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE,
-			.NumDescs = m_nValidObject,						// °´Ã¼ °³¼ö?
+			.NumDescs = m_nValidObject,						// ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½?
 			.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY,
 			.InstanceDescs = m_InstanceBuffer->GetGPUVirtualAddress()
 		},
@@ -88,7 +88,7 @@ void CAccelerationStructureManager::UpdateScene()
 	g_DxResource.cmdList->ResourceBarrier(1, &barrier);
 }
 
-// BLASList¿¡ BLAS¸¦ Ãß°¡ÇÑ´Ù.
+// BLASListï¿½ï¿½ BLASï¿½ï¿½ ï¿½ß°ï¿½ï¿½Ñ´ï¿½.
 //void CAccelerationStructureManager::AddBLAS(ID3D12Resource* vertexBuffer, UINT vertexcount, UINT64 vertexStride, DXGI_FORMAT vertexFormat,
 //	ID3D12Resource* indexBuffer, UINT indices, DXGI_FORMAT indexFormat)
 //{
@@ -119,7 +119,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 		for (int i = 0; i < nSubMesh; ++i) {
 			D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 			desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;		// ÀÓ½Ã
+			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;		// ï¿½Ó½ï¿½
 			desc.Triangles.Transform3x4 = 0;
 			desc.Triangles.VertexBuffer = {
 				.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
@@ -137,7 +137,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 	else {
 		D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 		desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-		desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;		// ÀÓ½Ã
+		desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;		// ï¿½Ó½ï¿½
 		desc.Triangles.Transform3x4 = 0;
 		desc.Triangles.VertexBuffer = {
 			.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
@@ -162,8 +162,8 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 	MakeAccelerationStructure(inputs, resource);
 }
 
-// BLAS¸¦ ¸¸µç´Ù, ÇöÀç´Â BLAS ÇÏ³ª´ç ÇÏ³ªÀÇ SubObject¸¦ ´ã´Â´Ù.
-// ÃßÈÄ ¸ðµ¨ÀÇ Æ÷¸äÀ» º¸°í ¼öÁ¤ ¿¹Á¤
+// BLASï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ BLAS ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ SubObjectï¿½ï¿½ ï¿½ï¿½Â´ï¿½.
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 //void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& asResource,
 //	ID3D12Resource* vertexBuffer, UINT vertexCount, UINT64 vertexStride, DXGI_FORMAT vertexFormat,
 //	ID3D12Resource* indexBuffer, UINT indices, DXGI_FORMAT indexFormat, bool bOpaque)
@@ -183,7 +183,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 //
 //	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
 //	inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-//	inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;	// ¼öÁ¤ ºÒ°¡´É
+//	inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ò°ï¿½ï¿½ï¿½
 //	inputs.NumDescs = 1;
 //	inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 //	inputs.pGeometryDescs = &geometryDesc;
@@ -218,7 +218,7 @@ void CAccelerationStructureManager::InitTLAS()
 	m_InstanceBuffer->Map(0, nullptr, (void**)&m_pInstanceData);
 
 	int i{};
-	// static Mehs Áö±Ý ÁöÁ¤
+	// static Mehs ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	for (std::unique_ptr<CGameObject>& object : vObjects) {
 		int n = object->getMeshIndex();
 		if (n != -1) {
@@ -229,7 +229,7 @@ void CAccelerationStructureManager::InitTLAS()
 				m_pInstanceData[i].InstanceMask = 1;
 				m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
 				auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-				XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// ¿©±â ÁÖÀÇ
+				XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				++i;
 			}
 		}
@@ -247,7 +247,7 @@ void CAccelerationStructureManager::InitTLAS()
 					m_pInstanceData[i].InstanceMask = 1;
 					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
 					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// ¿©±â ÁÖÀÇ
+					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 					++i;
 				}
 			}
@@ -273,7 +273,7 @@ void CAccelerationStructureManager::InitTLAS()
 		D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(m_tlasUpdataeScratch.GetAddressOf()));
 }
 
-// AS »ý¼º
+// AS ï¿½ï¿½ï¿½ï¿½
 void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, ComPtr<ID3D12Resource>& asResource, UINT64* updateScratchSize, bool allowUpdate)
 {
 	ID3D12Device5* device = g_DxResource.device;

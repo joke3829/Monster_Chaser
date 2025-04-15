@@ -1,5 +1,19 @@
 #include "ResourceManager.h"
 
+void CResourceManager::SetUp(unsigned int nLightRootParameterIndex)
+{
+	m_nLightRootParameterIndex = nLightRootParameterIndex;
+
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = Align(sizeof(Lights), 256);
+
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pLights.GetAddressOf()));
+	Lights* mapptr{};
+	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
+	mapptr->numLights = 0;
+	m_pLights->Unmap(0, nullptr);
+}
+
 bool CResourceManager::AddResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront)
 {
 	FilePathFront = textureFilePathFront;
@@ -16,7 +30,7 @@ bool CResourceManager::AddResourceFromFile(wchar_t* FilePath, std::string textur
 		inFile.read(strLabel.data(), nStrLength);
 		};
 
-	while (1) {
+	while (!inFile.eof()) {
 		readLabel();
 		if (strLabel == "</Hierarchy>")
 			break;
@@ -373,6 +387,18 @@ void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
 	}
 }
 
+void CResourceManager::UpdatePosition(float fElapsedTime)
+{
+	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
+		if (m_vAnimationManager[i]) {
+			CSkinningObject* skinningObject = GetSkinningObject(i);
+			if (skinningObject) {
+				m_vAnimationManager[i]->UpdateAniPosition(fElapsedTime, skinningObject);
+			}
+		}
+	}
+}
+
 void CResourceManager::ReBuildBLAS()
 {
 	for (std::unique_ptr<CSkinningObject>& object : m_vSkinningObject)
@@ -420,4 +446,24 @@ std::vector<std::unique_ptr<Mesh>>& CResourceManager::getMeshList()
 std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 {
 	return m_vTextureList;
+}
+
+void CResourceManager::LightTest()
+{
+	Lights testLight{};
+	testLight.numLights = 1;
+	testLight.lights[0].Type = DIRECTIONAL_LIGHT;
+	testLight.lights[0].Intensity = 1.0f;
+	testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
+	testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
+
+	testLight.lights[1].Type = DIRECTIONAL_LIGHT;
+	testLight.lights[1].Intensity = 1;
+	testLight.lights[1].Color = XMFLOAT4(1.0f, 0.0f ,1.0f, 1.0f);
+	testLight.lights[1].Direction = XMFLOAT3(-0.7527212f, 0.6549893f, 0.06633252f);
+
+	Lights* mapptr{};
+	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
+	memcpy(mapptr, &testLight, sizeof(Lights));
+	m_pLights->Unmap(0, nullptr);
 }

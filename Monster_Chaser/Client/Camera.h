@@ -9,6 +9,7 @@ struct CB_CAMERA_INFO {
 	XMFLOAT4X4 xmf4x4ViewProj;
 	XMFLOAT4X4 xmf4x4InverseViewProj;
 	XMFLOAT3 xmf3Eye;
+	int bNormalMapping;	// ¾Õ 2byte normal, µÚ 2byte albedo
 };
 
 class CCamera {
@@ -25,6 +26,24 @@ public:
 	void SetThirdPersonMode(bool bThirdPerson);
 	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }
 
+	void toggleNormalMapping() 
+	{ 
+		unsigned int fBytes = m_pCameraInfo->bNormalMapping & 0xFFFF0000;
+		unsigned int bBytes = m_pCameraInfo->bNormalMapping & 0x0000FFFF;
+		fBytes = ~fBytes & 0XFFFF0000;
+		m_pCameraInfo->bNormalMapping = fBytes | bBytes;
+		//m_pCameraInfo->bNormalMapping = ~m_pCameraInfo->bNormalMapping; 
+	}
+	void toggleAlbedoColor() 
+	{ 
+		unsigned int fByte = m_pCameraInfo->bNormalMapping & 0xFFFF0000;
+		unsigned int bByte = ~(m_pCameraInfo->bNormalMapping & 0x0000FFFF) & 0x0000FFFF;
+
+		m_pCameraInfo->bNormalMapping = fByte | bByte;
+		//m_pCameraInfo->bNormalMapping |= 0x0000; 
+	}
+	bool getThirdPersonState() const { return m_bThirdPerson; }
+
 protected:
 	bool m_bThirdPerson = false;
 	CGameObject* m_pTarget = nullptr;
@@ -33,12 +52,12 @@ protected:
 	ComPtr<ID3D12Resource> m_pd3dCameraBuffer{};
 	CB_CAMERA_INFO* m_pCameraInfo{};
 
-	XMFLOAT3 m_xmf3Eye{ 0.0f, 0.0f, 0.0f };
+	XMFLOAT3 m_xmf3Eye{ 0.0f, 20.0f, 0.0f };
 	XMFLOAT3 m_xmf3At;
 	XMFLOAT3 m_xmf3Up{ 0.0f, 1.0f, 0.0f };
 
 	XMFLOAT3 m_xmf3Dir{ 0.0f, 0.0f, 1.0f };
-	XMFLOAT3 m_xmf3Offset{ 0.0f, 0.0f, -1.0f };
+	XMFLOAT3 m_xmf3Offset{ 0.0f, 0.6f, -1.0f };
 
 	XMFLOAT4X4 m_xmf4x4View;
 	XMFLOAT4X4 m_xmf4x4Proj;

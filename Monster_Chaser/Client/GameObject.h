@@ -7,7 +7,8 @@ extern DXResources g_DxResource;
 extern std::default_random_engine g_dre;
 extern std::uniform_real_distribution<float> g_unorm;
 
-struct Material {	// ¸í½ÃÀûÀ¸·Î ¾µ¶ó°í ÀÌ·¸°Ô ¾´ °Í
+struct Material {	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì·ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½
+	Material() = default;
 	bool m_bHasAlbedoColor = false;
 	bool m_bHasEmissiveColor = false;
 	bool m_bHasSpecularColor = false;
@@ -61,17 +62,15 @@ struct HasMaterial
 	int bHasEmissionMap;
 	int bHasDetailAlbedoMap;
 	int bHasDetailNormalMap;
-	int padding[1];
+	float Glossiness;
 
 	XMFLOAT4 AlbedoColor;
 	XMFLOAT4 EmissiveColor;
 	XMFLOAT4 SpecularColor;
-	float Glossiness;
 	float Smoothness;
 	float Metallic;
 	float SpecularHighlight;
 	float GlossyReflection;
-	float padding2[3];
 };
 
 struct HasMesh {
@@ -89,7 +88,7 @@ class CGameObject {
 public:
 	CGameObject() {};
 	CGameObject(const CGameObject& other);
-	CGameObject& operator=(const CGameObject& other);	// º¹»ç ÇÒ´ç
+	CGameObject& operator=(const CGameObject& other);	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ò´ï¿½
 	bool InitializeObjectFromFile(std::ifstream& inFile);
 
 	template<class T>
@@ -168,10 +167,10 @@ public:
 	}
 
 	void SetPosition(XMFLOAT3 pos);
-	void Rotate(XMFLOAT3 rot);	// °¢°¢ right, up, look ÃàÀ¸·Î È¸Àü
+	void Rotate(XMFLOAT3 rot);	// ï¿½ï¿½ï¿½ï¿½ right, up, look ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½
 	void SetScale(XMFLOAT3 scale);
 
-	void move(float fElapsedTime);	// test¿ë
+	void move(float fElapsedTime);	// testï¿½ï¿½
 
 	std::string getFrameName() const;
 	std::vector<Material>& getMaterials();
@@ -181,7 +180,10 @@ public:
 	ID3D12Resource* getCbuffer(int index) const;
 	ID3D12Resource* getMeshCBuffer() const;
 	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Pos.x = m_xmf4x4WorldMatrix._41; m_xmf3Pos.y = m_xmf4x4WorldMatrix._42; m_xmf3Pos.z = m_xmf4x4WorldMatrix._43; return m_xmf3Pos; }
+	XMFLOAT3& getPositionFromLMatrix() { m_xmf3Pos.x = m_xmf4x4LocalMatrix._41; m_xmf3Pos.y = m_xmf4x4LocalMatrix._42; m_xmf3Pos.z = m_xmf4x4LocalMatrix._43; return m_xmf3Pos; }
+	XMFLOAT3& getPositionFromAMatrix() { m_xmf3Pos.x = m_xmf4x4AnimationMatrix._41; m_xmf3Pos.y = m_xmf4x4AnimationMatrix._42; m_xmf3Pos.z = m_xmf4x4AnimationMatrix._43; return m_xmf3Pos; }
 
+	XMFLOAT3 getUp() const { return m_xmf3Up; }
 
 	XMFLOAT4X4 getWorldMatrix();
 	XMFLOAT4X4 getLocalMatrix();
@@ -204,7 +206,7 @@ protected:
 	void UpdateLocalMatrix();
 	std::string m_strName{};
 
-	unsigned short m_bUseBoundingInfo{};	// ¹Ù¿îµù Á¤º¸ À¯¹« ¾Õ->Sphere, µÚ->OBB		
+	unsigned short m_bUseBoundingInfo{};	// ï¿½Ù¿ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½->Sphere, ï¿½ï¿½->OBB		
 	BoundingOrientedBox m_OBB{};
 	BoundingSphere m_BoundingSphere{};
 
@@ -220,22 +222,22 @@ protected:
 	XMFLOAT3 m_xmf3Look{0.0f, 0.0f, 1.0f};
 
 	std::vector<Material> m_vMaterials;
-	std::vector<ComPtr<ID3D12Resource>> m_vCBuffers;		// »ó¼ö ¹öÆÛ ¸ðÀ½
+	std::vector<ComPtr<ID3D12Resource>> m_vCBuffers;		// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	ComPtr<ID3D12Resource> m_pd3dMeshCBuffer{};
-	// »ó¼ö¹öÆÛ·Î ³Ñ±æ ¸®¼Ò½º°¡ ÇÊ¿äÇÑ°¡? ÀÏ´Ü º¸·ù
-	// »ó¼ö ¹öÆÛ·Î ³Ñ±æ°Å´Â ¸¶Å×¸®¾óÀÇ AlbedoColor, EmissiveColor, Glossiness, Metalic, SpecularHighlight, 
-	// ÅØ½ºÃÄÀÇ °æ¿ì´Â local root ¹Ù·Î º¸³¾°Í
-	// À§ °æ¿ì´Â DXRÀ» »ç¿ëÇÏ´Â °æ¿ìÀÌ´Ù.
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û·ï¿½ ï¿½Ñ±ï¿½ ï¿½ï¿½ï¿½Ò½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½Ñ°ï¿½? ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
+	// ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Û·ï¿½ ï¿½Ñ±ï¿½Å´ï¿½ ï¿½ï¿½ï¿½×¸ï¿½ï¿½ï¿½ï¿½ï¿½ AlbedoColor, EmissiveColor, Glossiness, Metalic, SpecularHighlight, 
+	// ï¿½Ø½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ local root ï¿½Ù·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ DXRï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½Ì´ï¿½.
 
-	int m_nMeshIndex = -1;		// ÀÌ ¿ÀºêÁ§Æ®°¡ ÂüÁ¶ÇÏ´Â Mesh Index
-	int m_nParentIndex = -1;	// ÀÌ ¿ÀºêÁ§Æ®ÀÇ ºÎ¸ð GameObjectÀÎµ¦½º
-	int m_nHitGroupIndex = -1;	// ¾î¶² HitGroupÀ» º¼°Å³Ä?
+	int m_nMeshIndex = -1;		// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ Mesh Index
+	int m_nParentIndex = -1;	// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Î¸ï¿½ GameObjectï¿½Îµï¿½ï¿½ï¿½
+	int m_nHitGroupIndex = -1;	// ï¿½î¶² HitGroupï¿½ï¿½ ï¿½ï¿½ï¿½Å³ï¿½?
 
 };
 
 // ==================================================================
 
-// ÀÌ Ä£±¸´Â ÇÁ·¹ÀÓ¿¡¼­ ÇÊ¿äÇÑ Çà·Ä¸¸ ¸ð¾Æ¼­ »ó¼ö¹öÆÛ¸¦ ¸¸µé¾î setÇÏ´Â ¿ªÇÒ
+// ï¿½ï¿½ Ä£ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ó¿ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¸ï¿½ ï¿½ï¿½Æ¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ setï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½
 class CSkinningInfo {
 public:
 	CSkinningInfo(std::ifstream& inFile, UINT nRefMesh);
@@ -248,17 +250,17 @@ public:
 
 	UINT getRefMeshIndex() const { return m_nRefMesh; }
 private:
-	UINT m_nBonesPerVertex{};	// Á¤Á¡ ´ç »ç¿ë »À °³¼ö
-	UINT m_nBones{};			// »À °³¼ö
-	UINT m_nVertexCount{};		// ÇØ´ç ¸Þ½ÃÀÇ Á¤Á¡ °³¼ö, ºÎÁ¤È®, È®ÀÎ ÇÊ¿ä
+	UINT m_nBonesPerVertex{};	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	UINT m_nBones{};			// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	UINT m_nVertexCount{};		// ï¿½Ø´ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½È®, È®ï¿½ï¿½ ï¿½Ê¿ï¿½
 
-	UINT m_nRefMesh{};			// ÂüÁ¶ÇÏ´Â ¸Þ½ÃÀÇ ¹øÈ£
+	UINT m_nRefMesh{};			// ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½È£
 
-	std::vector<std::string> m_vBoneNames{};	// »À ÀÌ¸§ ¸®½ºÆ®
-	std::vector<XMFLOAT4X4> m_vOffsetMatrix{};	// offset Çà·Ä
-	std::vector<UINT> m_vBoneIndices{};			// »À ÀÎµ¦½º
-	std::vector<float> m_vBoneWeight{};			// »À °¡ÁßÄ¡
-	std::vector<UINT>m_vAnimationMatrixIndex{};	// »ÀÀÇ ¾Ö´Ï¸ÞÀÌ¼Ç Çà·ÄÀ» Ã£±â À§ÇØ ÀÎµ¦½º¸¦ ÇÏ³ª ´õ ¸¸µé¾îÁØ´Ù.
+	std::vector<std::string> m_vBoneNames{};	// ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½Æ®
+	std::vector<XMFLOAT4X4> m_vOffsetMatrix{};	// offset ï¿½ï¿½ï¿½
+	std::vector<UINT> m_vBoneIndices{};			// ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½
+	std::vector<float> m_vBoneWeight{};			// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ä¡
+	std::vector<UINT>m_vAnimationMatrixIndex{};	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï³ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½.
 
 	ComPtr<ID3D12DescriptorHeap> m_pd3dDesciptorHeap{};
 
@@ -291,6 +293,7 @@ public:
 
 	void SetPosition(XMFLOAT3 pos);
 	void Rotate(XMFLOAT3 rot);
+	void Rotation(XMFLOAT3 rot, CGameObject& frame);
 	void move(float fElapsedTime, short arrow);
 
 	std::string getName() const { return m_strObjectName; }
@@ -300,6 +303,9 @@ public:
 	std::vector<std::shared_ptr<CTexture>>& getTextures() { return m_vTextures; }
 	XMFLOAT4X4& getWorldMatrix() { return m_xmf4x4WorldMatrix; }
 	XMFLOAT4X4& getPreWorldMatrix() { return m_xmf4x4PreWorldMatrix; }
+
+	XMFLOAT3& getPosition() { return m_xmf3Position; }
+	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Position.x = m_xmf4x4WorldMatrix._41; m_xmf3Position.y = m_xmf4x4WorldMatrix._42; m_xmf3Position.z = m_xmf4x4WorldMatrix._43; return m_xmf3Position; }
 
 	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;
 	virtual ComPtr<ID3D12Resource>& getVertexOutputBuffer(int index) = 0;
@@ -317,7 +323,7 @@ protected:
 
 	// XMFLOAT4X4
 	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
-	XMFLOAT4X4 m_xmf4x4PreTransformMatrix{};	// ¸Þ½ÃÀÇ ¹æÇâÀ» Á¤·ÄÇÏ±â À§ÇØ »ç¿ë
+	XMFLOAT4X4 m_xmf4x4PreTransformMatrix{};	// ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
 	XMFLOAT4X4 m_xmf4x4PreWorldMatrix{};		// test
 
 	bool m_bUsePreTransform = false;
@@ -328,8 +334,8 @@ protected:
 	XMFLOAT3 m_xmf3Position{};
 };
 
-// Rasterizer¿Í RayTracing¿¡¼­ÀÇ Skinning AnimationÀº ¹æ¹ýÀÌ ´Ù¸£´Ù
-// ·¹ÀÌÆ®·¹ÀÌ½Ì ¿ë ½ºÅ°´× ¿ÀºêÁ§Æ®, BLAS¸¦ °¡Áö°í ÀÖÀ½
+// Rasterizerï¿½ï¿½ RayTracingï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Skinning Animationï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¸ï¿½ï¿½ï¿½
+// ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ï¿½Ì½ï¿½ ï¿½ï¿½ ï¿½ï¿½Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®, BLASï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 class CRayTracingSkinningObject : public CSkinningObject {
 public:
 	void PrepareObject();
