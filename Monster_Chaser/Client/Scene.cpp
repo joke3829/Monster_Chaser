@@ -637,6 +637,7 @@ void CRaytracingMaterialTestScene::SetUp()
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
 	// 조명 추가
 	m_pResourceManager->LightTest();
 	// =========================================================
@@ -657,8 +658,8 @@ void CRaytracingMaterialTestScene::SetUp()
 	//normalObjects[finalindex]->SetMeshIndex(finalmesh);
 	//normalObjects[finalindex]->getMaterials().emplace_back();
 	//Material& tMaterial = normalObjects[finalindex]->getMaterials()[0];
-	//tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
-	//tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
+	//tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.0, 1.0, 0.0, 1.0);
+	//tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
 	////tMaterial.m_bHasMetallic = true; tMaterial.m_fMetallic = 0.0f;
 	//tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.5;
 	//tMaterial.m_bHasSpecularHighlight = true; tMaterial.m_fSpecularHighlight = 1;
@@ -676,6 +677,30 @@ void CRaytracingMaterialTestScene::SetUp()
 	//tt.m_bHasGlossiness = true; tt.m_fGlossiness = 0.5;
 	//tt.m_bHasGlossyReflection = true; tt.m_fGlossyReflection = 1.0f;
 	//normalObjects[finalindex + 1]->SetPosition(XMFLOAT3(0.0, -30.0, 0.0));
+
+	//std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.025f, 1.0f));
+
+	//UINT finalindex = normalObjects.size();
+	//UINT finalmesh = meshes.size();
+	//Material tMaterial{};
+	//meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
+	//normalObjects.emplace_back(std::make_unique<CGameObject>());
+	//normalObjects[finalindex]->SetMeshIndex(finalmesh);
+
+	//UINT txtIndex = textures.size();
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
+	////textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_NORM.dds"));
+
+	//tMaterial.m_bHasAlbedoMap = true; tMaterial.m_nAlbedoMapIndex = txtIndex;
+	////tMaterial.m_bHasNormalMap = true; tMaterial.m_nNormalMapIndex = txtIndex + 1;
+	//tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	//tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
+	//tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.2;
+
+	//normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
+	//normalObjects[finalindex]->SetScale(XMFLOAT3(-1.0f, 1.0f, 1.0f));
+	//normalObjects[finalindex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	//normalObjects[finalindex]->SetPosition(XMFLOAT3(-1024.0, 0.0, 1024.0));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject

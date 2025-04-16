@@ -284,22 +284,24 @@ bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
     return payload.bShadow;
 }
 
-inline float3 CalculateCookTorranceSpecular(in float roughness, in float3 R0, in float NdotV, in float NdotH, in float NdotL)
+inline float3 CalculateCookTorranceSpecular(inout float3 F, in float roughness, in float3 R0, in float NdotV, in float NdotH, in float NdotL)
 {
-    float3 F = GetFresnelusingSchlick(R0, NdotV);
+    F = GetFresnelusingSchlick(R0, NdotV);
+    //F = GetSmithGeometry(roughness, NdotV, NdotL);
+    //F = D_GGX(roughness, NdotH);
     float D = D_GGX(roughness, NdotH);
     float3 G = GetSmithGeometry(roughness, NdotV, NdotL);
     float denom = max(4 * NdotL * NdotV, 0.00001f);
     return (F * G * D) / denom;
 }
 
-float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float roughness, in float3 R0, float3 AlbedoColor)
+float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float roughness, in float3 R0, in float3 AlbedoColor)
 {
     float3 V = normalize(-WorldRayDirection());
     float NdotV = saturate(dot(N, V));
+    float3 Wpos = GetWorldPosition();
     
     float3 finalColor = float3(0.0, 0.0, 0.0);
-    
     for (uint i = 0; i < g_Lights.numLights; ++i)
     {
         switch (g_Lights.lights[i].Type)
@@ -310,23 +312,74 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                     float NdotH = saturate(dot(N, H));
                     float NdotL = saturate(dot(N, L));
                 
-                    if (NdotL > 0.0f)
+                    /*if (NdotL > 0.0f)
                     {
-                        float3 diffuseTerm = NdotL * AlbedoColor.rgb * (g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity);
-                        float3 Specular = CalculateCookTorranceSpecular(roughness, R0, NdotV, NdotH, NdotL);
+                       float3 lightColor = g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity;
+                        float3 F;
+                        float3 Specular = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                        //float3 specular = Specular * NdotL * lightColor;
+                        float3 diffuseTerm = (AlbedoColor.rgb/ PI) * lightColor;
                         if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
-                            finalColor += diffuseTerm + (NdotL * (AlbedoColor.rgb + (1 - AlbedoColor.rgb) * Specular));
+                        finalColor += diffuseTerm + (Specular * lightColor);
+                            //finalColor += diffuseTerm + Specular;
                         else
                             finalColor += Specular;
+                    }*/
+                    if (NdotL > 0.0f)
+                    {
+                        RayDesc shadowRay;
+                        shadowRay.Direction = L;
+                        shadowRay.Origin = GetWorldPosition() + N * 0.0001f;
+                        shadowRay.TMin = 0.0f;
+                        shadowRay.TMax = 500.0f;
+                        bool isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
+                        float shadowFactor = isShadow ? 0.25f : 1.0f;
+                        float3 lightColor = g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity;
+                        float3 F;
+                        float3 rs = float3(0.0, 0.0, 0.0);
+                        if (!isShadow)
+                            rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                        float metallic = max(max(R0.r, R0.g), R0.b);
+                        float s = lerp(0.0, 0.95, metallic);
+                        if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
+                            finalColor += NdotL * lightColor * (((1 - s) * AlbedoColor.rgb * shadowFactor) + s * rs);
+                        else
+                            finalColor += rs;
                     }
                 }
                 break;
             case POINT_LIGHT:{
-                    float3 Wpos = GetWorldPosition();
                     float dis = distance(g_Lights.lights[i].Position, Wpos);
-                    if (g_Lights.lights[i].Range <= dis)
+                    if (g_Lights.lights[i].Range >= dis)
                     {
-                        finalColor += float3(1.0, 1.0, 1.0);
+                        float3 L = normalize(g_Lights.lights[i].Position - Wpos);
+                        float3 H = normalize(V + L);
+                        float NdotH = saturate(dot(N, H));
+                        float NdotL = saturate(dot(N, L));
+                    
+                        if (NdotL > 0.0f)
+                        {
+                            float3 lightColor = lerp(g_Lights.lights[i].Color.rgb, float3(0.0, 0.0, 0.0), dis);
+                            lightColor *= g_Lights.lights[i].Intensity;
+                        
+                            RayDesc shadowRay;
+                            shadowRay.Direction = L;
+                            shadowRay.Origin = Wpos + N * 0.0001f;
+                            shadowRay.TMin = 0.0f;
+                            shadowRay.TMax = dis;
+                            bool isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
+                            float shadowFactor = isShadow ? 0.25f : 1.0f;
+                            float3 F;
+                            float3 rs = float3(0.0, 0.0, 0.0);
+                            if (!isShadow)
+                                rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                            float metallic = max(max(R0.r, R0.g), R0.b);
+                            float s = lerp(0.0, 0.95, metallic);
+                            if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
+                                finalColor += NdotL * lightColor * (((1 - s) * AlbedoColor.rgb * shadowFactor) + s * rs);
+                            else
+                                finalColor += rs;
+                        }
                     }
                 }
                 break;
@@ -355,32 +408,30 @@ float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, uint Shad
     switch (ShaderType)
     {
         case SHADER_TYPE_SPECULAR_MAP:{
-                float3 resultColor = float3(0.0, 0.0, 0.0);
                 float4 smSample = l_SpecularMap.SampleLevel(g_Sampler, uv, 0);
                 R0 = smSample.rgb;
-                roughness = smSample.a;
+                roughness = max(1.0f - smSample.a, 0.05f);
                 break;
             }
         case SHADER_TYPE_SPECULAR:{
-                if (0 != l_Material.bHasGlossiness) roughness = 1.0f - l_Material.Glossiness;
-                else if (0 != l_Material.bHasSmoothness) roughness = 1.0f - l_Material.Smoothness;
+                if (0 != l_Material.bHasGlossiness) roughness = max(1.0f - l_Material.Glossiness, 0.05f);
+                else if (0 != l_Material.bHasSmoothness) roughness = max(1.0f - l_Material.Smoothness, 0.05f);
                 R0 = l_Material.SpecularColor;
                 break;
             }
         case SHADER_TYPE_METALLIC_MAP:{
                 float4 metallicSample = l_MetallicMap.SampleLevel(g_Sampler, uv, 0);
                 R0 = metallicSample.rrr;
-                roughness = metallicSample.a;
+                roughness = max(1.0f - metallicSample.a, 0.05f);
                 break;
             }
         case SHADER_TYPE_METALLIC:{
-                if (0 != l_Material.bHasGlossiness) roughness = 1.0f - l_Material.Glossiness;
-                else if (0 != l_Material.bHasSmoothness) roughness = 1.0f - l_Material.Smoothness;
+                if (0 != l_Material.bHasGlossiness) roughness = max(1.0f - l_Material.Glossiness, 0.05f);
+                else if (0 != l_Material.bHasSmoothness) roughness = max(1.0f - l_Material.Smoothness, 0.05f);
                 R0 = lerp(float3(0.04, 0.04, 0.04), albedoColor.rgb, l_Material.Metallic);
                 break;
             }
     }
-    
     
     return float4(CalculateLighting(payload, N, roughness, R0, albedoColor), 1.0);
 }
