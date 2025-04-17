@@ -616,7 +616,7 @@ void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wPar
 			auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
 			if (animationManager && !animationManager->getFrame().empty()) {
 				CGameObject* frame = animationManager->getFrame()[0];
-				if (!m_LockAnimation && !m_LockAnimation1 && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
+				if (!m_LockAnimation && !m_LockAnimation1 && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) { //애니메이션 중에는 캐릭터 회전 X
 					m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 				}
 			}
