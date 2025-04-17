@@ -113,6 +113,7 @@ protected:
 class CMageManager : public CAnimationManager //마법사 전용
 {
 public:
+	CMageManager(std::ifstream& inFile) : CAnimationManager(inFile) { m_vComboAnimationSets = { 22,23,24,25 }; m_vSkillAnimationSets = { 26, 27, 28, 29 , 30 };};
 	virtual void StartCombo();
 	virtual void OnAttackInput();
 	virtual void UpdateCombo(float fElapsedTime);

@@ -231,7 +231,7 @@ void CMageManager::OnAttackInput()
 	}
 
 	// 콤보 진행
-	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 13) {
+	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
 		if (!m_bWaitingForNextInput) {
 			m_bNextAttack = true; // 다음 공격 대기
 		}
@@ -250,13 +250,13 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 	if (!m_bInCombo) return;
 
 	if (IsAnimationNearEnd()) {
-		if (m_bNextAttack && m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 13) {
+		if (m_bNextAttack && m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
 			// 콤보 모드
 			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
 			ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
 			m_bNextAttack = false;
 		}
-		else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 17) {
+		else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 26) {
 			// 스킬 3
 			m_CurrentComboStep++;
 			if (m_CurrentComboStep < m_vSkillAnimationSets.size()) {

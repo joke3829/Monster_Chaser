@@ -143,7 +143,7 @@ void CRaytracingScene::CreateRootSignature()
 		srvRange[4].NumDescriptors = 1;
 		srvRange[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		srvRange[4].RegisterSpace = 4;
-		
+
 		srvRange[5].BaseShaderRegister = 2;		// t2, space5
 		srvRange[5].NumDescriptors = 1;
 		srvRange[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -390,7 +390,7 @@ void CRaytracingScene::CreateComputeRootSignature()
 	desc.pParameters = params;
 	desc.NumStaticSamplers = 0;
 	desc.pStaticSamplers = nullptr;
-	
+
 	ID3DBlob* pBlob{};
 	D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
 	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pComputeRootSignature.GetAddressOf()));
@@ -460,7 +460,7 @@ void CRaytracingTestScene::SetUp()
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// Create new Objects, Copy SkinningObject here ========================================
-	
+
 	// Copy Example
 	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 	//skinned[1]->CopyFromOtherObject(skinned[0].get());
@@ -478,7 +478,7 @@ void CRaytracingTestScene::SetUp()
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	
+
 	UINT txtIndex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_NORM.dds"));
@@ -582,6 +582,16 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 
 void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
+	ShowCursor(FALSE);  // Ä¿¼­ ¼û±è
+	RECT clientRect;
+	GetClientRect(hWnd, &clientRect);
+	POINT center;
+	center.x = (clientRect.right - clientRect.left) / 2;
+	center.y = (clientRect.bottom - clientRect.top) / 2;
+	POINT screenCenter = center;
+	ClientToScreen(hWnd, &screenCenter);
+	POINT currentPos;
+	GetCursorPos(&currentPos);
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
@@ -595,24 +605,25 @@ void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wPar
 	}
 	case WM_MOUSEMOVE:
 	{
-		int xPos = LOWORD(lParam);
-		int yPos = HIWORD(lParam);
-		static POINT oldPos = { 0, 0 };
+		// ÀÌµ¿·® °è»ê (ÁÂ¿ì¸¸)
+		float deltaX = static_cast<float>(currentPos.x - screenCenter.x);
 
-		if (oldPos.x != 0 || oldPos.y != 0) {
-			float deltaX = static_cast<float>(xPos - oldPos.x);
+		if (deltaX != 0.0f) {
+			// Ä«¸Þ¶ó È¸Àü
+			m_pCamera->Rotate(deltaX * 1.5f, 0.0f); // °¨µµ Á¶Á¤ °¡´É
 
-			m_pCamera->Rotate(deltaX * 3.0f * 0.5f, 0.0f); // Ä«¸Þ¶ó È¸Àü¿¡ /3.0f ÇØÁÖ´Ï±î ±×³É °öÇØ¼­ Ä³¸¯ÅÍ È¸ÀüÀÌ¶û °ªÀ» ¸ÂÃá´Ù.
-
+			// Ä³¸¯ÅÍ È¸Àü
 			auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
 			if (animationManager && !animationManager->getFrame().empty()) {
 				CGameObject* frame = animationManager->getFrame()[0];
-				m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX *0.5f , 0.0f),*frame);
+				if (!m_LockAnimation && !m_LockAnimation1 && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
+					m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
+				}
 			}
-		}
 
-		oldPos.x = xPos;
-		oldPos.y = yPos;
+			// ¸¶¿ì½º ´Ù½Ã È­¸é °¡¿îµ¥·Î °íÁ¤
+			SetCursorPos(screenCenter.x, screenCenter.y);
+		}
 		break;
 	}
 	}
@@ -937,25 +948,25 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
 
-	if (keyBuffer['G'] & 0x80) {
-		auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
-		if (animationManager && !animationManager->getFrame().empty()) {
-			CGameObject* frame = animationManager->getFrame()[0];
-			m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f), *frame);
-		}
-	}
+	//if (keyBuffer['G'] & 0x80) {
+	//	auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
+	//	if (animationManager && !animationManager->getFrame().empty()) {
+	//		CGameObject* frame = animationManager->getFrame()[0];
+	//		m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f), *frame);
+	//	}
+	//}
 
-	if (keyBuffer['H'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //ï¿½ï¿½È¸ï¿½ï¿½
-	}
+	//if (keyBuffer['H'] & 0x80) {
+	//	m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //ï¿½ï¿½È¸ï¿½ï¿½
+	//}
 
-	if (keyBuffer['T'] & 0x80) {
-		auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
-		if (animationManager && !animationManager->getFrame().empty()) {
-			CGameObject* frame = animationManager->getFrame()[0];
-			m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f),*frame);
-		}
-	}
+	//if (keyBuffer['T'] & 0x80) {
+	//	auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
+	//	if (animationManager && !animationManager->getFrame().empty()) {
+	//		CGameObject* frame = animationManager->getFrame()[0];
+	//		m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f),*frame);
+	//	}
+	//}
 
 	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â±ï¿½
@@ -968,6 +979,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	}
 
 	if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
+		m_pResourceManager->UpdatePosition(fElapsedTime);
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(21, true); //Dodge
 		m_LockAnimation1 = true;
 	}

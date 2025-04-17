@@ -228,8 +228,9 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 
 void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	if(m_pCamera->getThirdPersonState())
+	if (m_pCamera->getThirdPersonState()) {
 		m_pScene->MouseProcessing(hWnd, nMessage, wParam, lParam);
+	}
 	else {
 		switch (nMessage) {
 		case WM_LBUTTONDOWN:
