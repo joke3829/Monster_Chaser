@@ -45,31 +45,12 @@ public:
 	void setCurrnetSet(UINT n) { m_nCurrentSet = n; }
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
 	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
-	bool IsAnimationNearEnd(float margin = 0.1f) const
+	bool IsAnimationNearEnd(float margin = 0.2f) const
 	{
 		float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 		float remainingTime = length - m_fElapsedTime;
-		return remainingTime <= margin && remainingTime >= 0.0f; //끝나기 0.0 ~ 0.1초 전인지 확인
+		return remainingTime <= margin && remainingTime >= 0.0f; //끝나기 0.0 ~ 0.2초 전인지 확인
 	}
-
-	bool IsLoopAnimation()const
-	{
-		if (m_nCurrentSet == 5 || m_nCurrentSet == 8)return true;
-		else { return false; }
-	}
-
-	void onWalking() {
-		m_isWalk = true;
-	}
-
-	void StopWalking() {
-		m_isWalk = false;
-	}
-
-	bool IsWalking() const {
-		return m_isWalk; // 현재 걷기  상태 반환
-	}
-
 
 	virtual void StartCombo() {};
 	virtual void OnAttackInput() {};
@@ -79,6 +60,9 @@ public:
 
 	virtual void StartSkill3() {};
 	virtual void OnKey3Input() {};
+
+	bool IsComboInterrupted() const { return m_bComboEnd; }
+	void ClearComboInterrupted() { m_bComboEnd = false; }
 
 	const std::vector<CGameObject*>& getFrame()const { return m_vFrames; }
 protected:
@@ -106,6 +90,7 @@ protected:
 	const float m_fComboWaitTime = 0.5f;     // 다음 입력을 기다리는 시간
 	bool m_bWaitingForNextInput;         // 다음 입력 대기 여부
 	bool m_bNextAttack = false;			// 다음 공격 요청 여부
+	bool m_bComboEnd = false;			// 콤보 공격 중단 여부
 
 	std::vector<UINT> m_vSkillAnimationSets; //스킬 애니메이션 세트
 };

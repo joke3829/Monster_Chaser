@@ -21,7 +21,11 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
 			animationManager->ChangeAnimation(0, false); // idleï¿½ï¿½ ï¿½ï¿½È¯
 			test = true;
-			m_LockAnimation1 = false;
+			m_bLockAnimation1 = false;
+		}
+		if (animationManager->IsComboInterrupted()) {
+			test = true;
+			animationManager->ClearComboInterrupted(); // ÇÃ·¡±× ÃÊ±âÈ­
 		}
 	}
 
@@ -595,7 +599,7 @@ void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wPar
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
-		if (!m_LockAnimation && !m_LockAnimation1) {
+		if (!m_bLockAnimation && !m_bLockAnimation1) {
 			auto& animationManagers = m_pResourceManager->getAnimationManagers();
 			for (auto& animationManager : animationManagers) {
 				animationManager->OnAttackInput();
@@ -616,7 +620,7 @@ void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wPar
 			auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
 			if (animationManager && !animationManager->getFrame().empty()) {
 				CGameObject* frame = animationManager->getFrame()[0];
-				if (!m_LockAnimation && !m_LockAnimation1 && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) { //¾Ö´Ï¸ÞÀÌ¼Ç Áß¿¡´Â Ä³¸¯ÅÍ È¸Àü X
+				if (!m_bLockAnimation && !m_bLockAnimation1 && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) { //¾Ö´Ï¸ÞÀÌ¼Ç Áß¿¡´Â Ä³¸¯ÅÍ È¸Àü X
 					m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 				}
 			}
@@ -650,23 +654,17 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pCamera->Move(2, fElapsedTime);
 	}
 
-	if (m_LockAnimation) {
-		if (m_pResourceManager->getAnimationManagers()[0]->IsInCombo()) {
-			m_LockAnimation = false;
-		}
-		else {
-			return;
-		}
+	if (m_bLockAnimation && !m_pResourceManager->getAnimationManagers()[0]->IsInCombo()) {
+		m_bLockAnimation = false;
+	}
+	if (m_bLockAnimation1 && m_pResourceManager->getAnimationManagers()[0]->IsAnimationFinished()) {
+		m_bLockAnimation1 = false;
 	}
 
-	if (m_LockAnimation1) {
-		if (m_pResourceManager->getAnimationManagers()[0]->IsAnimationFinished()) {
-			m_LockAnimation1 = false;
-		}
-		else {
-			return;
-		}
+	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
+		return;
 	}
+
 	// W + A (¿ÞÂÊ ´ë°¢¼± À§)
 	if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
@@ -970,43 +968,43 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â±ï¿½
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â°ï¿½ ï¿½×±ï¿½
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(21, true); //Dodge
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â±ï¿½
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(4, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â°ï¿½ ï¿½×±ï¿½
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(31, true); //ï¿½ï¿½Å³2
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(32, true); //ï¿½ï¿½Å³1
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->StartSkill3(); //ï¿½ï¿½Å³3
-		m_LockAnimation = true;
+		m_bLockAnimation = true;
 	}
 	// ï¿½ï¿½ï¿½ï¿½ Å° ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ï¿½
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
