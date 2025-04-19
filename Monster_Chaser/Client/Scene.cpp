@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "protocol.h"
 
 void CRaytracingScene::UpdateObject(float fElapsedTime)
 {
@@ -447,13 +448,13 @@ void CRaytracingTestScene::SetUp()
 	// Read File Here ========================================	! All Files Are Read Once !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	m_pResourceManager->LightTest();
 	// =========================================================
-
+	
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
 	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
@@ -524,8 +525,8 @@ void CRaytracingTestScene::SetUp()
 	m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
 
 	// Setting Camera ==============================================================
-	//m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	//m_pCamera->SetCameraLength(10.0f);
+	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetCameraLength(10.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -533,6 +534,8 @@ void CRaytracingTestScene::SetUp()
 	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
 	m_pAccelerationStructureManager->InitBLAS();
 	m_pAccelerationStructureManager->InitTLAS();
+	
+
 }
 
 
@@ -998,6 +1001,16 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	}
 	// ���� Ű ���¸� ���� ���·� ����
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
+
+	XMFLOAT3 pos = m_pResourceManager->getSkinningObjectList()[0]->getPosition();
+
+	//cs_packet_move pkt;
+	//pkt.size = sizeof(pkt);
+	//pkt.type = C2S_P_MOVE;
+	//pkt.x = pos.x;
+	//pkt.y = pos.y;
+	//pkt.z = pos.z;
+	//int ret = send(sock, reinterpret_cast<CHAR*>(pkt), reinterpret_cast<unsigned char*>(pkt)[0], 0);
 }
 
 

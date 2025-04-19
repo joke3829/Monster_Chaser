@@ -1,6 +1,9 @@
 #include "AnimationManager.h"
 #include "algorithm"
+#include "protocol.h"
+#include "C_Socket.h"
 
+extern C_Socket Client;
 CAnimationSet::CAnimationSet(std::ifstream& inFile, UINT nBones)
 {
 	UINT tempInt{};
@@ -56,7 +59,9 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 		//XMStoreFloat4x4(&xmf, XMMatrixTranspose(XMMatrixAffineTransformation(S, XMVectorZero(), R, T)));
 		XMStoreFloat4x4(&xmf, XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
 		vMatrixes[i]->SetLocalMatrix(xmf);
+		
 	}
+
 }
 
 // ====================================================================================

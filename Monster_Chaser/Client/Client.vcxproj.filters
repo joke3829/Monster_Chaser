@@ -9,10 +9,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="리소스 파일">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="GameFramework">
       <UniqueIdentifier>{42ca8c9a-10b0-488e-a434-850bb3faa612}</UniqueIdentifier>
     </Filter>
@@ -66,6 +62,16 @@
     </Filter>
     <Filter Include="Resource\AnimationManager">
       <UniqueIdentifier>{26e56987-728b-4f9b-bb23-ee29f7266adc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="소스 파일\서버관련">
+      <UniqueIdentifier>{5d46939a-3862-4eba-9cff-f66088c2ed2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="리소스 파일">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="소스 파일\서버관련\플레이어객체">
+      <UniqueIdentifier>{dd0ec600-8aae-412c-9fc4-1dc9367e0664}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -135,6 +141,18 @@
     <ClInclude Include="AnimationManager.h">
       <Filter>Resource\AnimationManager</Filter>
     </ClInclude>
+    <ClInclude Include="protocol.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="C_Socket.h">
+      <Filter>소스 파일\서버관련</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectManger.h">
+      <Filter>소스 파일\서버관련</Filter>
+    </ClInclude>
+    <ClInclude Include="CPlayerSkinningObject.h">
+      <Filter>소스 파일\서버관련\플레이어객체</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -193,6 +211,15 @@
     </ClCompile>
     <ClCompile Include="AnimationManager.cpp">
       <Filter>Resource\AnimationManager</Filter>
+    </ClCompile>
+    <ClCompile Include="C_Socket.cpp">
+      <Filter>소스 파일\서버관련</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectManger.cpp">
+      <Filter>소스 파일\서버관련</Filter>
+    </ClCompile>
+    <ClCompile Include="CPlayerSkinningObject.cpp">
+      <Filter>소스 파일\서버관련\플레이어객체</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

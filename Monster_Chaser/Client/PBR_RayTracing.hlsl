@@ -315,7 +315,7 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                         float3 diffuseTerm = NdotL * AlbedoColor.rgb * (g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity);
                         float3 Specular = CalculateCookTorranceSpecular(roughness, R0, NdotV, NdotH, NdotL);
                         if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
-                            finalColor += diffuseTerm + (NdotL * (AlbedoColor.rgb + (1 - AlbedoColor.rgb) * Specular));
+                            finalColor += diffuseTerm * 0.3 + (NdotL * (AlbedoColor.rgb + (1 - AlbedoColor.rgb) * Specular));  
                         else
                             finalColor += Specular;
                     }

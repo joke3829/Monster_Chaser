@@ -3,17 +3,22 @@
 
 #include "protocol.h"
 
+
 class SESSION;
+class Network;
 
 class Room {
 public:
-    Room(int number);
+    Room();
 
-    bool AddPlayer(SESSION* player);
-    void BroadcastRoomInfo();
-    void BroadcastReady(int player_id);
+    bool IsAddPlayer();
+    void SendRoomInfo();
+   
     int GetPlayerCount() const;
+    void setRoomNumber(const short& num);
+    void Enterplayer() { playerInRoom++; }
+    short ready_user = 0;
 private:
-    int room_number;
-    std::vector<SESSION*> players;
+    short room_number;
+    short playerInRoom = 0;
 };

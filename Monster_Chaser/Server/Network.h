@@ -5,6 +5,8 @@
 
 #include "protocol.h"
 #include "Room.h"
+#include "Character.h"
+#include "Monster.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -20,7 +22,7 @@ public:
     WSAOVERLAPPED over;
     IO_OP io_op;
     WSABUF wsabuf[1];
-    char buffer[BUF_SIZE];
+     char buffer[BUF_SIZE];
     SOCKET accept_socket;
 };
 
@@ -30,30 +32,31 @@ class SESSION;
 class SESSION {
 public:
     SOCKET socket;
+    EXP_OVER* recv_over;            
     int id;
     int room_num = -1;
     bool is_ready = false;
-    EXP_OVER* recv_over;
     unsigned char remained = 0;
-   // short x = 0, y = 0;
-    std::string name;
-
+    std::string name;               //유저 닉네임
+    Job character;
     SESSION(int i, SOCKET s);
     ~SESSION();
 
     void do_recv();
     void do_send(void* buff);
-    void process_packet(char* p);
+    void process_packet( char* p);
+    void BroadCasting_position(const XMFLOAT4X4& pos);
 };
 
 class Network {
 public:
     void Init();
-
-    static std::vector<Room> rooms;
+     Room rooms[10];
 
     HANDLE iocp;
     std::unordered_map<int, SESSION*> users;
-    int next_client_id = 0;
+    std::unordered_map<int, Monster*> monsters;
+    int client_id = 0;
+    int monster_id = 0;
     SOCKET listen_socket;
 };

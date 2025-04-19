@@ -4,11 +4,12 @@
 #include "Room.h"
 #include "Network.h"
 #include <MSWSock.h>
-#pragma comment(lib, "ws2_32.lib")
-#pragma comment(lib, "mswsock.lib")
+
+
 
 
 Network g_server;
+
 void do_accept(Network& server) {
 	SOCKET c_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
 	EXP_OVER* accept_over = new EXP_OVER(IO_ACCEPT);
@@ -42,15 +43,21 @@ int main() {
 		switch (exp->io_op) {
 		case IO_ACCEPT:
 		{
-			int client_id = g_server.next_client_id++;
+			int client_id = g_server.client_id++;
 			CreateIoCompletionPort(reinterpret_cast<HANDLE>(exp->accept_socket), g_server.iocp, client_id, 0);
 			g_server.users[client_id] = new SESSION(client_id, exp->accept_socket);
+			sc_packet_enter pkt;
+			pkt.size = sizeof(pkt);
+			pkt.type = S2C_P_ENTER;
+			pkt.id = client_id;
+			g_server.users[client_id]->do_send(&pkt);
 			for (int i = 0; i < MAX_ROOM; ++i) {
-				s2c_packet_room_info pkt;
+				sc_packet_room_info pkt;
 				pkt.size = sizeof(pkt);
-				pkt.type = S2C_P_ROOM_INFO;
+				pkt.type = S2C_P_UPDATEROOM;
 				pkt.room_number = static_cast<char>(i);
-				pkt.player_count = static_cast<char>(Network::rooms[i].GetPlayerCount());
+				pkt.player_count = static_cast<char>(g_server.rooms[i].GetPlayerCount());
+				
 				g_server.users[client_id]->do_send(&pkt);
 			}
 
@@ -62,7 +69,7 @@ int main() {
 		case IO_RECV:
 		{
 			SESSION* user = g_server.users[key];
-			char* ptr = exp->buffer;
+			 char* ptr = exp->buffer;
 			int processed = 0;
 			bytes += user->remained;
 			while (processed < bytes) {
