@@ -292,6 +292,7 @@ public:
 	void UpdateWorldMatrix();
 
 	void SetPosition(XMFLOAT3 pos);
+	void SetLookDirection(const XMFLOAT3& look, const XMFLOAT3& up);
 	void Rotate(XMFLOAT3 rot);
 	void Rotation(XMFLOAT3 rot, CGameObject& frame);
 	void move(float fElapsedTime, short arrow);

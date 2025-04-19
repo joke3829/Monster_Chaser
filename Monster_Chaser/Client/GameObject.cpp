@@ -890,6 +890,30 @@ void CSkinningObject::SetPosition(XMFLOAT3 pos)
 	m_xmf3Position = pos;
 	UpdateWorldMatrix();
 }
+void CSkinningObject::SetLookDirection(const XMFLOAT3& look, const XMFLOAT3& up)
+{
+	m_xmf3Look = look; // 카메라의 방향 벡터로 캐릭터 Look 설정
+	m_xmf3Up = up;     // 카메라 또는 프레임의 Up 벡터로 설정
+
+	// 방향 벡터 정규화
+	XMVECTOR lookVec = XMLoadFloat3(&m_xmf3Look);
+	XMVECTOR upVec = XMLoadFloat3(&m_xmf3Up);
+	lookVec = XMVector3Normalize(lookVec);
+	XMStoreFloat3(&m_xmf3Look, lookVec);
+
+	// Right 벡터 계산 (Up과 Look의 외적)
+	XMVECTOR right = XMVector3Cross(upVec, lookVec);
+	right = XMVector3Normalize(right);
+	XMStoreFloat3(&m_xmf3Right, right);
+
+	// Up 벡터 재계산 (Look과 Right의 외적)
+	upVec = XMVector3Cross(lookVec, right);
+	upVec = XMVector3Normalize(upVec);
+	XMStoreFloat3(&m_xmf3Up, upVec);
+
+	// 세계 행렬 업데이트
+	UpdateWorldMatrix();
+}
 // ��� ����
 void CSkinningObject::Rotate(XMFLOAT3 rot)
 {

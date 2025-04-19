@@ -44,6 +44,8 @@ public:
 	}
 	bool getThirdPersonState() const { return m_bThirdPerson; }
 
+	XMFLOAT3 getDir() const { return m_xmf3Dir; }
+	XMFLOAT3 getUp() const { return m_xmf3Up; }
 protected:
 	bool m_bThirdPerson = false;
 	CGameObject* m_pTarget = nullptr;
