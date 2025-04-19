@@ -596,12 +596,15 @@ void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wPar
 	ClientToScreen(hWnd, &screenCenter);
 	POINT currentPos;
 	GetCursorPos(&currentPos);
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	XMFLOAT3 cameraUp = m_pCamera->getUp();
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
 		if (!m_bLockAnimation && !m_bLockAnimation1) {
 			auto& animationManagers = m_pResourceManager->getAnimationManagers();
 			for (auto& animationManager : animationManagers) {
+				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 				animationManager->OnAttackInput();
 			}
 		}
