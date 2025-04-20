@@ -216,6 +216,10 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 				m_bRaster = !m_bRaster;
 			}
 			break;
+		case 'b':
+		case 'B':
+			m_pCamera->SetThirdPersonMode(false);
+			break;
 		default:
 			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
 			break;
