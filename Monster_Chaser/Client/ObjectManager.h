@@ -23,12 +23,16 @@ class Player : public ObjectManager {
 public:
     Player(int id) : ObjectManager(id) {}
 
-    CSkinningObject* getRenderingObject() { return Client_Object.get(); }
+    void setRenderingObject(CSkinningObject* obj) { Client_Object = obj; }
+
+    CSkinningObject* getRenderingObject() { return Client_Object; }
 
     void setPosition(const XMFLOAT4& pos) {
         ObjectManager::setPosition(pos);
-        XMFLOAT3 pos3 = { pos.x, pos.y, pos.z };
-        Client_Object->SetPosition(pos3);
+        if (Client_Object) {
+            XMFLOAT3 pos3 = { pos.x, pos.y, pos.z };
+            Client_Object->SetPosition(pos3);
+        }
     }
 
     bool isReady() const { return readyToStart; }
@@ -43,7 +47,7 @@ private:
     bool readyToStart = false;
     int hp = 100;
     
-    std::unique_ptr<CSkinningObject> Client_Object;
+    CSkinningObject* Client_Object=nullptr;
     // 더 필요한 상태값들...
 };
 
