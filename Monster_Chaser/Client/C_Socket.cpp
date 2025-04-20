@@ -112,8 +112,7 @@ void C_Socket::process_packet(char* ptr)
 		
 		if (Players.contains(id))
 		{
-			XMFLOAT4 pos = { position._41, position._42, position._43, 1.0f };
-			Players[id]->setPosition(pos);
+			Players[id]->setPosition(position);
 		}
 
 		break;

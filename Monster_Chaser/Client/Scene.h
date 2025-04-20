@@ -5,6 +5,7 @@
 #include "ShaderBindingTableManager.h"
 #include "AccelerationStructureManager.h"
 #include "stdfxh.h"
+#include "ObjectManager.h"
 
 extern DXResources g_DxResource;
 

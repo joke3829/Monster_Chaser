@@ -1,6 +1,6 @@
 #include "Scene.h"
 #include "protocol.h"
-
+extern std::unordered_map<int, Player*> Players;
 void CRaytracingScene::UpdateObject(float fElapsedTime)
 {
 	//m_pCamera->SetShaderVariable();
@@ -28,7 +28,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	auto& Skinned = m_pResourceManager->getSkinningObjectList();
 	for (size_t i = 1; i < Skinned.size(); ++i) {
-		Skinned[i]->SetPosition(XMFLOAT3(0.0f,0.0f,10.0f*i));
+		Skinned[i]->SetPosition(Players[i]->getRenderingObject()->getPosition());
 	}
 
 	m_pResourceManager->UpdateWorldMatrix();
@@ -480,12 +480,14 @@ void CRaytracingTestScene::SetUp()
 	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
 	aManagers[1]->SetFramesPointerFromSkinningObject(skinned[1]->getObjects());
 	aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
+	Players[1]->setRenderingObject(skinned[1].get());
 
 	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 	skinned[2]->CopyFromOtherObject(skinned[0].get());
 	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
 	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
 	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
+	Players[2]->setRenderingObject(skinned[2].get());
 
 	// Create new Object Example
 	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.025f, 1.0f));

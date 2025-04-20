@@ -11,12 +11,12 @@ public:
 
     int getID() const;
 
-    void setPosition(const XMFLOAT4& pos);
-    XMFLOAT4 getPosition() const;
+    void setMatrix(const XMFLOAT4X4& pos);
+    XMFLOAT3 getPosition() const;
 
 protected:
     int my_id;
-    XMFLOAT4 m_pos; // ¡ç XMFLOAT4·Î º¯°æµÊ
+    XMFLOAT4X4 m_Matrix; // ¡ç XMFLOAT4·Î º¯°æµÊ
 };
 
 class Player : public ObjectManager {
@@ -27,10 +27,10 @@ public:
 
     CSkinningObject* getRenderingObject() { return Client_Object; }
 
-    void setPosition(const XMFLOAT4& pos) {
-        ObjectManager::setPosition(pos);
+    void setPosition(const XMFLOAT4X4& pos) {
+        ObjectManager::setMatrix(pos);
         if (Client_Object) {
-            XMFLOAT3 pos3 = { pos.x, pos.y, pos.z };
+            XMFLOAT3 pos3 = { pos._41, pos._42 ,pos._43 };
             Client_Object->SetPosition(pos3);
         }
     }
