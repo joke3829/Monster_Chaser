@@ -73,6 +73,9 @@
     <Filter Include="소스 파일\서버관련\플레이어객체">
       <UniqueIdentifier>{dd0ec600-8aae-412c-9fc4-1dc9367e0664}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\서버관련\플레이어객체\플레이어 정보">
+      <UniqueIdentifier>{5a8a0fd5-210e-4d8d-ace9-d690a08eea57}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -150,6 +153,9 @@
     <ClInclude Include="ObjectManager.h">
       <Filter>소스 파일\서버관련\플레이어객체</Filter>
     </ClInclude>
+    <ClInclude Include="PlayerInfo.h">
+      <Filter>소스 파일\서버관련\플레이어객체\플레이어 정보</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -214,6 +220,9 @@
     </ClCompile>
     <ClCompile Include="ObjectManager.cpp">
       <Filter>소스 파일\서버관련\플레이어객체</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerInfo.cpp">
+      <Filter>소스 파일\서버관련\플레이어객체\플레이어 정보</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

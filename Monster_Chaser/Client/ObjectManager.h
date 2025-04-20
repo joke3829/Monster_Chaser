@@ -38,7 +38,7 @@ public:
     bool isReady() const { return readyToStart; }
     void setReady(const bool& ready) { readyToStart = ready; }
     void setRoomNumber(const int& num) { room_number = num; }
-
+    void setPlayerID_In_Game(const int & val,const int&key);
     int GetRoomNumber() { return room_number; }
     
     int room_players[MAX_ROOM] = {0};
@@ -46,7 +46,7 @@ private:
     int room_number{ -1 };
     bool readyToStart = false;
     int hp = 100;
-    
+    int PlayerID_In_Game[3];
     CSkinningObject* Client_Object=nullptr;
     // 더 필요한 상태값들...
 };

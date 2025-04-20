@@ -92,47 +92,15 @@ void SESSION::process_packet(char* p) {
 		std::cout << "[클라이언트 " << id << "]이 " << (int)room_num << "번 방에 입장했습니다." << std::endl;
 		break;
 	}
-	case C2S_P_READY: {
-		cs_packet_ready* pkt = reinterpret_cast<cs_packet_ready*>(p);
-		int id = pkt->id;
-		int room_num = static_cast<int>(pkt->room_number);		//이미 방에 들어갈 떄 진행하니까 굳이 필요는 x
-		bool is_ready = true;
-		g_server.rooms[room_num].setReadyUser(1);
-
-		if (g_server.rooms[room_num].GetReadyUser() >= 3)		//한 방에 3명이 준비가 다 완료 됐다는 뜻		//인게임 준비완료 
-		{
-			
-			sc_packet_Ingame_start sp;
-			sp.size = sizeof(sp);
-			sp.type = S2C_P_ALLREADY;
-			sp.room_number = room_num;
-			
-			for (int i = 0; i < g_server.rooms[room_num].GetPlayerCount(); ++i) {
-				sp.ready_id[i] = g_server.rooms[room_num].getID(i);  // ID 기록용
-			}
-		
-			for (int i = 0; i < g_server.rooms[room_num].GetPlayerCount(); ++i) {
-				int target_id = g_server.rooms[room_num].getID(i);
-				if (g_server.users.contains(target_id)) {
-					g_server.users[target_id]->do_send(&sp);
-				}
-			}
-			
-			
-		}
-		else 
-		{
-			sc_packet_set_ready rp;
-			rp.size = sizeof(rp);
-			rp.type = S2C_P_SETREADY;
-			rp.id = id;
-			rp.room_number = static_cast<char>(room_num);
-			rp.is_ready = is_ready;
-			for (auto& player : g_server.users) {
-				player.second->do_send(&rp);
-			}
-
-			std::cout << "[클라이언트 " << id << "]이 " << (int)room_num << "번 방에서 준비완료했습니다." << std::endl;
+	case C2S_P_ROOM_UPDATE: {
+		// Every rooms state send
+		for (int i = 0; i < MAX_ROOM; ++i) {
+			sc_packet_room_info pkt;
+			pkt.size = sizeof(pkt);
+			pkt.type = S2C_P_UPDATEROOM;
+			pkt.room_number = static_cast<char>(i);
+			pkt.player_count = static_cast<char>(g_server.rooms[i].GetPlayerCount());
+			do_send(&pkt);
 		}
 		break;
 	}
@@ -156,17 +124,55 @@ void SESSION::process_packet(char* p) {
 		std::cout << "[클라이언트 " << id << "]이 준비를 취소했습니다." << std::endl;
 		break;
 	}
+	case C2S_P_READY: {
+		cs_packet_ready* pkt = reinterpret_cast<cs_packet_ready*>(p);
+		int id = pkt->id;
+		int room_num = static_cast<int>(pkt->room_number);		//이미 방에 들어갈 떄 진행하니까 굳이 필요는 x
+		bool is_ready = true;
+		g_server.rooms[room_num].setReadyUser(1);
 
+		// 3명 다 준비 완료일 때
+		if (g_server.rooms[room_num].GetReadyUser() >= 3) {
+			// 모든 플레이어 ID 수집
+			std::vector<int> room_players;
+			for (int i = 0; i < g_server.rooms[room_num].GetPlayerCount(); ++i)
+				room_players.push_back(g_server.rooms[room_num].getID(i));
 
-	case C2S_P_ROOM_UPDATE: {
-		// Every rooms state send
-		for (int i = 0; i < MAX_ROOM; ++i) {
-			sc_packet_room_info pkt;
-			pkt.size = sizeof(pkt);
-			pkt.type = S2C_P_UPDATEROOM;
-			pkt.room_number = static_cast<char>(i);
-			pkt.player_count = static_cast<char>(g_server.rooms[i].GetPlayerCount());
-			do_send(&pkt);
+			// 각 유저에게 자신의 ID를 ready_id[0]으로 보내도록 별도 패킷 생성
+			for (int i = 0; i < room_players.size(); ++i) {
+				int self_id = room_players[i];
+				if (!g_server.users.contains(self_id)) continue;
+
+				sc_packet_Ingame_start sp;
+				sp.size = sizeof(sp);
+				sp.type = S2C_P_ALLREADY;
+				sp.room_number = room_num;
+
+				sp.ready_id[0] = self_id;
+				int idx = 1;
+				for (int j = 0; j < room_players.size(); ++j) {
+					if (room_players[j] != self_id)
+						sp.ready_id[idx++] = room_players[j];
+				}
+
+				g_server.users[self_id]->do_send(&sp);
+			}
+			g_server.rooms[room_num].StartGame();
+			
+		}
+		else 
+		{
+			sc_packet_set_ready rp;
+			rp.size = sizeof(rp);
+			rp.type = S2C_P_SETREADY;
+			rp.id = id;
+			rp.room_number = static_cast<char>(room_num);
+			rp.is_ready = is_ready;
+			for (auto& player : g_server.users) {
+				player.second->do_send(&rp);
+			}
+
+			std::cout << "[클라이언트 " << id << "]이 " << (int)room_num << "번 방에서 준비완료했습니다." << std::endl;
 		}
 		break;
 	}
@@ -175,10 +181,21 @@ void SESSION::process_packet(char* p) {
 		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
 		int id = pkt->id;
 		auto pos = pkt->pos;
+		
 		//collision check
 		/*{
 			이동
 		}*/
+		int target_id[3];
+		
+
+		for (auto& u : g_server.rooms) {
+			if (u.IsStarted()) {
+				for (int i = 0; i < u.GetReadyUser(); ++i) {
+					target_id[i] = u.getID(i);
+				}
+			}
+		}
 
 		sc_packet_move mp;
 		mp.size = sizeof(mp);

@@ -154,6 +154,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="ObjectManager.h" />
+    <ClInclude Include="PlayerInfo.h" />
     <ClInclude Include="protocol.h" />
     <ClInclude Include="RayTracingPipeline.h" />
     <ClInclude Include="ResourceManager.h" />
@@ -200,6 +201,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="ObjectManager.cpp" />
+    <ClCompile Include="PlayerInfo.cpp" />
     <ClCompile Include="RayTracingPipeline.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Scene.cpp" />

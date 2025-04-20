@@ -18,3 +18,8 @@ XMFLOAT4 ObjectManager::getPosition() const {
 }
 
 
+
+void Player::setPlayerID_In_Game(const int& val, const int& key)
+{
+    PlayerID_In_Game[key] = val;
+}

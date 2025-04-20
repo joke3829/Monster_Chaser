@@ -96,6 +96,9 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_ALLREADY:
 	{
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
+		Players[p->ready_id[0]]->setPlayerID_In_Game(p->ready_id[0], 0);					 //방에 있는 id 넣어주기 0번째 인덱스는 자기 id
+		Players[p->ready_id[0]]->setPlayerID_In_Game(p->ready_id[1], 1);					 //방에 있는 id 넣어주기 0번째 인덱스는 자기 id
+		Players[p->ready_id[0]]->setPlayerID_In_Game(p->ready_id[2], 2);					 //방에 있는 id 넣어주기 0번째 인덱스는 자기 id
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
 
 		break;
@@ -105,7 +108,7 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_move* p = reinterpret_cast<sc_packet_move*>(ptr);
 		int id = p->id;
 		XMFLOAT4X4 position = p->pos;
-		Players.size();
+		
 		
 		if (Players.contains(id))
 		{
