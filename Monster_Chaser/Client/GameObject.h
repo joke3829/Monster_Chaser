@@ -180,11 +180,15 @@ public:
 	ID3D12Resource* getCbuffer(int index) const;
 	ID3D12Resource* getMeshCBuffer() const;
 	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Pos.x = m_xmf4x4WorldMatrix._41; m_xmf3Pos.y = m_xmf4x4WorldMatrix._42; m_xmf3Pos.z = m_xmf4x4WorldMatrix._43; return m_xmf3Pos; }
+	unsigned short& getBoundingInfo() { return m_bUseBoundingInfo; }
 
 
-	XMFLOAT4X4 getWorldMatrix();
-	XMFLOAT4X4 getLocalMatrix();
-	XMFLOAT4X4 getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
+	XMFLOAT4X4& getWorldMatrix();
+	XMFLOAT4X4& getLocalMatrix();
+	XMFLOAT4X4& getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
+
+	BoundingOrientedBox& getObjectOBB() { return m_OBB; }
+	BoundingSphere& getObjectSphere() { return m_BoundingSphere; }
 
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);

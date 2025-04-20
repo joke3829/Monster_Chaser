@@ -172,12 +172,12 @@ ID3D12Resource* CGameObject::getMeshCBuffer() const
 	return m_pd3dMeshCBuffer.Get();
 }
 
-XMFLOAT4X4 CGameObject::getWorldMatrix()
+XMFLOAT4X4& CGameObject::getWorldMatrix()
 {
 	return m_xmf4x4WorldMatrix;
 }
 
-XMFLOAT4X4 CGameObject::getLocalMatrix()
+XMFLOAT4X4& CGameObject::getLocalMatrix()
 {
 	return m_xmf4x4LocalMatrix;
 }

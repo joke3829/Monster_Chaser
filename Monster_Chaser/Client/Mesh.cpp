@@ -79,10 +79,14 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 		n += XMVector3Cross(v1, v2);
 		};
 
+	float max_Value = FLT_MIN;
+
 	float fHeight;
 	for (int z = 0; z < Length; ++z) {
 		for (int x = 0; x < Width; ++x) {
 			fHeight = heightmap->GetHeight(x, z);
+			if (max_Value < fHeight)
+				max_Value = fHeight;
 			vertex.emplace_back(x * xmf3Scale.x, fHeight, z * xmf3Scale.z);
 			tex0.emplace_back(float(x) / float(Width - 1), float(Length - 1 - z) / float(Length - 1));
 			tex1.emplace_back(float(x) / float(xmf3Scale.x * 0.5f), float(z) / float(xmf3Scale.z * 0.5f));
@@ -106,6 +110,11 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 		}
 	}
 
+	XMFLOAT3 center{ ((Width - 1) * xmf3Scale.x) / 2 , max_Value / 2, ((Length - 1) * xmf3Scale.z) / 2 };
+	XMFLOAT3 extent{ ((Width - 1) * xmf3Scale.x) / 2 , max_Value / 2, ((Length - 1) * xmf3Scale.z) / 2 };
+	m_bHasBoundingBox = true;
+	m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0, 0.0, 0.0, 1.0));
+
 	std::vector<UINT> index{};
 
 	for (int z = 0; z < Length - 1; ++z) {
@@ -119,81 +128,6 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 			index.emplace_back(x + (z * Width) + 1 + Width);
 		}
 	}
-
-	// Calculate Normals
-	
-	unsigned int remainderW, quotientH;
-	for (unsigned int i = 0; i < vertex.size(); ++i) {
-		remainderW = i % Width; quotientH = i / Length;
-		if (0 == remainderW || Width - 1 == remainderW || 0 == quotientH || Length - 1 == quotientH)
-			continue;
-		short cnt{};
-		/*XMVECTOR vertexNormal{};
-		for (unsigned int j = 0; j < index.size() && cnt < 6; j += 3) {
-			if (i == index[j] || i == index[j + 1] || i == index[j + 2]) {
-				XMVECTOR v1 = XMVector3Normalize(XMLoadFloat3(&vertex[index[j + 1]]) - XMLoadFloat3(&vertex[index[j]]));
-				XMVECTOR v2 = XMVector3Normalize(XMLoadFloat3(&vertex[index[j + 2]]) - XMLoadFloat3(&vertex[index[j]]));
-				XMVECTOR N = XMVector3Cross(v1, v2);
-				vertexNormal += N;
-				++cnt;
-			}
-		}
-		XMStoreFloat3(&normals[i], XMVector3Normalize(vertexNormal));*/
-	}
-
-
-
-	// Calculate Tangents and BiTangents
-	std::vector<XMFLOAT3> tangents(vertex.size(), { 0.0f, 0.0f, 0.0f });
-	std::vector<XMFLOAT3> bitangents(vertex.size(), { 0.0f, 0.0f, 0.0f });
-	for (size_t i = 0; i < index.size(); i += 3) {
-		UINT index0 = index[i];
-		UINT index1 = index[i + 1];
-		UINT index2 = index[i + 2];
-
-		XMVECTOR v0 = XMLoadFloat3(&vertex[index0]);
-		XMVECTOR v1 = XMLoadFloat3(&vertex[index1]);
-		XMVECTOR v2 = XMLoadFloat3(&vertex[index2]);
-
-		XMFLOAT2 uv0 = tex0[index0];
-		XMFLOAT2 uv1 = tex0[index1];
-		XMFLOAT2 uv2 = tex0[index2];
-
-		XMVECTOR deltaPos1 = v1 - v0;
-		XMVECTOR deltaPos2 = v2 - v0;
-
-		float deltaU1 = uv1.x - uv0.x;
-		float deltaV1 = uv1.y - uv0.y;
-		float deltaU2 = uv2.x - uv0.x;
-		float deltaV2 = uv2.y - uv0.y;
-
-		float r = 1.0f / (deltaU1 * deltaV2 - deltaU2 * deltaV1);
-		XMVECTOR tangent = (deltaPos1 * deltaV2 - deltaPos2 * deltaV1) * r;
-		XMVECTOR bitangent = (deltaPos2 * deltaU1 - deltaPos1 * deltaU2) * r;
-
-		XMFLOAT3 faceTangent, faceBitangent;
-		XMStoreFloat3(&faceTangent, XMVector3Normalize(tangent));
-		XMStoreFloat3(&faceBitangent, XMVector3Normalize(bitangent));
-
-		tangents[index0].x += faceTangent.x; tangents[index0].y += faceTangent.y; tangents[index0].z += faceTangent.z;
-		tangents[index1].x += faceTangent.x; tangents[index1].y += faceTangent.y; tangents[index1].z += faceTangent.z;
-		tangents[index2].x += faceTangent.x; tangents[index2].y += faceTangent.y; tangents[index2].z += faceTangent.z;
-
-		bitangents[index0].x += faceBitangent.x; bitangents[index0].y += faceBitangent.y; bitangents[index0].z += faceBitangent.z;
-		bitangents[index1].x += faceBitangent.x; bitangents[index1].y += faceBitangent.y; bitangents[index1].z += faceBitangent.z;
-		bitangents[index2].x += faceBitangent.x; bitangents[index2].y += faceBitangent.y; bitangents[index2].z += faceBitangent.z;
-	}
-
-	for (size_t i = 0; i < tangents.size(); ++i) {
-		XMVECTOR tangentVec = XMLoadFloat3(&tangents[i]);
-		tangentVec = XMVector3Normalize(tangentVec);
-		XMStoreFloat3(&tangents[i], tangentVec);
-
-		XMVECTOR bitangentVec = XMLoadFloat3(&bitangents[i]);
-		bitangentVec = XMVector3Normalize(bitangentVec);
-		XMStoreFloat3(&bitangents[i], bitangentVec);
-	}
-
 
 	void* tempData{};
 	m_bHasVertex = true; m_nVertexCount = vertex.size();
@@ -229,22 +163,6 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 	memcpy(tempData, normals.data(), sizeof(XMFLOAT3)* m_nNormalsCount);
 	m_pd3dNormalsBuffer->Unmap(0, nullptr);
 
-	m_bHasTangents = true; m_nTangentsCount = tangents.size();
-	desc.Width = sizeof(XMFLOAT3) * m_nTangentsCount;
-	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr, IID_PPV_ARGS(m_pd3dTangentsBuffer.GetAddressOf()));
-	m_pd3dTangentsBuffer->Map(0, nullptr, &tempData);
-	memcpy(tempData, tangents.data(), sizeof(XMFLOAT3)* m_nTangentsCount);
-	m_pd3dTangentsBuffer->Unmap(0, nullptr);
-
-	m_bHasBiTangents = true; m_nBiTangentsCount = bitangents.size();
-	desc.Width = sizeof(XMFLOAT3) * m_nBiTangentsCount;
-	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr, IID_PPV_ARGS(m_pd3dBiTangentsBuffer.GetAddressOf()));
-	m_pd3dBiTangentsBuffer->Map(0, nullptr, &tempData);
-	memcpy(tempData, bitangents.data(), sizeof(XMFLOAT3)* m_nBiTangentsCount);
-	m_pd3dBiTangentsBuffer->Unmap(0, nullptr);
-
 	m_bHasSubMeshes = true;
 	ComPtr<ID3D12Resource> tempBuffer{};
 	desc.Width = sizeof(UINT) * index.size();
@@ -262,6 +180,7 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 Mesh::Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName)
 {
 	m_MeshName = meshName;
+	m_bHasBoundingBox = true;
 	m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
 	
 	std::vector<XMFLOAT3> pos(8);
@@ -274,19 +193,70 @@ Mesh::Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName)
 	pos[6] = XMFLOAT3(center.x + extent.x, center.y + extent.y, center.z + extent.z);
 	pos[7] = XMFLOAT3(center.x - extent.x, center.y + extent.y, center.z + extent.z);
 
+	std::vector<XMFLOAT3> nor(6);
+	nor[0] = XMFLOAT3(0.0f, 0.0f, -1.0f); nor[1] = XMFLOAT3(1.0f, 0.0f, 0.0f); nor[2] = XMFLOAT3(0.0f, 0.0f, 1.0f);
+	nor[3] = XMFLOAT3(-1.0f, 0.0f, 0.0f); nor[4] = XMFLOAT3(0.0f, -1.0f, 0.0f); nor[5] = XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+
+	std::vector<XMFLOAT3> vertex(36);
+	vertex[0] = pos[0]; vertex[1] = pos[4]; vertex[2] = pos[1];
+	vertex[3] = pos[4]; vertex[4] = pos[5]; vertex[5] = pos[1];
+
+	vertex[6] = pos[1]; vertex[7] = pos[5]; vertex[8] = pos[2];
+	vertex[9] = pos[5]; vertex[10] = pos[6]; vertex[11] = pos[2];
+
+	vertex[12] = pos[2]; vertex[13] = pos[6]; vertex[14] = pos[3];
+	vertex[15] = pos[6]; vertex[16] = pos[7]; vertex[17] = pos[3];
+
+	vertex[18] = pos[3]; vertex[19] = pos[7]; vertex[20] = pos[0];
+	vertex[21] = pos[7]; vertex[22] = pos[4]; vertex[23] = pos[0];
+
+	vertex[24] = pos[3]; vertex[25] = pos[0]; vertex[26] = pos[2];
+	vertex[27] = pos[0]; vertex[28] = pos[1]; vertex[29] = pos[2];
+
+	vertex[30] = pos[7]; vertex[31] = pos[6]; vertex[32] = pos[4];
+	vertex[33] = pos[4]; vertex[34] = pos[6]; vertex[35] = pos[5];
+
+	std::vector<XMFLOAT3> normals(36);
+	normals[0] = nor[0]; normals[1] = nor[0]; normals[2] = nor[0];
+	normals[3] = nor[0]; normals[4] = nor[0]; normals[5] = nor[0];
+
+	normals[6] = nor[1]; normals[7] = nor[1]; normals[8] = nor[1];
+	normals[9] = nor[1]; normals[10] = nor[1]; normals[11] = nor[1];
+
+	normals[12] = nor[2]; normals[13] = nor[2]; normals[14] = nor[2];
+	normals[15] = nor[2]; normals[16] = nor[2]; normals[17] = nor[2];
+
+	normals[18] = nor[3]; normals[19] = nor[3]; normals[20] = nor[3];
+	normals[21] = nor[3]; normals[22] = nor[3]; normals[23] = nor[3];
+
+	normals[24] = nor[4]; normals[25] = nor[4]; normals[26] = nor[4];
+	normals[27] = nor[4]; normals[28] = nor[4]; normals[29] = nor[4];
+
+	normals[30] = nor[5]; normals[31] = nor[5]; normals[32] = nor[5];
+	normals[33] = nor[5]; normals[34] = nor[5]; normals[35] = nor[5];
+
 
 	void* tempData{};
 	m_bHasVertex = true;
-	m_nVertexCount = 8;
+	m_nVertexCount = 36;
 	auto desc = BASIC_BUFFER_DESC;
-	desc.Width = sizeof(XMFLOAT3) * 8;
+	desc.Width = sizeof(XMFLOAT3) * 36;
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr, IID_PPV_ARGS(m_pd3dVertexBuffer.GetAddressOf()));
 	m_pd3dVertexBuffer->Map(0, nullptr, &tempData);
-	memcpy(tempData, pos.data(), sizeof(XMFLOAT3) * 8);
+	memcpy(tempData, vertex.data(), sizeof(XMFLOAT3) * 36);
 	m_pd3dVertexBuffer->Unmap(0, nullptr);
 
-	std::vector<UINT> index(36);
+	m_bHasNormals = true;
+	m_nNormalsCount = 36;
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr, IID_PPV_ARGS(m_pd3dNormalsBuffer.GetAddressOf()));
+	m_pd3dNormalsBuffer->Map(0, nullptr, &tempData);
+	memcpy(tempData, normals.data(), sizeof(XMFLOAT3) * 36);
+	m_pd3dNormalsBuffer->Unmap(0, nullptr);
+
+	/*std::vector<UINT> index(36);
 	index[0] = 0; index[1] = 1; index[2] = 3; index[3] = 1; index[4] = 2; index[5] = 3;
 	index[6] = 0; index[7] = 4; index[8] = 1; index[9] = 4; index[10] = 5; index[11] = 1;
 	index[12] = 5; index[13] = 6; index[14] = 2; index[15] = 5; index[16] = 2; index[17] = 1;
@@ -305,7 +275,7 @@ Mesh::Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName)
 
 	++m_nSubMeshesCount;
 	m_vIndices.emplace_back(36);
-	m_vSubMeshes.emplace_back(tempBuffer);
+	m_vSubMeshes.emplace_back(tempBuffer);*/
 }
 
 Mesh::Mesh(XMFLOAT3& center, float radius, std::string meshName)
@@ -456,6 +426,7 @@ void Mesh::GetBoundInfoFromFile(std::ifstream& inFile)
 	XMFLOAT3 OBBCenter{}; XMFLOAT3 OBBExtent{};
 	inFile.read((char*)&OBBCenter, sizeof(XMFLOAT3));
 	inFile.read((char*)&OBBExtent, sizeof(XMFLOAT3));
+	m_bHasBoundingBox = true;
 	m_OBB = BoundingOrientedBox(OBBCenter, OBBExtent, XMFLOAT4(0.0, 0.0, 0.0, 1.0));
 }
 

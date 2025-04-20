@@ -22,6 +22,8 @@ public:
 	void UpdateViewMatrix();
 	void SetShaderVariable();
 
+	XMFLOAT3& getEye() { return m_xmf3Eye; }
+
 	void SetTarget(CGameObject* target);
 	void SetThirdPersonMode(bool bThirdPerson);
 	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }

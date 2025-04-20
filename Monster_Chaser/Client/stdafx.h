@@ -23,6 +23,7 @@
 #include <fstream>
 #include <timeapi.h>
 #include <random>
+#include <numeric>
 
 #include <d3d12.h>
 #include <dxgi1_6.h>

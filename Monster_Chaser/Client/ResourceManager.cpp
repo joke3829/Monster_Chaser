@@ -380,7 +380,7 @@ void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
 {
 	// 애니메이션이 없는 스키닝 객체면 문제가 생김
 	for (int i = 0; i < m_vAnimationManager.size(); ++i) {
-		m_vAnimationManager[i]->TimeIncrease(fElapsedTime);
+		//m_vAnimationManager[i]->TimeIncrease(fElapsedTime);
 		m_vSkinningObject[i]->UpdateAnimationMatrixes();
 		m_vAnimationManager[i]->UpdateAnimationMatrix();
 		m_vSkinningObject[i]->UpdateObject(fElapsedTime);
@@ -439,22 +439,151 @@ std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 void CResourceManager::LightTest()
 {
 	Lights testLight{};
-	testLight.numLights = 2;
+	testLight.numLights = 3;
 	testLight.lights[0].Type = DIRECTIONAL_LIGHT;
-	testLight.lights[0].Intensity = 1.0f;
+	testLight.lights[0].Intensity =  1.0f;
 	testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
 	//testLight.lights[0].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	//testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
 	testLight.lights[0].Direction = XMFLOAT3(1.0, -1.0, 0.0);
 
-	testLight.lights[1].Type = POINT_LIGHT;
-	testLight.lights[1].Intensity = 1;
-	testLight.lights[1].Color = XMFLOAT4(1.0f, 1.0f ,1.0f, 1.0f);
-	testLight.lights[1].Position = XMFLOAT3(0.0, 10.0f, 15.0f);
-	testLight.lights[1].Range = 45.0f;
+	testLight.lights[1].Type = SPOT_LIGHT;
+	testLight.lights[1].Intensity = 10.0f;
+	testLight.lights[1].Color = XMFLOAT4(1.0f, 0.0f ,1.0f, 1.0f);
+	testLight.lights[1].Position = XMFLOAT3(0.0, 20.0f, 15.0f);
+	testLight.lights[1].Direction = XMFLOAT3(0.0, -1.0, -1.0);
+	testLight.lights[1].SpotAngle = 40.0f;
+	testLight.lights[1].Range = 40.0f;
+
+	testLight.lights[2].Type = POINT_LIGHT;
+	testLight.lights[2].Intensity = 5.0f;
+	testLight.lights[2].Color = XMFLOAT4(.0f, 1.0f, 1.0f, 1.0f);
+	testLight.lights[2].Position = XMFLOAT3(0.0, 20.0f, 15.0f);
+	testLight.lights[2].Range = 60.0f;
 
 	Lights* mapptr{};
 	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
 	memcpy(mapptr, &testLight, sizeof(Lights));
+	m_pLights->Unmap(0, nullptr);
+}
+
+void CResourceManager::AddLightsFromFile(wchar_t* FilePath)
+{
+	std::ifstream inFile{ FilePath, std::ios::binary };
+	if (!inFile) {
+		OutputDebugString(L"Can't File Open!\n");
+		return;
+	}
+	std::string strLabel{};
+	auto readLabel = [&]() {
+		char nStrLength{};
+		inFile.read(&nStrLength, sizeof(char));
+		strLabel.assign(nStrLength, ' ');
+		inFile.read(strLabel.data(), nStrLength);
+		};
+
+	while (!inFile.eof()) {
+		readLabel();
+		if ("</Hierarchy>:" == strLabel)
+			break;
+		if ("<Frame>:" == strLabel)
+			AddLightsFromFileRecursion(inFile);
+	}
+}
+
+void CResourceManager::AddLightsFromFileRecursion(std::ifstream& inFile)
+{
+	std::string strLabel{};
+	auto readLabel = [&]() {
+		char nStrLength{};
+		inFile.read(&nStrLength, sizeof(char));
+		strLabel.assign(nStrLength, ' ');
+		inFile.read(strLabel.data(), nStrLength);
+		};
+
+	int tempData{};
+	inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+	inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+	readLabel();
+
+	while (1) {
+		readLabel();
+		if ("</Frame>" == strLabel)
+			break;
+		if ("<Transform>:" == strLabel) {
+			for(int i = 0 ; i < 13; ++i)
+				inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+		}
+		else if ("<TransformMatrix>:" == strLabel) {
+			for (int i = 0; i < 16; ++i)
+				inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+		}
+		else if ("<Bound>:" == strLabel) {
+			for (int i = 0; i < 6; ++i)
+				inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+		}
+		else if ("<Children>:" == strLabel) {
+			int nChild{};
+			inFile.read(reinterpret_cast<char*>(&nChild), sizeof(int));
+			if (nChild > 0) {
+				for (int i = 0; i < nChild; ++i) {
+					readLabel();
+					AddLightsFromFileRecursion(inFile);
+				}
+			}
+		}
+		else if ("<Light>:" == strLabel) {
+			readLabel();
+			size_t myIndex = m_vLights.size();
+			m_vLights.emplace_back();
+			while (1) {
+				readLabel();
+				if ("</Light>" == strLabel)
+					break;
+				if ("<Type>:" == strLabel) {
+					readLabel();
+					if ("Directional" == strLabel)
+						m_vLights[myIndex].Type = DIRECTIONAL_LIGHT;
+					else if ("Point" == strLabel)
+						m_vLights[myIndex].Type = POINT_LIGHT;
+					else if ("Spot" == strLabel)
+						m_vLights[myIndex].Type = SPOT_LIGHT;
+					continue;
+				}
+				if ("<Position>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].Position), sizeof(XMFLOAT3));
+					continue;
+				}
+				if ("<Direction>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].Direction), sizeof(XMFLOAT3));
+					continue;
+				}
+				if ("<Color>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].Color), sizeof(XMFLOAT4));
+					continue;
+				}
+				if ("<Intensity>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].Intensity), sizeof(float));
+					continue;
+				}
+				if ("<Range>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].Range), sizeof(float));
+					continue;
+				}
+				if ("<SpotAngle>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].SpotAngle), sizeof(float));
+					continue;
+				}
+			}
+		}
+	}
+}
+
+void CResourceManager::ReadyLightBufferContent()
+{
+	Lights* mapptr{};
+	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
+	mapptr->numLights = m_vLights.size();
+	memcpy(mapptr->lights, m_vLights.data(), sizeof(Light) * m_vLights.size());
 	m_pLights->Unmap(0, nullptr);
 }

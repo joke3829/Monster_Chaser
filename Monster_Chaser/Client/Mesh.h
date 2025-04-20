@@ -76,6 +76,7 @@ public:
 	bool getHasBiTangent() const;
 	bool getHasSubmesh() const;
 	bool getbSkinning() const { return m_bSkinningMesh; }
+	bool getHasBoundingBox() const { return m_bHasBoundingBox; }
 
 	UINT getSubMeshCount() const;
 	
@@ -84,6 +85,7 @@ protected:
 private:
 	std::string m_MeshName{};							// Mesh의 이름
 
+	bool m_bHasBoundingBox = false;
 	BoundingOrientedBox m_OBB{};						// Oriented_Bounding_Box
 
 	UINT m_nVertexCount{};								// <Positions> 개수
