@@ -106,13 +106,12 @@ void C_Socket::process_packet(char* ptr)
 		int id = p->id;
 		XMFLOAT4X4 position = p->pos;
 		Players.size();
-		///여기다가 움직이는거 적으면 됩니다 
-		/// 
-		/// 
-		/// 
-		/// 
-		/// 
-		///------------------------------
+		
+		if (Players.contains(id))
+		{
+			XMFLOAT4 pos = { position._41, position._42, position._43, 1.0f };
+			Players[id]->setPosition(pos);
+		}
 
 		break;
 	}

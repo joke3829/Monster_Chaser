@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "protocol.h"
 #include "mutex"
+#include "GameObject.h"
 
 class ObjectManager {
 public:
@@ -22,6 +23,14 @@ class Player : public ObjectManager {
 public:
     Player(int id) : ObjectManager(id) {}
 
+    CSkinningObject* getRenderingObject() { return Client_Object.get(); }
+
+    void setPosition(const XMFLOAT4& pos) {
+        ObjectManager::setPosition(pos);
+        XMFLOAT3 pos3 = { pos.x, pos.y, pos.z };
+        Client_Object->SetPosition(pos3);
+    }
+
     bool isReady() const { return readyToStart; }
     void setReady(const bool& ready) { readyToStart = ready; }
     void setRoomNumber(const int& num) { room_number = num; }
@@ -34,6 +43,7 @@ private:
     bool readyToStart = false;
     int hp = 100;
     
+    std::unique_ptr<CSkinningObject> Client_Object;
     // 더 필요한 상태값들...
 };
 
