@@ -26,6 +26,11 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
+	auto& Skinned = m_pResourceManager->getSkinningObjectList();
+	for (size_t i = 1; i < Skinned.size(); ++i) {
+		Skinned[i]->SetPosition(XMFLOAT3(0.0f,0.0f,10.0f*i));
+	}
+
 	m_pResourceManager->UpdateWorldMatrix();
 
 	if (test) {
@@ -470,6 +475,18 @@ void CRaytracingTestScene::SetUp()
 	//aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
 	//aManagers[1]->UpdateAnimation(0.5f);		// Not Need
 
+	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	skinned[1]->CopyFromOtherObject(skinned[0].get());
+	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
+	aManagers[1]->SetFramesPointerFromSkinningObject(skinned[1]->getObjects());
+	aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
+
+	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	skinned[2]->CopyFromOtherObject(skinned[0].get());
+	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
+	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
+	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
+
 	// Create new Object Example
 	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.025f, 1.0f));
 
@@ -519,6 +536,8 @@ void CRaytracingTestScene::SetUp()
 	//skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	//skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
 	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[1]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[2]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
