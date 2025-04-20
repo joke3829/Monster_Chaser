@@ -151,6 +151,23 @@ void GetTex0FromBuffer(inout float2 uvs[3], in uint idx)
     }
 }
 
+void GetTex1FromBuffer(inout float2 uvs[3], in uint idx)
+{
+    if (0 != l_Mesh.bHasSubMeshes)
+    {
+        uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] };
+        uvs[0] = l_Tex1[index[0]];
+        uvs[1] = l_Tex1[index[1]];
+        uvs[2] = l_Tex1[index[2]];
+    }
+    else
+    {
+        uvs[0] = l_Tex1[idx];
+        uvs[1] = l_Tex1[idx + 1];
+        uvs[2] = l_Tex1[idx + 2];
+    }
+}
+
 void GetNormalFromBuffer(inout float3 normals[3], in uint idx)
 {
     if (0 != l_Mesh.bHasSubMeshes)
@@ -321,8 +338,8 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                         shadowRay.TMax = 500.0f;
                         bool isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
                         float shadowFactor = isShadow ? 0.25f : 1.0f;
-                        float intense = (g_Lights.lights[i].Intensity > 2.5f) ? 2.5f : g_Lights.lights[i].Intensity;
-                        float3 lightColor = g_Lights.lights[i].Color.rgb * intense;
+                        //float intense = (g_Lights.lights[i].Intensity > 2.5f) ? 2.5f : g_Lights.lights[i].Intensity;
+                        float3 lightColor = g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity;
                         float3 F;
                         float3 rs = float3(0.0, 0.0, 0.0);
                         if (!isShadow)
@@ -347,9 +364,9 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                     
                         if (NdotL > 0.0f)
                         {
-                            float3 lightColor = lerp(g_Lights.lights[i].Color.rgb, float3(0.0, 0.0, 0.0), dis / g_Lights.lights[i].Range);
-                            float intense = (g_Lights.lights[i].Intensity > 2.5f) ? 2.5f : g_Lights.lights[i].Intensity;
-                            lightColor *= intense;
+                            float3 lightColor = lerp(g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity, float3(0.0, 0.0, 0.0), dis / g_Lights.lights[i].Range);
+                            //float intense = (g_Lights.lights[i].Intensity > 2.5f) ? 2.5f : g_Lights.lights[i].Intensity;
+                            //lightColor *= g_Lights.lights[i].Intensity;
                         
                             RayDesc shadowRay;
                             shadowRay.Direction = L;
@@ -385,9 +402,9 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                             float NdotH = saturate(dot(N, H));
                             float NdotL = saturate(dot(N, L));
                         
-                            float3 lightColor = lerp(g_Lights.lights[i].Color.rgb, float3(0.0, 0.0, 0.0), dis / g_Lights.lights[i].Range);
-                            float intense = (g_Lights.lights[i].Intensity > 2.5f) ? 2.5f : g_Lights.lights[i].Intensity;
-                            lightColor *= intense;
+                            float3 lightColor = lerp(g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity, float3(0.0, 0.0, 0.0), dis / g_Lights.lights[i].Range);
+                            //float intense = (g_Lights.lights[i].Intensity > 2.5f) ? 2.5f : g_Lights.lights[i].Intensity;
+                            //lightColor *= g_Lights.lights[i].Intensity;
                         
                             RayDesc shadowRay;
                             shadowRay.Direction = L;
@@ -419,7 +436,7 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
         return (float3(0.6, 0.6, 0.6) * 0.2) + finalColor;
 }
 
-float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, uint ShaderType = 0, float2 uv = float2(0.0, 0.0))
+float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, uint ShaderType = 0, float2 uv = float2(0.0, 0.0), float2 uv1 = float2(0.0, 0.0))
 {
     float3 R0 = float3(0.0, 0.0, 0.0);
     float roughness = 0.0f;
@@ -429,6 +446,12 @@ float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, uint Shad
         albedoColor = l_Material.AlbedoColor.rgb;
     if(0 != l_Material.bHasAlbedoMap)
         albedoColor *= l_AlbedoMap.SampleLevel(g_Sampler, uv, 0).rgb;
+    
+    if (0 != l_Material.bHasDetailAlbedoMap)
+    {
+        float3 dAlbedo = l_DetailAlbedoMap.SampleLevel(g_Sampler, uv1, 0).rgb;
+        albedoColor = saturate(albedoColor + dAlbedo);
+    }
     
     float3 emissiveColor = float3(0.0, 0.0, 0.0);
     if (0 != l_Material.bHasEmissiveColor)
@@ -547,7 +570,7 @@ void RadianceAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectio
         AlphaValue = l_Material.AlbedoColor.a;
     else
         AlphaValue = 1.0f;
-    if (AlphaValue <= 0.01)
+    if (AlphaValue <= 0.3)
         IgnoreHit();
 }
 
@@ -590,7 +613,7 @@ void ShadowAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectionA
         AlphaValue = l_Material.AlbedoColor.a;
     else
         AlphaValue = 1.0f;
-    if (AlphaValue <= 0.01)
+    if (AlphaValue <= 0.5)
         IgnoreHit();
 }
 
@@ -611,11 +634,17 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     float3 normals[3];
     
     float2 texCoord0;
+    float2 texCoord1;
     float3 lightNormal;
     if (0 != l_Mesh.bHasTex0)
     {
         GetTex0FromBuffer(uvs, idx);
         texCoord0 = GetInterpolationHitFloat2(uvs, bary);
+    }
+    if (0 != l_Mesh.bHasTex1)
+    {
+        GetTex1FromBuffer(uvs, idx);
+        texCoord1 = GetInterpolationHitFloat2(uvs, bary);
     }
     if (0 != l_Mesh.bHasNormals)
     {
@@ -636,7 +665,7 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     //float3 testColor = float3(lightNormal.x * 0.5 + 0.5, lightNormal.y * 0.5 + 0.5, lightNormal.z * 0.5 + 0.5);
     //payload.RayColor = float4(testColor, 1.0f);
     
-    payload.RayColor = CalculateFinalColor(payload, lightNormal, ShaderType, texCoord0);
+    payload.RayColor = CalculateFinalColor(payload, lightNormal, ShaderType, texCoord0, texCoord1);
 }
 
 [shader("closesthit")]

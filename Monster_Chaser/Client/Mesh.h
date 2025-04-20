@@ -80,6 +80,7 @@ public:
 
 	UINT getSubMeshCount() const;
 	
+	std::vector<XMFLOAT2>& getTex0() { return m_vTex0; }
 	void setSkinning(bool bSkinning) { m_bSkinningMesh = bSkinning; }
 protected:
 private:
@@ -97,6 +98,7 @@ private:
 	bool m_bHasColor = false;
 
 	UINT m_nTexCoord0Count{};							// <TextureCoords0>
+	std::vector<XMFLOAT2> m_vTex0{};
 	ComPtr<ID3D12Resource> m_pd3dTexCoord0Buffer{};		// ¾Æ¸¶µµ DXGI_FORMAT_R32G32B32_UNORM;
 	bool m_bHasTex0 = false;
 

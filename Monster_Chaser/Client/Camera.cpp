@@ -42,27 +42,29 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 	XMStoreFloat3(&m_xmf3Offset, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Offset), mtxrotate));
 }
 
-void CCamera::Move(int arrow, float fElapsedTime)
+void CCamera::Move(int arrow, float fElapsedTime, bool shift)
 {
+	float speed = (shift) ? 40.0f : 20.0f;
+
 	if (arrow == 0) {	// 앞
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * 20 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * speed * fElapsedTime));
 	}
 	else if (arrow == 1) { // 위
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * 10 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * speed * fElapsedTime));
 	}
 	else if (arrow == 2) {	// 아래
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * -10 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * -speed * fElapsedTime));
 	}
 	else if (3 == arrow) {	// 우
 		XMVECTOR right = XMVector3Normalize(XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir)));
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * 20 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * speed * fElapsedTime));
 	}
 	else if (4 == arrow) {
 		XMVECTOR right = XMVector3Normalize(XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir)));
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * -20 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * -speed * fElapsedTime));
 	}
 	else   // 뒤
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -20 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -speed * fElapsedTime));
 }
 
 void CCamera::UpdateViewMatrix()

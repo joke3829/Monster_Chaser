@@ -438,32 +438,33 @@ std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 
 void CResourceManager::LightTest()
 {
-	Lights testLight{};
-	testLight.numLights = 3;
-	testLight.lights[0].Type = DIRECTIONAL_LIGHT;
-	testLight.lights[0].Intensity =  1.0f;
-	testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
-	//testLight.lights[0].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	//testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
-	testLight.lights[0].Direction = XMFLOAT3(1.0, -1.0, 0.0);
+	//Lights testLight{};
+	//testLight.numLights = 1;
+	//testLight.lights[0].Type = DIRECTIONAL_LIGHT;
+	//testLight.lights[0].Intensity =  1.0f;
+	//testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
+	////testLight.lights[0].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	////testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
+	//testLight.lights[0].Direction = XMFLOAT3(1.0, -1.0, 0.0);
 
-	testLight.lights[1].Type = SPOT_LIGHT;
-	testLight.lights[1].Intensity = 10.0f;
-	testLight.lights[1].Color = XMFLOAT4(1.0f, 0.0f ,1.0f, 1.0f);
-	testLight.lights[1].Position = XMFLOAT3(0.0, 20.0f, 15.0f);
-	testLight.lights[1].Direction = XMFLOAT3(0.0, -1.0, -1.0);
-	testLight.lights[1].SpotAngle = 40.0f;
-	testLight.lights[1].Range = 40.0f;
+	//testLight.lights[0].Type = SPOT_LIGHT;
+	//testLight.lights[0].Intensity = 5.0f;
+	//testLight.lights[0].Color = XMFLOAT4(1.0f, 1.0f ,1.0f, 1.0f);
+	//testLight.lights[0].Position = XMFLOAT3(0.0, 10.0f, 0.0f);
+	//testLight.lights[0].Direction = XMFLOAT3(0.0, -1.0, 0.0);
+	//testLight.lights[0].SpotAngle = 85.5f;
+	//testLight.lights[0].Range = 12.0f;
 
-	testLight.lights[2].Type = POINT_LIGHT;
-	testLight.lights[2].Intensity = 5.0f;
-	testLight.lights[2].Color = XMFLOAT4(.0f, 1.0f, 1.0f, 1.0f);
-	testLight.lights[2].Position = XMFLOAT3(0.0, 20.0f, 15.0f);
-	testLight.lights[2].Range = 60.0f;
+	///*testLight.lights[0].Type = POINT_LIGHT;
+	//testLight.lights[0].Intensity = 5.0f;
+	//testLight.lights[0].Color = XMFLOAT4(.0f, 1.0f, 1.0f, 1.0f);
+	//testLight.lights[0].Position = XMFLOAT3(0.0, 20.0f, 15.0f);
+	//testLight.lights[0].Range = 60.0f;*/
 
 	Lights* mapptr{};
 	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
-	memcpy(mapptr, &testLight, sizeof(Lights));
+	mapptr->lights[22].Intensity = 1.0f;
+	mapptr->lights[24].Intensity = 1.0f;
 	m_pLights->Unmap(0, nullptr);
 }
 
@@ -521,6 +522,71 @@ void CResourceManager::AddLightsFromFileRecursion(std::ifstream& inFile)
 		else if ("<Bound>:" == strLabel) {
 			for (int i = 0; i < 6; ++i)
 				inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+		}
+		else if ("<Mesh>:" == strLabel) {
+			inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+			readLabel();
+			Mesh* tempMesh = new Mesh(inFile, "noName");
+			delete tempMesh;
+		}
+		else if ("<Materials>:" == strLabel) {
+			inFile.read((char*)&tempData, sizeof(int));
+			while (1) {
+				readLabel();
+				if (strLabel == "<Material>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<AlbedoColor>:") {
+					for(int i = 0; i < 4; ++i)
+						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<EmissiveColor>:") {
+					for(int i = 0 ; i < 4; ++i)
+						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));;
+				}
+				else if (strLabel == "<SpecularColor>:") {
+					for(int i = 0; i < 4; ++i)
+						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<Glossiness>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<Smoothness>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<Metallic>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<SpecularHighlight>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<GlossyReflection>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<AlbedoMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<SpecularMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<MetallicMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<NormalMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<EmissionMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<DetailAlbedoMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<DetailNormalMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "</Materials>")
+					break;
+			}
 		}
 		else if ("<Children>:" == strLabel) {
 			int nChild{};

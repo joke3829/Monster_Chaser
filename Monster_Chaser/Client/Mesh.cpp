@@ -485,9 +485,12 @@ void Mesh::GetTexCoord0FromFile(std::ifstream& inFile)
 	inFile.read((char*)&m_nTexCoord0Count, sizeof(int));
 	if (m_nTexCoord0Count > 0) {
 		m_bHasTex0 = true;
-		std::vector<XMFLOAT2> uv;
+		/*std::vector<XMFLOAT2> uv;
 		uv.assign(m_nTexCoord0Count, XMFLOAT2(0.0, 0.0));
-		inFile.read((char*)uv.data(), sizeof(XMFLOAT2) * m_nTexCoord0Count);
+		inFile.read((char*)uv.data(), sizeof(XMFLOAT2) * m_nTexCoord0Count);*/
+
+		m_vTex0.assign(m_nTexCoord0Count, XMFLOAT2(0.0, 0.0));
+		inFile.read((char*)m_vTex0.data(), sizeof(XMFLOAT2) * m_nTexCoord0Count);
 
 		// CreateBuffer
 		auto desc = BASIC_BUFFER_DESC;
@@ -498,7 +501,7 @@ void Mesh::GetTexCoord0FromFile(std::ifstream& inFile)
 
 		void* ptr;
 		m_pd3dTexCoord0Buffer->Map(0, nullptr, &ptr);
-		memcpy(ptr, uv.data(), sizeof(XMFLOAT2) * m_nTexCoord0Count);
+		memcpy(ptr, m_vTex0.data(), sizeof(XMFLOAT2) * m_nTexCoord0Count);
 		m_pd3dTexCoord0Buffer->Unmap(0, nullptr);
 	}
 }

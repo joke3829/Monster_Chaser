@@ -650,9 +650,9 @@ void CRaytracingMaterialTestScene::SetUp()
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
 	// 조명 추가
-	//m_pResourceManager->LightTest();
-	m_pResourceManager->AddLightsFromFile(L"src\\Light\\Lighting.bin");
+	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
 	m_pResourceManager->ReadyLightBufferContent();
+	m_pResourceManager->LightTest();
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
@@ -679,17 +679,17 @@ void CRaytracingMaterialTestScene::SetUp()
 	//tMaterial.m_bHasGlossyReflection = true; tMaterial.m_fGlossyReflection = 1;
 	//normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0)); 
 
-	//meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(1000.0f, 0.001, 1000.0f)));
-	//normalObjects.emplace_back(std::make_unique<CGameObject>());
-	//normalObjects[finalindex + 1]->SetMeshIndex(finalmesh + 1);
-	//normalObjects[finalindex + 1]->getMaterials().emplace_back();
-	//Material& tt = normalObjects[finalindex + 1]->getMaterials()[0];
-	//tt.m_bHasAlbedoColor = true; tt.m_xmf4AlbedoColor = XMFLOAT4(0.75, 0.35, 0.75, 1.0);
-	////tt.m_bHasSpecularColor = true; tt.m_xmf4SpecularColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
-	//tt.m_bHasSpecularHighlight = true; tt.m_fSpecularHighlight = 1;
-	//tt.m_bHasGlossiness = true; tt.m_fGlossiness = 0.5;
-	//tt.m_bHasGlossyReflection = true; tt.m_fGlossyReflection = 1.0f;
-	//normalObjects[finalindex + 1]->SetPosition(XMFLOAT3(0.0, -30.0, 0.0));
+	/*meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(1000.0f, 0.0, 1000.0f)));
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	normalObjects[finalindex]->getMaterials().emplace_back();
+	Material& tt = normalObjects[finalindex]->getMaterials()[0];
+	tt.m_bHasAlbedoColor = true; tt.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	tt.m_bHasSpecularColor = true; tt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
+	tt.m_bHasSpecularHighlight = true; tt.m_fSpecularHighlight = 1;
+	tt.m_bHasGlossiness = true; tt.m_fGlossiness = 0.5;
+	tt.m_bHasGlossyReflection = true; tt.m_fGlossyReflection = 1.0f;
+	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0));*/
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.03f, 1.0f));
 
@@ -714,7 +714,7 @@ void CRaytracingMaterialTestScene::SetUp()
 	normalObjects[finalindex]->SetScale(XMFLOAT3(-1.0f, 1.0f, 1.0f));
 	normalObjects[finalindex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 	normalObjects[finalindex]->SetPosition(XMFLOAT3(-1024.0, 0.0, 1024.0));
-	
+
 	/*UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
 
@@ -752,6 +752,32 @@ void CRaytracingMaterialTestScene::SetUp()
 	//dMaterial.m_bHasGlossiness = true; dMaterial.m_fGlossiness = 0.1;
 
 	//normalObjects[finalindex + 1]->SetPosition(XMFLOAT3(0.0, 20.0, 15.0));
+	//std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
+	auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
+		return p->getFrameName() == "Water";
+		});
+	if (p != normalObjects.end()) {
+		(*p)->getMaterials().emplace_back();
+		Material& mt = (*p)->getMaterials()[0];
+		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.5, 0.5, 0.5, 1.0);
+		//mt.m_bHasSpecularColor = true; mt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
+		mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
+		mt.m_bHasAlbedoMap = true; mt.m_nAlbedoMapIndex = textures.size() - 3;
+		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
+
+		void* tempptr{};
+		std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
+		for (XMFLOAT2& xmf : tex0) {
+			xmf.x *= 10.0f; xmf.y *= 10.0f;
+		}
+		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
+		memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
+		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
+	}
+
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
@@ -839,19 +865,45 @@ void CRaytracingMaterialTestScene::ProcessInput(float fElapsedTime)
 {
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
+	
+	bool shiftDown = false;
+	if (keyBuffer[VK_SHIFT] & 0x80)
+		shiftDown = true;
 
 	if (keyBuffer['W'] & 0x80)
-		m_pCamera->Move(0, fElapsedTime);
+		m_pCamera->Move(0, fElapsedTime, shiftDown);
 	if (keyBuffer['S'] & 0x80)
-		m_pCamera->Move(5, fElapsedTime);
+		m_pCamera->Move(5, fElapsedTime, shiftDown);
 	if (keyBuffer['D'] & 0x80)
-		m_pCamera->Move(3, fElapsedTime);
+		m_pCamera->Move(3, fElapsedTime, shiftDown);
 	if (keyBuffer['A'] & 0x80)
-		m_pCamera->Move(4, fElapsedTime);
+		m_pCamera->Move(4, fElapsedTime, shiftDown);
 	if (keyBuffer[VK_SPACE] & 0x80)
-		m_pCamera->Move(1, fElapsedTime);
+		m_pCamera->Move(1, fElapsedTime, shiftDown);
 	if (keyBuffer[VK_CONTROL] & 0x80)
-		m_pCamera->Move(2, fElapsedTime);
+		m_pCamera->Move(2, fElapsedTime, shiftDown);
+
+	if (keyBuffer['I'] & 0x80) {
+		std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
+		auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
+			return p->getFrameName() == "WoodPanel00_LOD012";
+			});
+		if (p != normalObjects.end()) {
+			XMFLOAT4X4& ww = (*p)->getLocalMatrix();
+			ww._42 += (5.0f * fElapsedTime);
+		}
+	}
+
+	if (keyBuffer['K'] & 0x80) {
+		std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
+		auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
+			return p->getFrameName() == "WoodPanel00_LOD012";
+			});
+		if (p != normalObjects.end()) {
+			XMFLOAT4X4& ww = (*p)->getLocalMatrix();
+			ww._42 += (-5.0f * fElapsedTime);
+		}
+	}
 
 	if (keyBuffer[VK_RIGHT] & 0x80)
 		m_pResourceManager->getAnimationManagers()[0]->TimeIncrease(fElapsedTime);

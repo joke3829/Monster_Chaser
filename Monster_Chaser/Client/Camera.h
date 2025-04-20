@@ -17,7 +17,7 @@ public:
 	void Setup(int nRootParameterIndex);
 
 	void Rotate(int cxDelta, int cyDelta);
-	void Move(int arrow, float fElapsedTime);
+	void Move(int arrow, float fElapsedTime, bool shift = false);
 
 	void UpdateViewMatrix();
 	void SetShaderVariable();
