@@ -147,10 +147,7 @@
     <ClInclude Include="C_Socket.h">
       <Filter>소스 파일\서버관련</Filter>
     </ClInclude>
-    <ClInclude Include="ObjectManger.h">
-      <Filter>소스 파일\서버관련</Filter>
-    </ClInclude>
-    <ClInclude Include="CPlayerSkinningObject.h">
+    <ClInclude Include="ObjectManager.h">
       <Filter>소스 파일\서버관련\플레이어객체</Filter>
     </ClInclude>
   </ItemGroup>
@@ -215,10 +212,7 @@
     <ClCompile Include="C_Socket.cpp">
       <Filter>소스 파일\서버관련</Filter>
     </ClCompile>
-    <ClCompile Include="ObjectManger.cpp">
-      <Filter>소스 파일\서버관련</Filter>
-    </ClCompile>
-    <ClCompile Include="CPlayerSkinningObject.cpp">
+    <ClCompile Include="ObjectManager.cpp">
       <Filter>소스 파일\서버관련\플레이어객체</Filter>
     </ClCompile>
   </ItemGroup>

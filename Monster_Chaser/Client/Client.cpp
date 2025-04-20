@@ -16,10 +16,14 @@ WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 CGameFramework gGameFramework;
 
-std::unordered_map<int, CSkinningObject*> Players;               // 다른 플레이어들
 
-std::unordered_map<int, CSkinningObject*> g_monsters;            // 몬스터들
-int my_id = 0;
+std::unordered_map<int, Player*> Players;               // 모든 플레이어들
+
+std::unordered_map<int, Monster*> g_monsters;            // 몬스터들
+
+
+int RoomList[10];			// 방 UI대신 쓸거 
+C_Socket Client;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -27,125 +31,179 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-C_Socket Client;
+// 여기는 방 UI들어오면 삭제할 부분
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+
+
+void SetCursorPosition(int x, int y) {
+	COORD coord = { static_cast<SHORT>(x), static_cast<SHORT>(y) };
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
+
+void DrawRoomList()
 {
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
+	SetCursorPosition(0, 0);  // 항상 콘솔 맨 위부터 덮어쓰기
 
-    AllocConsole();
-    freopen("CONOUT$", "w", stdout);
-    freopen("CONIN$", "r", stdin);
+	std::cout << "=== [Room Status] ===\n";
+	std::cout << "총 클라이언트 수: " << Players.size() << std::endl;
+	for (int i = 0; i < MAX_ROOM; ++i) {
+		std::cout << i << "번 방: " << RoomList[i] << "/" << MAX_ROOM_MEMBER << std::endl;
+	}
+	std::cout << "=====================" << std::endl;
+	std::cout << "'r' 키: Ready 전송 / 'q' 키: 종료" << std::endl;
+}
+void RoomListThread() {
+	using namespace std::chrono;
 
-    // TODO: 여기에 코드를 입력합니다.
-    if (!Client.Init("127.0.0.1", PORT_NUM))            //Change IP Address
-    {
-        MessageBoxA(nullptr, "서버 연결 실패. 클라이언트를 종료합니다.", "연결 실패", MB_ICONERROR);
-        return 0;  // 창 생성 없이 종료
-    }
-    std::thread recvThread(&C_Socket::do_recv, &Client);
-    
-    Client.DrawRoomList();
-    int room_num;
-    while (true) {
-        std::cout << "입장할 방 번호 입력 (0~9): ";
-        std::cin >> room_num;
-        if (room_num < 0 || room_num >9)
-            continue;
-        break;
-    }
-    cs_packet_enter_room p;
-    p.size = sizeof(p);
-    p.type = C2S_P_ENTER_ROOM;
-    p.room_number = (char)room_num;
-    Client.send_packet(&p);
+	while (!Client.getstart()) {
+		auto start = steady_clock::now();
 
-    bool is_ready = false;
-    while (!Client.get_ready_to_start()) {
-        if (_kbhit()) {
-            char key = _getch();
-            switch (key) {
-            case 'r':
-                if (!is_ready) {
-                    cs_packet_ready rp;
-                    rp.size = sizeof(rp);
-                    rp.type = C2S_P_READY;
-                    Client.send_packet(&rp);
-                    is_ready = true;
-                }
-                else {
-                    cs_packet_cancel_ready cp;
-                    cp.size = sizeof(cp);
-                    cp.type = C2S_P_READY_Cancel;
-                    Client.send_packet(&cp);
-                    is_ready = false;
-                }
-                break;
-            case 'k':
-                cs_packet_room_refresh rf;
-                rf.size = sizeof(rf);
-                rf.type = C2S_P_ROOM_REFRESH;
-                Client.send_packet(&rf);
-                break;
-            case 'q':
-                return 0;  // 수동 종료
-            }
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    }
- 
+		{
+			
+			DrawRoomList();
+		}
 
-    // 준비 완료되기 전까지 대기
- /*   while (!Client.get_ready_to_start()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }*/
+		// 정확히 1초 간격으로 유지
+		auto end = steady_clock::now();
+		auto elapsed = duration_cast<milliseconds>(end - start);
 
-    // 콘솔 종료
-    FreeConsole();
-   
-    //recvThread.join();
-    
+		if (elapsed < 1000ms)
+			std::this_thread::sleep_for(1000ms - elapsed);
+	}
+}
 
-    // 전역 문자열을 초기화합니다.
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_CLIENT, szWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
 
-    // 애플리케이션 초기화를 수행합니다:
-    if (!InitInstance (hInstance, nCmdShow))
-    {
-        return FALSE;
-    }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CLIENT));
+// 여기는 방 UI들어오면 삭제할 부분
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
+	_In_opt_ HINSTANCE hPrevInstance,
+	_In_ LPWSTR    lpCmdLine,
+	_In_ int       nCmdShow)
+{
+	UNREFERENCED_PARAMETER(hPrevInstance);
+	UNREFERENCED_PARAMETER(lpCmdLine);
 
-    //MSG msg;
 
-    // 기본 메시지 루프입니다:
-    /*while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }*/
+	// TODO: 여기에 코드를 입력합니다.
+	if (!Client.Init("127.0.0.1", PORT_NUM))            //Change IP Address
+	{
+		MessageBoxA(nullptr, "서버 연결 실패. 클라이언트를 종료합니다.", "연결 실패", MB_ICONERROR);
+		return 0;  // 창 생성 없이 종료
+	}
+	AllocConsole();
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONIN$", "r", stdin);
+	
+	std::thread recvThread(&C_Socket::do_recv, &Client);
+	std::thread drawThread(RoomListThread);
+	{
+		int num;
+		while (true) {
+			std::cout << "입장할 방 번호 입력 (0~9): ";
+			std::cin >> num;
+			if (num < 0 || num >9)
+				continue;
+			break;
+		}
+		int m_id = Client.get_id();
+		int room_num = static_cast<char>(num);
 
-    for (MSG msg;;) {
-        while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT)
-                return 0;
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
-        gGameFramework.Render();
-    }
+		cs_packet_enter_room p;
+		p.size = sizeof(p);
+		p.type = C2S_P_ENTER_ROOM;
+		p.id = m_id;
+		p.room_number = (char)num;
+		Client.send_packet(&p);
 
-    //return (int) msg.wParam;
+
+		
+		while (!Client.getstart()) {
+			
+			if (_kbhit()) {
+				char key = _getch();
+				switch (key) {
+				case 'r':
+
+					if (!Players[m_id]->isReady()) {
+						cs_packet_ready rp;
+						rp.size = sizeof(rp);
+						rp.type = C2S_P_READY;
+						rp.room_number = room_num;
+						rp.id = m_id;
+						Client.send_packet(&rp);
+
+					}
+					else {
+						cs_packet_cancel_ready cp;
+						cp.size = sizeof(cp);
+						cp.room_number = room_num;
+						cp.type = C2S_P_READY_Cancel;
+						cp.id = Client.get_id();
+						Client.send_packet(&cp);
+
+					}
+					break;
+				case 'k':
+					cs_packet_room_refresh rf;
+					rf.size = sizeof(rf);
+					rf.type = C2S_P_ROOM_UPDATE;
+					Client.send_packet(&rf);
+					break;
+				case 'q':
+					return 0;  // 수동 종료
+				}
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		}
+	}
+
+	//준비 완료되기 전까지 대기
+/*   while (!Client.get_ready_to_start()) {
+	   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+   }*/
+
+   //  콘솔 종료
+	FreeConsole();
+
+	//recvThread.join();
+
+
+	// 전역 문자열을 초기화합니다.
+	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+	LoadStringW(hInstance, IDC_CLIENT, szWindowClass, MAX_LOADSTRING);
+	MyRegisterClass(hInstance);
+
+	// 애플리케이션 초기화를 수행합니다:
+	if (!InitInstance(hInstance, nCmdShow))
+	{
+		return FALSE;
+	}
+
+	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CLIENT));
+
+	//MSG msg;
+
+	// 기본 메시지 루프입니다:
+	/*while (GetMessage(&msg, nullptr, 0, 0))
+	{
+		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}*/
+
+	for (MSG msg;;) {
+		while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+			if (msg.message == WM_QUIT)
+				return 0;
+			TranslateMessage(&msg);
+			DispatchMessageW(&msg);
+		}
+		gGameFramework.Render();
+	}
+
+	//return (int) msg.wParam;
 }
 
 
@@ -157,23 +215,23 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 //
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
+	WNDCLASSEXW wcex;
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
+	wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CLIENT));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = nullptr;
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = WndProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_CLIENT));
+	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszMenuName = nullptr;
+	wcex.lpszClassName = szWindowClass;
+	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
-    return RegisterClassExW(&wcex);
+	return RegisterClassExW(&wcex);
 }
 
 //
@@ -188,29 +246,29 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
+	hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
-   DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_BORDER;
-   RECT rt = { 0, 0, DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT };
-   // rt는 추후에 화면 크기 조정을 추가하면 바뀔 수 있다.
+	DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_MINIMIZEBOX | WS_SYSMENU | WS_BORDER;
+	RECT rt = { 0, 0, DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT };
+	// rt는 추후에 화면 크기 조정을 추가하면 바뀔 수 있다.
 
-   AdjustWindowRect(&rt, dwStyle, FALSE);
+	AdjustWindowRect(&rt, dwStyle, FALSE);
 
-   HWND hWnd = CreateWindow(szWindowClass, szTitle, dwStyle,
-       CW_USEDEFAULT, CW_USEDEFAULT, rt.right - rt.left, rt.bottom - rt.top, nullptr, nullptr, hInstance, nullptr);
+	HWND hWnd = CreateWindow(szWindowClass, szTitle, dwStyle,
+		CW_USEDEFAULT, CW_USEDEFAULT, rt.right - rt.left, rt.bottom - rt.top, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
-   if (!gGameFramework.OnInit(hWnd, hInstance))
-       exit(0);
-   
- 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+	if (!hWnd)
+	{
+		return FALSE;
+	}
+	if (!gGameFramework.OnInit(hWnd, hInstance))
+		exit(0);
 
-   return TRUE;
+
+	ShowWindow(hWnd, nCmdShow);
+	UpdateWindow(hWnd);
+
+	return TRUE;
 }
 
 //
@@ -225,42 +283,42 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (message) {
-    case WM_LBUTTONDOWN:
-    case WM_LBUTTONUP:
-    case WM_RBUTTONDOWN:
-    case WM_RBUTTONUP:
-    case WM_MOUSEMOVE:
-    case WM_KEYDOWN:
-    case WM_KEYUP:
-        gGameFramework.WMMessageProcessing(hWnd, message, wParam, lParam);
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
+	switch (message) {
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+	case WM_MOUSEMOVE:
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+		gGameFramework.WMMessageProcessing(hWnd, message, wParam, lParam);
+		break;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		break;
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
 }
 
 // 정보 대화 상자의 메시지 처리기입니다.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
-    switch (message)
-    {
-    case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
+	UNREFERENCED_PARAMETER(lParam);
+	switch (message)
+	{
+	case WM_INITDIALOG:
+		return (INT_PTR)TRUE;
 
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
-        }
-        break;
-    }
-    return (INT_PTR)FALSE;
+	case WM_COMMAND:
+		if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+		{
+			EndDialog(hDlg, LOWORD(wParam));
+			return (INT_PTR)TRUE;
+		}
+		break;
+	}
+	return (INT_PTR)FALSE;
 }
 

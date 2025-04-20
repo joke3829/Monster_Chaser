@@ -33,25 +33,26 @@ class SESSION {
 public:
     SOCKET socket;
     EXP_OVER* recv_over;            
-    int id;
-    int room_num = -1;
-    bool is_ready = false;
+   
+  
+  
     unsigned char remained = 0;
     std::string name;               //유저 닉네임
-    Job character;
-    SESSION(int i, SOCKET s);
+    
+    SESSION(SOCKET s);
     ~SESSION();
 
     void do_recv();
     void do_send(void* buff);
     void process_packet( char* p);
-    void BroadCasting_position(const XMFLOAT4X4& pos);
+    void BroadCasting_position(const XMFLOAT4X4& pos,const int& id);
 };
 
 class Network {
 public:
+    Network();
     void Init();
-     Room rooms[10];
+    std::vector<Room> rooms;
 
     HANDLE iocp;
     std::unordered_map<int, SESSION*> users;

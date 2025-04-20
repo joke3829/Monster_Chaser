@@ -1,11 +1,11 @@
 
 #include "C_Socket.h"
 #include "GameObject.h"
-extern CSkinningObject* g_myPlayerObject;
+extern C_Socket Client;
 extern std::unordered_map<int, Player*> Players;
 extern std::unordered_map<int, Monster*> g_monsters;
-extern int my_id;
-C_Socket::C_Socket() : ready_to_start(false), running(true), remained(0), id(0), m_socket(INVALID_SOCKET) {}
+extern int RoomList[10];
+C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
 
 
 C_Socket::~C_Socket()
@@ -15,31 +15,31 @@ C_Socket::~C_Socket()
 
 bool C_Socket::Init(const char* ip, int port)
 {
-    WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
+	WSADATA wsaData;
+	WSAStartup(MAKEWORD(2, 2), &wsaData);
 
-    m_socket =  socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-    sockaddr_in serverAddr{};
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
-    inet_pton(AF_INET, ip, &serverAddr.sin_addr);
+	sockaddr_in serverAddr{};
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(port);
+	inet_pton(AF_INET, ip, &serverAddr.sin_addr);
 
-    if (connect(m_socket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        
-        closesocket(m_socket);
-        WSACleanup();
+	if (connect(m_socket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+
+		closesocket(m_socket);
+		WSACleanup();
 		return false;
-    }
-	id = my_id;
-	my_id++;
+	}
+	
+
 	return true;
 }
-	
+
 
 void C_Socket::send_packet(void* pkt)
 {
-    int ret = send(m_socket, reinterpret_cast<CHAR*>(pkt), reinterpret_cast<unsigned char*>(pkt)[0], 0);
+	int ret = send(m_socket, reinterpret_cast<CHAR*>(pkt), reinterpret_cast<unsigned char*>(pkt)[0], 0);
 }
 
 void C_Socket::process_packet(char* ptr)
@@ -47,63 +47,94 @@ void C_Socket::process_packet(char* ptr)
 	char type = ptr[1];
 	switch (type)
 	{
-		
+
 	case S2C_P_ENTER:			//입장
 	{
 		sc_packet_enter* p = reinterpret_cast<sc_packet_enter*>(ptr);
-		if (p->id == id) {
-			id = p->id;
-		}
-		Players[p->id] = new Player(p->id); // 
 		
-		/*snprintf(p->name, sizeof(p->name), "클라 %d", p->id);*/
+		int id = p->id;
+		if (!Players.contains(p->id)) {
+			
+			Players[p->id] = new Player(p->id);
+		}
+		if (Client.get_id() == -1) {
+			Client.set_id(p->id);  // 내 ID 설정은 처음 받은 패킷에서만
+			//std::cout << "[내 클라이언트 ID 설정됨] " << p->id << std::endl;
+		}
+		
+		
+		break;
+	}
+	case S2C_P_SELECT_ROOM: {
+
+		sc_packet_select_room* p = reinterpret_cast<sc_packet_select_room*>(ptr);
+		int id = p->id;
+		int room_num = static_cast<int>(p->room_number);
+		int playersInRoom = static_cast<int>(p->players_inRoom);
+		
+		RoomList[room_num] = playersInRoom;
+		//Players[id]->setRoomNumber(room_num);
+		//Players[id]->room_players[room_num] = playersInRoom;	//현재 그 방에 몇명있는지 알려주기
+		
+		
 		break;
 	}
 	case S2C_P_SETREADY:
 	{
-		
+
 		sc_packet_set_ready* p = reinterpret_cast<sc_packet_set_ready*>(ptr);
-		p->
+		int id = p->id;
+		int room_num = static_cast<int>(p->room_number);//이미 방 선택할떄 room_num이 Players[id]안에 들어감
+		bool ready = p->is_ready;
+		
+		Players[p->id]->setReady(ready);
+		Players[p->id]->setRoomNumber(room_num);// 방 선택했을떄 해당 방 유저 수 나타내는 맴버 변수 
 		//p->id = id;
-			g_server.users[client_id] = new SESSION(client_id, exp->accept_socket);
-			 
+		
 		break;
 	}
+	case S2C_P_ALLREADY:
+	{
+		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
+		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
+
+		break;
+	}
+
 	case S2C_P_MOVE: {
 		sc_packet_move* p = reinterpret_cast<sc_packet_move*>(ptr);
-	/*	XMFLOAT3 newPos = { static_cast<float>(p->x), static_cast<float>(p->y), static_cast<float>(p->z) };
-
-		if (p->id == id && g_myPlayerObject) {
-			g_myPlayerObject->SetPosition(newPos);
-		}
-		else if (g_otherPlayers.count(p->id)) {
-			g_otherPlayers[p->id]->SetPosition(newPos);
-		}
-		else if (g_monsters.count(p->id)) {
-			g_monsters[p->id]->SetPosition(newPos);
-		}*/
+		int id = p->id;
+		XMFLOAT4X4 position = p->pos;
+		Players.size();
+		///여기다가 움직이는거 적으면 됩니다 
+		/// 
+		/// 
+		/// 
+		/// 
+		/// 
+		///------------------------------
 
 		break;
 	}
-	case S2C_P_ROOM_INFO: {
-		
+	case S2C_P_UPDATEROOM: {
+
 		sc_packet_room_info* p = reinterpret_cast<sc_packet_room_info*>(ptr);
+		int room_in_Players = static_cast<int>(p->player_count);
+		int roomNum = static_cast<int>(p->room_number);
 		
-		room_players[p->room_number] = p->player_count;
-		int ready_count = 0;
-		for (int i = 0; i < p->player_count; ++i) {
-			if (p->ready_states[i]) ++ready_count;
-		}
-		if (p->player_count == 3 && ready_count == 3)
-			ready_to_start = true;
-		DrawRoomList();
+		RoomList[roomNum] = room_in_Players;
+		/*for (auto& p : Players) {
+			p.second->room_players[roomNum] = room_in_Players;
+		}*/
+
+		
 		break;
 	}
 	default:
 		break;
 	}
-	
-	 
+
+
 }
 
 void C_Socket::do_recv()
@@ -113,11 +144,20 @@ void C_Socket::do_recv()
 		int processed = 0;
 
 		int io_byte = recv(m_socket, buffer + remained, BUF_SIZE - remained, 0);      //io_byte
-		
+
+
 		if (io_byte == 0) {
 			MessageBoxA(nullptr, "IO_BYTE 크기가 0입니다.", "수신 에러", MB_ICONERROR);
-			
+
 			break;
+		}
+		if (io_byte == SOCKET_ERROR) {
+			int err = WSAGetLastError();
+			
+				MessageBoxA(NULL, "서버와의 연결이 끊어졌습니다.", "연결 종료", MB_OK | MB_ICONERROR);
+				PostQuitMessage(0);  // 윈도우 루프 종료
+				return;
+			
 		}
 		char* ptr = buffer;
 		io_byte += remained;
@@ -140,17 +180,6 @@ void C_Socket::do_recv()
 	}
 }
 
-void C_Socket::DrawRoomList()
-{
 
-	std::lock_guard<std::mutex> lock(mtx);
-	system("cls");
-	std::cout << "=== [Room Status] ===\n";
-	for (int i = 0; i < MAX_ROOM; ++i) {
-		std::cout << i << "번 방: " << (int)room_players[i] << "/" << MAX_ROOM_MEMBER << std::endl;
-	}
-	std::cout << "=====================" << std::endl;
-	std::cout << "'r' 키: Ready 전송 / 'q' 키: 종료" << std::endl;
-}
 
 

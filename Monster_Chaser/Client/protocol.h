@@ -63,7 +63,7 @@ struct sc_packet_select_room {			//방 번호 선택했을 때
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 constexpr char S2C_P_ALLREADY = 4;
-struct sc_packet_ready_success {			//한 방에 세명이 다 준비 완료를 시작했을때 
+struct sc_packet_Ingame_start {			//한 방에 세명이 다 준비 완료를 시작했을때 
 	unsigned char size;
 	char type;
 	int ready_id[3];
@@ -179,7 +179,7 @@ struct cs_packet_cancel_ready {
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-constexpr char C2S_P_ROOM_REFRESH = 56;
+constexpr char C2S_P_ROOM_UPDATE = 56;
 struct cs_packet_room_refresh {
 	unsigned char size;
 	char type;

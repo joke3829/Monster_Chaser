@@ -32,7 +32,7 @@
 #include <array>
 
 #include <conio.h>		//room UI 들어오면 없앰
-
+#include <chrono>		//클라 UI들어오면 없앰
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -51,6 +51,7 @@
 
 
 using namespace DirectX;
+using namespace std::chrono;
 using Microsoft::WRL::ComPtr;
 
 // =============================================================================================

@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "protocol.h"
 #include "GameObject.h"
-#include "mutex"
 #include "ObjectManager.h"
 
 																										
@@ -21,9 +20,12 @@ public:
 																										
 	void send_packet(void* ptk);	//send하는곳 														
 	//--------------------------------------------------------------//									
-	void DrawRoomList();			//방 현황 출력																																			
-	bool get_ready_to_start() { return ready_to_start; }												
-	std::thread drawThread;																				
+																																			
+	bool getstart() { return InGameStart; }												
+	void Setstart(const bool& st) { InGameStart = st; }			
+
+	void set_id(int id) { my_id = id; }
+	int get_id() const { return my_id; }
 	//------------------------------------------------------------//									
 																			
 	SOCKET Getsocket() const { return m_socket; }														
@@ -31,10 +33,12 @@ private:
 	SOCKET m_socket;																					
 																						
 	bool running{ true };																				
-	bool ready_to_start = false;																		
-	std::mutex mtx;																						
+	bool InGameStart = false;																		
+																					
 	unsigned char remained{ 0 };																		
-	char room_players[MAX_ROOM] = {};																	
+			
+
+	int my_id = -1;
 																										
 																										
 };
