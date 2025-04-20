@@ -5,6 +5,7 @@
 
 
 extern Network g_server;
+extern mutex myMutex;
 EXP_OVER::EXP_OVER(IO_OP op) : io_op(op) {
 	ZeroMemory(&over, sizeof(over));
 	wsabuf[0].buf = buffer;
@@ -178,6 +179,7 @@ void SESSION::process_packet(char* p) {
 	}
 	case C2S_P_MOVE:
 	{
+		lock_guard<mutex> lock(myMutex);
 		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
 		int id = pkt->id;
 		auto pos = pkt->pos;

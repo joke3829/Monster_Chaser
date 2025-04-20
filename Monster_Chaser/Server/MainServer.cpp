@@ -7,7 +7,7 @@
 
 
 
-
+mutex myMutex;
 Network g_server;
 
 void do_accept(Network& server) {
