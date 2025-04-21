@@ -23,7 +23,16 @@ void Room::AddPlayer(const int& enter_id)
 {
 	int new_id = enter_id;
 	id.emplace_back(new_id);
+	
+	
 }
+
+
+
+
+
+
+
 
 void Room::SendRoomInfo() {        //방 현황 보내주기
 	sc_packet_room_info pkt;

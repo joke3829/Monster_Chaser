@@ -37,16 +37,17 @@ public:
 
     bool isReady() const { return readyToStart; }
     void setReady(const bool& ready) { readyToStart = ready; }
-    void setRoomNumber(const int& num) { room_number = num; }
+   
     void setPlayerID_In_Game(const int & val,const int&key);
-    int GetRoomNumber() { return room_number; }
-    
-    int room_players[MAX_ROOM] = {0};
+   
+   
 private:
-    int room_number{ -1 };
+   
     bool readyToStart = false;
     int hp = 100;
-    int PlayerID_In_Game[3];
+    int PlayerID_In_Game[3];    //3 1 2
+    //인게임 시작할떄 어떤 클라가 같이 렌더링 되어야하는지 알아야 되지 않을까? 해서 넣어둔거지
+    
     CSkinningObject* Client_Object=nullptr;
     // 더 필요한 상태값들...
 };

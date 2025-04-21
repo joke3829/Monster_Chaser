@@ -534,7 +534,11 @@ void CRaytracingTestScene::SetUp()
 	m_pShaderBindingTable->CreateSBT();
 
 	// Normal Object Copy & Manipulation Matrix Here ================================
+	// ¼ºÇÏ-7 Á¤¹Î2 ½ÂÈ£ 9
+	// g_user[id].do_send(mp);
+	// 0	1		2
 	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
+
 	//skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	//skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
 	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());

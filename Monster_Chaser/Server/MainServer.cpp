@@ -37,7 +37,7 @@ int main() {
 
 		BOOL success = GetQueuedCompletionStatus(g_server.iocp, &bytes, &key, &over, INFINITE);
 		if (!success) continue;
-
+		
 		EXP_OVER* exp = reinterpret_cast<EXP_OVER*>(over);
 
 		switch (exp->io_op) {
@@ -45,47 +45,28 @@ int main() {
 		{
 			int client_id = g_server.client_id++;
 			CreateIoCompletionPort(reinterpret_cast<HANDLE>(exp->accept_socket), g_server.iocp, client_id, 0);
-			g_server.users[client_id] = new SESSION(exp->accept_socket);
+			g_server.users[client_id] = new SESSION(key,exp->accept_socket);
 
 
 
 			sc_packet_enter ep;
 			ep.size = sizeof(ep);
 			ep.type = S2C_P_ENTER;
-			ep.id = client_id;
 			for (auto& u : g_server.users) {			//모든 유저에게 정보 보냄 
 				//if(u.first !=client_id)
 				u.second->do_send(&ep);
 			}
 
 			
-
-
-				
 			for (auto& u : g_server.users) {			//신규 클라가 기존 클라의 존재를 인식 
 				if (u.first != client_id)
 				{
 					sc_packet_enter ep;
 					ep.size = sizeof(ep);
 					ep.type = S2C_P_ENTER;
-					ep.id = u.first;
 					g_server.users[client_id]->do_send(&ep);		
 				}
 			}
-
-			//여기 수정해야될듯 이러면 2번째 클라는 첫번째 클라의 정보를 Players에 못넣자나 그 뒤도 마찬가지고 
-
-
-
-			//for (int i = 0; i < MAX_ROOM; ++i) {
-			//	sc_packet_room_info pkt;
-			//	pkt.size = sizeof(pkt);
-			//	pkt.type = S2C_P_UPDATEROOM;
-			//	pkt.room_number = static_cast<char>(i);
-			//	pkt.player_count = static_cast<char>(g_server.rooms[i].GetPlayerCount());
-			//
-			//	g_server.users[client_id]->do_send(&pkt);
-			//}
 
 			std::cout << "[클라이언트 " << client_id << " ]" << "이 접속했습니다." << std::endl;
 			do_accept(g_server);

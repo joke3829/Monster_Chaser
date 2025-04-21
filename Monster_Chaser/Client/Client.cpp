@@ -17,7 +17,7 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름�
 CGameFramework gGameFramework;
 
 
-std::unordered_map<int, Player*> Players;               // 모든 플레이어들
+std::unordered_map<int, Player*> Players;               // 모든 플레이어들		
 
 std::unordered_map<int, Monster*> g_monsters;            // 몬스터들
 

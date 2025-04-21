@@ -1,4 +1,6 @@
 #pragma once
+#include "stdafx.h"
+
 
 
 constexpr int PORT_NUM = 3500;
@@ -35,7 +37,7 @@ constexpr char S2C_P_ENTER = 1;
 struct sc_packet_enter {			//accept되는순간 처리 
 	unsigned char size;
 	char type;
-	int  id;
+
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -55,9 +57,9 @@ constexpr char S2C_P_SELECT_ROOM = 3;
 struct sc_packet_select_room {			//방 번호 선택했을 때 
 	unsigned char size;
 	char type;
-	int id;
+	int Local_id;		//이제 필요없음
 	char room_number;
-	char players_inRoom;
+
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +68,8 @@ constexpr char S2C_P_ALLREADY = 4;
 struct sc_packet_Ingame_start {			//한 방에 세명이 다 준비 완료를 시작했을때 
 	unsigned char size;
 	char type;
-	int ready_id[3];
+	int ready_id[3];	//3 6 2									
+	int real_id;		//3			6			2
 	char room_number;
 
 };
@@ -87,7 +90,7 @@ constexpr char S2C_P_SETREADY = 6;
 struct sc_packet_set_ready {			//클라가 준비했을 때 
 	unsigned char size;
 	char type;
-	int id;
+	int id;				//필요없을듯
 	char room_number;
 	bool is_ready;
 };
@@ -177,6 +180,10 @@ struct cs_packet_cancel_ready {
 	int id;
 	char room_number;
 };
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//여기다가 방 다시 선택하는 패킷 할지말지 고민 중
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 constexpr char C2S_P_ROOM_UPDATE = 56;

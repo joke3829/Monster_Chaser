@@ -52,11 +52,6 @@ void C_Socket::process_packet(char* ptr)
 	{
 		sc_packet_enter* p = reinterpret_cast<sc_packet_enter*>(ptr);
 		
-		int id = p->id;
-		if (!Players.contains(p->id)) {
-			
-			Players[p->id] = new Player(p->id);
-		}
 		if (Client.get_id() == -1) {
 			Client.set_id(p->id);  // 내 ID 설정은 처음 받은 패킷에서만
 			//std::cout << "[내 클라이언트 ID 설정됨] " << p->id << std::endl;
@@ -68,7 +63,7 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_SELECT_ROOM: {
 
 		sc_packet_select_room* p = reinterpret_cast<sc_packet_select_room*>(ptr);
-		int id = p->id;
+		
 		int room_num = static_cast<int>(p->room_number);
 		int playersInRoom = static_cast<int>(p->players_inRoom);
 		
@@ -87,8 +82,8 @@ void C_Socket::process_packet(char* ptr)
 		int room_num = static_cast<int>(p->room_number);//이미 방 선택할떄 room_num이 Players[id]안에 들어감
 		bool ready = p->is_ready;
 		
-		Players[p->id]->setReady(ready);
-		Players[p->id]->setRoomNumber(room_num);// 방 선택했을떄 해당 방 유저 수 나타내는 맴버 변수 
+		//Players[p->id]->setReady(ready);
+		//Players[p->id]->setRoomNumber(room_num);// 방 선택했을떄 해당 방 유저 수 나타내는 맴버 변수 
 		//p->id = id;
 		
 		break;
@@ -96,20 +91,22 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_ALLREADY:
 	{
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
-		Players[p->ready_id[0]]->setPlayerID_In_Game(p->ready_id[0], 0);					 //방에 있는 id 넣어주기 0번째 인덱스는 자기 id
-		Players[p->ready_id[0]]->setPlayerID_In_Game(p->ready_id[1], 1);					 //방에 있는 id 넣어주기 0번째 인덱스는 자기 id
-		Players[p->ready_id[0]]->setPlayerID_In_Game(p->ready_id[2], 2);					 //방에 있는 id 넣어주기 0번째 인덱스는 자기 id
+		Players[p->ready_id[0]]->setPlayerID_In_Game(p->ready_id[0], 0);					  
+		Players[p->ready_id[1]]->setPlayerID_In_Game(p->ready_id[1], 1);					  
+		Players[p->ready_id[2]]->setPlayerID_In_Game(p->ready_id[2], 2);					  
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
 
 		break;
+		//4 7 9
 	}
 
 	case S2C_P_MOVE: {
 		sc_packet_move* p = reinterpret_cast<sc_packet_move*>(ptr);
+		//로컬ID
 		int id = p->id;
 		XMFLOAT4X4 position = p->pos;
 		
-		
+		// 3명꺼를 한꺼번에	
 		if (Players.contains(id))
 		{
 			Players[id]->setPosition(position);
