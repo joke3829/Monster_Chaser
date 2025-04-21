@@ -13,7 +13,8 @@ CHeightMapImage::CHeightMapImage(const wchar_t* filePath, int nWidth, int nLengt
 	m_pHeightMapPixels = std::make_unique<WORD[]>(m_nWidth * m_nLength);
 	for (int z = 0; z < m_nLength; ++z) {
 		for (int x = 0; x < m_nWidth; ++x) {
-			m_pHeightMapPixels[x + ((m_nLength - 1 - z) * m_nWidth)] = v[x + (z * m_nWidth)];//pHeightMapPixels[x + (z * m_nWidth)];
+			//m_pHeightMapPixels[x + ((m_nLength - 1 - z) * m_nWidth)] = v[x + (z * m_nWidth)];//pHeightMapPixels[x + (z * m_nWidth)];
+			m_pHeightMapPixels[x + (z*m_nWidth)] = v[x + (z * m_nWidth)];
 		}
 	}
 }

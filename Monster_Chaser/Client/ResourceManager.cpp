@@ -464,7 +464,7 @@ void CResourceManager::LightTest()
 	Lights* mapptr{};
 	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
 	mapptr->lights[22].Intensity = 1.0f;
-	mapptr->lights[24].Intensity = 1.0f;
+	mapptr->lights[23].Intensity = 0.6f;
 	m_pLights->Unmap(0, nullptr);
 }
 

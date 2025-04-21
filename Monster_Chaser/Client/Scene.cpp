@@ -30,6 +30,8 @@ void CRaytracingScene::Render()
 	m_pCamera->SetShaderVariable();
 	m_pAccelerationStructureManager->SetScene();
 	m_pResourceManager->SetLights();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[textures.size() - 1]->getView()->GetGPUDescriptorHandleForHeapStart());
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
 	raydesc.Depth = 1;
@@ -60,8 +62,14 @@ void CRaytracingScene::CreateRootSignature()
 		rootRange.BaseShaderRegister = 0;
 		rootRange.RegisterSpace = 0;
 
-		// 0. uavBuffer, 1. AS, 2. camera, 3. Lights
-		D3D12_ROOT_PARAMETER params[4] = {};
+		D3D12_DESCRIPTOR_RANGE cubeMapRange{};
+		cubeMapRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		cubeMapRange.NumDescriptors = 1;
+		cubeMapRange.BaseShaderRegister = 3;
+		cubeMapRange.RegisterSpace = 0;
+
+		// 0. uavBuffer, 1. AS, 2. camera, 3. Lights, 4. Enviorment(cubeMap)
+		D3D12_ROOT_PARAMETER params[5] = {};
 		params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;	// u0
 		params[0].DescriptorTable.NumDescriptorRanges = 1;
 		params[0].DescriptorTable.pDescriptorRanges = &rootRange;
@@ -78,6 +86,10 @@ void CRaytracingScene::CreateRootSignature()
 		params[3].Descriptor.RegisterSpace = 1;
 		params[3].Descriptor.ShaderRegister = 0;
 
+		params[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		params[4].DescriptorTable.NumDescriptorRanges = 1;
+		params[4].DescriptorTable.pDescriptorRanges = &cubeMapRange;
+
 		D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
 		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -90,7 +102,7 @@ void CRaytracingScene::CreateRootSignature()
 		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 		D3D12_ROOT_SIGNATURE_DESC rtDesc{};
-		rtDesc.NumParameters = 4;
+		rtDesc.NumParameters = 5;
 		rtDesc.NumStaticSamplers = 1;
 		rtDesc.pParameters = params;
 		rtDesc.pStaticSamplers = &samplerDesc;
@@ -646,6 +658,7 @@ void CRaytracingMaterialTestScene::SetUp()
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\w.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\portal_low.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
@@ -691,8 +704,8 @@ void CRaytracingMaterialTestScene::SetUp()
 	tt.m_bHasGlossyReflection = true; tt.m_fGlossyReflection = 1.0f;
 	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0));*/
 
-	std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.03f, 1.0f));
-
+	std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	//std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Terrain_WinterLands_heightmap.raw", 4096, 4096, XMFLOAT3(1.0f, 0.025f, 1.0f));
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
 	Material tMaterial{};
@@ -711,9 +724,9 @@ void CRaytracingMaterialTestScene::SetUp()
 	tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.2;
 
 	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
-	normalObjects[finalindex]->SetScale(XMFLOAT3(-1.0f, 1.0f, 1.0f));
-	normalObjects[finalindex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
-	normalObjects[finalindex]->SetPosition(XMFLOAT3(-1024.0, 0.0, 1024.0));
+	//normalObjects[finalindex]->SetScale(XMFLOAT3(1.0f, 1.0f, 1.0f));
+	//normalObjects[finalindex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	normalObjects[finalindex]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
 
 	/*UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
@@ -753,6 +766,7 @@ void CRaytracingMaterialTestScene::SetUp()
 
 	//normalObjects[finalindex + 1]->SetPosition(XMFLOAT3(0.0, 20.0, 15.0));
 	//std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
+
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
@@ -762,10 +776,11 @@ void CRaytracingMaterialTestScene::SetUp()
 	if (p != normalObjects.end()) {
 		(*p)->getMaterials().emplace_back();
 		Material& mt = (*p)->getMaterials()[0];
-		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.5, 0.5, 0.5, 1.0);
+		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118*4, 0.2065666*4, 0.2358491*4, 0.7);
+		//mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.0, 0.0, 1.0, 0.7);
 		//mt.m_bHasSpecularColor = true; mt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
 		mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
-		mt.m_bHasAlbedoMap = true; mt.m_nAlbedoMapIndex = textures.size() - 3;
+		//mt.m_bHasAlbedoMap = true; mt.m_nAlbedoMapIndex = textures.size() - 3;
 		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
 
 		void* tempptr{};
@@ -777,6 +792,9 @@ void CRaytracingMaterialTestScene::SetUp()
 		memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
 		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
 	}
+
+	// cubeMap Ready
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky2.dds", true));
 
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
@@ -902,6 +920,16 @@ void CRaytracingMaterialTestScene::ProcessInput(float fElapsedTime)
 		if (p != normalObjects.end()) {
 			XMFLOAT4X4& ww = (*p)->getLocalMatrix();
 			ww._42 += (-5.0f * fElapsedTime);
+		}
+	}
+
+	if (keyBuffer['H'] & 0x80) {
+		std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
+		auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
+			return p->getFrameName() == "Snow_Low_(1)";
+			});
+		if (p != normalObjects.end()) {
+			(*p)->getLocalMatrix()._42 = -1000.0f;
 		}
 	}
 
