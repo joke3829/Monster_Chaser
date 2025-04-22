@@ -32,6 +32,11 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	auto& Skinned = m_pResourceManager->getSkinningObjectList();
 	for (size_t i = 0; i < Skinned.size(); ++i) {
 		Skinned[i]->SetPosition(Players[i].getRenderingObject()->getPosition());
+		cs_packet_move mp;
+		mp.size = sizeof(mp);
+		mp.type = C2S_P_MOVE;
+		mp.pos = Players[i].getRenderingObject()->getWorldMatrix();
+		Client.send_packet(&mp);
 	}
 
 	m_pResourceManager->UpdateWorldMatrix();
@@ -457,8 +462,8 @@ void CRaytracingTestScene::SetUp()
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	m_pResourceManager->LightTest();
 	// =========================================================
@@ -481,18 +486,18 @@ void CRaytracingTestScene::SetUp()
 	//Players.try_emplace(0, )
 	Players[0].setRenderingObject(skinned[0].get());
 
-	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	skinned[1]->CopyFromOtherObject(skinned[0].get());
-	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
-	aManagers[1]->SetFramesPointerFromSkinningObject(skinned[1]->getObjects());
-	aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
+	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	//skinned[1]->CopyFromOtherObject(skinned[0].get());
+	//aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
+	//aManagers[1]->SetFramesPointerFromSkinningObject(skinned[1]->getObjects());
+	//aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
 	Players[1].setRenderingObject(skinned[1].get());
 	
-	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	/*skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 	skinned[2]->CopyFromOtherObject(skinned[0].get());
 	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
 	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
-	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
+	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());*/
 	Players[2].setRenderingObject(skinned[2].get());
 
 	// Create new Object Example
@@ -693,345 +698,357 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		}
 	}
 	// W + A (¿ÞÂÊ ´ë°¢¼± À§)
-	if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT_UP, true); // ¶Ù±â: ¿ÞÂÊ ´ë°¢¼± À§
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT_UP, true); // ¶Ù±â À¯Áö
-		}
-	}
-	// W + A + Shift ¶¾ ¼ø°£ (¿ÞÂÊ ´ë°¢¼± À§ °È±â·Î ÀüÈ¯)
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_UP, true); // °È±â: ¿ÞÂÊ ´ë°¢¼± À§
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + A ´Üµ¶ (¿ÞÂÊ ´ë°¢¼± À§ °È±â)
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_UP, true); // °È±â: ¿ÞÂÊ ´ë°¢¼± À§
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_UP, true); // °È±â À¯Áö
-		}
-	}
-	// W + A + Shift¿¡¼­ A ¶¾ ¼ø°£ (ÀüÁø ¶Ù±â·Î ÀüÈ¯)
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_FORWARD, true); // ¶Ù±â: ÀüÁø
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + A¿¡¼­ A ¶¾ ¼ø°£ (ÀüÁø °È±â·Î ÀüÈ¯)
-	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_FORWARD, true); // °È±â: ÀüÁø
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + A¿¡¼­ W ¶¾ ¼ø°£ (ÁÂÃø °È±â·Î ÀüÈ¯)
-	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT, true); // °È±â: ÁÂÃø (°¡Á¤: 8)
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + D + Shift (¿À¸¥ÂÊ ´ë°¢¼± À§ ¶Ù±â)
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT_UP, true); // ¶Ù±â: ¿À¸¥ÂÊ ´ë°¢¼± À§
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT_UP, true); // ¶Ù±â À¯Áö
-		}
-	}
-	// W + D + Shift ¶¾ ¼ø°£ (¿À¸¥ÂÊ ´ë°¢¼± À§ °È±â·Î ÀüÈ¯)
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_UP, true); // °È±â: ¿À¸¥ÂÊ ´ë°¢¼± À§
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + D ´Üµ¶ (¿À¸¥ÂÊ ´ë°¢¼± À§ °È±â)
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_UP, true); // °È±â: ¿À¸¥ÂÊ ´ë°¢¼± À§
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_UP, true); // °È±â À¯Áö
-		}
-	}
-	// W + D + Shift¿¡¼­ D ¶¾ ¼ø°£ (ÀüÁø ¶Ù±â·Î ÀüÈ¯)
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_FORWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + Dï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + Dï¿½ï¿½ï¿½ï¿½ W ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + A + Shift (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù±ï¿½)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT_DOWN, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT_DOWN, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// S + A + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_DOWN, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + A ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_DOWN, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_DOWN, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// S + A + Shiftï¿½ï¿½ï¿½ï¿½ A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 20)
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + Aï¿½ï¿½ï¿½ï¿½ A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + Aï¿½ï¿½ï¿½ï¿½ S ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 8)
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + D + Shift (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù±ï¿½)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT_DOWN, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT_DOWN, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// S + D + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_DOWN, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + D ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_DOWN, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_DOWN, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// S + D + Shiftï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 20)
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + Dï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + Dï¿½ï¿½ï¿½ï¿½ S ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + Shift (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½)
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_FORWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_FORWARD, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// W + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½)
-	else if (keyBuffer['W'] & 0x80) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// S + Shift (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½)
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 20)
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// S + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½)
-	else if (keyBuffer['S'] & 0x80) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// A + Shift (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½)
-	else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 18)
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// A + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 8)
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// A ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½)
-	else if (keyBuffer['A'] & 0x80) {
-		if (!(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 8)
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// D + Shift (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½)
-	else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 19)
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// D + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
-	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// D ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½)
-	else if (keyBuffer['D'] & 0x80) {
-		if (!(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
-		}
-	}
-	// W ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (IDLEï¿½ï¿½ ï¿½ï¿½È¯)
-	else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (IDLEï¿½ï¿½ ï¿½ï¿½È¯)
-	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (IDLEï¿½ï¿½ ï¿½ï¿½È¯)
-	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (IDLEï¿½ï¿½ ï¿½ï¿½È¯)
-	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->UpdatePosition(fElapsedTime);
+	if (keyBuffer['W'] & 0x80) {
+
+	m_pResourceManager->getSkinningObjectList()[Client.get_id()]->move(fElapsedTime, 0);
 	}
 
-	if (keyBuffer['G'] & 0x80) {
-		auto* animationManager = m_pResourceManager->getAnimationManagers()[Client.get_id()].get();
-		if (animationManager && !animationManager->getFrame().empty()) {
-			CGameObject* frame = animationManager->getFrame()[0];
-			m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotation(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f), *frame);
-		}
+	if (keyBuffer['S'] & 0x80) {
+
+		m_pResourceManager->getSkinningObjectList()[Client.get_id()]->move(fElapsedTime, 1);
+
 	}
 
-	if (keyBuffer['H'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //ï¿½ï¿½È¸ï¿½ï¿½
-	}
 
-	if (keyBuffer['T'] & 0x80) {
-		auto* animationManager = m_pResourceManager->getAnimationManagers()[Client.get_id()].get();
-		if (animationManager && !animationManager->getFrame().empty()) {
-			CGameObject* frame = animationManager->getFrame()[0];
-			m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotation(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f),*frame);
-		}
-	}
+	//if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT_UP, true); // ¶Ù±â: ¿ÞÂÊ ´ë°¢¼± À§
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT_UP, true); // ¶Ù±â À¯Áö
+	//	}
+	//}
+	//// W + A + Shift ¶¾ ¼ø°£ (¿ÞÂÊ ´ë°¢¼± À§ °È±â·Î ÀüÈ¯)
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_UP, true); // °È±â: ¿ÞÂÊ ´ë°¢¼± À§
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// W + A ´Üµ¶ (¿ÞÂÊ ´ë°¢¼± À§ °È±â)
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_UP, true); // °È±â: ¿ÞÂÊ ´ë°¢¼± À§
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_UP, true); // °È±â À¯Áö
+	//	}
+	//}
+	//// W + A + Shift¿¡¼­ A ¶¾ ¼ø°£ (ÀüÁø ¶Ù±â·Î ÀüÈ¯)
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_FORWARD, true); // ¶Ù±â: ÀüÁø
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// W + A¿¡¼­ A ¶¾ ¼ø°£ (ÀüÁø °È±â·Î ÀüÈ¯)
+	//else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_FORWARD, true); // °È±â: ÀüÁø
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// W + A¿¡¼­ W ¶¾ ¼ø°£ (ÁÂÃø °È±â·Î ÀüÈ¯)
+	//else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT, true); // °È±â: ÁÂÃø (°¡Á¤: 8)
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// W + D + Shift (¿À¸¥ÂÊ ´ë°¢¼± À§ ¶Ù±â)
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT_UP, true); // ¶Ù±â: ¿À¸¥ÂÊ ´ë°¢¼± À§
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT_UP, true); // ¶Ù±â À¯Áö
+	//	}
+	//}
+	//// W + D + Shift ¶¾ ¼ø°£ (¿À¸¥ÂÊ ´ë°¢¼± À§ °È±â·Î ÀüÈ¯)
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_UP, true); // °È±â: ¿À¸¥ÂÊ ´ë°¢¼± À§
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// W + D ´Üµ¶ (¿À¸¥ÂÊ ´ë°¢¼± À§ °È±â)
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_UP, true); // °È±â: ¿À¸¥ÂÊ ´ë°¢¼± À§
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_UP, true); // °È±â À¯Áö
+	//	}
+	//}
+	//// W + D + Shift¿¡¼­ D ¶¾ ¼ø°£ (ÀüÁø ¶Ù±â·Î ÀüÈ¯)
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_FORWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// W + Dï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// W + Dï¿½ï¿½ï¿½ï¿½ W ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// S + A + Shift (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù±ï¿½)
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT_DOWN, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT_DOWN, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// S + A + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_DOWN, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// S + A ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½)
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_DOWN, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_DOWN, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// S + A + Shiftï¿½ï¿½ï¿½ï¿½ A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 20)
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// S + Aï¿½ï¿½ï¿½ï¿½ A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// S + Aï¿½ï¿½ï¿½ï¿½ S ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 8)
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// S + D + Shift (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù±ï¿½)
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT_DOWN, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT_DOWN, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// S + D + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_DOWN, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// S + D ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½ ï¿½È±ï¿½)
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_DOWN, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ë°¢ï¿½ï¿½ ï¿½ï¿½
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT_DOWN, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// S + D + Shiftï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 20)
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// S + Dï¿½ï¿½ï¿½ï¿½ D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// S + Dï¿½ï¿½ï¿½ï¿½ S ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// W + Shift (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½)
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_FORWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_FORWARD, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// W + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// W ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½)
+	//else if (keyBuffer['W'] & 0x80) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_FORWARD, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// S + Shift (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½)
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 20)
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_BACKWARD, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// S + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// S ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½)
+	//else if (keyBuffer['S'] & 0x80) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_BACKWARD, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// A + Shift (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½)
+	//else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 18)
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// A + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 8)
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// A ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½)
+	//else if (keyBuffer['A'] & 0x80) {
+	//	if (!(m_PrevKeyBuffer['A'] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 8)
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// D + Shift (ï¿½ï¿½ï¿½ï¿½ ï¿½Ù±ï¿½)
+	//else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT, true); // ï¿½Ù±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 19)
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_RIGHT, true); // ï¿½Ù±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// D + Shift ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½ï¿?ï¿½ï¿½È¯)
+	//else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// D ï¿½Üµï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½)
+	//else if (keyBuffer['D'] & 0x80) {
+	//	if (!(m_PrevKeyBuffer['D'] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½: 9)
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_RIGHT, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
+	//	}
+	//}
+	//// W ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (IDLEï¿½ï¿½ ï¿½ï¿½È¯)
+	//else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false); // IDLE
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// S ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (IDLEï¿½ï¿½ ï¿½ï¿½È¯)
+	//else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false); // IDLE
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// A ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (IDLEï¿½ï¿½ ï¿½ï¿½È¯)
+	//else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false); // IDLE
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
+	//// D ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (IDLEï¿½ï¿½ ï¿½ï¿½È¯)
+	//else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false); // IDLE
+	//	m_pResourceManager->UpdatePosition(fElapsedTime);
+	//}
 
-	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(1, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â±ï¿½
-		m_LockAnimation1 = true;
-	}
+	//if (keyBuffer['G'] & 0x80) {
+	//	auto* animationManager = m_pResourceManager->getAnimationManagers()[Client.get_id()].get();
+	//	if (animationManager && !animationManager->getFrame().empty()) {
+	//		CGameObject* frame = animationManager->getFrame()[0];
+	//		m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotation(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f), *frame);
+	//	}
+	//}
 
-	if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(2, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â°ï¿½ ï¿½×±ï¿½
-		m_LockAnimation1 = true;
-	}
+	//if (keyBuffer['H'] & 0x80) {
+	//	m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //ï¿½ï¿½È¸ï¿½ï¿½
+	//}
 
-	if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(21, true); //Dodge
-		m_LockAnimation1 = true;
-	}
+	//if (keyBuffer['T'] & 0x80) {
+	//	auto* animationManager = m_pResourceManager->getAnimationManagers()[Client.get_id()].get();
+	//	if (animationManager && !animationManager->getFrame().empty()) {
+	//		CGameObject* frame = animationManager->getFrame()[0];
+	//		m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotation(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f),*frame);
+	//	}
+	//}
 
-	if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(3, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â±ï¿½
-		m_LockAnimation1 = true;
-	}
+	//if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(1, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â±ï¿½
+	//	m_LockAnimation1 = true;
+	//}
 
-	if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(4, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â°ï¿½ ï¿½×±ï¿½
-		m_LockAnimation1 = true;
-	}
+	//if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(2, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â°ï¿½ ï¿½×±ï¿½
+	//	m_LockAnimation1 = true;
+	//}
 
-	if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(31, true); //ï¿½ï¿½Å³2
-		m_LockAnimation1 = true;
-	}
+	//if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(21, true); //Dodge
+	//	m_LockAnimation1 = true;
+	//}
 
-	if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(32, true); //ï¿½ï¿½Å³1
-		m_LockAnimation1 = true;
-	}
+	//if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(3, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â±ï¿½
+	//	m_LockAnimation1 = true;
+	//}
 
-	if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->StartSkill3(); //ï¿½ï¿½Å³3
-		m_LockAnimation = true;
-	}
+	//if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(4, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â°ï¿½ ï¿½×±ï¿½
+	//	m_LockAnimation1 = true;
+	//}
+
+	//if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(31, true); //ï¿½ï¿½Å³2
+	//	m_LockAnimation1 = true;
+	//}
+
+	//if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(32, true); //ï¿½ï¿½Å³1
+	//	m_LockAnimation1 = true;
+	//}
+
+	//if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
+	//	m_pResourceManager->getAnimationManagers()[Client.get_id()]->StartSkill3(); //ï¿½ï¿½Å³3
+	//	m_LockAnimation = true;
+	//}
 	// ï¿½ï¿½ï¿½ï¿½ Å° ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ï¿½
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 

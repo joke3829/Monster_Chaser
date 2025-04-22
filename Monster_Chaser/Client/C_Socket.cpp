@@ -75,10 +75,10 @@ void C_Socket::process_packet(char* ptr)
 
 		int room_num = static_cast<int>(p->room_number);
 		int local_id = p->Local_id;
-		Client.set_id(local_id);
 		if (!Players.contains(local_id)) {
 
 			Players.try_emplace(local_id, local_id);
+		Client.set_id(local_id);
 			//Players[local_id] = new Player(local_id);
 		}
 
