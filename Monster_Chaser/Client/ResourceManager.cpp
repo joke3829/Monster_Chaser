@@ -119,7 +119,7 @@ void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentI
 			if (g_ShowBoundingBox) {
 				m_vGameObjectList[nCurrentObjectIndex]->getMaterials().clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ·£´ý ÄÃ·¯
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ·£´ý ÄÃ·¯
 				m_vGameObjectList[nCurrentObjectIndex]->getMaterials().emplace_back(tempM);
 			}
 		}

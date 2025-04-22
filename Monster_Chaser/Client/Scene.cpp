@@ -657,7 +657,7 @@ void CRaytracingMaterialTestScene::SetUp()
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\w.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\portal_low.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
@@ -776,7 +776,7 @@ void CRaytracingMaterialTestScene::SetUp()
 	if (p != normalObjects.end()) {
 		(*p)->getMaterials().emplace_back();
 		Material& mt = (*p)->getMaterials()[0];
-		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118*4, 0.2065666*4, 0.2358491*4, 0.7);
+		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.7);
 		//mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.0, 0.0, 1.0, 0.7);
 		//mt.m_bHasSpecularColor = true; mt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
 		mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;

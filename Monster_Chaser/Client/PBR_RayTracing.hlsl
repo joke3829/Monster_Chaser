@@ -316,6 +316,14 @@ inline float3 CalculateCookTorranceSpecular(inout float3 F, in float roughness, 
     return (F * G * D) / denom;
 }
 
+inline float3 CalculateBlinnPhongSpecular(inout float3 F, in float roughness, in float3 R0, in float NdotV, in float NdotH, in float NdotL)
+{
+    float glossiness = 1.0f - roughness;
+    float rh = lerp(0.0, 128.0, glossiness);
+
+    return pow(NdotH, rh);
+}
+
 float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float roughness, in float3 R0, in float3 AlbedoColor)
 {
     float3 V = normalize(-WorldRayDirection());
@@ -346,6 +354,7 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                         float3 rs = float3(0.0, 0.0, 0.0);
                         if (!isShadow)
                             rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                            //rs = CalculateBlinnPhongSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
                         float metallic = max(max(R0.r, R0.g), R0.b);
                         float s = lerp(0.0, 0.95, metallic);
                         if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
@@ -385,6 +394,7 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                             float3 rs = float3(0.0, 0.0, 0.0);
                             if (!isShadow)
                                 rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                                //rs = CalculateBlinnPhongSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
                             float metallic = max(max(R0.r, R0.g), R0.b);
                             float s = lerp(0.0, 0.95, metallic);        
                             if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
@@ -425,6 +435,7 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                             float3 rs = float3(0.0, 0.0, 0.0);
                             if (!isShadow)
                                 rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                                //rs = CalculateBlinnPhongSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
                             float metallic = max(max(R0.r, R0.g), R0.b);
                             float s = lerp(0.0, 0.95, metallic);
                             if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
