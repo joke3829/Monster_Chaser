@@ -6,6 +6,7 @@
 
 class ObjectManager {
 public:
+    ObjectManager(){}
     ObjectManager(int id) ;
     virtual ~ObjectManager() = default;
 
@@ -21,6 +22,7 @@ protected:
 
 class Player : public ObjectManager {
 public:
+    Player() {}
     Player(int id) : ObjectManager(id) {}
 
     void setRenderingObject(CSkinningObject* obj)

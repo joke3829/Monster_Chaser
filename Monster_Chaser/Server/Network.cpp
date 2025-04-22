@@ -51,22 +51,23 @@ void SESSION::process_packet(char* p) {
 	}
 	case C2S_P_ENTER_ROOM: {
 		
+		lock_guard<mutex> lock(myMutex);
 		cs_packet_enter_room* pkt = reinterpret_cast<cs_packet_enter_room*>(p);
 
-		int room_num = static_cast<int>(pkt->room_number);
+		int room_Num = static_cast<int>(pkt->room_number);
 		bool is_ready = false;
 
 
-		if (g_server.rooms[room_num].IsAddPlayer())			//id 값이 맴버 변수에 들어감 
+		if (g_server.rooms[room_Num].IsAddPlayer())			//id 값이 맴버 변수에 들어감 
 		{
-			g_server.users[m_uniqueNo]->local_id = g_server.rooms[room_num].GetPlayerCount();		//Assign Local_Id
+			g_server.users[m_uniqueNo]->local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
 			
-			g_server.rooms[room_num].AddPlayer(m_uniqueNo);
+			g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
 
 		}
 		else
 		{
-			cout << "이미 " << room_num << "번 방에는 사람이 꽉 찼습니다" << endl;
+			cout << "이미 " << room_Num << "번 방에는 사람이 꽉 찼습니다" << endl;
 			break;
 		}
 		
@@ -77,9 +78,10 @@ void SESSION::process_packet(char* p) {
 		sp.size = sizeof(sp);
 		sp.type = S2C_P_SELECT_ROOM;
 		sp.Local_id = g_server.users[m_uniqueNo]->local_id;
-		sp.room_number = static_cast<char>(room_num);
+		sp.room_number = static_cast<char>(room_Num);
 
-		for(auto& id  : g_server.rooms[room_num].id)
+		room_num = room_Num;
+		for(auto& id  : g_server.rooms[room_Num].id)
 		g_server.users[id]->do_send(&sp);
 
 		//나중에 UI나와서 방 선택하고 바로 직업 선택하는걸로 전환되는 거면 전체 유저한테 다 보낼 필요가 없음 	

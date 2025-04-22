@@ -30,6 +30,9 @@ enum MoveAnimationState
 	RUN_RIGHT_DOWN = 20,
 };
 
+
+
+
 class CScene {
 public:
 	virtual void SetUp() {}

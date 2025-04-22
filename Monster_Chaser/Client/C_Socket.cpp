@@ -1,10 +1,11 @@
 
 #include "C_Socket.h"
-#include "GameObject.h"
+
 extern C_Socket Client;
-extern std::unordered_map<int, Player*> Players;
+extern std::unordered_map<int, Player> Players;
 extern std::unordered_map<int, Monster*> g_monsters;
 extern int RoomList[10];
+
 extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
 C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
 
@@ -74,10 +75,11 @@ void C_Socket::process_packet(char* ptr)
 
 		int room_num = static_cast<int>(p->room_number);
 		int local_id = p->Local_id;
-
+		Client.set_id(local_id);
 		if (!Players.contains(local_id)) {
 
-			Players[local_id] = new Player(local_id);
+			Players.try_emplace(local_id, local_id);
+			//Players[local_id] = new Player(local_id);
 		}
 
 		RoomList[room_num]++;
@@ -121,7 +123,7 @@ void C_Socket::process_packet(char* ptr)
 
 		// 3¸í²¨¸¦ ÇÑ²¨¹ø¿¡	
 
-		Players[local_id]->setPosition(position);
+		Players[local_id].setPosition(position);
 
 
 		break;
@@ -135,6 +137,8 @@ void C_Socket::process_packet(char* ptr)
 
 void C_Socket::do_recv()
 {
+	std::lock_guard<std::mutex>lock(myMutex);
+
 	char buffer[BUF_SIZE] = {};
 	while (running) {
 		int processed = 0;
