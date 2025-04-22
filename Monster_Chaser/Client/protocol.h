@@ -50,7 +50,7 @@ struct sc_packet_createUser {			//회원가입
 	bool loginSuccess = false;
 	//char Loginid[MAX_ID_LEN];						 //이거는 클라가 서버한테 보내주는 계정 정보지 왜 서버가 주노..
 	//char Loginpassword[MAX_ID_LEN];				 //이거는 클라가 서버한테 보내주는 계정 정보지 왜 서버가 주노..
-};
+};	//클라가 가질 필요 없음 ㅋ
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 constexpr char S2C_P_SELECT_ROOM = 3;
@@ -68,8 +68,7 @@ constexpr char S2C_P_ALLREADY = 4;
 struct sc_packet_Ingame_start {			//한 방에 세명이 다 준비 완료를 시작했을때 
 	unsigned char size;
 	char type;
-	int ready_id[3];	//3 6 2									
-	int real_id;		//3			6			2
+	int Local_id;
 	char room_number;
 
 };
@@ -80,8 +79,8 @@ constexpr char S2C_P_UPDATEROOM = 5;
 struct sc_packet_room_info {			//방 정보 업데이트 
 	unsigned char size;
 	char type;
-	char room_number;
-	char player_count;
+	int room_info[10];
+
 
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +89,7 @@ constexpr char S2C_P_SETREADY = 6;
 struct sc_packet_set_ready {			//클라가 준비했을 때 
 	unsigned char size;
 	char type;
-	int id;				//필요없을듯
+	int Local_id;
 	char room_number;
 	bool is_ready;
 };
@@ -100,7 +99,7 @@ constexpr char S2C_P_MOVE = 7;
 struct sc_packet_move {
 	unsigned char size;
 	char type;
-	int id;
+	int Local_id;
 	XMFLOAT4X4 pos;
 	float time;
 };
@@ -158,7 +157,7 @@ constexpr char C2S_P_ENTER_ROOM = 53;	//방 선택했을 떄
 struct cs_packet_enter_room {
 	unsigned char size;
 	char type;
-	int id;
+	//int id;
 	char room_number;
 };
 
@@ -168,7 +167,6 @@ constexpr char C2S_P_READY = 54;
 struct cs_packet_ready {
 	unsigned char size;
 	char type;
-	int id;
 	char room_number;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +175,6 @@ constexpr char C2S_P_READY_Cancel = 55;
 struct cs_packet_cancel_ready {
 	unsigned char size;
 	char type;
-	int id;
 	char room_number;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,7 +194,6 @@ constexpr char C2S_P_MOVE = 57;
 struct cs_packet_move {
 	unsigned char  size;
 	char  type;
-	int id;
 	XMFLOAT4X4 pos;
 
 };

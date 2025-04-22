@@ -6,7 +6,7 @@
 
 class ObjectManager {
 public:
-    ObjectManager(int id);
+    ObjectManager(int id) ;
     virtual ~ObjectManager() = default;
 
     int getID() const;
@@ -23,7 +23,10 @@ class Player : public ObjectManager {
 public:
     Player(int id) : ObjectManager(id) {}
 
-    void setRenderingObject(CSkinningObject* obj) { Client_Object = obj; }
+    void setRenderingObject(CSkinningObject* obj)
+    {
+        Client_Object = obj;
+    }
 
     CSkinningObject* getRenderingObject() { return Client_Object; }
 
@@ -38,17 +41,15 @@ public:
     bool isReady() const { return readyToStart; }
     void setReady(const bool& ready) { readyToStart = ready; }
    
-    void setPlayerID_In_Game(const int & val,const int&key);
+   
    
    
 private:
    
     bool readyToStart = false;
     int hp = 100;
-    int PlayerID_In_Game[3];    //3 1 2
-    //인게임 시작할떄 어떤 클라가 같이 렌더링 되어야하는지 알아야 되지 않을까? 해서 넣어둔거지
     
-    CSkinningObject* Client_Object=nullptr;
+    CSkinningObject* Client_Object = nullptr;
     // 더 필요한 상태값들...
 };
 

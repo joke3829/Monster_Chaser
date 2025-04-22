@@ -1,6 +1,8 @@
 #include "Scene.h"
+#include "C_Socket.h"
 #include "protocol.h"
-extern std::unordered_map<int, Player*> Players;
+std::unordered_map<int, Player*> Players;
+extern C_Socket Client;
 void CRaytracingScene::UpdateObject(float fElapsedTime)
 {
 	//m_pCamera->SetShaderVariable();
@@ -27,8 +29,8 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	}
 
 	auto& Skinned = m_pResourceManager->getSkinningObjectList();
-	for (size_t i = 1; i < Skinned.size(); ++i) {
-		Skinned[i]->SetPosition(Players[i]->getRenderingObject()->getPosition());
+	for (size_t i = 0; i < Skinned.size(); ++i) {
+		//Skinned[i]->SetPosition(Players[i]->getRenderingObject()->getPosition());
 	}
 
 	m_pResourceManager->UpdateWorldMatrix();
@@ -475,19 +477,22 @@ void CRaytracingTestScene::SetUp()
 	//aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
 	//aManagers[1]->UpdateAnimation(0.5f);		// Not Need
 
+
+	//Players[0]->setRenderingObject(test);
+
 	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 	skinned[1]->CopyFromOtherObject(skinned[0].get());
 	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
 	aManagers[1]->SetFramesPointerFromSkinningObject(skinned[1]->getObjects());
 	aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
-	Players[1]->setRenderingObject(skinned[1].get());
-
+	//Players[1]->setRenderingObject(skinned[1].get());
+	
 	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 	skinned[2]->CopyFromOtherObject(skinned[0].get());
 	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
 	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
 	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
-	Players[2]->setRenderingObject(skinned[2].get());
+	//Players[2]->setRenderingObject(skinned[2].get());
 
 	// Create new Object Example
 	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.025f, 1.0f));
@@ -550,7 +555,7 @@ void CRaytracingTestScene::SetUp()
 	m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
 
 	// Setting Camera ==============================================================
-	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());//skinned[Client.get_id()]->getObjects()[0].get());
 	m_pCamera->SetCameraLength(10.0f);
 	// ==========================================================================
 

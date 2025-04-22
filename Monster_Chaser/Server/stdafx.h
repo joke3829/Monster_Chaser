@@ -20,10 +20,7 @@
 using namespace DirectX;
 using namespace std;
 
-void MoveCursorTo(int x, int y) {
-	COORD pos = { (SHORT)x, (SHORT)y };
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-}
+
 enum 직업 {
 	전사 = 0,
 	마법사,

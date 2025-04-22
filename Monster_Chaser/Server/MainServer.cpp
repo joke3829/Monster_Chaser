@@ -45,7 +45,7 @@ int main() {
 		{
 			int client_id = g_server.client_id++;
 			CreateIoCompletionPort(reinterpret_cast<HANDLE>(exp->accept_socket), g_server.iocp, client_id, 0);
-			g_server.users[client_id] = new SESSION(key,exp->accept_socket);
+			g_server.users[client_id] = std::make_unique<SESSION>(client_id,exp->accept_socket);
 
 
 
@@ -75,7 +75,7 @@ int main() {
 		break;
 		case IO_RECV:
 		{
-			SESSION* user = g_server.users[key];
+			SESSION* user = g_server.users[key].get();
 			char* ptr = exp->buffer;
 			int processed = 0;
 			bytes += user->remained;

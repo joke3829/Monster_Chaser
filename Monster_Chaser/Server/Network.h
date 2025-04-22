@@ -32,13 +32,16 @@ class SESSION;
 class SESSION {
 public:
     SOCKET socket;
-    EXP_OVER* recv_over;            
+    std::unique_ptr<EXP_OVER> recv_over;
     int m_uniqueNo;
   
     unsigned char remained = 0;
+
     std::string name;               //유저 닉네임
     int local_id;
-    
+    int room_num;
+
+
     SESSION(int Num,SOCKET s);
     ~SESSION();
 
@@ -55,12 +58,12 @@ public:
     std::vector<Room> rooms;
 
     HANDLE iocp;
-    std::unordered_map<int, SESSION*> users;
+    std::unordered_map<int, std::unique_ptr<SESSION>> users;
 
     std::unordered_map<int, Monster*> monsters;
 
 
-    int client_id = 0;
-    int monster_id = 50000;
+    std::atomic<int> client_id = 0;
+    std::atomic<int>  monster_id = 50000;
     SOCKET listen_socket;
 };

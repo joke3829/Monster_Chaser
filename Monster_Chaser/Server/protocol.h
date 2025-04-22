@@ -157,7 +157,7 @@ constexpr char C2S_P_ENTER_ROOM = 53;	//방 선택했을 떄
 struct cs_packet_enter_room {
 	unsigned char size;
 	char type;
-	int id;
+	//int id;
 	char room_number;
 };
 
@@ -194,7 +194,6 @@ constexpr char C2S_P_MOVE = 57;
 struct cs_packet_move {
 	unsigned char  size;
 	char  type;
-	int id;
 	XMFLOAT4X4 pos;
 
 };

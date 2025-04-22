@@ -38,12 +38,28 @@ void Room::SendRoomInfo() {        //방 현황 보내주기
 	sc_packet_room_info pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = S2C_P_UPDATEROOM;
-	pkt.room_number = static_cast<char>(room_number);
-	pkt.player_count = id.size();
+	pkt.room_info;
+	
 
 	for (auto& player : g_server.users) {
 		player.second->do_send(&pkt);
 	}
+}
+
+void Room::BroadCast_Room()
+{
+	/*sc_packet_room_info rp;
+	rp.size = sizeof(rp);
+	rp.type = S2C_P_UPDATEROOM;
+	rp.room_info[Getroom_number()] = GetPlayerCount();*/
+		
+	
+	//for (auto& player : g_server.users) {							//send other player to broadcast room update
+	//	//if (player.second->m_uniqueNo == this->m_uniqueNo)  // 나 자신은 제외
+	//	//	continue;	
+	//	player.second->do_send(&rp);								//if come UI Not to send me
+	//}
+	//g_server.users
 }
 
 

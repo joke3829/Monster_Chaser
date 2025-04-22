@@ -17,12 +17,13 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름�
 CGameFramework gGameFramework;
 
 
-std::unordered_map<int, Player*> Players;               // 모든 플레이어들		
+extern std::unordered_map<int, Player*> Players;               // 모든 플레이어들		
 
 std::unordered_map<int, Monster*> g_monsters;            // 몬스터들
 
 
 int RoomList[10];			// 방 UI대신 쓸거 
+bool ready = false;
 C_Socket Client;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다
@@ -105,13 +106,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				continue;
 			break;
 		}
-		int m_id = Client.get_id();
+		
 		int room_num = static_cast<char>(num);
 
 		cs_packet_enter_room p;
 		p.size = sizeof(p);
 		p.type = C2S_P_ENTER_ROOM;
-		p.id = m_id;
 		p.room_number = (char)num;
 		Client.send_packet(&p);
 
@@ -124,12 +124,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				switch (key) {
 				case 'r':
 
-					if (!Players[m_id]->isReady()) {
+					if (!ready) {
 						cs_packet_ready rp;
 						rp.size = sizeof(rp);
 						rp.type = C2S_P_READY;
 						rp.room_number = room_num;
-						rp.id = m_id;
 						Client.send_packet(&rp);
 
 					}
@@ -138,7 +137,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 						cp.size = sizeof(cp);
 						cp.room_number = room_num;
 						cp.type = C2S_P_READY_Cancel;
-						cp.id = Client.get_id();
 						Client.send_packet(&cp);
 
 					}

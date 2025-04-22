@@ -14,7 +14,7 @@ EXP_OVER::EXP_OVER(IO_OP op) : io_op(op) {
 }
 
 SESSION::SESSION(int Num, SOCKET s) :m_uniqueNo(Num), socket(s) {
-	recv_over = new EXP_OVER(IO_RECV);
+	recv_over = std::make_unique<EXP_OVER>(IO_RECV);
 	do_recv();
 }
 
@@ -22,7 +22,7 @@ SESSION::~SESSION() {
 
 
 	closesocket(socket);
-	delete recv_over;
+
 }
 
 void SESSION::do_recv() {
@@ -37,7 +37,9 @@ void SESSION::do_send(void* packet) {
 	int len = reinterpret_cast<unsigned char*>(packet)[0];
 	memcpy(over->buffer, packet, len);
 	over->wsabuf[0].len = len;
+	
 	WSASend(socket, over->wsabuf, 1, nullptr, 0, &over->over, nullptr);
+	
 }
 
 void SESSION::process_packet(char* p) {
@@ -48,9 +50,8 @@ void SESSION::process_packet(char* p) {
 		break;
 	}
 	case C2S_P_ENTER_ROOM: {
+		
 		cs_packet_enter_room* pkt = reinterpret_cast<cs_packet_enter_room*>(p);
-
-
 
 		int room_num = static_cast<int>(pkt->room_number);
 		bool is_ready = false;
@@ -58,10 +59,9 @@ void SESSION::process_packet(char* p) {
 
 		if (g_server.rooms[room_num].IsAddPlayer())			//id 값이 맴버 변수에 들어감 
 		{
-			g_server.rooms[room_num].AddPlayer(m_uniqueNo);
 			g_server.users[m_uniqueNo]->local_id = g_server.rooms[room_num].GetPlayerCount();		//Assign Local_Id
-
-
+			
+			g_server.rooms[room_num].AddPlayer(m_uniqueNo);
 
 		}
 		else
@@ -69,17 +69,20 @@ void SESSION::process_packet(char* p) {
 			cout << "이미 " << room_num << "번 방에는 사람이 꽉 찼습니다" << endl;
 			break;
 		}
+		
+
+
 
 		sc_packet_select_room sp;
 		sp.size = sizeof(sp);
 		sp.type = S2C_P_SELECT_ROOM;
 		sp.Local_id = g_server.users[m_uniqueNo]->local_id;
-		sp.room_number = room_num;
+		sp.room_number = static_cast<char>(room_num);
 
+		for(auto& id  : g_server.rooms[room_num].id)
+		g_server.users[id]->do_send(&sp);
 
-		g_server.users[m_uniqueNo]->do_send(&sp);
-
-		// 나중에 UI나와서 방 선택하고 바로 직업 선택하는걸로 전환되는 거면 전체 유저한테 다 보낼 필요가 없음 	
+		//나중에 UI나와서 방 선택하고 바로 직업 선택하는걸로 전환되는 거면 전체 유저한테 다 보낼 필요가 없음 	
 		//for (auto& player : g_server.users) {
 		//	player.second->do_send(&sp);
 		//}
@@ -99,11 +102,9 @@ void SESSION::process_packet(char* p) {
 		for (int i = 0; i < g_server.rooms.size(); ++i) {
 			rp.room_info[i] = g_server.rooms[i].GetPlayerCount();
 		}
-		for (auto& player : g_server.users) {							//send other player to broadcast room update
-			//if (player.second->m_uniqueNo == this->m_uniqueNo)  // 나 자신은 제외
-			//	continue;	
-			player.second->do_send(&rp);								//if come UI Not to send me
-		}
+		for (auto& player : g_server.users)
+			player.second->do_send(&rp);
+
 
 		std::cout << "[클라이언트 " << m_uniqueNo << "]이 " << (int)room_num << "번 방에 입장했습니다." << std::endl;
 		break;
@@ -117,75 +118,85 @@ void SESSION::process_packet(char* p) {
 		for (int i = 0; i < g_server.rooms.size(); ++i) {
 			pkt.room_info[i] = g_server.rooms[i].GetPlayerCount();
 		}
-
-		do_send(&pkt);
+		for (auto& player : g_server.users)
+			player.second->do_send(&pkt);
 
 		break;
 	}
 	case C2S_P_READY_Cancel: {
 		cs_packet_cancel_ready* pkt = reinterpret_cast<cs_packet_cancel_ready*>(p);
-		int id = m_uniqueNo;
 		int room_num = static_cast<int>(pkt->room_number);
 		bool is_ready = false;
 		g_server.rooms[room_num].setReadyUser(-1);
 
+
+		vector<int> ids;
+		for (int i = 0; i < g_server.rooms[room_num].GetPlayerCount(); ++i) {
+			ids.emplace_back(g_server.rooms[room_num].getID(i));
+		}
+
+
 		sc_packet_set_ready cp;
 		cp.size = sizeof(cp);
 		cp.type = S2C_P_SETREADY;
-		cp.Local_id = id;
+		cp.Local_id = g_server.users[m_uniqueNo]->local_id;
 		cp.room_number = room_num;
 		cp.is_ready = is_ready;
-		for (auto& player : g_server.users) {
-			player.second->do_send(&cp);
-		}
 
-		std::cout << "[클라이언트 " << id << "]이 준비를 취소했습니다." << std::endl;
+		for (int id : ids)
+			g_server.users[id]->do_send(&cp);
+
+
+		std::cout << "[클라이언트 " << m_uniqueNo << "]이 준비를 취소했습니다." << std::endl;
 		break;
 	}
 	case C2S_P_READY: {
+		lock_guard<mutex> lock(myMutex);
 		cs_packet_ready* pkt = reinterpret_cast<cs_packet_ready*>(p);
-		int id = m_uniqueNo;
+
 		int room_num = static_cast<int>(pkt->room_number);		//이미 방에 들어갈 떄 진행하니까 굳이 필요는 x
 		bool is_ready = true;
 		g_server.rooms[room_num].setReadyUser(1);
+		std::vector<int> room_players;
 
 		// 3명 다 준비 완료일 때
-		if (g_server.rooms[room_num].GetReadyUser() >= 3) {
+		if (g_server.rooms[room_num].GetReadyUser() >= g_server.rooms[room_num].id.size()) {
 			// 모든 플레이어 ID 수집
-			std::vector<int> room_players;
-			for (int i = 0; i < g_server.rooms[room_num].GetPlayerCount(); ++i)
-				room_players.push_back(g_server.rooms[room_num].getID(i));
-
-			// 각 유저에게 자신의 ID를 ready_id[0]으로 보내도록 별도 패킷 생성
-			for (int i = 0; i < room_players.size(); ++i) {
-				int self_id = room_players[i];
-				if (!g_server.users.contains(self_id)) continue;
-				//
-				sc_packet_Ingame_start sp;
-				sp.size = sizeof(sp);
-				sp.type = S2C_P_ALLREADY;
-				sp.room_number = room_num;
+			for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)
+				room_players.emplace_back(g_server.rooms[room_num].getID(i));
 
 
+			sc_packet_Ingame_start sp;
+			sp.size = sizeof(sp);
+			sp.type = S2C_P_ALLREADY;
+			sp.room_number = static_cast<char>(room_num);
+			sp.Local_id = g_server.users[m_uniqueNo]->local_id;
 
-				g_server.users[self_id]->do_send(&sp);
-			}
+
 			g_server.rooms[room_num].StartGame();
+			g_server.users[m_uniqueNo]->room_num = room_num;
+			for (auto& id : room_players)
+				g_server.users[id]->do_send(&sp);
 
 		}
+
+
 		else
 		{
 			sc_packet_set_ready rp;
 			rp.size = sizeof(rp);
 			rp.type = S2C_P_SETREADY;
-			rp.id = id;
+			rp.Local_id = g_server.users[m_uniqueNo]->local_id;
 			rp.room_number = static_cast<char>(room_num);
 			rp.is_ready = is_ready;
-			for (auto& player : g_server.users) {
-				player.second->do_send(&rp);
-			}
 
-			std::cout << "[클라이언트 " << id << "]이 " << (int)room_num << "번 방에서 준비완료했습니다." << std::endl;
+			for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)
+				room_players.emplace_back(g_server.rooms[room_num].getID(i));
+
+			for (auto& id : room_players)
+				g_server.users[id]->do_send(&rp);
+
+			std::cout << "[클라이언트 " << m_uniqueNo << "]이 " << (int)room_num << "번 방에서 준비완료했습니다." << std::endl;
 		}
 		break;
 	}
@@ -193,37 +204,40 @@ void SESSION::process_packet(char* p) {
 	{
 		lock_guard<mutex> lock(myMutex);
 		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
-		int id = pkt->id;
-		auto pos = pkt->pos;
 
+		auto pos = pkt->pos;
+		
 		//collision check
 		/*{
 			이동
 		}*/
-		int target_id[3];
 
-
-		for (auto& u : g_server.rooms) {
-			if (u.IsStarted()) {
-				for (int i = 0; i < u.GetReadyUser(); ++i) {
-					target_id[i] = u.getID(i);
-				}
-			}
-		}
+		
 
 		sc_packet_move mp;
 		mp.size = sizeof(mp);
 		mp.type = S2C_P_MOVE;
-		mp.id = id;
+		mp.Local_id = g_server.users[m_uniqueNo]->local_id;;
 		mp.pos = pos;
 
-		for (auto& u : g_server.users) {
-			u.second->do_send(&mp);
-		}
-		BroadCasting_position(mp.pos, id);
+		vector <int> room_players;
+		for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)
+			room_players.emplace_back(g_server.rooms[room_num].getID(i));
+
+		for (auto& id : room_players)
+			g_server.users[id]->do_send(&mp);
+
+
+
+		BroadCasting_position(mp.pos, m_uniqueNo);
 		break;
 	}
 	}
+}
+
+void MoveCursorTo(int x, int y) {
+	COORD pos = { (SHORT)x, (SHORT)y };
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
 
 void SESSION::BroadCasting_position(const XMFLOAT4X4& pos, const int& id)
