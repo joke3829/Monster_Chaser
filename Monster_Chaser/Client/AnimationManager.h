@@ -40,6 +40,7 @@ public:
 	void UpdateAnimation(float fElapsedTime);		// 시간 지정
 	void UpdateAnimationMatrix();
 	void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
+	bool CheckSphereAABBCollision(std::vector<CGameObject*>& map);
 	void ChangeAnimation(UINT nSet);
 	void ChangeAnimation(UINT nSet, bool playOnce = false); // playOnce 옵션 추가
 	void setCurrnetSet(UINT n) { m_nCurrentSet = n; }

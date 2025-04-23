@@ -31,6 +31,8 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
+	m_pResourceManager->CheckCollision();
+
 	if (test) {
 		m_pResourceManager->UpdatePosition(fElapsedTime); //��ġ ������Ʈ
 	}
