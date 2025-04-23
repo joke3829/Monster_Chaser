@@ -188,6 +188,7 @@ public:
 	XMFLOAT4X4 getWorldMatrix();
 	XMFLOAT4X4 getLocalMatrix();
 	XMFLOAT4X4 getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
+	BoundingOrientedBox GetBoundingOBB()const;
 
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
@@ -202,6 +203,9 @@ public:
 	void SetAnimationMatrix(XMFLOAT4X4& atx) { m_xmf4x4AnimationMatrix = atx; }
 
 	void InitializeAxis();
+
+	void UpdateBoundingSphere(XMFLOAT4X4& ltx);
+	void UpdateBoneBoundingBox(CGameObject* bone, XMFLOAT4X4& ltx);
 protected:
 	void UpdateLocalMatrix();
 	std::string m_strName{};

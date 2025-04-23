@@ -56,6 +56,12 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 		//XMStoreFloat4x4(&xmf, XMMatrixTranspose(XMMatrixAffineTransformation(S, XMVectorZero(), R, T)));
 		XMStoreFloat4x4(&xmf, XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
 		vMatrixes[i]->SetLocalMatrix(xmf);
+		vMatrixes[i]->UpdateBoneBoundingBox(vMatrixes[i], xmf);
+
+		// 루트 뼈(0번째 뼈)에 대해서만 바운딩 스피어 업데이트
+		if (i == 0) {
+			vMatrixes[i]->UpdateBoundingSphere(xmf);
+		}
 	}
 }
 
