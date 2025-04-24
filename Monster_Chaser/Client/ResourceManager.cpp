@@ -380,7 +380,9 @@ void CResourceManager::CheckCollision()
 {
 	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
 		if (m_vAnimationManager[i]) {
-			m_vAnimationManager[i]->CheckSphereAABBCollision(getGameObjectPtrList());
+			m_vAnimationManager[i]->CheckSphereAABBCollision(getGameObjectPtrList() , getMeshPtrList());
+			//계산을 하는 함수를 호출하던지 계산을 진행해주고
+			// 그 값을 
 		}
 	}
 }
@@ -452,6 +454,14 @@ std::vector<CGameObject*> CResourceManager::getGameObjectPtrList()
 {
 	std::vector<CGameObject*> ptrList;
 	for (const auto& obj : m_vGameObjectList) {
+		if (obj)ptrList.push_back(obj.get());
+	}
+	return ptrList;
+}
+std::vector<Mesh*> CResourceManager::getMeshPtrList()
+{
+	std::vector<Mesh*> ptrList;
+	for (const auto& obj : m_vMeshList) {
 		if (obj)ptrList.push_back(obj.get());
 	}
 	return ptrList;

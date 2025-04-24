@@ -56,11 +56,6 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 		//XMStoreFloat4x4(&xmf, XMMatrixTranspose(XMMatrixAffineTransformation(S, XMVectorZero(), R, T)));
 		XMStoreFloat4x4(&xmf, XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
 		vMatrixes[i]->SetLocalMatrix(xmf);
-		vMatrixes[i]->UpdateBoneBoundingBox(vMatrixes[i], xmf);
-
-		if (i == 0) {
-			vMatrixes[i]->UpdateBoundingSphere(xmf);
-		}
 	}
 }
 
@@ -188,46 +183,6 @@ void CAnimationManager::UpdateAnimationMatrix()
 	for (int i = 0; i < m_vMatrixes.size(); ++i) 
 		XMStoreFloat4x4(&m_vMatrixes[i], XMMatrixTranspose(XMLoadFloat4x4(&m_vFrames[i]->getAnimationMatrix())));
 	memcpy(m_pMappedPointer, m_vMatrixes.data(), sizeof(XMFLOAT4X4) * m_vMatrixes.size());
-}
-
-bool CAnimationManager::CheckSphereAABBCollision(std::vector<CGameObject*>& map)
-{
-	BoundingSphere sphere = m_vFrames[0]->GetBoundingSphere();
-	XMFLOAT3 sphereCenter = sphere.Center;
-
-	for (CGameObject* mapObj : map) {
-		if (!mapObj) {
-			continue;
-		}
-
-		// 맵 객체의 OBB
-		BoundingOrientedBox aabb = mapObj->GetBoundingOBB(); //메쉬의 바운딩 박스를 가져오던가 동일하게 값을 가져오던가 해야할 듯
-		XMFLOAT3 aabbCenter = aabb.Center;
-		XMFLOAT3 aabbExtents = aabb.Extents;
-
-		// AABB의 최소/최대 점 계산 (OBB를 AABB로 근사)
-		XMFLOAT3 aabbMin = { aabbCenter.x - aabbExtents.x, aabbCenter.y - aabbExtents.y, aabbCenter.z - aabbExtents.z };
-		XMFLOAT3 aabbMax = { aabbCenter.x + aabbExtents.x, aabbCenter.y + aabbExtents.y, aabbCenter.z + aabbExtents.z };
-
-		// 가장 가까운 점 계산
-		XMFLOAT3 closestPoint;
-		closestPoint.x = std::clamp(sphereCenter.x, aabbMin.x, aabbMax.x);
-		closestPoint.y = std::clamp(sphereCenter.y, aabbMin.y, aabbMax.y);
-		closestPoint.z = std::clamp(sphereCenter.z, aabbMin.z, aabbMax.z);
-
-		// 거리 계산
-		float dx = sphereCenter.x - closestPoint.x;
-		float dy = sphereCenter.y - closestPoint.y;
-		float dz = sphereCenter.z - closestPoint.z;
-		float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
-
-		// 충돌 확인
-		if (distance <= sphere.Radius) {
-			return true;
-		}
-	}
-
-	return false;
 }
 
 void CAnimationManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* player)

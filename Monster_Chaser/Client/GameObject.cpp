@@ -260,42 +260,6 @@ void CGameObject::InitializeAxis()
 	normalizeFloat3(m_xmf3Look);
 }
 
-void CGameObject::UpdateBoundingSphere(XMFLOAT4X4& ltx)
-{
-	// 캐릭터의 초기 바운딩 스피어 가져오기
-	BoundingSphere initialSphere = m_BoundingSphere;
-	XMMATRIX transform = XMLoadFloat4x4(&ltx);
-
-	// 중심 변환
-	XMVECTOR center = XMLoadFloat3(&initialSphere.Center);
-	center = XMVector3Transform(center, transform);
-
-	// 스케일링 계산
-	XMVECTOR scale, rot, trans;
-	XMMatrixDecompose(&scale, &rot, &trans, transform);
-	float scaleFactor = XMVectorGetX(scale);
-	float transformedRadius = initialSphere.Radius * scaleFactor;
-
-	// 변환된 스피어 저장
-	XMFLOAT3 transformedCenter;
-	XMStoreFloat3(&transformedCenter, center);
-	SetBoundingSphere(transformedCenter, transformedRadius);
-}
-
-void CGameObject::UpdateBoneBoundingBox(CGameObject* bone, XMFLOAT4X4& ltx)
-{
-	// 기존 OBB 정보 가져오기
-	BoundingOrientedBox initialOBB = bone->GetBoundingOBB();
-	XMMATRIX transform = XMLoadFloat4x4(&ltx);
-
-	// OBB 변환
-	BoundingOrientedBox transformedOBB;
-	initialOBB.Transform(transformedOBB, transform);
-
-	// 변환된 OBB 저장
-	bone->SetBoundingOBB(transformedOBB.Center, transformedOBB.Extents);
-}
-
 
 // =============================================================
 

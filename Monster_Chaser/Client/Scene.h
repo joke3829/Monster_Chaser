@@ -64,6 +64,9 @@ public:
 	void PrepareRender();
 	void Render();
 
+	template<typename T, typename U>
+	void CheckCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector < std::unique_ptr<U>>& obejct2);
+
 	void CreateRootSignature();
 	void CreateComputeRootSignature();
 	void CreateComputeShader();

@@ -50,6 +50,7 @@ public:
 	// getter
 	std::vector<std::unique_ptr<CGameObject>>& getGameObjectList();
 	std::vector<CGameObject*> getGameObjectPtrList();
+	std::vector<Mesh*> getMeshPtrList();
 	std::vector<std::unique_ptr<Mesh>>& getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& getTextureList();
 

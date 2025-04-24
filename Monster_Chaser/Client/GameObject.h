@@ -204,14 +204,11 @@ public:
 	void SetAnimationMatrix(XMFLOAT4X4& atx) { m_xmf4x4AnimationMatrix = atx; }
 
 	void InitializeAxis();
-
-	void UpdateBoundingSphere(XMFLOAT4X4& ltx);
-	void UpdateBoneBoundingBox(CGameObject* bone, XMFLOAT4X4& ltx);
 protected:
 	void UpdateLocalMatrix();
 	std::string m_strName{};
 
-	unsigned short m_bUseBoundingInfo{};	// �ٿ�� ���� ���� ��->Sphere, ��->OBB		
+	unsigned short m_bUseBoundingInfo{};    // 바운딩 정보 유무 앞->Sphere, 뒤->OBB
 	BoundingOrientedBox m_OBB{};
 	BoundingSphere m_BoundingSphere{};
 

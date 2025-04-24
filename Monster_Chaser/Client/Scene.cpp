@@ -72,6 +72,8 @@ void CRaytracingScene::Render()
 	g_DxResource.cmdList->DispatchRays(&raydesc);
 }
 
+
+
 void CRaytracingScene::CreateRootSignature()
 {
 	{
@@ -401,6 +403,41 @@ void CRaytracingScene::CreateComputeRootSignature()
 	D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
 	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pComputeRootSignature.GetAddressOf()));
 	pBlob->Release();
+}
+
+template<typename T, typename U>
+inline void CRaytracingScene::CheckCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& obejct2)
+{
+
+
+	for (const std::unique_ptr<T>& object : objects) {
+		int n = object->getMeshIndex();
+		if (n != -1) {
+			if (meshes[n]->getHasVertex()) {
+				if (meshes[n]->getHasBoundingBox()) {
+					BoundingOrientedBox wBox;
+					meshes[n]->getOBB().Transform(wBox, DirectX::XMLoadFloat4x4(&object->getWorldMatrix()));
+					if (wBox.Intersects(validSphere)) { // ¸Ê
+						
+					}
+				}
+				else if (object->getBoundingInfo() & 0x0011) {    // »À
+					BoundingOrientedBox wBox;
+					object->getObjectOBB().Transform(wBox, DirectX::XMLoadFloat4x4(&object->getWorldMatrix()));
+					if (wBox.Intersects(validSphere)) {
+						
+					}
+				}
+				else if (object->getBoundingInfo() & 0x1100) {    // Ä³¸¯ÅÍ ±¸
+					BoundingSphere wSphere;
+					object->getObjectSphere().Transform(wSphere, DirectX::XMLoadFloat4x4(&object->getWorldMatrix()));
+					if (wSphere.Intersects(validSphere)) {
+						
+					}
+				}
+			}
+		}
+	}
 }
 
 void CRaytracingScene::CreateComputeShader()
