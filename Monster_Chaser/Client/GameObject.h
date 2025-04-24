@@ -190,6 +190,7 @@ public:
 	XMFLOAT4X4 getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
 	BoundingOrientedBox GetBoundingOBB()const;
 	BoundingSphere GetBoundingSphere()const;
+	unsigned short getBoundingInfo() const {return m_bUseBoundingInfo;}
 
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);

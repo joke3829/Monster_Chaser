@@ -31,6 +31,8 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
+	CheckCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
+
 	if (test) {
 		m_pResourceManager->UpdatePosition(fElapsedTime); //占쏙옙치 占쏙옙占쏙옙占쏙옙트
 	}
@@ -404,49 +406,91 @@ void CRaytracingScene::CreateComputeRootSignature()
 }
 
 template<typename T, typename U>
-inline void CRaytracingScene::CheckCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& obejct2)
+inline void CRaytracingScene::CheckCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2)
 {
-	auto& gameObjects = m_pResourceManager->getGameObjectList();
+	// T는 캐릭터 or 맵, U는 캐릭터만 설정해서 사용	
+	static_assert(std::is_base_of_v<CGameObject, T> || std::is_base_of_v<CSkinningObject, T>);
+	static_assert(std::is_base_of_v<CSkinningObject, U>);
+	// Mesh 리스트(맵의 OBB용)
+	auto& meshes = m_pResourceManager->getMeshList();
 
-	for (const std::unique_ptr<T>& object : object1) {
-		int n = object->getMeshIndex();
-		if (n != -1) {
-			if (meshes[n]->getHasVertex()) {
-				if (meshes[n]->getHasBoundingBox()) {
-					BoundingOrientedBox wBox;
-					meshes[n]->getOBB().Transform(wBox, DirectX::XMLoadFloat4x4(&object->getWorldMatrix()));
-					for (const auto& gameObject : gameObjects) {
-						if (gameObject->getBoundingInfo() & 0x1100) {
-							BoundingSphere validSphere;
-							gameObject->getObjectSphere().Transform(validSphere, DirectX::XMLoadFloat4x4(&gameObject->getWorldMatrix()));
-							if (wBox.Intersects(validSphere)) {
-								// 충돌 처리
+	for (const std::unique_ptr<T>& obj1 : object1) {
+		// 맵-캐릭터
+		if constexpr (std::is_base_of_v<CGameObject, T>) {
+			int meshIndex = obj1->getMeshIndex();
+			if (meshIndex != -1 && meshIndex < meshes.size() && meshes[meshIndex]->getHasVertex()) {
+				if (meshes[meshIndex]->getHasBoundingBox()) {
+					BoundingOrientedBox mapOBB;
+					meshes[meshIndex]->getOBB().Transform(mapOBB, DirectX::XMLoadFloat4x4(&obj1->getWorldMatrix()));
+
+					// 캐릭터와 충돌 확인
+					for (const auto& character : object2) {
+						for (const auto& bone : character->getObjects()) {
+							if (bone->getBoundingInfo() & 0x1100) { // 캐릭터 구
+								BoundingSphere boneSphere = bone->GetBoundingSphere();
+								if (mapOBB.Intersects(boneSphere)) {
+									//충돌처리
+								}
+							}
+							else if (bone->getBoundingInfo() & 0x0011) { // 뼈 (OBB)
+								BoundingOrientedBox boneOBB;
+								bone->GetBoundingOBB().Transform(boneOBB, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
+								if (mapOBB.Intersects(boneOBB)) {
+									//충돌처리
+								}
 							}
 						}
 					}
 				}
-				else if (object->getBoundingInfo() & 0x0011) { // 뼈(OBB)
-					BoundingOrientedBox wBox;
-					object->getObjectOBB().Transform(wBox, DirectX::XMLoadFloat4x4(&object->getWorldMatrix()));
-					for (const auto& gameObject : gameObjects) {
-						if (gameObject->getBoundingInfo() & 0x1100) {
-							BoundingSphere validSphere;
-							gameObject->getObjectSphere().Transform(validSphere, DirectX::XMLoadFloat4x4(&gameObject->getWorldMatrix()));
-							if (wBox.Intersects(validSphere)) {
-								// 충돌 처리
+			}
+		}
+
+		// 캐릭터-캐릭터
+		if constexpr (std::is_base_of_v<CSkinningObject, T>) {
+			for (const auto& bone1 : obj1->getObjects()) {
+				if (bone1->getBoundingInfo() & 0x1100) { // 캐릭터 구
+					BoundingSphere boneSphere1 = bone1->GetBoundingSphere();
+
+					for (const auto& character : object2) {
+						if (obj1 != character) { // 동일 캐릭터 제외
+							for (const auto& bone2 : character->getObjects()) {
+								if (bone2->getBoundingInfo() & 0x1100) { // 캐릭터 구
+									BoundingSphere boneSphere2 = bone2->GetBoundingSphere();
+									if (boneSphere1.Intersects(boneSphere2)) {
+										//충돌처리
+									}
+								}
+								else if (bone2->getBoundingInfo() & 0x0011) { // 뼈 (OBB)
+									BoundingOrientedBox boneOBB2;
+									bone2->GetBoundingOBB().Transform(boneOBB2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
+									if (boneSphere1.Intersects(boneOBB2)) {
+										//충돌처리
+									}
+								}
 							}
 						}
 					}
 				}
-				else if (object->getBoundingInfo() & 0x1100) { // 캐릭터 구
-					BoundingSphere wSphere;
-					object->getObjectSphere().Transform(wSphere, DirectX::XMLoadFloat4x4(&object->getWorldMatrix()));
-					for (const auto& gameObject : gameObjects) {
-						if (gameObject->getBoundingInfo() & 0x1100) {
-							BoundingSphere validSphere;
-							gameObject->getObjectSphere().Transform(validSphere, DirectX::XMLoadFloat4x4(&gameObject->getWorldMatrix()));
-							if (wSphere.Intersects(validSphere)) {
-								// 충돌 처리
+				else if (bone1->getBoundingInfo() & 0x0011) { // 뼈 (OBB)
+					BoundingOrientedBox boneOBB1;
+					bone1->GetBoundingOBB().Transform(boneOBB1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
+
+					for (const auto& character : object2) {
+						if (obj1 != character) {
+							for (const auto& bone2 : character->getObjects()) {
+								if (bone2->getBoundingInfo() & 0x1100) { // 캐릭터
+									BoundingSphere boneSphere2 = bone2->GetBoundingSphere();
+									if (boneOBB1.Intersects(boneSphere2)) {
+										//충돌처리
+									}
+								}
+								else if (bone2->getBoundingInfo() & 0x0011) { // 뼈 (OBB)
+									BoundingOrientedBox boneOBB2;
+									bone2->GetBoundingOBB().Transform(boneOBB2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
+									if (boneOBB1.Intersects(boneOBB2)) {
+										//충돌처리
+									}
+								}
 							}
 						}
 					}

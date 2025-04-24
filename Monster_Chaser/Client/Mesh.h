@@ -76,6 +76,7 @@ public:
 	bool getHasTangent() const;
 	bool getHasBiTangent() const;
 	bool getHasSubmesh() const;
+	bool getHasBoundingBox() const;
 	bool getbSkinning() const { return m_bSkinningMesh; }
 
 	UINT getSubMeshCount() const;
@@ -86,6 +87,7 @@ private:
 	std::string m_MeshName{};							// Mesh의 이름
 
 	BoundingOrientedBox m_OBB{};						// Oriented_Bounding_Box
+	bool m_bHasOBB = false;
 
 	UINT m_nVertexCount{};								// <Positions> 개수
 	ComPtr<ID3D12Resource> m_pd3dVertexBuffer{};		// DXGI_FORMAT_R32G32B32_FLOAT
