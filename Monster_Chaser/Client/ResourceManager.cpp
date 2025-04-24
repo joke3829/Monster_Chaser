@@ -376,17 +376,6 @@ void CResourceManager::PrepareObject()
 		object->PrepareObject();
 }
 
-void CResourceManager::CheckCollision()
-{
-	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
-		if (m_vAnimationManager[i]) {
-			m_vAnimationManager[i]->CheckSphereAABBCollision(getGameObjectPtrList() , getMeshPtrList());
-			//계산을 하는 함수를 호출하던지 계산을 진행해주고
-			// 그 값을 
-		}
-	}
-}
-
 void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
 {
 	// 애니메이션이 없는 스키닝 객체면 문제가 생김

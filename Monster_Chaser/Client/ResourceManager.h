@@ -37,7 +37,6 @@ public:
 	void InitializeGameObjectCBuffer();
 
 	void PrepareObject();
-	void CheckCollision();
 
 	void UpdateSkinningMesh(float fElapsedTime);
 	void UpdatePosition(float fElapsedTime);
