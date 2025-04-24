@@ -52,6 +52,21 @@ protected:
 	std::shared_ptr<CCamera> m_pCamera{};
 };
 
+template<typename T>
+concept HasGameObjectInterface = requires(T t) {
+	{ t.getMeshIndex() } -> std::convertible_to<int>;
+	{ t.getWorldMatrix() } -> std::convertible_to<XMFLOAT4X4>;
+	{ t.GetBoundingOBB() } -> std::convertible_to<BoundingOrientedBox>;
+	{ t.GetBoundingSphere() } -> std::convertible_to<BoundingSphere>;
+	{ t.getBoundingInfo() } -> std::convertible_to<unsigned short>;
+};
+
+template<typename T>
+concept HasSkinningObjectInterface = requires(T t) {
+	{ t.getObjects() } -> std::convertible_to<std::vector<std::unique_ptr<CGameObject>>&>;
+	{ t.getWorldMatrix() } -> std::convertible_to<XMFLOAT4X4>;
+};
+
 class CRaytracingScene : public CScene {
 public:
 	virtual void SetUp() {}
@@ -65,6 +80,7 @@ public:
 	void Render();
 
 	template<typename T, typename U>
+	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
 	void CheckCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector < std::unique_ptr<U>>& obejct2);
 
 	void CreateRootSignature();

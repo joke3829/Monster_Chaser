@@ -406,17 +406,17 @@ void CRaytracingScene::CreateComputeRootSignature()
 }
 
 template<typename T, typename U>
+requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
 inline void CRaytracingScene::CheckCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2)
 {
 	// T는 캐릭터 or 맵, U는 캐릭터만 설정해서 사용	
-	static_assert(std::is_base_of_v<CGameObject, T> || std::is_base_of_v<CSkinningObject, T>);
-	static_assert(std::is_base_of_v<CSkinningObject, U>);
+	
 	// Mesh 리스트(맵의 OBB용)
 	auto& meshes = m_pResourceManager->getMeshList();
 
 	for (const std::unique_ptr<T>& obj1 : object1) {
 		// 맵-캐릭터
-		if constexpr (std::is_base_of_v<CGameObject, T>) {
+		if constexpr (HasGameObjectInterface<T>) {
 			int meshIndex = obj1->getMeshIndex();
 			if (meshIndex != -1 && meshIndex < meshes.size() && meshes[meshIndex]->getHasVertex()) {
 				if (meshes[meshIndex]->getHasBoundingBox()) {
@@ -446,7 +446,7 @@ inline void CRaytracingScene::CheckCollision(const std::vector<std::unique_ptr<T
 		}
 
 		// 캐릭터-캐릭터
-		if constexpr (std::is_base_of_v<CSkinningObject, T>) {
+		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
 				if (bone1->getBoundingInfo() & 0x1100) { // 캐릭터 구
 					BoundingSphere boneSphere1 = bone1->GetBoundingSphere();
