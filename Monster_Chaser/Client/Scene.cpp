@@ -31,8 +31,6 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
-	m_pResourceManager->CheckCollision();
-
 	if (test) {
 		m_pResourceManager->UpdatePosition(fElapsedTime); //ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
 	}
@@ -408,31 +406,49 @@ void CRaytracingScene::CreateComputeRootSignature()
 template<typename T, typename U>
 inline void CRaytracingScene::CheckCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& obejct2)
 {
+	auto& gameObjects = m_pResourceManager->getGameObjectList();
 
-
-	for (const std::unique_ptr<T>& object : objects) {
+	for (const std::unique_ptr<T>& object : object1) {
 		int n = object->getMeshIndex();
 		if (n != -1) {
 			if (meshes[n]->getHasVertex()) {
 				if (meshes[n]->getHasBoundingBox()) {
 					BoundingOrientedBox wBox;
 					meshes[n]->getOBB().Transform(wBox, DirectX::XMLoadFloat4x4(&object->getWorldMatrix()));
-					if (wBox.Intersects(validSphere)) { // ¸Ê
-						
+					for (const auto& gameObject : gameObjects) {
+						if (gameObject->getBoundingInfo() & 0x1100) {
+							BoundingSphere validSphere;
+							gameObject->getObjectSphere().Transform(validSphere, DirectX::XMLoadFloat4x4(&gameObject->getWorldMatrix()));
+							if (wBox.Intersects(validSphere)) {
+								// Ãæµ¹ Ã³¸®
+							}
+						}
 					}
 				}
-				else if (object->getBoundingInfo() & 0x0011) {    // »À
+				else if (object->getBoundingInfo() & 0x0011) { // »À(OBB)
 					BoundingOrientedBox wBox;
 					object->getObjectOBB().Transform(wBox, DirectX::XMLoadFloat4x4(&object->getWorldMatrix()));
-					if (wBox.Intersects(validSphere)) {
-						
+					for (const auto& gameObject : gameObjects) {
+						if (gameObject->getBoundingInfo() & 0x1100) {
+							BoundingSphere validSphere;
+							gameObject->getObjectSphere().Transform(validSphere, DirectX::XMLoadFloat4x4(&gameObject->getWorldMatrix()));
+							if (wBox.Intersects(validSphere)) {
+								// Ãæµ¹ Ã³¸®
+							}
+						}
 					}
 				}
-				else if (object->getBoundingInfo() & 0x1100) {    // Ä³¸¯ÅÍ ±¸
+				else if (object->getBoundingInfo() & 0x1100) { // Ä³¸¯ÅÍ ±¸
 					BoundingSphere wSphere;
 					object->getObjectSphere().Transform(wSphere, DirectX::XMLoadFloat4x4(&object->getWorldMatrix()));
-					if (wSphere.Intersects(validSphere)) {
-						
+					for (const auto& gameObject : gameObjects) {
+						if (gameObject->getBoundingInfo() & 0x1100) {
+							BoundingSphere validSphere;
+							gameObject->getObjectSphere().Transform(validSphere, DirectX::XMLoadFloat4x4(&gameObject->getWorldMatrix()));
+							if (wSphere.Intersects(validSphere)) {
+								// Ãæµ¹ Ã³¸®
+							}
+						}
 					}
 				}
 			}
