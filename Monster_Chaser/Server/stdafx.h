@@ -11,7 +11,8 @@
 #include <DirectXMath.h>
 #include <mutex>
 #include <windows.h>
-
+#include <concurrent_unordered_map.h>
+#include <MSWSock.h>
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "mswsock.lib")
@@ -19,8 +20,9 @@
 
 using namespace DirectX;
 using namespace std;
+using namespace concurrency;
 
-
+#define MAX_USER 5000
 enum 직업 {
 	전사 = 0,
 	마법사,

@@ -130,6 +130,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 						rp.type = C2S_P_READY;
 						rp.room_number = room_num;
 						Client.send_packet(&rp);
+						
 
 					}
 					else {
@@ -140,6 +141,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 						Client.send_packet(&cp);
 
 					}
+					ready = ready ? 0 : 1;
 					break;
 				case 'k':
 					cs_packet_room_refresh rf;

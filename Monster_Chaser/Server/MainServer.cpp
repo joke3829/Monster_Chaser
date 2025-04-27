@@ -9,7 +9,8 @@
 
 mutex myMutex;
 Network g_server;
-
+std::atomic<int> g_client_id = 0;
+std::atomic<int>  g_monster_id = 50000;
 void do_accept(Network& server) {
 	SOCKET c_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
 	EXP_OVER* accept_over = new EXP_OVER(IO_ACCEPT);
@@ -24,10 +25,6 @@ int main() {
 
 	g_server.Init();
 
-	GUID guidAcceptEx = WSAID_ACCEPTEX;
-	DWORD dwBytes;
-
-
 	do_accept(g_server);
 	//netework에 있는 소켓으로 처리 
 	while (true) {
@@ -37,15 +34,15 @@ int main() {
 
 		BOOL success = GetQueuedCompletionStatus(g_server.iocp, &bytes, &key, &over, INFINITE);
 		if (!success) continue;
-		
+
 		EXP_OVER* exp = reinterpret_cast<EXP_OVER*>(over);
 
 		switch (exp->io_op) {
 		case IO_ACCEPT:
 		{
-			int client_id = g_server.client_id++;
+			int client_id = g_client_id++;
 			CreateIoCompletionPort(reinterpret_cast<HANDLE>(exp->accept_socket), g_server.iocp, client_id, 0);
-			g_server.users[client_id] = std::make_unique<SESSION>(client_id,exp->accept_socket);
+			g_server.users[client_id] = std::make_unique<SESSION>(client_id, exp->accept_socket);
 
 
 
@@ -57,14 +54,14 @@ int main() {
 				u.second->do_send(&ep);
 			}
 
-			
+
 			for (auto& u : g_server.users) {			//신규 클라가 기존 클라의 존재를 인식 
 				if (u.first != client_id)
 				{
 					sc_packet_enter ep;
 					ep.size = sizeof(ep);
 					ep.type = S2C_P_ENTER;
-					g_server.users[client_id]->do_send(&ep);		
+					g_server.users[client_id]->do_send(&ep);
 				}
 			}
 

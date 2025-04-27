@@ -58,12 +58,14 @@ public:
     std::vector<Room> rooms;
 
     HANDLE iocp;
-    std::unordered_map<int, std::unique_ptr<SESSION>> users;
+   // std::unordered_map<int, std::unique_ptr<SESSION>> users;
+    //concurrent_unordered_map <int, std::unique_ptr<SESSION>> users;
+    concurrent_unordered_map <int,shared_ptr <SESSION>> users;
+    
+    //std::array<SESSION, MAX_USER> users;
 
     std::unordered_map<int, Monster*> monsters;
 
 
-    std::atomic<int> client_id = 0;
-    std::atomic<int>  monster_id = 50000;
-    SOCKET listen_socket;
+   SOCKET listen_socket;
 };

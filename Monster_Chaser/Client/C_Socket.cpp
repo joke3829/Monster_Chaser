@@ -78,7 +78,9 @@ void C_Socket::process_packet(char* ptr)
 		if (!Players.contains(local_id)) {
 
 			Players.try_emplace(local_id, local_id);
-		Client.set_id(local_id);
+			if (Client.get_id() == -1) {
+				Client.set_id(local_id);
+			}
 			//Players[local_id] = new Player(local_id);
 		}
 
@@ -106,11 +108,11 @@ void C_Socket::process_packet(char* ptr)
 	}
 	case S2C_P_ALLREADY:
 	{
-		
+
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
 		Client.set_id(p->Local_id);
 		Setstart(true);		//¸É¹ö º¯¼ö InGameStart true·Î ¹Ù²ãÁÖ±â
-		
+
 		break;
 		//4 7 9
 	}

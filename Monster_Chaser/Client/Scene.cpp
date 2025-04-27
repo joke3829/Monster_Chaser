@@ -32,12 +32,12 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	auto& Skinned = m_pResourceManager->getSkinningObjectList();
 	for (size_t i = 0; i < Skinned.size(); ++i) {
 		Skinned[i]->SetPosition(Players[i].getRenderingObject()->getPosition());
+	}
 		cs_packet_move mp;
 		mp.size = sizeof(mp);
 		mp.type = C2S_P_MOVE;
-		mp.pos = Players[i].getRenderingObject()->getWorldMatrix();
+		mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
 		Client.send_packet(&mp);
-	}
 
 	m_pResourceManager->UpdateWorldMatrix();
 

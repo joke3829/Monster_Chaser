@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "Network.h"
-#include <MSWSock.h>
+
 
 
 
@@ -37,9 +37,9 @@ void SESSION::do_send(void* packet) {
 	int len = reinterpret_cast<unsigned char*>(packet)[0];
 	memcpy(over->buffer, packet, len);
 	over->wsabuf[0].len = len;
-	
+
 	WSASend(socket, over->wsabuf, 1, nullptr, 0, &over->over, nullptr);
-	
+
 }
 
 void SESSION::process_packet(char* p) {
@@ -50,7 +50,7 @@ void SESSION::process_packet(char* p) {
 		break;
 	}
 	case C2S_P_ENTER_ROOM: {
-		
+
 		lock_guard<mutex> lock(myMutex);
 		cs_packet_enter_room* pkt = reinterpret_cast<cs_packet_enter_room*>(p);
 
@@ -61,7 +61,7 @@ void SESSION::process_packet(char* p) {
 		if (g_server.rooms[room_Num].IsAddPlayer())			//id 값이 맴버 변수에 들어감 
 		{
 			g_server.users[m_uniqueNo]->local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
-			
+
 			g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
 
 		}
@@ -70,7 +70,7 @@ void SESSION::process_packet(char* p) {
 			cout << "이미 " << room_Num << "번 방에는 사람이 꽉 찼습니다" << endl;
 			break;
 		}
-		
+
 
 
 
@@ -81,8 +81,22 @@ void SESSION::process_packet(char* p) {
 		sp.room_number = static_cast<char>(room_Num);
 
 		room_num = room_Num;
-		for(auto& id  : g_server.rooms[room_Num].id)
-		g_server.users[id]->do_send(&sp);
+		for (auto& id : g_server.rooms[room_Num].id)
+			g_server.users[id]->do_send(&sp);
+
+
+		// 2. 신규 클라에게 기존 유저들의 존재 알림
+		for (int existing_id : g_server.rooms[room_num].id) {
+			if (existing_id == g_server.rooms[room_num].id.back()) continue;
+
+			sc_packet_select_room sp;
+			sp.size = sizeof(sp);
+			sp.type = S2C_P_SELECT_ROOM;
+			sp.Local_id = g_server.users[existing_id]->local_id;
+			sp.room_number = (char)room_num;
+
+			g_server.users[g_server.rooms[room_num].id.back()]->do_send(&sp);
+		}
 
 		//나중에 UI나와서 방 선택하고 바로 직업 선택하는걸로 전환되는 거면 전체 유저한테 다 보낼 필요가 없음 	
 		//for (auto& player : g_server.users) {
@@ -208,13 +222,13 @@ void SESSION::process_packet(char* p) {
 		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
 
 		auto pos = pkt->pos;
-		
+
 		//collision check
 		/*{
 			이동
 		}*/
 
-		
+
 
 		sc_packet_move mp;
 		mp.size = sizeof(mp);
