@@ -657,9 +657,10 @@ void CRaytracingMaterialTestScene::SetUp()
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\w.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\portal_low.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
 	// 조명 추가
@@ -684,12 +685,13 @@ void CRaytracingMaterialTestScene::SetUp()
 	//normalObjects[finalindex]->SetMeshIndex(finalmesh);
 	//normalObjects[finalindex]->getMaterials().emplace_back();
 	//Material& tMaterial = normalObjects[finalindex]->getMaterials()[0];
-	//tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.0, 1.0, 0.0, 1.0);
-	//tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(0.5, 0.5, 0.5, 1.0);
+	//tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.0, 1.0, 0.0, 0.5);
+	//tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
 	////tMaterial.m_bHasMetallic = true; tMaterial.m_fMetallic = 0.0f;
 	//tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.8;
 	//tMaterial.m_bHasSpecularHighlight = true; tMaterial.m_fSpecularHighlight = 1;
 	//tMaterial.m_bHasGlossyReflection = true; tMaterial.m_fGlossyReflection = 1;
+	//normalObjects[finalindex]->SetInstanceID(1);
 	//normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0)); 
 
 	/*meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(1000.0f, 0.0, 1000.0f)));
@@ -724,8 +726,6 @@ void CRaytracingMaterialTestScene::SetUp()
 	tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.2;
 
 	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
-	//normalObjects[finalindex]->SetScale(XMFLOAT3(1.0f, 1.0f, 1.0f));
-	//normalObjects[finalindex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 	normalObjects[finalindex]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
 
 	/*UINT finalindex = normalObjects.size();
@@ -767,35 +767,35 @@ void CRaytracingMaterialTestScene::SetUp()
 	//normalObjects[finalindex + 1]->SetPosition(XMFLOAT3(0.0, 20.0, 15.0));
 	//std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
 
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
-	auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
-		return p->getFrameName() == "Water";
-		});
-	if (p != normalObjects.end()) {
-		(*p)->getMaterials().emplace_back();
-		Material& mt = (*p)->getMaterials()[0];
-		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.7);
-		//mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.0, 0.0, 1.0, 0.7);
-		//mt.m_bHasSpecularColor = true; mt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
-		mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
-		//mt.m_bHasAlbedoMap = true; mt.m_nAlbedoMapIndex = textures.size() - 3;
-		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
+	//auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
+	//	return p->getFrameName() == "Water";
+	//	});
+	//if (p != normalObjects.end()) {
+	//	(*p)->SetInstanceID(1);
+	//	(*p)->getMaterials().emplace_back();
+	//	Material& mt = (*p)->getMaterials()[0];
+	//	mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.7);
+	//	//mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.0, 0.0, 1.0, 0.7);
+	//	//mt.m_bHasSpecularColor = true; mt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
+	//	mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
+	//	//mt.m_bHasAlbedoMap = true; mt.m_nAlbedoMapIndex = textures.size() - 3;
+	//	mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
 
-		void* tempptr{};
-		std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
-		for (XMFLOAT2& xmf : tex0) {
-			xmf.x *= 10.0f; xmf.y *= 10.0f;
-		}
-		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
-		memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
-		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
-	}
+	//	void* tempptr{};
+	//	std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
+	//	for (XMFLOAT2& xmf : tex0) {
+	//		xmf.x *= 10.0f; xmf.y *= 10.0f;
+	//	}
+	//	meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
+	//	memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
+	//	meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
+	//}
 
 	// cubeMap Ready
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky2.dds", true));
-
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky.dds", true));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject

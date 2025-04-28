@@ -84,6 +84,12 @@ struct HasMesh {
 	int bHasSubMeshes = false;
 };
 
+// InstanceID decide Refractive Index
+// 0 -> Air, 1 -> Water, 2 -> Ice
+
+// Specifically, Terrain have the following InstanceID -> 10
+
+
 class CGameObject {
 public:
 	CGameObject() {};
@@ -181,6 +187,7 @@ public:
 	ID3D12Resource* getMeshCBuffer() const;
 	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Pos.x = m_xmf4x4WorldMatrix._41; m_xmf3Pos.y = m_xmf4x4WorldMatrix._42; m_xmf3Pos.z = m_xmf4x4WorldMatrix._43; return m_xmf3Pos; }
 	unsigned short& getBoundingInfo() { return m_bUseBoundingInfo; }
+	unsigned int getInstanceID() const { return m_nInstanceID; }
 
 
 	XMFLOAT4X4& getWorldMatrix();
@@ -193,6 +200,7 @@ public:
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
 	void SetHitGroupIndex(int index);
+	void SetInstanceID(unsigned int id) { m_nInstanceID = id; }
 	void SetFrameName(std::string& name) { m_strName = name; }
 	void SetBoundingOBB(XMFLOAT3& center, XMFLOAT3& extent) { m_bUseBoundingInfo |= 0x0011; m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0, 0.0, 0.0, 1.0)); }
 	void SetBoundingSphere(XMFLOAT3& center, float rad) { m_bUseBoundingInfo |= 0x1100, m_BoundingSphere = BoundingSphere(center, rad); }
@@ -230,10 +238,10 @@ protected:
 	// 텍스쳐의 경우는 local root 바로 보낼것
 	// 위 경우는 DXR을 사용하는 경우이다.
 
-	int m_nMeshIndex = -1;		// 이 오브젝트가 참조하는 Mesh Index
-	int m_nParentIndex = -1;	// 이 오브젝트의 부모 GameObject인덱스
-	int m_nHitGroupIndex = -1;	// 어떤 HitGroup을 볼거냐?
-
+	int m_nMeshIndex = -1;			// 이 오브젝트가 참조하는 Mesh Index
+	int m_nParentIndex = -1;		// 이 오브젝트의 부모 GameObject인덱스
+	int m_nHitGroupIndex = -1;		// 어떤 HitGroup을 볼거냐?
+	unsigned int m_nInstanceID{};	// TLAS instnaceID
 };
 
 // ==================================================================
@@ -365,5 +373,5 @@ protected:
 
 	std::vector<ComPtr<ID3D12DescriptorHeap>> m_vUAV{};
 	std::vector<ComPtr<ID3D12DescriptorHeap>> m_vInsertDescriptorHeap{};
-	ComPtr<ID3D12Resource> m_pNullResource{};
+	//ComPtr<ID3D12Resource> m_pNullResource{};
 };

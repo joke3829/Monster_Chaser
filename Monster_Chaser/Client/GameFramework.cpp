@@ -44,6 +44,19 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	g_DxResource.fence = m_pd3dFence.Get();
 	g_DxResource.pFenceHandle = &m_hFenceHandle;
 
+	// Ready NullResource
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = sizeof(XMFLOAT3);
+	m_pd3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(g_DxResource.nullBuffer.GetAddressOf()));
+
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	desc.Width = desc.Height = 1;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+	m_pd3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(g_DxResource.nullTexture.GetAddressOf()));
+
 	m_pCamera = std::make_shared<CCamera>();
 	m_pCamera->Setup(2);
 

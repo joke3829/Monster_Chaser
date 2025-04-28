@@ -444,16 +444,16 @@ void CResourceManager::LightTest()
 	//testLight.lights[0].Intensity =  1.0f;
 	//testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
 	////testLight.lights[0].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	////testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
-	//testLight.lights[0].Direction = XMFLOAT3(1.0, -1.0, 0.0);
+	//testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
+	////testLight.lights[0].Direction = XMFLOAT3(1.0, -1.0, 0.0);
 
-	//testLight.lights[0].Type = SPOT_LIGHT;
+	///*testLight.lights[0].Type = SPOT_LIGHT;
 	//testLight.lights[0].Intensity = 5.0f;
 	//testLight.lights[0].Color = XMFLOAT4(1.0f, 1.0f ,1.0f, 1.0f);
 	//testLight.lights[0].Position = XMFLOAT3(0.0, 10.0f, 0.0f);
 	//testLight.lights[0].Direction = XMFLOAT3(0.0, -1.0, 0.0);
 	//testLight.lights[0].SpotAngle = 85.5f;
-	//testLight.lights[0].Range = 12.0f;
+	//testLight.lights[0].Range = 12.0f;*/
 
 	///*testLight.lights[0].Type = POINT_LIGHT;
 	//testLight.lights[0].Intensity = 5.0f;
@@ -463,6 +463,7 @@ void CResourceManager::LightTest()
 
 	Lights* mapptr{};
 	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
+	//memcpy(mapptr, &testLight, sizeof(Lights));
 	mapptr->lights[22].Intensity = 1.0f;
 	mapptr->lights[23].Intensity = 0.6f;
 	m_pLights->Unmap(0, nullptr);

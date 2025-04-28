@@ -63,47 +63,30 @@ void CAccelerationStructureManager::UpdateScene(XMFLOAT3& cameraEye)
 		int n = object->getMeshIndex();
 		if (n != -1) {
 			if (meshes[n]->getHasVertex()) {
+				BoundingOrientedBox wBox;
+				bool bIntersect = false;
 				if (meshes[n]->getHasBoundingBox()) {
-					BoundingOrientedBox wBox;
 					meshes[n]->getOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
-					if (wBox.Intersects(validSphere)) {
-						m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-						m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-						m_pInstanceData[i].InstanceID = i;
-						m_pInstanceData[i].InstanceMask = 1;
-						m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-						auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-						XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
-						++i;
-					}
+					if (wBox.Intersects(validSphere))  bIntersect = true;
 				}
 				else if (object->getBoundingInfo() & 0x0011) {	// box
-					BoundingOrientedBox wBox;
 					object->getObjectOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
-					if (wBox.Intersects(validSphere)) {
-						m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-						m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-						m_pInstanceData[i].InstanceID = i;
-						m_pInstanceData[i].InstanceMask = 1;
-						m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-						auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-						XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
-						++i;
-					}
+					if (wBox.Intersects(validSphere)) bIntersect = true;
 				}
 				else if (object->getBoundingInfo() & 0x1100) {	// sphere
 					BoundingSphere wSphere;
 					object->getObjectSphere().Transform(wSphere, XMLoadFloat4x4(&object->getWorldMatrix()));
-					if (wSphere.Intersects(validSphere)) {
-						m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-						m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-						m_pInstanceData[i].InstanceID = i;
-						m_pInstanceData[i].InstanceMask = 1;
-						m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-						auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-						XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
-						++i;
-					}
+					if (wSphere.Intersects(validSphere)) bIntersect = true;
+				}
+				if (bIntersect) {
+					m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
+					m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+					m_pInstanceData[i].InstanceID = object->getInstanceID();
+					m_pInstanceData[i].InstanceMask = 1;
+					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
+					++i;
 				}
 			}
 		}
@@ -116,47 +99,33 @@ void CAccelerationStructureManager::UpdateScene(XMFLOAT3& cameraEye)
 			int n = object->getMeshIndex();
 			if (n != -1) {
 				if (sMeshes[n]->getHasVertex()) {
+					BoundingOrientedBox wBox;
+					bool bIntersect = false;
 					if (sMeshes[n]->getHasBoundingBox()) {
-						BoundingOrientedBox wBox;
 						sMeshes[n]->getOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
-						if (wBox.Intersects(validSphere)) {
-							m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-							m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-							m_pInstanceData[i].InstanceID = i;
-							m_pInstanceData[i].InstanceMask = 1;
-							m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-							auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-							XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
-							++i;
-						}
+						if (wBox.Intersects(validSphere)) bIntersect = true;
 					}
 					else if (object->getBoundingInfo() & 0x0011) {	// box
-						BoundingOrientedBox wBox;
 						object->getObjectOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
-						if (wBox.Intersects(validSphere)) {
-							m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-							m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-							m_pInstanceData[i].InstanceID = i;
-							m_pInstanceData[i].InstanceMask = 1;
-							m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-							auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-							XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
-							++i;
-						}
+						if (wBox.Intersects(validSphere)) bIntersect = true;
 					}
 					else if (object->getBoundingInfo() & 0x1100) {	// sphere
 						BoundingSphere wSphere;
 						object->getObjectSphere().Transform(wSphere, XMLoadFloat4x4(&object->getWorldMatrix()));
-						if (wSphere.Intersects(validSphere)) {
-							m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-							m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-							m_pInstanceData[i].InstanceID = i;
-							m_pInstanceData[i].InstanceMask = 1;
-							m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-							auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+						if (wSphere.Intersects(validSphere)) bIntersect = true;
+					}
+					if (bIntersect) {
+						m_pInstanceData[i].AccelerationStructure = skinningBLASs[n]->GetGPUVirtualAddress();
+						m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+						m_pInstanceData[i].InstanceID = object->getInstanceID();
+						m_pInstanceData[i].InstanceMask = 1;
+						m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+						auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+						if (sMeshes[n]->getbSkinning())
+							XMStoreFloat3x4(ptr, XMLoadFloat4x4(&Skinning->getPreWorldMatrix()));
+						else
 							XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
-							++i;
-						}
+						++i;
 					}
 				}
 			}
@@ -322,42 +291,42 @@ void CAccelerationStructureManager::InitTLAS()
 		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_InstanceBuffer.GetAddressOf()));
 	m_InstanceBuffer->Map(0, nullptr, (void**)&m_pInstanceData);
 
-	int i{};
-	// static Mehs 지금 지정
-	for (std::unique_ptr<CGameObject>& object : vObjects) {
-		int n = object->getMeshIndex();
-		if (n != -1) {
-			if (vMeshes[n]->getHasVertex()) {
-				m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-				m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-				m_pInstanceData[i].InstanceID = i;
-				m_pInstanceData[i].InstanceMask = 1;
-				m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-				auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-				XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
-				++i;
-			}
-		}
-	}
-	for (std::unique_ptr<CSkinningObject>& Skinning : m_pResourceManager->getSkinningObjectList()) {
-		std::vector<ComPtr<ID3D12Resource>>& skinningBLASs = Skinning->getBLAS();
-		std::vector<std::shared_ptr<Mesh>>& sMeshes = Skinning->getMeshes();
-		for (std::unique_ptr<CGameObject>& object : Skinning->getObjects()) {
-			int n = object->getMeshIndex();
-			if (n != -1) {
-				if (sMeshes[n]->getHasVertex()) {
-					m_pInstanceData[i].AccelerationStructure = skinningBLASs[n]->GetGPUVirtualAddress();
-					m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-					m_pInstanceData[i].InstanceID = i;
-					m_pInstanceData[i].InstanceMask = 1;
-					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
-					++i;
-				}
-			}
-		}
-	}
+	//int i{};
+	//// static Mehs 지금 지정
+	//for (std::unique_ptr<CGameObject>& object : vObjects) {
+	//	int n = object->getMeshIndex();
+	//	if (n != -1) {
+	//		if (vMeshes[n]->getHasVertex()) {
+	//			m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
+	//			m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+	//			m_pInstanceData[i].InstanceID = i;
+	//			m_pInstanceData[i].InstanceMask = 1;
+	//			m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+	//			auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+	//			XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
+	//			++i;
+	//		}
+	//	}
+	//}
+	//for (std::unique_ptr<CSkinningObject>& Skinning : m_pResourceManager->getSkinningObjectList()) {
+	//	std::vector<ComPtr<ID3D12Resource>>& skinningBLASs = Skinning->getBLAS();
+	//	std::vector<std::shared_ptr<Mesh>>& sMeshes = Skinning->getMeshes();
+	//	for (std::unique_ptr<CGameObject>& object : Skinning->getObjects()) {
+	//		int n = object->getMeshIndex();
+	//		if (n != -1) {
+	//			if (sMeshes[n]->getHasVertex()) {
+	//				m_pInstanceData[i].AccelerationStructure = skinningBLASs[n]->GetGPUVirtualAddress();
+	//				m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+	//				m_pInstanceData[i].InstanceID = i;
+	//				m_pInstanceData[i].InstanceMask = 1;
+	//				m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+	//				auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+	//				XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));	// 여기 주의
+	//				++i;
+	//			}
+	//		}
+	//	}
+	//}
 
 	UINT64 updateScratchSize;
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};

@@ -99,7 +99,7 @@ struct Lights
     Light lights[MAX_LIGHTS];
 };
 
-//static const float3 skyColor = float3(0.75, 0.86, 0.93);
+static float refractive_index[] = { 1.0f, 1.0f / 1.33f, 1.0f / 1.31 };
 
 // Global Root Signature ============================================
 RaytracingAccelerationStructure g_Scene : register(t0, space0);
@@ -412,11 +412,17 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                         float3 L = normalize(g_Lights.lights[i].Position - Wpos);
                         float3 nLDir = normalize(g_Lights.lights[i].Direction);
                         float LdotD = dot(-L, nLDir);
-                        if (LdotD > 0.0f && LdotD >= cos(radians(g_Lights.lights[i].SpotAngle / 2)))
+                        float cosAngle = cos(radians(g_Lights.lights[i].SpotAngle / 2));
+                        if (LdotD > 0.0f && LdotD >= cosAngle)
                         {
                             float3 H = normalize(V + L);
                             float NdotH = saturate(dot(N, H));
                             float NdotL = saturate(dot(N, L));
+                        
+                            float cosTheta = cos(radians((g_Lights.lights[i].SpotAngle * 0.8) / 2));
+                            //float falloff = 0.5f;
+                        
+                            float fSpotFactor = max(((LdotD - cosAngle) / (cosTheta - cosAngle)), 0.0f);
                         
                             //float intense = (g_Lights.lights[i].Intensity > 10.0f) ? 10.0f : g_Lights.lights[i].Intensity;
                             float3 lightColor = lerp(g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity, float3(0.0, 0.0, 0.0), dis / g_Lights.lights[i].Range);
@@ -439,7 +445,7 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                             float metallic = max(max(R0.r, R0.g), R0.b);
                             float s = lerp(0.0, 0.95, metallic);
                             if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
-                                finalColor += NdotL * lightColor * (((1 - s) * AlbedoColor.rgb * shadowFactor) + (s * rs));
+                                finalColor += NdotL * lightColor * fSpotFactor * (((1 - s) * AlbedoColor.rgb * shadowFactor) + (s * rs));
                             else
                                 finalColor += rs;
                         }
@@ -459,7 +465,7 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
     
     
     if(g_CameraInfo.bNormalMapping & 0x0000FFFF)
-        return (AlbedoColor.rgb * 0.2) + finalColor;
+        return finalColor + (AlbedoColor.rgb * 0.2);
     else
         return (float3(0.6, 0.6, 0.6) * 0.2) + finalColor;
 }
@@ -535,9 +541,9 @@ float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, uint Shad
         if (albedoColor.a <= 0.95)
         {
             RayDesc tRay;
-            tRay.Direction = WorldRayDirection();
-            tRay.Origin = WorldRayOrigin();
-            tRay.TMin = t + 0.001;
+            tRay.Direction = refract(WorldRayDirection(), N, refractive_index[InstanceID()]); //refractive_index[InstanceID()]);
+            tRay.Origin = GetWorldPosition();
+            tRay.TMin = 0.001f;
             tRay.TMax = 600.0f;
             float4 TransmissionColor = TraceRadianceRay(tRay, payload.RayDepth);
             //float4 TransmissionColor = float4(1.0, 0.0, 1.0, 1.0);
