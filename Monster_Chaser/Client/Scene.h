@@ -20,10 +20,13 @@ public:
 
 	virtual void PrepareRender() {};
 	virtual void Render() {};
+
+	virtual void PrepareTerrainTexture() {}
 protected:
 	bool								m_bRayTracing = false;
 	ComPtr<ID3D12RootSignature>			m_pGlobalRootSignature{};
 	std::shared_ptr<CCamera>			m_pCamera{};
+
 };
 
 class CRaytracingScene : public CScene {
@@ -35,11 +38,13 @@ public:
 	void UpdateObject(float fElapsedTime);
 
 	void PrepareRender();
-	void Render();
+	virtual void Render();
 
 	void CreateRootSignature();
 	void CreateComputeRootSignature();
 	void CreateComputeShader();
+
+	virtual void PrepareTerrainTexture() {}
 protected:
 
 	ComPtr<ID3D12RootSignature>							m_pLocalRootSignature{};
@@ -51,6 +56,10 @@ protected:
 	// 스키닝 애니메이션 용 리소스
 	ComPtr<ID3D12RootSignature>							m_pComputeRootSignature{};
 	ComPtr<ID3D12PipelineState>							m_pAnimationComputeShader{};
+
+	// terrainDescriptor
+	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
+	ComPtr<ID3D12Resource>								m_pTerrainCB{};
 };
 
 class CRaytracingTestScene : public CRaytracingScene {
@@ -67,4 +76,13 @@ public:
 	void SetUp();
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void Render();
+	void PrepareTerrainTexture();
+};
+
+// real use scene
+class CRaytracingWinterLandScene : public CRaytracingScene {
+public:
+	void SetUp() {}
 };

@@ -438,14 +438,14 @@ std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 
 void CResourceManager::LightTest()
 {
-	//Lights testLight{};
-	//testLight.numLights = 1;
-	//testLight.lights[0].Type = DIRECTIONAL_LIGHT;
-	//testLight.lights[0].Intensity =  1.0f;
-	//testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
-	////testLight.lights[0].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	//testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
-	////testLight.lights[0].Direction = XMFLOAT3(1.0, -1.0, 0.0);
+	Lights testLight{};
+	testLight.numLights = 1;
+	testLight.lights[0].Type = DIRECTIONAL_LIGHT;
+	testLight.lights[0].Intensity =  1.0f;
+	testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
+	//testLight.lights[0].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
+	testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
+	//testLight.lights[0].Direction = XMFLOAT3(1.0, -1.0, 0.0);
 
 	///*testLight.lights[0].Type = SPOT_LIGHT;
 	//testLight.lights[0].Intensity = 5.0f;

@@ -1,5 +1,7 @@
 #include "Scene.h"
 
+constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
+
 void CRaytracingScene::UpdateObject(float fElapsedTime)
 {
 	//m_pCamera->SetShaderVariable();
@@ -56,20 +58,32 @@ void CRaytracingScene::CreateRootSignature()
 {
 	{
 		// Global Root Signature
-		D3D12_DESCRIPTOR_RANGE rootRange{};
+		D3D12_DESCRIPTOR_RANGE rootRange{};								// u0
 		rootRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 		rootRange.NumDescriptors = 1;
 		rootRange.BaseShaderRegister = 0;
 		rootRange.RegisterSpace = 0;
 
-		D3D12_DESCRIPTOR_RANGE cubeMapRange{};
+		D3D12_DESCRIPTOR_RANGE cubeMapRange{};							// t3
 		cubeMapRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		cubeMapRange.NumDescriptors = 1;
 		cubeMapRange.BaseShaderRegister = 3;
 		cubeMapRange.RegisterSpace = 0;
 
-		// 0. uavBuffer, 1. AS, 2. camera, 3. Lights, 4. Enviorment(cubeMap)
-		D3D12_ROOT_PARAMETER params[5] = {};
+		D3D12_DESCRIPTOR_RANGE terrainTRange[2]{};						// b0, space2
+		terrainTRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+		terrainTRange[0].NumDescriptors = 1;
+		terrainTRange[0].BaseShaderRegister = 2;
+		terrainTRange[0].RegisterSpace = 0;
+
+		terrainTRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		terrainTRange[1].NumDescriptors = 13;
+		terrainTRange[1].BaseShaderRegister = 4;
+		terrainTRange[1].RegisterSpace = 0;
+		terrainTRange[1].OffsetInDescriptorsFromTableStart = 1;
+
+		// 0. uavBuffer, 1. AS, 2. camera, 3. Lights, 4. Enviorment(cubeMap), 5. TerrainInfo
+		D3D12_ROOT_PARAMETER params[NUM_G_ROOTPARAMETER] = {};
 		params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;	// u0
 		params[0].DescriptorTable.NumDescriptorRanges = 1;
 		params[0].DescriptorTable.pDescriptorRanges = &rootRange;
@@ -90,6 +104,10 @@ void CRaytracingScene::CreateRootSignature()
 		params[4].DescriptorTable.NumDescriptorRanges = 1;
 		params[4].DescriptorTable.pDescriptorRanges = &cubeMapRange;
 
+		params[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		params[5].DescriptorTable.NumDescriptorRanges = 2;
+		params[5].DescriptorTable.pDescriptorRanges = terrainTRange;
+
 		D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
 		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -102,7 +120,7 @@ void CRaytracingScene::CreateRootSignature()
 		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 		D3D12_ROOT_SIGNATURE_DESC rtDesc{};
-		rtDesc.NumParameters = 5;
+		rtDesc.NumParameters = NUM_G_ROOTPARAMETER;
 		rtDesc.NumStaticSamplers = 1;
 		rtDesc.pParameters = params;
 		rtDesc.pStaticSamplers = &samplerDesc;
@@ -657,7 +675,7 @@ void CRaytracingMaterialTestScene::SetUp()
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\w.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\portal_low.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
@@ -714,6 +732,7 @@ void CRaytracingMaterialTestScene::SetUp()
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	normalObjects[finalindex]->SetInstanceID(10);
 
 	UINT txtIndex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
@@ -767,32 +786,34 @@ void CRaytracingMaterialTestScene::SetUp()
 	//normalObjects[finalindex + 1]->SetPosition(XMFLOAT3(0.0, 20.0, 15.0));
 	//std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
 
-	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
-	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
-	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
-	//auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
-	//	return p->getFrameName() == "Water";
-	//	});
-	//if (p != normalObjects.end()) {
-	//	(*p)->SetInstanceID(1);
-	//	(*p)->getMaterials().emplace_back();
-	//	Material& mt = (*p)->getMaterials()[0];
-	//	mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.7);
-	//	//mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.0, 0.0, 1.0, 0.7);
-	//	//mt.m_bHasSpecularColor = true; mt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
-	//	mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
-	//	//mt.m_bHasAlbedoMap = true; mt.m_nAlbedoMapIndex = textures.size() - 3;
-	//	mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
+	auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
+		return p->getFrameName() == "Water";
+		});
+	if (p != normalObjects.end()) {
+		(*p)->SetInstanceID(1);
+		(*p)->getMaterials().emplace_back();
+		Material& mt = (*p)->getMaterials()[0];
+		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
+		//mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.0, 0.0, 1.0, 0.7);
+		//mt.m_bHasSpecularColor = true; mt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
+		mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
+		//mt.m_bHasAlbedoMap = true; mt.m_nAlbedoMapIndex = textures.size() - 3;
+		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
 
-	//	void* tempptr{};
-	//	std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
-	//	for (XMFLOAT2& xmf : tex0) {
-	//		xmf.x *= 10.0f; xmf.y *= 10.0f;
-	//	}
-	//	meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
-	//	memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
-	//	meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
-	//}
+		void* tempptr{};
+		std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
+		for (XMFLOAT2& xmf : tex0) {
+			xmf.x *= 10.0f; xmf.y *= 10.0f;
+		}
+		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
+		memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
+		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
+	}
+
+	PrepareTerrainTexture();
 
 	// cubeMap Ready
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky.dds", true));
@@ -935,4 +956,199 @@ void CRaytracingMaterialTestScene::ProcessInput(float fElapsedTime)
 
 	if (keyBuffer[VK_RIGHT] & 0x80)
 		m_pResourceManager->getAnimationManagers()[0]->TimeIncrease(fElapsedTime);
+}
+
+void CRaytracingMaterialTestScene::PrepareTerrainTexture()
+{
+	D3D12_DESCRIPTOR_HEAP_DESC desc{};
+	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	desc.NumDescriptors = 14;
+	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	g_DxResource.device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_pTerrainDescriptor.GetAddressOf()));
+
+	struct alignas(16) terrainINFO  {
+		int numLayer{};
+		float padding[3]{};
+		int bHasDiffuse[4]{};
+		int bHasNormal[4]{};
+		int bHasMask[4]{};
+	};
+
+	auto rdesc = BASIC_BUFFER_DESC;
+	rdesc.Width = Align(sizeof(terrainINFO), 256);
+
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &rdesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+		IID_PPV_ARGS(m_pTerrainCB.GetAddressOf()));
+
+	terrainINFO* pMap{};
+	m_pTerrainCB->Map(0, nullptr, reinterpret_cast<void**>(&pMap));
+	pMap->numLayer = 4;
+	pMap->bHasDiffuse[0] = pMap->bHasDiffuse[1] = pMap->bHasDiffuse[2] = pMap->bHasDiffuse[3] = 1;
+	pMap->bHasNormal[0] = pMap->bHasNormal[1] = pMap->bHasNormal[2] = pMap->bHasNormal[3] = 0;
+	pMap->bHasMask[0] = pMap->bHasMask[2] = pMap->bHasMask[3] = 0;
+	m_pTerrainCB->Unmap(0, nullptr);
+
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	size_t textureIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Terrain_WinterLands_splatmap.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\RockStalagmites00_terrain2.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\Stonerock03_Metallic.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	D3D12_RESOURCE_DESC d3dRD;
+
+	UINT increment = g_DxResource.device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	D3D12_CPU_DESCRIPTOR_HANDLE  handle = m_pTerrainDescriptor->GetCPUDescriptorHandleForHeapStart();
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cdesc{};
+	cdesc.BufferLocation = m_pTerrainCB->GetGPUVirtualAddress();
+	cdesc.SizeInBytes = rdesc.Width;
+
+	g_DxResource.device->CreateConstantBufferView(&cdesc, handle);
+	handle.ptr += increment;
+
+	// splat
+	d3dRD = textures[textureIndex]->getTexture()->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+
+	g_DxResource.device->CreateShaderResourceView(textures[textureIndex]->getTexture(), &srvDesc, handle);
+	handle.ptr += increment;
+	
+	// layer 0 ===============================================================
+
+	d3dRD = textures[textureIndex + 1]->getTexture()->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 1]->getTexture(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	// layer 1 ===============================================================
+
+	d3dRD = textures[textureIndex + 2]->getTexture()->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 2]->getTexture(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	// layer 2 ===============================================================
+
+	d3dRD = textures[textureIndex + 3]->getTexture()->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 3]->getTexture(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	// layer 3 ===============================================================
+
+	d3dRD = textures[textureIndex + 4]->getTexture()->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 4]->getTexture(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+}
+
+void CRaytracingMaterialTestScene::Render()
+{
+	m_pCamera->SetShaderVariable();
+	m_pAccelerationStructureManager->SetScene();
+	m_pResourceManager->SetLights();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[textures.size() - 1]->getView()->GetGPUDescriptorHandleForHeapStart());
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
+
+	D3D12_DISPATCH_RAYS_DESC raydesc{};
+	raydesc.Depth = 1;
+	raydesc.Width = DEFINED_UAV_BUFFER_WIDTH;
+	raydesc.Height = DEFINED_UAV_BUFFER_HEIGHT;
+
+	raydesc.RayGenerationShaderRecord.StartAddress = m_pShaderBindingTable->getRayGenTable()->GetGPUVirtualAddress();
+	raydesc.RayGenerationShaderRecord.SizeInBytes = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+
+	raydesc.MissShaderTable.StartAddress = m_pShaderBindingTable->getMissTable()->GetGPUVirtualAddress();
+	raydesc.MissShaderTable.SizeInBytes = m_pShaderBindingTable->getMissSize();
+	raydesc.MissShaderTable.StrideInBytes = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
+
+	raydesc.HitGroupTable.StartAddress = m_pShaderBindingTable->getHitGroupTable()->GetGPUVirtualAddress();
+	raydesc.HitGroupTable.SizeInBytes = m_pShaderBindingTable->getHitGroupSize();
+	raydesc.HitGroupTable.StrideInBytes = m_pShaderBindingTable->getHitGroupStride();
+
+	g_DxResource.cmdList->DispatchRays(&raydesc);
 }

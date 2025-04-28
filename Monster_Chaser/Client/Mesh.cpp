@@ -90,7 +90,7 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 				max_Value = fHeight;
 			vertex.emplace_back(x * xmf3Scale.x, fHeight, z * xmf3Scale.z);
 			tex0.emplace_back(float(x) / float(Width - 1), float(Length - 1 - z) / float(Length - 1));
-			tex1.emplace_back(float(x) / float(xmf3Scale.x * 0.5f), float(z) / float(xmf3Scale.z * 0.5f));
+			tex1.emplace_back(float(x) / float(xmf3Scale.x * 10.0f), float(z) / float(xmf3Scale.z * 10.0f));
 
 			if (0 == x || Width - 1 == x || 0 == z || Length - 1 == z)
 				continue;

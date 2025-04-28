@@ -15,7 +15,7 @@ public:
 	void CreateSRV(bool cubeMap = false);
 
 	ID3D12DescriptorHeap* getView() const;
-
+	ID3D12Resource* getTexture() const { return m_pd3dTexture.Get(); }
 	void SetTextureName(std::string name);
 	std::string getName() const;
 private:

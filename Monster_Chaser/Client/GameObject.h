@@ -87,7 +87,7 @@ struct HasMesh {
 // InstanceID decide Refractive Index
 // 0 -> Air, 1 -> Water, 2 -> Ice
 
-// Specifically, Terrain have the following InstanceID -> 10
+// Specifically, Terrain have the following InstanceID -> 10 : Use SplatTexture - Maximum 4Layer
 
 
 class CGameObject {
