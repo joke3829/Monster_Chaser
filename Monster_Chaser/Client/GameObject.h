@@ -188,8 +188,8 @@ public:
 	XMFLOAT4X4 getWorldMatrix();
 	XMFLOAT4X4 getLocalMatrix();
 	XMFLOAT4X4 getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
-	BoundingOrientedBox GetBoundingOBB()const;
-	BoundingSphere GetBoundingSphere()const;
+	BoundingOrientedBox& getObjectOBB() { return m_OBB; }
+	BoundingSphere& getObjectSphere() { return m_BoundingSphere; }
 	unsigned short getBoundingInfo() const {return m_bUseBoundingInfo;}
 
 	void SetMeshIndex(int index);

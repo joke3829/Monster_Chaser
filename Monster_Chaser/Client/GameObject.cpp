@@ -183,32 +183,6 @@ XMFLOAT4X4 CGameObject::getLocalMatrix()
 	return m_xmf4x4LocalMatrix;
 }
 
-BoundingOrientedBox CGameObject::GetBoundingOBB() const
-{
-	if ((m_bUseBoundingInfo & 0x0011) == 0x0011) {
-		return m_OBB;
-	}
-	else {
-		return BoundingOrientedBox(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-	}
-}
-
-BoundingSphere CGameObject::GetBoundingSphere() const
-{
-	if ((m_bUseBoundingInfo & 0x1100) == 0x1100) {
-		return m_BoundingSphere;
-	}
-	else if ((m_bUseBoundingInfo & 0x0011) == 0x0011) {
-		XMFLOAT3 extents = m_OBB.Extents;
-		float radius = extents.x;
-		if (extents.y > radius) radius = extents.y;
-		if (extents.z > radius) radius = extents.z;
-		return BoundingSphere(m_OBB.Center, radius);
-	}
-
-	return BoundingSphere(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f);
-}
-
 void CGameObject::SetMeshIndex(int index)
 {
 	m_nMeshIndex = index;
