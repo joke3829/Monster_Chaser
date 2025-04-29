@@ -31,7 +31,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
-	TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
+	//TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
 
 	if (test) {
 		m_pResourceManager->UpdatePosition(fElapsedTime); //ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
@@ -407,37 +407,27 @@ void CRaytracingScene::CreateComputeRootSignature()
 
 template<typename T, typename U>
 requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
-inline void CRaytracingScene::CheckCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2)
+inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2)
 {
-	// T´Â Ä³¸¯ÅÍ or ¸Ê, U´Â Ä³¸¯ÅÍ¸¸ ¼³Á¤ÇØ¼­ »ç¿ë	
-	
-	// Mesh ¸®½ºÆ®(¸ÊÀÇ OBB¿ë)
+	bool collisionDetected = false;
 	auto& meshes = m_pResourceManager->getMeshList();
 
 	for (const std::unique_ptr<T>& obj1 : object1) {
-		// ¸Ê-Ä³¸¯ÅÍ
+		// ¸Ê-Ä³¸¯ÅÍ (½ºÇÇ¾î¸¸)
 		if constexpr (HasGameObjectInterface<T>) {
 			int meshIndex = obj1->getMeshIndex();
-			if (meshIndex != -1 && meshIndex < meshes.size() && meshes[meshIndex]->getHasVertex()) {
-				if (meshes[meshIndex]->getHasBoundingBox()) {
-					BoundingOrientedBox mapOBB;
-					meshes[meshIndex]->getOBB().Transform(mapOBB, DirectX::XMLoadFloat4x4(&obj1->getWorldMatrix()));
+			if (meshIndex != -1 && meshIndex < meshes.size() && meshes[meshIndex]->getHasVertex() && meshes[meshIndex]->getHasBoundingBox()) {
+				DirectX::BoundingOrientedBox mapOBB;
+				meshes[meshIndex]->getOBB().Transform(mapOBB, DirectX::XMLoadFloat4x4(&obj1->getWorldMatrix()));
 
-					// Ä³¸¯ÅÍ¿Í Ãæµ¹ È®ÀÎ
-					for (const auto& character : object2) {
-						for (const auto& bone : character->getObjects()) {
-							if (bone->getBoundingInfo() & 0x1100) { // Ä³¸¯ÅÍ ±¸
-								BoundingSphere boneSphere = bone->getObjectSphere();
-								if (mapOBB.Intersects(boneSphere)) {
-									//Ãæµ¹Ã³¸®
-								}
-							}
-							else if (bone->getBoundingInfo() & 0x0011) { // »À (OBB)
-								BoundingOrientedBox boneOBB;
-								bone->getObjectOBB().Transform(boneOBB, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
-								if (mapOBB.Intersects(boneOBB)) {
-									//Ãæµ¹Ã³¸®
-								}
+				for (const auto& character : object2) {
+					for (const auto& bone : character->getObjects()) {
+						if (bone->getBoundingInfo() & 0x1100) { // Ä³¸¯ÅÍ ½ºÇÇ¾î
+							DirectX::BoundingSphere boneSphere = bone->getObjectSphere();
+							bone->getObjectSphere().Transform(boneSphere, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
+							if (mapOBB.Intersects(boneSphere)) {
+								collisionDetected = true;
+								// Ãæµ¹ Ã³¸®
 							}
 						}
 					}
@@ -445,50 +435,77 @@ inline void CRaytracingScene::CheckCollision(const std::vector<std::unique_ptr<T
 			}
 		}
 
-		// Ä³¸¯ÅÍ-Ä³¸¯ÅÍ
+		// Ä³¸¯ÅÍ-Ä³¸¯ÅÍ (½ºÇÇ¾î-½ºÇÇ¾î¸¸)
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x1100) { // Ä³¸¯ÅÍ ±¸
-					BoundingSphere boneSphere1 = bone1->getObjectSphere();
+				if (bone1->getBoundingInfo() & 0x1100) { // Ä³¸¯ÅÍ ½ºÇÇ¾î
+					DirectX::BoundingSphere boneSphere1 = bone1->getObjectSphere();
+					bone1->getObjectSphere().Transform(boneSphere1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
 						if (obj1 != character) { // µ¿ÀÏ Ä³¸¯ÅÍ Á¦¿Ü
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x1100) { // Ä³¸¯ÅÍ ±¸
-									BoundingSphere boneSphere2 = bone2->getObjectSphere();
+								if (bone2->getBoundingInfo() & 0x1100) { // Ä³¸¯ÅÍ ½ºÇÇ¾î
+									DirectX::BoundingSphere boneSphere2 = bone2->getObjectSphere();
+									bone2->getObjectSphere().Transform(boneSphere2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneSphere1.Intersects(boneSphere2)) {
-										//Ãæµ¹Ã³¸®
-									}
-								}
-								else if (bone2->getBoundingInfo() & 0x0011) { // »À (OBB)
-									BoundingOrientedBox boneOBB2;
-									bone2->getObjectOBB().Transform(boneOBB2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
-									if (boneSphere1.Intersects(boneOBB2)) {
-										//Ãæµ¹Ã³¸®
+										collisionDetected = true;
+										// Ãæµ¹ Ã³¸®
 									}
 								}
 							}
 						}
 					}
 				}
-				else if (bone1->getBoundingInfo() & 0x0011) { // »À (OBB)
-					BoundingOrientedBox boneOBB1;
+			}
+		}
+	}
+	return collisionDetected;
+}
+
+template<typename T, typename U>
+requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
+inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2)
+{
+	auto& meshes = m_pResourceManager->getMeshList();
+
+	for (const std::unique_ptr<T>& obj1 : object1) {
+		// ¸Ê-Ä³¸¯ÅÍ (OBB¸¸)
+		if constexpr (HasGameObjectInterface<T>) {
+			int meshIndex = obj1->getMeshIndex();
+			if (meshIndex != -1 && meshIndex < meshes.size() && meshes[meshIndex]->getHasVertex() && meshes[meshIndex]->getHasBoundingBox()) {
+				DirectX::BoundingOrientedBox mapOBB;
+				meshes[meshIndex]->getOBB().Transform(mapOBB, DirectX::XMLoadFloat4x4(&obj1->getWorldMatrix()));
+
+				for (const auto& character : object2) {
+					for (const auto& bone : character->getObjects()) {
+						if (bone->getBoundingInfo() & 0x0011) { // Ä³¸¯ÅÍ OBB
+							DirectX::BoundingOrientedBox boneOBB;
+							bone->getObjectOBB().Transform(boneOBB, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
+							if (mapOBB.Intersects(boneOBB)) {
+								// Ãæµ¹ Ã³¸®
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Ä³¸¯ÅÍ-Ä³¸¯ÅÍ (OBB-OBB¸¸)
+		if constexpr (HasSkinningObjectInterface<T>) {
+			for (const auto& bone1 : obj1->getObjects()) {
+				if (bone1->getBoundingInfo() & 0x0011) { // Ä³¸¯ÅÍ OBB
+					DirectX::BoundingOrientedBox boneOBB1;
 					bone1->getObjectOBB().Transform(boneOBB1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
-						if (obj1 != character) {
+						if (obj1 != character) { // µ¿ÀÏ Ä³¸¯ÅÍ Á¦¿Ü
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x1100) { // Ä³¸¯ÅÍ
-									BoundingSphere boneSphere2 = bone2->getObjectSphere();
-									if (boneOBB1.Intersects(boneSphere2)) {
-										//Ãæµ¹Ã³¸®
-									}
-								}
-								else if (bone2->getBoundingInfo() & 0x0011) { // »À (OBB)
-									BoundingOrientedBox boneOBB2;
+								if (bone2->getBoundingInfo() & 0x0011) { // Ä³¸¯ÅÍ OBB
+									DirectX::BoundingOrientedBox boneOBB2;
 									bone2->getObjectOBB().Transform(boneOBB2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneOBB1.Intersects(boneOBB2)) {
-										//Ãæµ¹Ã³¸®
+										// Ãæµ¹ Ã³¸®
 									}
 								}
 							}
@@ -511,22 +528,16 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 		auto& mesh = meshes[meshIndex];
 		if (!mesh->getHasVertex() || !mesh->getHasBoundingBox()) continue;
 
-		BoundingOrientedBox mapOBB;
-		mesh->getOBB().Transform(mapOBB, XMLoadFloat4x4(&mapObj->getWorldMatrix()));
+		DirectX::BoundingOrientedBox mapOBB;
+		mesh->getOBB().Transform(mapOBB, DirectX::XMLoadFloat4x4(&mapObj->getWorldMatrix()));
 
 		for (const auto& character : characters) {
 			for (const auto& bone : character->getObjects()) {
 				if (bone->getBoundingInfo() & 0x1100) { // Sphere
-					BoundingSphere boneSphere = bone->getObjectSphere();
+					DirectX::BoundingSphere boneSphere = bone->getObjectSphere();
+					bone->getObjectSphere().Transform(boneSphere, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
 					if (mapOBB.Intersects(boneSphere)) {
-						//baam
-					}
-				}
-				else if (bone->getBoundingInfo() & 0x0011) { // OBB
-					BoundingOrientedBox boneOBB;
-					bone->getObjectOBB().Transform(boneOBB, XMLoadFloat4x4(&bone->getWorldMatrix()));
-					if (mapOBB.Intersects(boneOBB)) {
-						//baam
+						// Ãæµ¹ Ã³¸®
 					}
 				}
 			}
@@ -584,8 +595,8 @@ void CRaytracingTestScene::SetUp()
 	// Read File Here ========================================	! All Files Are Read Once !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	m_pResourceManager->LightTest();
@@ -654,7 +665,7 @@ void CRaytracingTestScene::SetUp()
 	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
 	//skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	//skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
-	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[0]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
@@ -1167,6 +1178,21 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3, true); //ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Â±ï¿½
 		m_bLockAnimation1 = true;
+	}
+
+	if (keyBuffer['N'] & 0x80) {
+		if (!(m_PrevKeyBuffer['N'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // ï¿½È±ï¿½: ï¿½ï¿½ï¿½ï¿½
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->UpdatePosition(fElapsedTime);
+		}
+		else {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
+		}
+	}
+
+	if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80)) {
+		TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
 	}
 
 	if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {

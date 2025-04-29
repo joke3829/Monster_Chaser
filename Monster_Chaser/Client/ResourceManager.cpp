@@ -60,7 +60,7 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 	if (!inFile.eof()) {
 		readLabel();
 		if ("<Animation>:" == strLabel) {	// 애니메이션이 있으면 매니저 생성 & 오브젝트 지정
-			m_vAnimationManager.emplace_back(std::make_unique<CMageManager>(inFile));
+			m_vAnimationManager.emplace_back(std::make_unique<CAnimationManager>(inFile));
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->SetFramesPointerFromSkinningObject(m_vSkinningObject[m_vSkinningObject.size() - 1]->getObjects());
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->MakeAnimationMatrixIndex(m_vSkinningObject[m_vSkinningObject.size() - 1].get());
 		}
