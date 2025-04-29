@@ -29,10 +29,12 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-	auto& Skinned = m_pResourceManager->getSkinningObjectList();
+	/*auto& Skinned = m_pResourceManager->getSkinningObjectList();
 	for (size_t i = 0; i < Skinned.size(); ++i) {
 		Skinned[i]->SetPosition(Players[i].getRenderingObject()->getPosition());
-	}
+	}*/
+
+
 		cs_packet_move mp;
 		mp.size = sizeof(mp);
 		mp.type = C2S_P_MOVE;
@@ -555,8 +557,8 @@ void CRaytracingTestScene::SetUp()
 	//skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	//skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
 	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-	skinned[1]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-	skinned[2]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[1]->setPreTransform(0.8, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[2]->setPreTransform(0.8, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();

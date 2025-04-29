@@ -87,7 +87,8 @@ void SESSION::process_packet(char* p) {
 
 		// 2. 신규 클라에게 기존 유저들의 존재 알림
 		for (int existing_id : g_server.rooms[room_num].id) {
-			if (existing_id == g_server.rooms[room_num].id.back()) continue;
+			if (existing_id == g_server.rooms[room_num].id.back()) 
+				continue;
 
 			sc_packet_select_room sp;
 			sp.size = sizeof(sp);
@@ -98,20 +99,7 @@ void SESSION::process_packet(char* p) {
 			g_server.users[g_server.rooms[room_num].id.back()]->do_send(&sp);
 		}
 
-		//나중에 UI나와서 방 선택하고 바로 직업 선택하는걸로 전환되는 거면 전체 유저한테 다 보낼 필요가 없음 	
-		//for (auto& player : g_server.users) {
-		//	player.second->do_send(&sp);
-		//}
-		//for (auto& player : g_server.users) {			//신규 클라가 기존 클라의 존재를 인식 
-		//	if (player.first != m_uniqueNo)
-		//	{
-		//		sc_packet_select_room sp;
-		//		sp.size = sizeof(sp);
-		//		sp.type = S2C_P_SELECT_ROOM;
-		//		sp.Local_id = player.first;
-		//		g_server.users[m_uniqueNo]->do_send(&sp);
-		//	}
-		//}
+		
 		sc_packet_room_info rp;
 		rp.size = sizeof(rp);
 		rp.type = S2C_P_UPDATEROOM;
@@ -186,7 +174,7 @@ void SESSION::process_packet(char* p) {
 			sp.size = sizeof(sp);
 			sp.type = S2C_P_ALLREADY;
 			sp.room_number = static_cast<char>(room_num);
-			sp.Local_id = g_server.users[m_uniqueNo]->local_id;
+			//sp.Local_id = g_server.users[m_uniqueNo]->local_id;
 
 
 			g_server.rooms[room_num].StartGame();
@@ -233,7 +221,7 @@ void SESSION::process_packet(char* p) {
 		sc_packet_move mp;
 		mp.size = sizeof(mp);
 		mp.type = S2C_P_MOVE;
-		mp.Local_id = g_server.users[m_uniqueNo]->local_id;;
+		mp.Local_id = g_server.users[m_uniqueNo]->local_id;
 		mp.pos = pos;
 
 		vector <int> room_players;

@@ -108,9 +108,9 @@ void C_Socket::process_packet(char* ptr)
 	}
 	case S2C_P_ALLREADY:
 	{
-
+	
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
-		Client.set_id(p->Local_id);
+		//Client.set_id(p->Local_id);
 		Setstart(true);		//¸É¹ö º¯¼ö InGameStart true·Î ¹Ù²ãÁÖ±â
 
 		break;
@@ -121,11 +121,15 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_move* p = reinterpret_cast<sc_packet_move*>(ptr);
 		//·ÎÄÃID
 		int local_id = p->Local_id;
+
+		if (local_id == Client.get_id()) {
+			return;
+		}
 		XMFLOAT4X4 position = p->pos;
 
 		// 3¸í²¨¸¦ ÇÑ²¨¹ø¿¡	
 
-		Players[local_id].setPosition(position);
+		Players[local_id].getRenderingObject()->SetPosition({position._41, position._42, position._43});
 
 
 		break;

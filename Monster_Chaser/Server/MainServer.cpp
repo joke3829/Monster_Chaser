@@ -67,7 +67,7 @@ int main() {
 
 			std::cout << "[클라이언트 " << client_id << " ]" << "이 접속했습니다." << std::endl;
 			do_accept(g_server);
-			/*  delete exp;*/
+			
 		}
 		break;
 		case IO_RECV:
