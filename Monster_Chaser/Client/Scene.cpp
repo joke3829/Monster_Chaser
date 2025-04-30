@@ -596,8 +596,8 @@ void CRaytracingTestScene::SetUp()
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	m_pResourceManager->LightTest();
 	// =========================================================
@@ -1182,12 +1182,12 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if (keyBuffer['N'] & 0x80) {
 		if (!(m_PrevKeyBuffer['N'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // �ȱ�: ����
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(6, true); // �ȱ�: ����
 			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(8, true); // �ȱ� ����
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(6, true); // �ȱ� ����
 		}
 	}
 
