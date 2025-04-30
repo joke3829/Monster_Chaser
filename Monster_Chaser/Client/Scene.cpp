@@ -537,7 +537,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 					BoundingSphere boneSphere = bone->getObjectSphere();
 					boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
 					if (mapOBB.Intersects(boneSphere)) {
-						// 충돌 처리
+						return;
 					}
 				}
 			}
