@@ -209,7 +209,7 @@ void SESSION::process_packet(char* p) {
 		lock_guard<mutex> lock(myMutex);
 		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
 
-		auto pos = pkt->pos;
+		m_pos = pkt->pos;
 
 		//collision check
 		/*{
@@ -221,8 +221,8 @@ void SESSION::process_packet(char* p) {
 		sc_packet_move mp;
 		mp.size = sizeof(mp);
 		mp.type = S2C_P_MOVE;
-		mp.Local_id = g_server.users[m_uniqueNo]->local_id;
-		mp.pos = pos;
+		mp.Local_id = this->local_id;
+		mp.pos = m_pos;
 
 		vector <int> room_players;
 		for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)
@@ -233,7 +233,7 @@ void SESSION::process_packet(char* p) {
 
 
 
-		BroadCasting_position(mp.pos, m_uniqueNo);
+		BroadCasting_position(mp.pos, g_server.rooms[room_num].id.size());
 		break;
 	}
 	}
@@ -244,15 +244,19 @@ void MoveCursorTo(int x, int y) {
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
 
-void SESSION::BroadCasting_position(const XMFLOAT4X4& pos, const int& id)
+void SESSION::BroadCasting_position(const XMFLOAT4X4& pos, const int& size)
 {
 
 	MoveCursorTo(0, 0);
 	system("cls");
-	cout << "=== [°´Ã¼" << id << "postion]" "== ";
+	for (int i = 0; i < size; ++i) {
+		int num = g_server.rooms[room_num].getID(i);
+		cout << "=== [°´Ã¼" << num << "postion]" "== ";
 
-	cout << "x: " << pos._41 << "y: " << pos._42 << "z: " << pos._43 << endl;
+		cout << "x: " << g_server.users[num]->m_pos._41 << "y: " << g_server.users[num]->m_pos._42 << "z: " << g_server.users[num]->m_pos._43 << endl;
 
+	}
+	
 }
 
 

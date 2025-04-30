@@ -34,7 +34,7 @@ public:
     SOCKET socket;
     std::unique_ptr<EXP_OVER> recv_over;
     int m_uniqueNo;
-  
+    XMFLOAT4X4 m_pos;
     unsigned char remained = 0;
 
     std::string name;               //유저 닉네임
@@ -48,7 +48,7 @@ public:
     void do_recv();
     void do_send(void* buff);
     void process_packet( char* p);
-    void BroadCasting_position(const XMFLOAT4X4& pos,const int& id);
+    void BroadCasting_position(const XMFLOAT4X4& pos, const int& size);
 };
 
 class Network {

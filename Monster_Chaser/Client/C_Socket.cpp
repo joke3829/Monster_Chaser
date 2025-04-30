@@ -80,11 +80,11 @@ void C_Socket::process_packet(char* ptr)
 			Players.try_emplace(local_id, local_id);
 			if (Client.get_id() == -1) {
 				Client.set_id(local_id);
+				RoomList[room_num]++;
 			}
 			//Players[local_id] = new Player(local_id);
 		}
 
-		RoomList[room_num]++;
 		//Players[id]->setRoomNumber(room_num);
 		//Players[id]->room_players[room_num] = playersInRoom;	//현재 그 방에 몇명있는지 알려주기
 
@@ -108,7 +108,7 @@ void C_Socket::process_packet(char* ptr)
 	}
 	case S2C_P_ALLREADY:
 	{
-	
+
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
 		//Client.set_id(p->Local_id);
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
@@ -129,7 +129,7 @@ void C_Socket::process_packet(char* ptr)
 
 		// 3명꺼를 한꺼번에	
 
-		Players[local_id].getRenderingObject()->SetPosition({position._41, position._42, position._43});
+		Players[local_id].getRenderingObject()->SetPosition({ position._41, position._42, position._43 });
 
 
 		break;
@@ -143,7 +143,7 @@ void C_Socket::process_packet(char* ptr)
 
 void C_Socket::do_recv()
 {
-	std::lock_guard<std::mutex>lock(myMutex);
+	//std::lock_guard<std::mutex>lock(myMutex);
 
 	char buffer[BUF_SIZE] = {};
 	while (running) {

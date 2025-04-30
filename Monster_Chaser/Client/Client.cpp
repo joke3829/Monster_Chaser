@@ -29,6 +29,7 @@ C_Socket Client;
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
+BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
@@ -162,6 +163,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	   std::this_thread::sleep_for(std::chrono::milliseconds(100));
    }*/
 
+
    //  콘솔 종료
 	FreeConsole();
 
@@ -202,7 +204,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		gGameFramework.Render();
 	}
-
+	recvThread.join();
+	drawThread.join();
 	//return (int) msg.wParam;
 }
 
