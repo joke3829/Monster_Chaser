@@ -978,6 +978,12 @@ void CSkinningObject::move(float fElapsedTime, short arrow) {
 	UpdateWorldMatrix();
 }
 
+void CSkinningObject::moveback(float depth)
+{
+	XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -depth));
+	UpdateWorldMatrix();
+}
+
 std::vector<std::unique_ptr<CSkinningInfo>>& CSkinningObject::getSkinningInfo()
 {
 	return m_vSkinningInfo;
