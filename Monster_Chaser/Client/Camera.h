@@ -23,6 +23,7 @@ public:
 	void SetShaderVariable();
 
 	XMFLOAT3& getEye() { return m_xmf3Eye; }
+	bool getThirdPersonState() const { return m_bThirdPerson; }
 
 	void SetTarget(CGameObject* target);
 	void SetThirdPersonMode(bool bThirdPerson);

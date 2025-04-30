@@ -17,6 +17,41 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
+	//std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	//for (auto& mo : m_pResourceManager->getGameObjectList()) {
+	//	int in = mo->getMeshIndex();
+	//	if (in != -1) {
+	//		BoundingOrientedBox wOBB{};
+	//		if (meshes[in]->getHasBoundingBox()) {
+	//			meshes[in]->getOBB().Transform(wOBB, XMLoadFloat4x4(&mo->getWorldMatrix()));
+
+	//			for (auto& so : m_pResourceManager->getSkinningObjectList()) {
+	//				std::vector<std::shared_ptr<Mesh>>& sMeshes = so->getMeshes();
+	//				for (auto& oo : so->getObjects()) {
+	//					int n = oo->getMeshIndex();
+	//					BoundingOrientedBox wBox{};
+	//					if (sMeshes[n]->getHasBoundingBox()) {
+	//						sMeshes[n]->getOBB().Transform(wBox, XMLoadFloat4x4(&oo->getWorldMatrix()));
+	//						if (wBox.Intersects(wOBB))
+	//							OutputDebugString(L"Collision MeshBounding\n\n");
+	//					}
+	//					else if (oo->getBoundingInfo() & 0x0011) {	// box
+	//						oo->getObjectOBB().Transform(wBox, XMLoadFloat4x4(&oo->getWorldMatrix()));
+	//						if (wBox.Intersects(wOBB))
+	//							OutputDebugString(L"Collision ObjectBounding\n");
+	//					}
+	//					else if (oo->getBoundingInfo() & 0x1100) {	// sphere
+	//						BoundingSphere wSphere;
+	//						oo->getObjectSphere().Transform(wSphere, XMLoadFloat4x4(&oo->getWorldMatrix()));
+	//						if (wSphere.Intersects(wOBB))
+	//							OutputDebugString(L"Collision Sphere\n");
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+
 	m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 }
@@ -835,7 +870,7 @@ void CRaytracingMaterialTestScene::SetUp()
 	//m_pCamera->SetTarget(normalObjects[0].get());
 	//m_pCamera->SetCameraLength(20.0f);
 	// ==========================================================================
-
+	//m_pResourceManager->getAnimationManagers()[0]->UpdateAnimation(0.2);
 	// AccelerationStructure
 	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
 	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
@@ -923,35 +958,26 @@ void CRaytracingMaterialTestScene::ProcessInput(float fElapsedTime)
 		m_pCamera->Move(2, fElapsedTime, shiftDown);
 
 	if (keyBuffer['I'] & 0x80) {
-		std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
-		auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
-			return p->getFrameName() == "WoodPanel00_LOD012";
-			});
-		if (p != normalObjects.end()) {
-			XMFLOAT4X4& ww = (*p)->getLocalMatrix();
-			ww._42 += (5.0f * fElapsedTime);
-		}
+		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
 	}
 
 	if (keyBuffer['K'] & 0x80) {
-		std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
-		auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
-			return p->getFrameName() == "WoodPanel00_LOD012";
-			});
-		if (p != normalObjects.end()) {
-			XMFLOAT4X4& ww = (*p)->getLocalMatrix();
-			ww._42 += (-5.0f * fElapsedTime);
-		}
+		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
 	}
 
-	if (keyBuffer['H'] & 0x80) {
-		std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
-		auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
-			return p->getFrameName() == "Snow_Low_(1)";
-			});
-		if (p != normalObjects.end()) {
-			(*p)->getLocalMatrix()._42 = -1000.0f;
-		}
+	if (keyBuffer['J'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, -90.0f * fElapsedTime, 0.0f));
+	}
+	if (keyBuffer['L'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, 90.0f * fElapsedTime, 0.0f));
+	}
+
+	if (keyBuffer['U'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 2);
+	}
+
+	if (keyBuffer['O'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 3);
 	}
 
 	if (keyBuffer[VK_RIGHT] & 0x80)
@@ -1126,6 +1152,452 @@ void CRaytracingMaterialTestScene::PrepareTerrainTexture()
 }
 
 void CRaytracingMaterialTestScene::Render()
+{
+	m_pCamera->SetShaderVariable();
+	m_pAccelerationStructureManager->SetScene();
+	m_pResourceManager->SetLights();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[textures.size() - 1]->getView()->GetGPUDescriptorHandleForHeapStart());
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
+
+	D3D12_DISPATCH_RAYS_DESC raydesc{};
+	raydesc.Depth = 1;
+	raydesc.Width = DEFINED_UAV_BUFFER_WIDTH;
+	raydesc.Height = DEFINED_UAV_BUFFER_HEIGHT;
+
+	raydesc.RayGenerationShaderRecord.StartAddress = m_pShaderBindingTable->getRayGenTable()->GetGPUVirtualAddress();
+	raydesc.RayGenerationShaderRecord.SizeInBytes = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+
+	raydesc.MissShaderTable.StartAddress = m_pShaderBindingTable->getMissTable()->GetGPUVirtualAddress();
+	raydesc.MissShaderTable.SizeInBytes = m_pShaderBindingTable->getMissSize();
+	raydesc.MissShaderTable.StrideInBytes = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
+
+	raydesc.HitGroupTable.StartAddress = m_pShaderBindingTable->getHitGroupTable()->GetGPUVirtualAddress();
+	raydesc.HitGroupTable.SizeInBytes = m_pShaderBindingTable->getHitGroupSize();
+	raydesc.HitGroupTable.StrideInBytes = m_pShaderBindingTable->getHitGroupStride();
+
+	g_DxResource.cmdList->DispatchRays(&raydesc);
+}
+
+// =====================================================================================
+
+
+void CRaytracingWinterLandScene::SetUp()
+{
+	// Create Global & Local Root Signature
+	CreateRootSignature();
+
+	// animation Pipeline Ready
+	CreateComputeRootSignature();
+	CreateComputeShader();
+
+	// Create And Set up PipelineState
+	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
+	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit", L"ShadowAnyHit");
+	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
+	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
+	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
+	m_pRaytracingPipeline->MakePipelineState();
+
+	// Resource Ready
+	m_pResourceManager = std::make_unique<CResourceManager>();
+	m_pResourceManager->SetUp(3);
+	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	// 조명 추가
+	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
+	m_pResourceManager->ReadyLightBufferContent();
+	m_pResourceManager->LightTest();
+	// =========================================================
+
+	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
+	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
+	// 완전히 새로운 객체 & skinning Object 복사는 여기서 ========================================
+
+	for (auto& o : skinned[0]->getObjects()) {
+		for (auto& ma : o->getMaterials())
+			ma.m_bHasEmissiveColor = false;
+	}
+
+	// terrian
+	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
+
+	normalObjects[normalObjects.size() - 1]->SetInstanceID(10);
+	normalObjects[normalObjects.size() - 1]->getMaterials().emplace_back();
+	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
+
+
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
+	auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
+		return p->getFrameName() == "Water";
+		});
+	if (p != normalObjects.end()) {
+		(*p)->SetInstanceID(1);
+		(*p)->getMaterials().emplace_back();
+		Material& mt = (*p)->getMaterials()[0];
+		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
+		mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
+		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
+
+		void* tempptr{};
+		std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
+		for (XMFLOAT2& xmf : tex0) {
+			xmf.x *= 10.0f; xmf.y *= 10.0f;
+		}
+		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
+		memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
+		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
+	}
+
+	PrepareTerrainTexture();
+
+	// cubeMap Ready
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky.dds", true));
+	// ===========================================================================================
+	m_pResourceManager->InitializeGameObjectCBuffer();	// 모든 오브젝트 상수버퍼 생성 & 초기화
+	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
+
+
+	// ShaderBindingTable
+	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
+	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
+	m_pShaderBindingTable->CreateSBT();
+
+	// 여기서 필요한 객체(normalObject) 복사 & 행렬 조작 ===============================
+
+	skinned[0]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+
+	// ==============================================================================
+
+	// 카메라 설정 ==============================================================
+	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetCameraLength(80.0f);
+	// ==========================================================================
+
+	// AccelerationStructure
+	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
+	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
+	m_pAccelerationStructureManager->InitBLAS();
+	m_pAccelerationStructureManager->InitTLAS();
+}
+
+
+void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+		switch (wParam) {
+		case 'n':
+		case 'N':
+			m_pCamera->toggleNormalMapping();
+			break;
+		case 'm':
+		case 'M':
+			m_pCamera->toggleAlbedoColor();
+			break;
+		case '9':
+			m_pCamera->SetThirdPersonMode(false);
+			break;
+		case '0':
+			m_pCamera->SetThirdPersonMode(true);
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		break;
+	}
+}
+
+void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
+{
+	UCHAR keyBuffer[256];
+	GetKeyboardState(keyBuffer);
+
+	bool shiftDown = false;
+	if (keyBuffer[VK_SHIFT] & 0x80)
+		shiftDown = true;
+
+	if (false == m_pCamera->getThirdPersonState()) {
+		if (keyBuffer['W'] & 0x80)
+			m_pCamera->Move(0, fElapsedTime, shiftDown);
+		if (keyBuffer['S'] & 0x80)
+			m_pCamera->Move(5, fElapsedTime, shiftDown);
+		if (keyBuffer['D'] & 0x80)
+			m_pCamera->Move(3, fElapsedTime, shiftDown);
+		if (keyBuffer['A'] & 0x80)
+			m_pCamera->Move(4, fElapsedTime, shiftDown);
+		if (keyBuffer[VK_SPACE] & 0x80)
+			m_pCamera->Move(1, fElapsedTime, shiftDown);
+		if (keyBuffer[VK_CONTROL] & 0x80)
+			m_pCamera->Move(2, fElapsedTime, shiftDown);
+	}
+	else {
+		if (keyBuffer['W'] & 0x80) {
+			m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
+		}
+		if (keyBuffer['S'] & 0x80) {
+			m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
+		}
+		if (keyBuffer['A'] & 0x80) {
+			m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, -90.0f * fElapsedTime, 0.0f));
+		}
+		if (keyBuffer['D'] & 0x80) {
+			m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, 90.0f * fElapsedTime, 0.0f));
+		}
+	}
+
+	if (keyBuffer['U'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 2);
+	}
+
+	if (keyBuffer['O'] & 0x80) {
+		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 3);
+	}
+
+	if (keyBuffer[VK_RIGHT] & 0x80)
+		m_pResourceManager->getAnimationManagers()[0]->TimeIncrease(fElapsedTime);
+}
+
+void CRaytracingWinterLandScene::PrepareTerrainTexture()
+{
+	D3D12_DESCRIPTOR_HEAP_DESC desc{};
+	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	desc.NumDescriptors = 14;
+	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+
+	g_DxResource.device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_pTerrainDescriptor.GetAddressOf()));
+
+	struct alignas(16) terrainINFO {
+		int numLayer{};
+		float padding[3]{};
+		int bHasDiffuse[4]{};
+		int bHasNormal[4]{};
+		int bHasMask[4]{};
+	};
+
+	auto rdesc = BASIC_BUFFER_DESC;
+	rdesc.Width = Align(sizeof(terrainINFO), 256);
+
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &rdesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+		IID_PPV_ARGS(m_pTerrainCB.GetAddressOf()));
+
+	terrainINFO* pMap{};
+	m_pTerrainCB->Map(0, nullptr, reinterpret_cast<void**>(&pMap));
+	pMap->numLayer = 4;
+	pMap->bHasDiffuse[0] = pMap->bHasDiffuse[1] = pMap->bHasDiffuse[2] = pMap->bHasDiffuse[3] = 1;
+	pMap->bHasNormal[0] = pMap->bHasNormal[1] = pMap->bHasNormal[2] = pMap->bHasNormal[3] = 0;
+	pMap->bHasMask[0] = pMap->bHasMask[2] = pMap->bHasMask[3] = 0;
+	m_pTerrainCB->Unmap(0, nullptr);
+
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	size_t textureIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Terrain_WinterLands_splatmap.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\RockStalagmites00_terrain2.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\Stonerock03_Metallic.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	D3D12_RESOURCE_DESC d3dRD;
+
+	UINT increment = g_DxResource.device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	D3D12_CPU_DESCRIPTOR_HANDLE  handle = m_pTerrainDescriptor->GetCPUDescriptorHandleForHeapStart();
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cdesc{};
+	cdesc.BufferLocation = m_pTerrainCB->GetGPUVirtualAddress();
+	cdesc.SizeInBytes = rdesc.Width;
+
+	g_DxResource.device->CreateConstantBufferView(&cdesc, handle);
+	handle.ptr += increment;
+
+	// splat
+	d3dRD = textures[textureIndex]->getTexture()->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+
+	g_DxResource.device->CreateShaderResourceView(textures[textureIndex]->getTexture(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	// layer 0 ===============================================================
+
+	d3dRD = textures[textureIndex + 1]->getTexture()->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 1]->getTexture(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	// layer 1 ===============================================================
+
+	d3dRD = textures[textureIndex + 2]->getTexture()->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 2]->getTexture(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	// layer 2 ===============================================================
+
+	d3dRD = textures[textureIndex + 3]->getTexture()->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 3]->getTexture(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	// layer 3 ===============================================================
+
+	d3dRD = textures[textureIndex + 4]->getTexture()->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 4]->getTexture(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+
+	d3dRD = g_DxResource.nullTexture->GetDesc();
+	srvDesc.Format = d3dRD.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MipLevels = -1;
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
+	handle.ptr += increment;
+}
+
+void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
+{
+	// compute shader & rootSignature set
+	g_DxResource.cmdList->SetPipelineState(m_pAnimationComputeShader.Get());
+	g_DxResource.cmdList->SetComputeRootSignature(m_pComputeRootSignature.Get());
+
+	m_pResourceManager->UpdateSkinningMesh(fElapsedTime);
+	Flush();
+	// Skinning Object BLAS ReBuild
+	m_pResourceManager->ReBuildBLAS();
+
+
+	XMFLOAT4X4& playerWorld = m_pResourceManager->getSkinningObjectList()[0]->getWorldMatrix();
+	playerWorld._42 -= (30 * fElapsedTime);
+	m_pResourceManager->getSkinningObjectList()[0]->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
+	
+	float terrainHeight = m_pHeightMap->GetHeightinWorldSpace(playerWorld._41 + 1024.0f, playerWorld._43 + 1024.0f);
+	if (terrainHeight > playerWorld._42) { 
+		playerWorld._42 = terrainHeight;
+		m_pResourceManager->getSkinningObjectList()[0]->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
+	}
+	//std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	//for (auto& mo : m_pResourceManager->getGameObjectList()) {
+	//	int in = mo->getMeshIndex();
+	//	if (in != -1) {
+	//		BoundingOrientedBox wOBB{};
+	//		if (meshes[in]->getHasBoundingBox()) {
+	//			meshes[in]->getOBB().Transform(wOBB, XMLoadFloat4x4(&mo->getWorldMatrix()));
+	//			for (auto& so : m_pResourceManager->getSkinningObjectList()) {
+	//				std::vector<std::shared_ptr<Mesh>>& sMeshes = so->getMeshes();
+	//				for (auto& oo : so->getObjects()) {
+	//					int n = oo->getMeshIndex();
+	//					BoundingOrientedBox wBox{};
+	//					if (sMeshes[n]->getHasBoundingBox()) {
+	//						sMeshes[n]->getOBB().Transform(wBox, XMLoadFloat4x4(&oo->getWorldMatrix()));
+	//						if (wBox.Intersects(wOBB))
+	//							OutputDebugString(L"Collision MeshBounding\n\n");
+	//					}
+	//					else if (oo->getBoundingInfo() & 0x0011) {	// box
+	//						oo->getObjectOBB().Transform(wBox, XMLoadFloat4x4(&oo->getWorldMatrix()));
+	//						if (wBox.Intersects(wOBB))
+	//							OutputDebugString(L"Collision ObjectBounding\n");
+	//					}
+	//					else if (oo->getBoundingInfo() & 0x1100) {	// sphere
+	//						BoundingSphere wSphere;
+	//						oo->getObjectSphere().Transform(wSphere, XMLoadFloat4x4(&oo->getWorldMatrix()));
+	//						if (wSphere.Intersects(wOBB))
+	//							OutputDebugString(L"Collision Sphere\n");
+	//					}
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+	m_pResourceManager->UpdateWorldMatrix();
+
+	m_pCamera->UpdateViewMatrix();
+	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
+}
+
+void CRaytracingWinterLandScene::Render()
 {
 	m_pCamera->SetShaderVariable();
 	m_pAccelerationStructureManager->SetScene();

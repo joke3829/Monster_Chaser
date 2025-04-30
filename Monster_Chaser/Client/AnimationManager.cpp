@@ -49,6 +49,7 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 		XMVECTOR S0, R0, T0, S1, R1, T1;
 		XMMatrixDecompose(&S0, &R0, &T0, XMLoadFloat4x4(&m_vTransforms[index][i]));
 		XMMatrixDecompose(&S1, &R1, &T1, XMLoadFloat4x4(&m_vTransforms[index + 1][i]));
+		//R0 = XMQuaternionNormalize(R0); R1 = XMQuaternionNormalize(R1);
 		XMVECTOR S = XMVectorLerp(S0, S1, t);
 		XMVECTOR T = XMVectorLerp(T0, T1, t);
 		XMVECTOR R = XMQuaternionSlerp(R0, R1, t);

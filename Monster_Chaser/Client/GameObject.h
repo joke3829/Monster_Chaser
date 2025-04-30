@@ -311,6 +311,7 @@ public:
 	std::vector<std::shared_ptr<CTexture>>& getTextures() { return m_vTextures; }
 	XMFLOAT4X4& getWorldMatrix() { return m_xmf4x4WorldMatrix; }
 	XMFLOAT4X4& getPreWorldMatrix() { return m_xmf4x4PreWorldMatrix; }
+	XMFLOAT3& getPosition() { return m_xmf3Position; }
 
 	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;
 	virtual ComPtr<ID3D12Resource>& getVertexOutputBuffer(int index) = 0;
@@ -373,5 +374,5 @@ protected:
 
 	std::vector<ComPtr<ID3D12DescriptorHeap>> m_vUAV{};
 	std::vector<ComPtr<ID3D12DescriptorHeap>> m_vInsertDescriptorHeap{};
-	//ComPtr<ID3D12Resource> m_pNullResource{};
+	ComPtr<ID3D12Resource> m_pNullResource{};
 };

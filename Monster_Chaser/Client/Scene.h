@@ -35,7 +35,7 @@ public:
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void ProcessInput(float fElapsedTime) {};
 
-	void UpdateObject(float fElapsedTime);
+	virtual void UpdateObject(float fElapsedTime);
 
 	void PrepareRender();
 	virtual void Render();
@@ -84,5 +84,13 @@ public:
 // real use scene
 class CRaytracingWinterLandScene : public CRaytracingScene {
 public:
-	void SetUp() {}
+	void SetUp();
+	void ProcessInput(float fElapsedTime);
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void UpdateObject(float fElapsedTime);
+	void Render();
+	void PrepareTerrainTexture();
+
+	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 };

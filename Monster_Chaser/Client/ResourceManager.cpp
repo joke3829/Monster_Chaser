@@ -380,7 +380,7 @@ void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
 {
 	// 애니메이션이 없는 스키닝 객체면 문제가 생김
 	for (int i = 0; i < m_vAnimationManager.size(); ++i) {
-		//m_vAnimationManager[i]->TimeIncrease(fElapsedTime);
+		m_vAnimationManager[i]->TimeIncrease(fElapsedTime);
 		m_vSkinningObject[i]->UpdateAnimationMatrixes();
 		m_vAnimationManager[i]->UpdateAnimationMatrix();
 		m_vSkinningObject[i]->UpdateObject(fElapsedTime);
@@ -408,18 +408,6 @@ void CResourceManager::UpdateWorldMatrix()
 	}
 	for (std::unique_ptr<CSkinningObject>& Skinning : m_vSkinningObject) {
 		Skinning->UpdateFrameWorldMatrix();
-		//std::vector<std::unique_ptr<CGameObject>>& sObjects = Skinning->getObjects();
-		//for (std::unique_ptr<CGameObject>& object : sObjects) {
-		//	if (object->getParentIndex() != -1) {
-		//		XMFLOAT4X4 wmtx = sObjects[object->getParentIndex()]->getWorldMatrix();
-		//		XMFLOAT4X4 lmtx = object->getLocalMatrix();
-		//		XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
-		//		object->SetWorlaMatrix(lmtx);
-		//	}
-		//	else
-		//		object->SetWorlaMatrix(object->getLocalMatrix());
-		//		//object->UpdateWorldMatrix();
-		//}
 	}
 }
 

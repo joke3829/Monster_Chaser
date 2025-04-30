@@ -914,6 +914,10 @@ void CSkinningObject::Rotate(XMFLOAT3 rot)
 void CSkinningObject::move(float fElapsedTime, short arrow) {
 	if (0 == arrow)
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 30.0f * fElapsedTime));
+	else if (2 == arrow)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * 30.0f * fElapsedTime));
+	else if (3 == arrow)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * -30.0f * fElapsedTime));
 	else
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -30.0f * fElapsedTime));
 	UpdateWorldMatrix();
@@ -1113,9 +1117,9 @@ void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::
 void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 {
 	auto desc = BASIC_BUFFER_DESC;
-	/*desc.Width = sizeof(XMFLOAT3);
+	desc.Width = sizeof(XMFLOAT3);
 	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-	g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(m_pNullResource.GetAddressOf()));*/
+	g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(m_pNullResource.GetAddressOf()));
 
 
 	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo)
@@ -1202,11 +1206,11 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 
 				vDesc.Buffer.NumElements = 1;
 				vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
-				g_DxResource.device->CreateUnorderedAccessView(g_DxResource.nullBuffer.Get(), nullptr, &vDesc, uavHandle);
+				g_DxResource.device->CreateUnorderedAccessView(m_pNullResource.Get(), nullptr, &vDesc, uavHandle);
 
 				sDesc.Buffer.NumElements = 1;
 				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
-				g_DxResource.device->CreateShaderResourceView(g_DxResource.nullBuffer.Get(), &sDesc, insertHandle);
+				g_DxResource.device->CreateShaderResourceView(m_pNullResource.Get(), &sDesc, insertHandle);
 			}
 			uavHandle.ptr += incrementSize;
 			insertHandle.ptr += incrementSize;
@@ -1231,11 +1235,11 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 
 				vDesc.Buffer.NumElements = 1;
 				vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
-				g_DxResource.device->CreateUnorderedAccessView(g_DxResource.nullBuffer.Get(), nullptr, &vDesc, uavHandle);
+				g_DxResource.device->CreateUnorderedAccessView(m_pNullResource.Get(), nullptr, &vDesc, uavHandle);
 
 				sDesc.Buffer.NumElements = 1;
 				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
-				g_DxResource.device->CreateShaderResourceView(g_DxResource.nullBuffer.Get(), &sDesc, insertHandle);
+				g_DxResource.device->CreateShaderResourceView(m_pNullResource.Get(), &sDesc, insertHandle);
 			}
 			uavHandle.ptr += incrementSize;
 			insertHandle.ptr += incrementSize;
@@ -1260,11 +1264,11 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 
 				vDesc.Buffer.NumElements = 1;
 				vDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
-				g_DxResource.device->CreateUnorderedAccessView(g_DxResource.nullBuffer.Get(), nullptr, &vDesc, uavHandle);
+				g_DxResource.device->CreateUnorderedAccessView(m_pNullResource.Get(), nullptr, &vDesc, uavHandle);
 
 				sDesc.Buffer.NumElements = 1;
 				sDesc.Buffer.StructureByteStride = sizeof(XMFLOAT3);
-				g_DxResource.device->CreateShaderResourceView(g_DxResource.nullBuffer.Get(), &sDesc, insertHandle);
+				g_DxResource.device->CreateShaderResourceView(m_pNullResource.Get(), &sDesc, insertHandle);
 			}
 			uavHandle.ptr += incrementSize;
 			insertHandle.ptr += incrementSize;

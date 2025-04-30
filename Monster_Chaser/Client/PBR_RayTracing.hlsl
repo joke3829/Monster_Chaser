@@ -343,7 +343,7 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
     float3 Wpos = GetWorldPosition();
     float3 finalColor = float3(0.0, 0.0, 0.0);
     float F;
-    bool isShadow;
+    bool isShadow = false;
     for (uint i = 0; i < g_Lights.numLights; ++i)
     {
         switch (g_Lights.lights[i].Type)
@@ -468,16 +468,20 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
         }
     }
     
-    /*RayDesc rRay;
-    rRay.Direction = reflect(WorldRayDirection(), N);
-    rRay.Origin = GetWorldPosition() + (N * 0.001f);
-    rRay.TMin = 0.0f;
-    rRay.TMax = 600.0f;
+    /*float4 ReflectColor = float4(0.0, 0.0, 0.0, 0.0);
+    if (payload.RayDepth <= 1)
+    {
+        RayDesc rRay;
+        rRay.Direction = reflect(WorldRayDirection(), N);
+        rRay.Origin = GetWorldPosition();
+        rRay.TMin = 0.001f;
+        rRay.TMax = 600.0f;
     
-    float4 ReflectColor = TraceRadianceRay(rRay, payload.RayDepth);*/
+        ReflectColor = TraceRadianceRay(rRay, payload.RayDepth);
+    }*/
 
     if(g_CameraInfo.bNormalMapping & 0x0000FFFF)
-        return finalColor + (AlbedoColor.rgb * 0.05);
+        return finalColor + (AlbedoColor.rgb * 0.2);
     else
         return (float3(0.6, 0.6, 0.6) * 0.2) + finalColor;
 }
