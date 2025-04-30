@@ -528,14 +528,14 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 		auto& mesh = meshes[meshIndex];
 		if (!mesh->getHasVertex() || !mesh->getHasBoundingBox()) continue;
 
-		DirectX::BoundingOrientedBox mapOBB;
-		mesh->getOBB().Transform(mapOBB, DirectX::XMLoadFloat4x4(&mapObj->getWorldMatrix()));
+		BoundingOrientedBox mapOBB;
+		mesh->getOBB().Transform(mapOBB, XMLoadFloat4x4(&mapObj->getWorldMatrix()));
 
 		for (const auto& character : characters) {
 			for (const auto& bone : character->getObjects()) {
 				if (bone->getBoundingInfo() & 0x1100) { // Sphere
-					DirectX::BoundingSphere boneSphere = bone->getObjectSphere();
-					bone->getObjectSphere().Transform(boneSphere, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
+					BoundingSphere boneSphere = bone->getObjectSphere();
+					bone->getObjectSphere().Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
 					if (mapOBB.Intersects(boneSphere)) {
 						// 충돌 처리
 					}
