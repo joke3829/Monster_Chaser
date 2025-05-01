@@ -75,7 +75,6 @@ void RoomListThread() {
 }
 
 
-
 // 여기는 방 UI들어오면 삭제할 부분
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
@@ -87,7 +86,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 	// TODO: 여기에 코드를 입력합니다.
-	if (!Client.Init("127.0.0.1", PORT_NUM))            //Change IP Address
+	if (!Client.Init("172.30.1.18", PORT_NUM))            //Change IP Address
 	{
 		MessageBoxA(nullptr, "서버 연결 실패. 클라이언트를 종료합니다.", "연결 실패", MB_ICONERROR);
 		return 0;  // 창 생성 없이 종료

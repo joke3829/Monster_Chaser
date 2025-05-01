@@ -60,7 +60,7 @@ void SESSION::process_packet(char* p) {
 
 		if (g_server.rooms[room_Num].IsAddPlayer())			//id 값이 맴버 변수에 들어감 
 		{
-			g_server.users[m_uniqueNo]->local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
+			this->local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
 
 			g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
 
@@ -87,7 +87,7 @@ void SESSION::process_packet(char* p) {
 
 		// 2. 신규 클라에게 기존 유저들의 존재 알림
 		for (int existing_id : g_server.rooms[room_num].id) {
-			if (existing_id == g_server.rooms[room_num].id.back()) 
+			if (existing_id == g_server.rooms[room_num].id.back())
 				continue;
 
 			sc_packet_select_room sp;
@@ -99,7 +99,7 @@ void SESSION::process_packet(char* p) {
 			g_server.users[g_server.rooms[room_num].id.back()]->do_send(&sp);
 		}
 
-		
+
 		sc_packet_room_info rp;
 		rp.size = sizeof(rp);
 		rp.type = S2C_P_UPDATEROOM;
@@ -210,7 +210,7 @@ void SESSION::process_packet(char* p) {
 		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
 
 		m_pos = pkt->pos;
-
+		
 		//collision check
 		/*{
 			이동
@@ -233,7 +233,7 @@ void SESSION::process_packet(char* p) {
 
 
 
-		BroadCasting_position(mp.pos, g_server.rooms[room_num].id.size());
+		BroadCasting_position(g_server.rooms[room_num].id.size());
 		break;
 	}
 	}
@@ -244,7 +244,7 @@ void MoveCursorTo(int x, int y) {
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
 }
 
-void SESSION::BroadCasting_position(const XMFLOAT4X4& pos, const int& size)
+void SESSION::BroadCasting_position(const int& size)
 {
 
 	MoveCursorTo(0, 0);
@@ -256,7 +256,7 @@ void SESSION::BroadCasting_position(const XMFLOAT4X4& pos, const int& size)
 		cout << "x: " << g_server.users[num]->m_pos._41 << "y: " << g_server.users[num]->m_pos._42 << "z: " << g_server.users[num]->m_pos._43 << endl;
 
 	}
-	
+
 }
 
 

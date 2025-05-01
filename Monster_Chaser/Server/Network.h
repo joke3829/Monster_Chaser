@@ -48,7 +48,7 @@ public:
     void do_recv();
     void do_send(void* buff);
     void process_packet( char* p);
-    void BroadCasting_position(const XMFLOAT4X4& pos, const int& size);
+    void BroadCasting_position(const int& size);
 };
 
 class Network {

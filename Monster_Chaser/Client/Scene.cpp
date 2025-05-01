@@ -35,11 +35,11 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	}*/
 
 
-		/*cs_packet_move mp;
-		mp.size = sizeof(mp);
-		mp.type = C2S_P_MOVE;
-		mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
-		Client.send_packet(&mp);*/
+	/*cs_packet_move mp;
+	mp.size = sizeof(mp);
+	mp.type = C2S_P_MOVE;
+	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
+	Client.send_packet(&mp);*/
 
 	m_pResourceManager->UpdateWorldMatrix();
 
@@ -159,7 +159,7 @@ void CRaytracingScene::CreateRootSignature()
 		srvRange[4].NumDescriptors = 1;
 		srvRange[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		srvRange[4].RegisterSpace = 4;
-		
+
 		srvRange[5].BaseShaderRegister = 2;		// t2, space5
 		srvRange[5].NumDescriptors = 1;
 		srvRange[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -406,7 +406,7 @@ void CRaytracingScene::CreateComputeRootSignature()
 	desc.pParameters = params;
 	desc.NumStaticSamplers = 0;
 	desc.pStaticSamplers = nullptr;
-	
+
 	ID3DBlob* pBlob{};
 	D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
 	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pComputeRootSignature.GetAddressOf()));
@@ -464,19 +464,19 @@ void CRaytracingTestScene::SetUp()
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	m_pResourceManager->LightTest();
 	// =========================================================
-	
+
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
 	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// Create new Objects, Copy SkinningObject here ========================================
-	
+
 	// Copy Example
 	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 	//skinned[1]->CopyFromOtherObject(skinned[0].get());
@@ -488,19 +488,15 @@ void CRaytracingTestScene::SetUp()
 	//Players.try_emplace(0, )
 	Players[0].setRenderingObject(skinned[0].get());
 
-	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	//skinned[1]->CopyFromOtherObject(skinned[0].get());
-	//aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
-	//aManagers[1]->SetFramesPointerFromSkinningObject(skinned[1]->getObjects());
-	//aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
-	Players[1].setRenderingObject(skinned[1].get());
-	
-	/*skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	skinned[2]->CopyFromOtherObject(skinned[0].get());
-	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
-	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
-	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());*/
-	Players[2].setRenderingObject(skinned[2].get());
+	for (int i = 1; i < Players.size(); ++i) {
+		skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+		skinned[i]->CopyFromOtherObject(skinned[0].get());
+		aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
+		aManagers[i]->SetFramesPointerFromSkinningObject(skinned[i]->getObjects());
+		aManagers[i]->MakeAnimationMatrixIndex(skinned[i].get());
+		Players[i].setRenderingObject(skinned[i].get());
+	}
+
 
 	// Create new Object Example
 	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.025f, 1.0f));
@@ -511,7 +507,7 @@ void CRaytracingTestScene::SetUp()
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	
+
 	UINT txtIndex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_NORM.dds"));
@@ -550,15 +546,16 @@ void CRaytracingTestScene::SetUp()
 	// ¼ºÇÏ-7 Á¤¹Î2 ½ÂÈ£ 9
 	// g_user[id].do_send(mp);
 	// 0	1		2
-	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
-	skinned[1]->SetPosition(XMFLOAT3(10.0f, 0.0f, 50.0f));
-	skinned[2]->SetPosition(XMFLOAT3(20.0f, 0.0f, 50.0f));
+	for (int i = 0; i < Players.size(); ++i) {
+		skinned[i]->SetPosition(XMFLOAT3(10.0f * i, 0.0f, 50.0f));
+		skinned[i]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	}
+
 
 	//skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	//skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
-	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-	skinned[1]->setPreTransform(0.8, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-	skinned[2]->setPreTransform(0.8, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	/*skinned[1]->setPreTransform(0.8, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[2]->setPreTransform(0.8, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());*/
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
@@ -574,7 +571,7 @@ void CRaytracingTestScene::SetUp()
 	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
 	m_pAccelerationStructureManager->InitBLAS();
 	m_pAccelerationStructureManager->InitTLAS();
-	
+
 
 }
 
@@ -650,7 +647,7 @@ void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wPar
 			auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
 			if (animationManager && !animationManager->getFrame().empty()) {
 				CGameObject* frame = animationManager->getFrame()[0];
-				m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX *0.5f , 0.0f),*frame);
+				m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 			}
 		}
 
@@ -702,7 +699,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	// W + A (¿ÞÂÊ ´ë°¢¼± À§)
 	if (keyBuffer['W'] & 0x80) {
 
-	m_pResourceManager->getSkinningObjectList()[Client.get_id()]->move(fElapsedTime, 0);
+		m_pResourceManager->getSkinningObjectList()[Client.get_id()]->move(fElapsedTime, 0);
 	}
 
 	if (keyBuffer['S'] & 0x80) {
@@ -1008,7 +1005,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		auto* animationManager = m_pResourceManager->getAnimationManagers()[Client.get_id()].get();
 		if (animationManager && !animationManager->getFrame().empty()) {
 			CGameObject* frame = animationManager->getFrame()[0];
-			m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotation(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f),*frame);
+			m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotation(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f), *frame);
 		}
 	}
 
@@ -1054,13 +1051,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	// ï¿½ï¿½ï¿½ï¿½ Å° ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â·ï¿½ ï¿½ï¿½ï¿½ï¿½
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 
-	
 
-	cs_packet_move mp;
-	mp.size = sizeof(mp);
-	mp.type = C2S_P_MOVE;
-	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
-	Client.send_packet(&mp);
+	//Players[Client.get_id()].getRenderingObject()->UpdateWorldMatrix();  // ¡Ú ÀÌ°É ²À È£Ãâ
+	//cs_packet_move mp;
+	//mp.size = sizeof(mp);
+	//mp.type = C2S_P_MOVE;
+	//mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
+	//Client.send_packet(&mp);
 }
 
 

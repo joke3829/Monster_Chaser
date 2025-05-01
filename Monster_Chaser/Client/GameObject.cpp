@@ -1,7 +1,9 @@
 #include "GameObject.h"
 #include "C_Socket.h"
+#include "ObjectManager.h"
 #include "protocol.h"
 extern C_Socket Client;
+extern std::unordered_map<int, Player> Players;
 CGameObject::CGameObject(const CGameObject& other)
 {
 	m_strName = other.m_strName;	
@@ -893,7 +895,11 @@ void CSkinningObject::SetPosition(XMFLOAT3 pos)
 	
 	UpdateWorldMatrix();
 	
-
+	cs_packet_move mp;
+	mp.size = sizeof(mp);
+	mp.type = C2S_P_MOVE;
+	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
+	Client.send_packet(&mp);
 
 }
 // ��� ����

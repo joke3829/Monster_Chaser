@@ -42,6 +42,12 @@ bool C_Socket::Init(const char* ip, int port)
 void C_Socket::send_packet(void* pkt)
 {
 	int ret = send(m_socket, reinterpret_cast<CHAR*>(pkt), reinterpret_cast<unsigned char*>(pkt)[0], 0);
+	if (ret == SOCKET_ERROR) {
+		int err = WSAGetLastError();
+		if (err == WSAEWOULDBLOCK) {
+			std::cerr << "send 블로킹 발생!" << std::endl;
+		}
+	}
 }
 
 void C_Socket::process_packet(char* ptr)
