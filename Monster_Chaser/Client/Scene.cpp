@@ -1297,20 +1297,20 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_bLockAnimation1 = true;
 	}
 
-	if (keyBuffer['N'] & 0x80) {
-		if (!(m_PrevKeyBuffer['N'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(6, true); // �ȱ�: ����
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(6, true); // �ȱ� ����
-		}
-	}
+	//if (keyBuffer['N'] & 0x80) {
+	//	if (!(m_PrevKeyBuffer['N'] & 0x80)) {
+	//		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(6, true); // �ȱ�: ����
+	//		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+	//		m_pResourceManager->UpdatePosition(fElapsedTime);
+	//	}
+	//	else {
+	//		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(6, true); // �ȱ� ����
+	//	}
+	//}
 
-	if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80)) {
-		TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
-	}
+	//if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80)) {
+	//	TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
+	//}
 
 	if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
