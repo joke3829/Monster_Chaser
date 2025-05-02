@@ -50,31 +50,12 @@ public:
 
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
 	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
-	bool IsAnimationNearEnd(float margin = 0.1f) const
+	bool IsAnimationNearEnd(float margin = 0.2f) const
 	{
 		float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 		float remainingTime = length - m_fElapsedTime;
-		return remainingTime <= margin && remainingTime >= 0.0f; //������ 0.0 ~ 0.1�� ������ Ȯ��
+		return remainingTime <= margin && remainingTime >= 0.0f; //������ 0.0 ~ 0.2�� ������ Ȯ��
 	}
-
-	bool IsLoopAnimation()const
-	{
-		if (m_nCurrentSet == 5 || m_nCurrentSet == 8)return true;
-		else { return false; }
-	}
-
-	void onWalking() {
-		m_isWalk = true;
-	}
-
-	void StopWalking() {
-		m_isWalk = false;
-	}
-
-	bool IsWalking() const {
-		return m_isWalk; // ���� �ȱ�  ���� ��ȯ
-	}
-
 
 	virtual void StartCombo() {};
 	virtual void OnAttackInput() {};
@@ -84,6 +65,9 @@ public:
 
 	virtual void StartSkill3() {};
 	virtual void OnKey3Input() {};
+
+	bool IsComboInterrupted() const { return m_bComboEnd; }
+	void ClearComboInterrupted() { m_bComboEnd = false; }
 
 	const std::vector<CGameObject*>& getFrame()const { return m_vFrames; }
 protected:
@@ -102,7 +86,6 @@ protected:
 
 	bool m_bPlayOnce = false; // �� ���� ��� ����
 	bool m_isWalk = false; // �ȱ� ����
-
 	// �޺�
 	bool m_bInCombo;                     // �޺� ���� �� ����
 	int m_CurrentComboStep;               // ���� �޺� �ܰ�
@@ -111,6 +94,7 @@ protected:
 	const float m_fComboWaitTime = 0.5f;     // ���� �Է��� ��ٸ��� �ð�
 	bool m_bWaitingForNextInput;         // ���� �Է� ��� ����
 	bool m_bNextAttack = false;			// ���� ���� ��û ����
+	bool m_bComboEnd = false;			// �޺� ���� �ߴ� ����
 
 	std::vector<UINT> m_vSkillAnimationSets; //��ų �ִϸ��̼� ��Ʈ
 };
@@ -118,6 +102,7 @@ protected:
 class CMageManager : public CAnimationManager //������ ����
 {
 public:
+	CMageManager(std::ifstream& inFile) : CAnimationManager(inFile) { m_vComboAnimationSets = { 22,23,24,25 }; m_vSkillAnimationSets = { 26, 27, 28, 29 , 30 };};
 	virtual void StartCombo();
 	virtual void OnAttackInput();
 	virtual void UpdateCombo(float fElapsedTime);

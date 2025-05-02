@@ -9,7 +9,7 @@ struct CB_CAMERA_INFO {
 	XMFLOAT4X4 xmf4x4ViewProj;
 	XMFLOAT4X4 xmf4x4InverseViewProj;
 	XMFLOAT3 xmf3Eye;
-	int bNormalMapping;	// ¾Õ 2byte normal, µÚ 2byte albedo
+	int bNormalMapping;	// ï¿½ï¿½ 2byte normal, ï¿½ï¿½ 2byte albedo
 };
 
 class CCamera {
@@ -45,6 +45,8 @@ public:
 		m_pCameraInfo->bNormalMapping = fByte | bByte;
 		//m_pCameraInfo->bNormalMapping |= 0x0000; 
 	}
+	XMFLOAT3 getDir() const { return m_xmf3Dir; }
+	XMFLOAT3 getUp() const { return m_xmf3Up; }
 protected:
 	bool m_bThirdPerson = false;
 	CGameObject* m_pTarget = nullptr;
@@ -69,7 +71,7 @@ protected:
 	float m_fFar = 1000.0f;
 
 	float m_fLimitcy{};
-	float m_fCameraLength{ 30.0f };		// Ä«¸Þ¶ó °Å¸®
+	float m_fCameraLength{ 30.0f };		// Ä«ï¿½Þ¶ï¿½ ï¿½Å¸ï¿½
 
 	int m_nRootParameterIndex{};
 };

@@ -80,6 +80,21 @@ protected:
 	std::unique_ptr<CResourceManager>	m_pResourceManager{};
 };
 
+template<typename T>
+concept HasGameObjectInterface = requires(T t) {
+	{ t.getMeshIndex() } -> std::convertible_to<int>;
+	{ t.getWorldMatrix() } -> std::convertible_to<XMFLOAT4X4>;
+	{ t.GetBoundingOBB() } -> std::convertible_to<BoundingOrientedBox>;
+	{ t.GetBoundingSphere() } -> std::convertible_to<BoundingSphere>;
+	{ t.getBoundingInfo() } -> std::convertible_to<unsigned short>;
+};
+
+template<typename T>
+concept HasSkinningObjectInterface = requires(T t) {
+	{ t.getObjects() } -> std::convertible_to<std::vector<std::unique_ptr<CGameObject>>&>;
+	{ t.getWorldMatrix() } -> std::convertible_to<XMFLOAT4X4>;
+};
+
 class CRaytracingScene : public CScene {
 public:
 	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) {}
@@ -91,6 +106,19 @@ public:
 
 	void PrepareRender();
 	virtual void Render();
+
+	template<typename T, typename U>
+	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
+	bool CheckSphereCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector < std::unique_ptr<U>>& obejct2); //1차체크
+
+	template<typename T, typename U>
+	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
+	void CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2); //세부체크
+
+	void TestCollision(const std::vector<std::unique_ptr<CGameObject>>& mapObjects, const std::vector<std::unique_ptr<CSkinningObject>>& characters);
+
+	XMFLOAT3 CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //법선 벡터 구하기
+	float CalculateDepth(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //침투 깊이 구하기
 
 	void CreateRootSignature();
 	void CreateComputeRootSignature();

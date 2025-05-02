@@ -893,6 +893,30 @@ void CSkinningObject::SetPosition(XMFLOAT3 pos)
 	m_xmf3Position = pos;
 	UpdateWorldMatrix();
 }
+void CSkinningObject::SetLookDirection(const XMFLOAT3& look, const XMFLOAT3& up)
+{
+	m_xmf3Look = look; // 카메라의 방향 벡터로 캐릭터 Look 설정
+	m_xmf3Up = up;     // 카메라 또는 프레임의 Up 벡터로 설정
+
+	// 방향 벡터 정규화
+	XMVECTOR lookVec = XMLoadFloat3(&m_xmf3Look);
+	XMVECTOR upVec = XMLoadFloat3(&m_xmf3Up);
+	lookVec = XMVector3Normalize(lookVec);
+	XMStoreFloat3(&m_xmf3Look, lookVec);
+
+	// Right 벡터 계산 (Up과 Look의 외적)
+	XMVECTOR right = XMVector3Cross(upVec, lookVec);
+	right = XMVector3Normalize(right);
+	XMStoreFloat3(&m_xmf3Right, right);
+
+	// Up 벡터 재계산 (Look과 Right의 외적)
+	upVec = XMVector3Cross(lookVec, right);
+	upVec = XMVector3Normalize(upVec);
+	XMStoreFloat3(&m_xmf3Up, upVec);
+
+	// 세계 행렬 업데이트
+	UpdateWorldMatrix();
+}
 // ��� ����
 void CSkinningObject::Rotate(XMFLOAT3 rot)
 {
@@ -958,6 +982,38 @@ void CSkinningObject::move(float fElapsedTime, short arrow) {
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * -30.0f * fElapsedTime));
 	else
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -30.0f * fElapsedTime));
+	UpdateWorldMatrix();
+}
+
+void CSkinningObject::sliding(float depth, const XMFLOAT3& normal)
+{
+	XMVECTOR normalVec = XMLoadFloat3(&normal);
+	XMVECTOR moveDirVec = XMLoadFloat3(&m_xmf3Look);
+
+	float originalLookY = m_xmf3Look.y;
+
+	// 수평 방향 벡터로 변환 (y = 0)
+	XMVECTOR horizontalMoveDir = moveDirVec;
+	horizontalMoveDir = XMVectorSetY(horizontalMoveDir, 0.0f);
+	XMVECTOR horizontalNormal = normalVec;
+	horizontalNormal = XMVectorSetY(horizontalNormal, 0.0f);
+
+	XMVECTOR normalLength = XMVector3Length(horizontalNormal);
+	if (XMVectorGetX(normalLength) > 0.0001f) { //법선이 수직에 가까우면, 기본 방향으로
+		XMFLOAT3 result;
+		XMStoreFloat3(&result, horizontalMoveDir);
+		m_xmf3Sliding = result;
+		return;
+	}
+	horizontalNormal = XMVectorScale(horizontalNormal, 1.0f / XMVectorGetX(normalLength));
+
+	float dot = XMVectorGetX(XMVector3Dot(horizontalMoveDir, horizontalNormal));
+	XMVECTOR slideVector = horizontalMoveDir - (horizontalNormal * dot); // 수평 슬라이딩 방향
+
+	slideVector = XMVectorSetY(slideVector, originalLookY); //y값은 원래 값 유지
+
+	XMStoreFloat3(&m_xmf3Sliding, slideVector); //저장
+
 	UpdateWorldMatrix();
 }
 

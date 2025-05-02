@@ -51,6 +51,8 @@ public:
 
 	// getter
 	std::vector<std::unique_ptr<CGameObject>>& getGameObjectList();
+	std::vector<CGameObject*> getGameObjectPtrList();
+	std::vector<Mesh*> getMeshPtrList();
 	std::vector<std::unique_ptr<Mesh>>& getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& getTextureList();
 
@@ -60,7 +62,6 @@ public:
 	ComPtr<ID3D12Resource>& getLightBuffer() { return m_pLights; }
 
 	// ================================================
-	CSkinningObject* GetSkinningObject(int index) {return m_vSkinningObject[index].get();} //?
 private:
 	std::string FilePathFront{};
 

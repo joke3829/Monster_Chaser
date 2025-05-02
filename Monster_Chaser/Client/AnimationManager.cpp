@@ -229,19 +229,19 @@ void CMageManager::StartCombo()
 	m_bNextAttack = false;
 
 	m_vComboAnimationSets = { 22,23,24,25 };
-
+	m_vSkillAnimationSets.clear();
 	ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
 }
 
 void CMageManager::OnAttackInput()
 {
 	if (!m_bInCombo) {
-		StartCombo(); // 첫 클릭
+		StartCombo();
 		return;
 	}
 
 	// 콤보 진행
-	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 13) {
+	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
 		if (!m_bWaitingForNextInput) {
 			m_bNextAttack = true; // 다음 공격 대기
 		}
@@ -260,41 +260,47 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 	if (!m_bInCombo) return;
 
 	if (IsAnimationNearEnd()) {
-		if (m_bNextAttack && m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 13) {
-			// 콤보 모드
-			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
-			ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
-			m_bNextAttack = false;
+		if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
+			if (m_bNextAttack) {
+				m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+				ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+				m_bNextAttack = false;
+				m_fComboTimer = 0.0f;
+			}
+			else {
+				m_bWaitingForNextInput = true;
+				m_fComboTimer += fElapsedTime;
+				if (m_fComboTimer >= m_fComboWaitTime) {
+					ResetCombo();
+				}
+			}
 		}
-		else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 17) {
-			// 스킬 3
+		else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 26) {
 			m_CurrentComboStep++;
 			if (m_CurrentComboStep < m_vSkillAnimationSets.size()) {
 				ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
 			}
 			else {
-				ResetCombo(); // 한 사이클 돌면 종료
+				ResetCombo();
 			}
 			m_fComboTimer = 0.0f;
 		}
 		else {
-			m_bWaitingForNextInput = true;
-			m_fComboTimer += fElapsedTime;
-
-			if (m_fComboTimer >= m_fComboWaitTime) {
-				ResetCombo();
-			}
+			ResetCombo();
 		}
 	}
 }
 
 void CMageManager::ResetCombo()
 {
+	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // 중단 감지
 	m_bInCombo = false;
 	m_CurrentComboStep = 0;
 	m_fComboTimer = 0.0f;
 	m_bWaitingForNextInput = false;
 	m_bNextAttack = false;
+	m_vComboAnimationSets.clear();
+	m_vSkillAnimationSets.clear();
 	setTimeZero();
 	ChangeAnimation(0, false); // idle로 전환
 }
@@ -308,6 +314,7 @@ void CMageManager::StartSkill3()
 	m_bNextAttack = false;
 
 	m_vSkillAnimationSets = { 26, 27, 28, 29 , 30 };
+	m_vComboAnimationSets.clear();
 	ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
 }
 

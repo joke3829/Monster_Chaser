@@ -460,6 +460,7 @@ void Mesh::GetBoundInfoFromFile(std::ifstream& inFile)
 	inFile.read((char*)&OBBExtent, sizeof(XMFLOAT3));
 	m_bHasBoundingBox = true;
 	m_OBB = BoundingOrientedBox(OBBCenter, OBBExtent, XMFLOAT4(0.0, 0.0, 0.0, 1.0));
+	m_bHasOBB = true;
 }
 
 // ���� ������ ������ ���ÿ� vertexbuffer ����
@@ -759,6 +760,11 @@ bool Mesh::getHasBiTangent() const
 bool Mesh::getHasSubmesh() const
 {
 	return m_bHasSubMeshes;
+}
+
+bool Mesh::getHasBoundingBox() const
+{
+	return m_bHasOBB;
 }
 
 UINT Mesh::getSubMeshCount() const

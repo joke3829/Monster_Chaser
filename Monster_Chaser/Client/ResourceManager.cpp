@@ -391,7 +391,7 @@ void CResourceManager::UpdatePosition(float fElapsedTime)
 {
 	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
 		if (m_vAnimationManager[i]) {
-			CSkinningObject* skinningObject = GetSkinningObject(i);
+			CSkinningObject* skinningObject = getSkinningObjectList()[0].get();
 			if (skinningObject) {
 				m_vAnimationManager[i]->UpdateAniPosition(fElapsedTime, skinningObject);
 			}
@@ -426,6 +426,22 @@ void CResourceManager::UpdateWorldMatrix()
 std::vector<std::unique_ptr<CGameObject>>& CResourceManager::getGameObjectList()
 {
 	return m_vGameObjectList;
+}
+std::vector<CGameObject*> CResourceManager::getGameObjectPtrList()
+{
+	std::vector<CGameObject*> ptrList;
+	for (const auto& obj : m_vGameObjectList) {
+		if (obj)ptrList.push_back(obj.get());
+	}
+	return ptrList;
+}
+std::vector<Mesh*> CResourceManager::getMeshPtrList()
+{
+	std::vector<Mesh*> ptrList;
+	for (const auto& obj : m_vMeshList) {
+		if (obj)ptrList.push_back(obj.get());
+	}
+	return ptrList;
 }
 std::vector<std::unique_ptr<Mesh>>& CResourceManager::getMeshList()
 {
