@@ -591,6 +591,8 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 		BoundingOrientedBox mapOBB;
 		mesh->getOBB().Transform(mapOBB, XMLoadFloat4x4(&mapObj->getWorldMatrix()));
 
+		float meshHeight = mapOBB.Extents.y * 2.0f;
+
 		for (const auto& character : characters) {
 			for (const auto& bone : character->getObjects()) {
 				if (bone->getBoundingInfo() & 0x1100) { // Sphere
@@ -599,12 +601,11 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 					if (mapOBB.Intersects(boneSphere)) {
 						XMFLOAT3 norm = CalculateCollisionNormal(mapOBB, boneSphere);
 						float dept = CalculateDepth(mapOBB, boneSphere);
-						// �̵� ����� �浹 ������ ���Ͽ� �ݴ� �������θ� �����̵� ����
 						XMVECTOR moveDir = XMLoadFloat3(&character->getLook());
 						XMVECTOR normal = XMLoadFloat3(&norm);
 						float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
-						if (dotProduct < 0.0f) { // �̵� ������ �浹 ������ �ݴ��� ���
-							character->sliding(dept, norm);
+						if (dotProduct < 0.0f) { //이동 방향이 법선과 반대
+							character->sliding(dept, norm, meshHeight);
 							return;
 						}
 					}

@@ -985,12 +985,10 @@ void CSkinningObject::move(float fElapsedTime, short arrow) {
 	UpdateWorldMatrix();
 }
 
-void CSkinningObject::sliding(float depth, const XMFLOAT3& normal)
+void CSkinningObject::sliding(float depth, const XMFLOAT3& normal, float meshHeight)
 {
 	XMVECTOR normalVec = XMLoadFloat3(&normal);
 	XMVECTOR moveDirVec = XMLoadFloat3(&m_xmf3Look);
-
-	float originalLookY = m_xmf3Look.y;
 
 	// 수평 방향 벡터로 변환 (y = 0)
 	XMVECTOR horizontalMoveDir = moveDirVec;
@@ -998,21 +996,42 @@ void CSkinningObject::sliding(float depth, const XMFLOAT3& normal)
 	XMVECTOR horizontalNormal = normalVec;
 	horizontalNormal = XMVectorSetY(horizontalNormal, 0.0f);
 
+	// 법선 길이 확인
 	XMVECTOR normalLength = XMVector3Length(horizontalNormal);
-	if (XMVectorGetX(normalLength) > 0.0001f) { //법선이 수직에 가까우면, 기본 방향으로
-		XMFLOAT3 result;
-		XMStoreFloat3(&result, horizontalMoveDir);
-		m_xmf3Sliding = result;
-		return;
+	XMFLOAT3 slideVector;
+	if (XMVectorGetX(normalLength) < 0.0001f) { // 법선이 수직에 가까우면 기본 방향 유지
+		XMStoreFloat3(&slideVector, horizontalMoveDir);
 	}
-	horizontalNormal = XMVectorScale(horizontalNormal, 1.0f / XMVectorGetX(normalLength));
+	else {
+		// 슬라이딩 벡터 계산
+		float dot = XMVectorGetX(XMVector3Dot(horizontalMoveDir, horizontalNormal));
+		XMVECTOR slideVec = horizontalMoveDir - (horizontalNormal * dot); // 수평 슬라이딩 방향
+		XMStoreFloat3(&slideVector, slideVec);
+	}
 
-	float dot = XMVectorGetX(XMVector3Dot(horizontalMoveDir, horizontalNormal));
-	XMVECTOR slideVector = horizontalMoveDir - (horizontalNormal * dot); // 수평 슬라이딩 방향
+	// y값 이동 제한: 메쉬 높이가 20.0f 미만이면 y값은 0으로 설정
+	if (meshHeight < 20.0f) {
+		slideVector.y = 0.0f;
+	}
+	else {
+		slideVector.y = m_xmf3Look.y; // 메쉬 높이가 20.0f 이상이면 원래 y값 유지
+	}
 
-	slideVector = XMVectorSetY(slideVector, originalLookY); //y값은 원래 값 유지
+	// 현재 위치 추출
+	XMFLOAT3 currentPosition;
+	XMMATRIX worldMatrix = XMLoadFloat4x4(&m_xmf4x4WorldMatrix);
+	XMStoreFloat3(&currentPosition, worldMatrix.r[3]); // r[3]에서 위치 벡터 추출
 
-	XMStoreFloat3(&m_xmf3Sliding, slideVector); //저장
+	// 슬라이딩 벡터를 위치에 적용
+	XMVECTOR newPosition = XMLoadFloat3(&currentPosition) + XMLoadFloat3(&slideVector);
+	XMStoreFloat3(&currentPosition, newPosition);
+
+	// 월드 행렬 업데이트
+	worldMatrix.r[3] = XMVectorSetW(newPosition, 1.0f); // 위치 업데이트
+	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, worldMatrix);
+
+	// 슬라이딩 벡터 저장 (디버깅 또는 애니메이션용)
+	m_xmf3Sliding = slideVector;
 
 	UpdateWorldMatrix();
 }
