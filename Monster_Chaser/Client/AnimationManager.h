@@ -11,6 +11,9 @@ public:
 	void UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime);
 
 	float getLength() const { return m_fLength; }
+	int getNumKeyFrame() const { return m_nKeyFrame; }
+	std::vector<std::vector<XMFLOAT4X4>>& getTransforms() { return m_vTransforms; }
+
 private:
 	std::string m_AnimationName{};
 	float m_fLength{};
@@ -39,6 +42,8 @@ public:
 	void UpdateAnimation(float fElapsedTime);		// 시간 지정
 	void UpdateAnimationMatrix();
 	void ChangeAnimation(UINT nSet);
+
+	std::shared_ptr<CAnimationSet>& getAnimationSet(int index) { return m_vAnimationSets[index]; }
 
 	void setCurrnetSet(UINT n) { m_nCurrnetSet = n; }
 	void setTimeZero() { m_fElapsedTime = 0.0f; }

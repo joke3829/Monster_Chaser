@@ -10,12 +10,13 @@ extern DXResources g_DxResource;
 
 class CScene {
 public:
-	virtual void SetUp() {}
+	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) {}
 	virtual void SetCamera(std::shared_ptr<CCamera>& pCamera) { m_pCamera = pCamera; }
 
 	virtual void UpdateObject(float fElapsedTime) {};
 	
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
+	virtual void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void ProcessInput(float fElapsedTime) {};
 
 	virtual void PrepareRender() {};
@@ -27,12 +28,38 @@ protected:
 	ComPtr<ID3D12RootSignature>			m_pGlobalRootSignature{};
 	std::shared_ptr<CCamera>			m_pCamera{};
 
+	POINT oldCursor;
+	bool m_bHold = false;
+};
+
+enum TitleState{Title, RoomSelect, InRoom, GoLoading};
+
+class TitleScene : public CScene {
+public:
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
+
+	//void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void CreateRootSignature();
+	void CreateRenderTargetView();
+
+	void UpdateObject(float fElapsedTime);
+	void Render();
+protected:
+	TitleState							m_nState = Title;
+
+	ComPtr<ID3D12Resource>				m_pOutputBuffer{};
+	ComPtr<ID3D12DescriptorHeap>		m_RederTargetView{};
+	ComPtr<ID3D12PipelineState>			m_UIPipelineState{};
+	std::unique_ptr<CResourceManager>	m_pResourceManager{};
 };
 
 class CRaytracingScene : public CScene {
 public:
-	virtual void SetUp() {}
+	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) {}
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
+	virtual void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void ProcessInput(float fElapsedTime) {};
 
 	virtual void UpdateObject(float fElapsedTime);
@@ -64,7 +91,7 @@ protected:
 
 class CRaytracingTestScene : public CRaytracingScene {
 public:
-	void SetUp();
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
@@ -73,9 +100,10 @@ public:
 
 class CRaytracingMaterialTestScene : public CRaytracingScene {
 public:
-	void SetUp();
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	void Render();
 	void PrepareTerrainTexture();
@@ -84,9 +112,10 @@ public:
 // real use scene
 class CRaytracingWinterLandScene : public CRaytracingScene {
 public:
-	void SetUp();
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	void UpdateObject(float fElapsedTime);
 	void Render();

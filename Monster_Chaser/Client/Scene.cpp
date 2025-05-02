@@ -2,10 +2,40 @@
 
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
+void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
+{
+	m_pOutputBuffer = outputBuffer;
+
+}
+
+//void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+
+}
+
+void TitleScene::CreateRootSignature()
+{
+
+}
+void TitleScene::CreateRenderTargetView()
+{
+
+}
+
+void TitleScene::UpdateObject(float fElapsedTime)
+{
+
+}
+void TitleScene::Render()
+{
+
+}
+
+// ==================================================================================
+
 void CRaytracingScene::UpdateObject(float fElapsedTime)
 {
-	//m_pCamera->SetShaderVariable();
-
 	// compute shader & rootSignature set
 	g_DxResource.cmdList->SetPipelineState(m_pAnimationComputeShader.Get());
 	g_DxResource.cmdList->SetComputeRootSignature(m_pComputeRootSignature.Get());
@@ -17,40 +47,6 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
-	//std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
-	//for (auto& mo : m_pResourceManager->getGameObjectList()) {
-	//	int in = mo->getMeshIndex();
-	//	if (in != -1) {
-	//		BoundingOrientedBox wOBB{};
-	//		if (meshes[in]->getHasBoundingBox()) {
-	//			meshes[in]->getOBB().Transform(wOBB, XMLoadFloat4x4(&mo->getWorldMatrix()));
-
-	//			for (auto& so : m_pResourceManager->getSkinningObjectList()) {
-	//				std::vector<std::shared_ptr<Mesh>>& sMeshes = so->getMeshes();
-	//				for (auto& oo : so->getObjects()) {
-	//					int n = oo->getMeshIndex();
-	//					BoundingOrientedBox wBox{};
-	//					if (sMeshes[n]->getHasBoundingBox()) {
-	//						sMeshes[n]->getOBB().Transform(wBox, XMLoadFloat4x4(&oo->getWorldMatrix()));
-	//						if (wBox.Intersects(wOBB))
-	//							OutputDebugString(L"Collision MeshBounding\n\n");
-	//					}
-	//					else if (oo->getBoundingInfo() & 0x0011) {	// box
-	//						oo->getObjectOBB().Transform(wBox, XMLoadFloat4x4(&oo->getWorldMatrix()));
-	//						if (wBox.Intersects(wOBB))
-	//							OutputDebugString(L"Collision ObjectBounding\n");
-	//					}
-	//					else if (oo->getBoundingInfo() & 0x1100) {	// sphere
-	//						BoundingSphere wSphere;
-	//						oo->getObjectSphere().Transform(wSphere, XMLoadFloat4x4(&oo->getWorldMatrix()));
-	//						if (wSphere.Intersects(wOBB))
-	//							OutputDebugString(L"Collision Sphere\n");
-	//					}
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
 
 	m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
@@ -469,7 +465,7 @@ void CRaytracingScene::CreateComputeShader()
 
 // =====================================================================================
 
-void CRaytracingTestScene::SetUp()
+void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
 	// Create Global & Local Root Signature
 	CreateRootSignature();
@@ -591,7 +587,6 @@ void CRaytracingTestScene::SetUp()
 	m_pAccelerationStructureManager->InitTLAS();
 }
 
-
 void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessage) {
@@ -680,10 +675,9 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 90.0f * fElapsedTime, 0.0f));
 }
 
-
 // ==============================================================================
 
-void CRaytracingMaterialTestScene::SetUp()
+void CRaytracingMaterialTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
 	// Create Global & Local Root Signature
 	CreateRootSignature();
@@ -709,11 +703,11 @@ void CRaytracingMaterialTestScene::SetUp()
 	m_pResourceManager->SetUp(3);
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\w.bin", "src\\texture\\Lion\\");
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\portal_low.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
 	// 조명 추가
@@ -728,6 +722,10 @@ void CRaytracingMaterialTestScene::SetUp()
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// 완전히 새로운 객체 & skinning Object 복사는 여기서 ========================================
+
+	/*std::shared_ptr<CAnimationSet>& aset = aManagers[0]->getAnimationSet(0);
+	int keyframe = aset->getNumKeyFrame();
+	memcpy(aset->getTransforms()[0].data(), aset->getTransforms()[keyframe - 1].data(), aset->getTransforms()[0].size() * sizeof(XMFLOAT4X4));*/
 
 	// 객체 생성 예시
 
@@ -759,28 +757,28 @@ void CRaytracingMaterialTestScene::SetUp()
 	tt.m_bHasGlossyReflection = true; tt.m_fGlossyReflection = 1.0f;
 	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0));*/
 
-	std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
-	//std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Terrain_WinterLands_heightmap.raw", 4096, 4096, XMFLOAT3(1.0f, 0.025f, 1.0f));
-	UINT finalindex = normalObjects.size();
-	UINT finalmesh = meshes.size();
-	Material tMaterial{};
-	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	normalObjects[finalindex]->SetInstanceID(10);
+	//std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	////std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Terrain_WinterLands_heightmap.raw", 4096, 4096, XMFLOAT3(1.0f, 0.025f, 1.0f));
+	//UINT finalindex = normalObjects.size();
+	//UINT finalmesh = meshes.size();
+	//Material tMaterial{};
+	//meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
+	//normalObjects.emplace_back(std::make_unique<CGameObject>());
+	//normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	//normalObjects[finalindex]->SetInstanceID(10);
 
-	UINT txtIndex = textures.size();
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
-	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_NORM.dds"));
+	//UINT txtIndex = textures.size();
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
+	////textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_NORM.dds"));
 
-	tMaterial.m_bHasAlbedoMap = true; tMaterial.m_nAlbedoMapIndex = txtIndex;
-	//tMaterial.m_bHasNormalMap = true; tMaterial.m_nNormalMapIndex = txtIndex + 1;
-	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
-	tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
-	tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.2;
+	//tMaterial.m_bHasAlbedoMap = true; tMaterial.m_nAlbedoMapIndex = txtIndex;
+	////tMaterial.m_bHasNormalMap = true; tMaterial.m_nNormalMapIndex = txtIndex + 1;
+	//tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	//tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
+	//tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.2;
 
-	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
-	normalObjects[finalindex]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
+	//normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
+	//normalObjects[finalindex]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
 
 	/*UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
@@ -821,34 +819,34 @@ void CRaytracingMaterialTestScene::SetUp()
 	//normalObjects[finalindex + 1]->SetPosition(XMFLOAT3(0.0, 20.0, 15.0));
 	//std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
 
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
-	auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
-		return p->getFrameName() == "Water";
-		});
-	if (p != normalObjects.end()) {
-		(*p)->SetInstanceID(1);
-		(*p)->getMaterials().emplace_back();
-		Material& mt = (*p)->getMaterials()[0];
-		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
-		//mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.0, 0.0, 1.0, 0.7);
-		//mt.m_bHasSpecularColor = true; mt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
-		mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
-		//mt.m_bHasAlbedoMap = true; mt.m_nAlbedoMapIndex = textures.size() - 3;
-		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
+	//auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
+	//	return p->getFrameName() == "Water";
+	//	});
+	//if (p != normalObjects.end()) {
+	//	(*p)->SetInstanceID(1);
+	//	(*p)->getMaterials().emplace_back();
+	//	Material& mt = (*p)->getMaterials()[0];
+	//	mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
+	//	//mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.0, 0.0, 1.0, 0.7);
+	//	//mt.m_bHasSpecularColor = true; mt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
+	//	mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
+	//	//mt.m_bHasAlbedoMap = true; mt.m_nAlbedoMapIndex = textures.size() - 3;
+	//	mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
 
-		void* tempptr{};
-		std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
-		for (XMFLOAT2& xmf : tex0) {
-			xmf.x *= 10.0f; xmf.y *= 10.0f;
-		}
-		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
-		memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
-		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
-	}
+	//	void* tempptr{};
+	//	std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
+	//	for (XMFLOAT2& xmf : tex0) {
+	//		xmf.x *= 10.0f; xmf.y *= 10.0f;
+	//	}
+	//	meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
+	//	memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
+	//	meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
+	//}
 
-	PrepareTerrainTexture();
+	//PrepareTerrainTexture();
 
 	// cubeMap Ready
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky.dds", true));
@@ -877,7 +875,6 @@ void CRaytracingMaterialTestScene::SetUp()
 	m_pAccelerationStructureManager->InitBLAS();
 	m_pAccelerationStructureManager->InitTLAS();
 }
-
 
 void CRaytracingMaterialTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
@@ -982,6 +979,29 @@ void CRaytracingMaterialTestScene::ProcessInput(float fElapsedTime)
 
 	if (keyBuffer[VK_RIGHT] & 0x80)
 		m_pResourceManager->getAnimationManagers()[0]->TimeIncrease(fElapsedTime);
+}
+
+void CRaytracingMaterialTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_LBUTTONDOWN:
+		m_bHold = true;
+		GetCursorPos(&oldCursor);
+		break;
+	case WM_LBUTTONUP:
+		m_bHold = false;
+		break;
+	case WM_MOUSEMOVE:
+	{
+		POINT cursorpos;
+		if (m_bHold) {
+			GetCursorPos(&cursorpos);
+			m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
+			SetCursorPos(oldCursor.x, oldCursor.y);
+		}
+		break;
+	}
+	}
 }
 
 void CRaytracingMaterialTestScene::PrepareTerrainTexture()
@@ -1158,7 +1178,7 @@ void CRaytracingMaterialTestScene::Render()
 	m_pResourceManager->SetLights();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[textures.size() - 1]->getView()->GetGPUDescriptorHandleForHeapStart());
-	g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
+	//g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
 	raydesc.Depth = 1;
@@ -1181,8 +1201,7 @@ void CRaytracingMaterialTestScene::Render()
 
 // =====================================================================================
 
-
-void CRaytracingWinterLandScene::SetUp()
+void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
 	// Create Global & Local Root Signature
 	CreateRootSignature();
@@ -1208,7 +1227,8 @@ void CRaytracingWinterLandScene::SetUp()
 	m_pResourceManager->SetUp(3);
 	// 여기에 파일 넣기 ========================================	! 모든 파일은 한번씩만 읽기 !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	// 조명 추가
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
 	m_pResourceManager->ReadyLightBufferContent();
@@ -1222,7 +1242,7 @@ void CRaytracingWinterLandScene::SetUp()
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// 완전히 새로운 객체 & skinning Object 복사는 여기서 ========================================
 
-	for (auto& o : skinned[0]->getObjects()) {
+	for (auto& o : skinned[1]->getObjects()) {
 		for (auto& ma : o->getMaterials())
 			ma.m_bHasEmissiveColor = false;
 	}
@@ -1277,13 +1297,17 @@ void CRaytracingWinterLandScene::SetUp()
 
 	// 여기서 필요한 객체(normalObject) 복사 & 행렬 조작 ===============================
 
-	skinned[0]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	skinned[0]->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -998.0f));
+	skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	skinned[1]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
+	skinned[1]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 
 	// ==============================================================================
 
 	// 카메라 설정 ==============================================================
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	m_pCamera->SetCameraLength(80.0f);
+	m_pCamera->SetCameraLength(15.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -1293,12 +1317,17 @@ void CRaytracingWinterLandScene::SetUp()
 	m_pAccelerationStructureManager->InitTLAS();
 }
 
-
 void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessage) {
 	case WM_KEYDOWN:
 		switch (wParam) {
+		case '1':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
+			break;
+		case '2':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
+			break;
 		case 'n':
 		case 'N':
 			m_pCamera->toggleNormalMapping();
@@ -1317,6 +1346,29 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 		break;
 	case WM_KEYUP:
 		break;
+	}
+}
+
+void CRaytracingWinterLandScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_LBUTTONDOWN:
+		m_bHold = true;
+		GetCursorPos(&oldCursor);
+		break;
+	case WM_LBUTTONUP:
+		m_bHold = false;
+		break;
+	case WM_MOUSEMOVE:
+	{
+		POINT cursorpos;
+		if (m_bHold) {
+			GetCursorPos(&cursorpos);
+			m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
+			SetCursorPos(oldCursor.x, oldCursor.y);
+		}
+		break;
+	}
 	}
 }
 
@@ -1548,49 +1600,17 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	// Skinning Object BLAS ReBuild
 	m_pResourceManager->ReBuildBLAS();
 
+	for (auto& p : m_pResourceManager->getSkinningObjectList()) {
+		XMFLOAT4X4& playerWorld = p->getWorldMatrix();
+		playerWorld._42 -= (30 * fElapsedTime);
+		p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
 
-	XMFLOAT4X4& playerWorld = m_pResourceManager->getSkinningObjectList()[0]->getWorldMatrix();
-	playerWorld._42 -= (30 * fElapsedTime);
-	m_pResourceManager->getSkinningObjectList()[0]->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
-	
-	float terrainHeight = m_pHeightMap->GetHeightinWorldSpace(playerWorld._41 + 1024.0f, playerWorld._43 + 1024.0f);
-	if (terrainHeight > playerWorld._42) { 
-		playerWorld._42 = terrainHeight;
-		m_pResourceManager->getSkinningObjectList()[0]->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
+		float terrainHeight = m_pHeightMap->GetHeightinWorldSpace(playerWorld._41 + 1024.0f, playerWorld._43 + 1024.0f);
+		if (terrainHeight > playerWorld._42) {
+			playerWorld._42 = terrainHeight;
+			p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
+		}
 	}
-	//std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
-	//for (auto& mo : m_pResourceManager->getGameObjectList()) {
-	//	int in = mo->getMeshIndex();
-	//	if (in != -1) {
-	//		BoundingOrientedBox wOBB{};
-	//		if (meshes[in]->getHasBoundingBox()) {
-	//			meshes[in]->getOBB().Transform(wOBB, XMLoadFloat4x4(&mo->getWorldMatrix()));
-	//			for (auto& so : m_pResourceManager->getSkinningObjectList()) {
-	//				std::vector<std::shared_ptr<Mesh>>& sMeshes = so->getMeshes();
-	//				for (auto& oo : so->getObjects()) {
-	//					int n = oo->getMeshIndex();
-	//					BoundingOrientedBox wBox{};
-	//					if (sMeshes[n]->getHasBoundingBox()) {
-	//						sMeshes[n]->getOBB().Transform(wBox, XMLoadFloat4x4(&oo->getWorldMatrix()));
-	//						if (wBox.Intersects(wOBB))
-	//							OutputDebugString(L"Collision MeshBounding\n\n");
-	//					}
-	//					else if (oo->getBoundingInfo() & 0x0011) {	// box
-	//						oo->getObjectOBB().Transform(wBox, XMLoadFloat4x4(&oo->getWorldMatrix()));
-	//						if (wBox.Intersects(wOBB))
-	//							OutputDebugString(L"Collision ObjectBounding\n");
-	//					}
-	//					else if (oo->getBoundingInfo() & 0x1100) {	// sphere
-	//						BoundingSphere wSphere;
-	//						oo->getObjectSphere().Transform(wSphere, XMLoadFloat4x4(&oo->getWorldMatrix()));
-	//						if (wSphere.Intersects(wOBB))
-	//							OutputDebugString(L"Collision Sphere\n");
-	//					}
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
 	m_pResourceManager->UpdateWorldMatrix();
 
 	m_pCamera->UpdateViewMatrix();

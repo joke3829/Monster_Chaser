@@ -116,16 +116,18 @@ void CGameFramework::InitSwapChain()
 	desc.SampleDesc = NO_AA;
 	desc.BufferCount = 2;
 	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-
+	
 	IDXGISwapChain1* swapchain1{};
 	m_pdxgiFactory->CreateSwapChainForHwnd(m_pd3dCommandQueue.Get(), m_hWnd, &desc, nullptr, nullptr, &swapchain1);
 	swapchain1->QueryInterface(m_pdxgiSwapChain.GetAddressOf());
 	swapchain1->Release();
-
+	
 	if (!m_pdxgiSwapChain) {
 		OutputDebugString(L"Not SwapChain Created\n");
 		exit(0);
 	}
+
+	m_pdxgiFactory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER);
 }
 
 void CGameFramework::InitRTVDSV()
@@ -176,7 +178,7 @@ void CGameFramework::InitOutputBuffer()
 	desc.Width = DEFINED_UAV_BUFFER_WIDTH;
 	desc.Height = DEFINED_UAV_BUFFER_HEIGHT;
 	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 
@@ -194,7 +196,7 @@ void CGameFramework::InitScene()
 {
 	m_pScene = std::make_unique<CRaytracingWinterLandScene>();
 	m_pScene->SetCamera(m_pCamera);
-	m_pScene->SetUp();
+	m_pScene->SetUp(m_pd3dOutputBuffer);
 }
 
 LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -223,7 +225,7 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 		case VK_ESCAPE:
 			PostQuitMessage(0);
 			break;
-		case 'p':	// 임시로 설정
+		//case 'p':	// 임시로 설정
 		case 'P':
 			if (m_bRayTracingSupport) {
 				m_bRaster = !m_bRaster;
@@ -242,23 +244,11 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessage) {
-	case WM_LBUTTONDOWN:
-		m_bHold = true;
-		GetCursorPos(&oldCursor);
-		break;
+	case WM_LBUTTONDOWN:;
 	case WM_LBUTTONUP:
-		m_bHold = false;
-		break;
 	case WM_MOUSEMOVE:
-	{
-		POINT cursorpos;
-		if (m_bHold) {
-			GetCursorPos(&cursorpos);
-			m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
-			SetCursorPos(oldCursor.x, oldCursor.y);
-		}
+		m_pScene->OnProcessingMouseMessage(hWnd, nMessage, wParam, lParam);
 		break;
-	}
 	}
 }
 
@@ -282,7 +272,7 @@ void CGameFramework::Render()
 		};
 	//m_Timer.Tick(60.0f);
 	m_Timer.Tick();
-	if (m_bRaster) {
+	if (m_bRaster) {	// Not Used
 		m_pd3dCommandAllocator->Reset();
 		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
 

@@ -536,7 +536,10 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			}
 		}
 		else if (strLabel == "<SkinningInfo>:") {
-			m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size()));
+			if(g_ShowBoundingBox)	// Fail -> Frame not has Bound
+				m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size() - 1));
+			else
+				m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size()));
 		}
 		else if (strLabel == "<Materials>:") {
 			inFile.read((char*)&tempData, sizeof(int));
@@ -545,7 +548,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ·£´ý ÄÃ·¯
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ·£´ý ÄÃ·¯
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -571,7 +574,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ·£´ý ÄÃ·¯
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ·£´ý ÄÃ·¯
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -1122,8 +1125,10 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 	g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(m_pNullResource.GetAddressOf()));
 
 
-	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo)
-		m_vMeshes[info->getRefMeshIndex()]->setSkinning(true);
+	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo) {
+		int n = info->getRefMeshIndex();
+		m_vMeshes[n]->setSkinning(true);
+	}
 	for (std::shared_ptr<Mesh>& mesh : m_vMeshes) {
 		ComPtr<ID3D12Resource> constResource{};
 		ComPtr<ID3D12Resource> vResource{};
