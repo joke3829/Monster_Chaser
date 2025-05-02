@@ -12,14 +12,16 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	g_DxResource.cmdList->SetPipelineState(m_pAnimationComputeShader.Get());
 	g_DxResource.cmdList->SetComputeRootSignature(m_pComputeRootSignature.Get());
 
-
+	auto& animationManagers = m_pResourceManager->getAnimationManagers();
+	//for (auto& animationManager : animationManagers) {
+	//	
+	//}
 	m_pResourceManager->UpdateSkinningMesh(fElapsedTime);
 	Flush();
 	// BLAS RebBuild
 	m_pResourceManager->ReBuildBLAS();
 
 	bool test = false;
-	auto& animationManagers = m_pResourceManager->getAnimationManagers();
 	for (auto& animationManager : animationManagers) {
 		animationManager->UpdateCombo(fElapsedTime);
 		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {

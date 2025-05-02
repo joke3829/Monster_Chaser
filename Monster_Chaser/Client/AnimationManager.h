@@ -44,6 +44,7 @@ public:
 	void ChangeAnimation(UINT nSet, bool playOnce = false); // playOnce 옵션 추가
 	void setCurrnetSet(UINT n) { m_nCurrentSet = n; }
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
+	void setAnimationTime(float fElapsedTime) {m_fElapsedTime = fElapsedTime;}
 	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
 	bool IsAnimationNearEnd(float margin = 0.1f) const
 	{
