@@ -1,6 +1,6 @@
 // ==============================================
 // GameFramework.cpp
-// ���� �߰�
+// 
 // ==============================================
 
 #include "GameFramework.h"
@@ -16,16 +16,16 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 
 	_tcscpy_s(m_pszFrameRate, _T("Client ("));
 
-	// device, fence �ʱ�ȭ
+	// device, fence Create
 	InitDevice();
 	
-	// RayTracing ���� ���� Ȯ��
+	// RayTracing Support Check
 	CheckRayTracingSupport();
 
-	// Command��� ����
+	// Command Object Ready
 	InitCommand();
 
-	// SwapChain ����
+	// SwapChain Ready
 	InitSwapChain();
 
 	// RTV, DSV
@@ -35,7 +35,7 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	if (m_bRayTracingSupport)
 		InitOutputBuffer();
 
-	// �ʿ��ϸ� Scene�� �ʱ�ȭ�ϴ� �ܰ赵 �߰��Ѵ�.
+	// Global Variable & Scene Ready
 	
 	g_DxResource.device = m_pd3dDevice.Get();
 	g_DxResource.cmdAlloc = m_pd3dCommandAllocator.Get();
@@ -110,7 +110,7 @@ void CGameFramework::InitCommand()
 void CGameFramework::InitSwapChain()
 {
 	DXGI_SWAP_CHAIN_DESC1 desc{};
-	desc.Width = DEFINED_UAV_BUFFER_WIDTH;	// �ٲ� �� �ִ�.
+	desc.Width = DEFINED_UAV_BUFFER_WIDTH;	// subject to change
 	desc.Height = DEFINED_UAV_BUFFER_HEIGHT;
 	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	desc.SampleDesc = NO_AA;
@@ -154,7 +154,7 @@ void CGameFramework::InitRTVDSV()
 	D3D12_RESOURCE_DESC resourceDesc = BASIC_BUFFER_DESC;
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	resourceDesc.Width = DEFINED_UAV_BUFFER_WIDTH;		// �ٲ� �� �ִ�
+	resourceDesc.Width = DEFINED_UAV_BUFFER_WIDTH;		// Subject to change
 	resourceDesc.Height = DEFINED_UAV_BUFFER_HEIGHT;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
@@ -194,7 +194,7 @@ void CGameFramework::InitOutputBuffer()
 
 void CGameFramework::InitScene()
 {
-	m_pScene = std::make_unique<CRaytracingWinterLandScene>();
+	m_pScene = std::make_unique<CRaytracingTestScene>();
 	m_pScene->SetCamera(m_pCamera);
 	m_pScene->SetUp(m_pd3dOutputBuffer);
 }
@@ -225,7 +225,7 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 		case VK_ESCAPE:
 			PostQuitMessage(0);
 			break;
-		//case 'p':	// �ӽ÷� ����
+		//case 'p':
 		case 'P':
 			if (m_bRayTracingSupport) {
 				m_bRaster = !m_bRaster;
@@ -287,7 +287,7 @@ void CGameFramework::Render()
 		d3dCPUHandle = m_pd3dDepthStencilView->GetCPUDescriptorHandleForHeapStart();
 		m_pd3dCommandList->ClearDepthStencilView(d3dCPUHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 		
-		// ������ �۾�(Set & Draw) ===================
+		// Render Here(Set & Draw) ===================
 
 		// ===========================================
 
@@ -304,7 +304,7 @@ void CGameFramework::Render()
 		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
 
 		ProcessInput(m_Timer.GetTimeElapsed());
-		// ������ �۾�(Set & Draw) ===================
+		// Render Here(Set & Draw) ===================
 
 		m_pScene->UpdateObject(m_Timer.GetTimeElapsed());
 

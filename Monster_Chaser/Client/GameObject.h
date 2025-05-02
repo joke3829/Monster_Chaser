@@ -316,8 +316,6 @@ public:
 	XMFLOAT4X4& getWorldMatrix() { return m_xmf4x4WorldMatrix; }
 	XMFLOAT4X4& getPreWorldMatrix() { return m_xmf4x4PreWorldMatrix; }
 	XMFLOAT3& getPosition() { return m_xmf3Position; }
-
-	XMFLOAT3& getPosition() { return m_xmf3Position; }
 	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Position.x = m_xmf4x4WorldMatrix._41; m_xmf3Position.y = m_xmf4x4WorldMatrix._42; m_xmf3Position.z = m_xmf4x4WorldMatrix._43; return m_xmf3Position; }
 
 	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;

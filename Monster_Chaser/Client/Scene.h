@@ -48,9 +48,6 @@ protected:
 	bool m_LockAnimation = false;
 	bool m_LockAnimation1 = false;
 	bool m_StopAnimaiton = false;
-	bool m_bRayTracing = false;
-	ComPtr<ID3D12RootSignature> m_pGlobalRootSignature{};
-	std::shared_ptr<CCamera> m_pCamera{};
 
 	bool								m_bRayTracing = false;
 	ComPtr<ID3D12RootSignature>			m_pGlobalRootSignature{};
@@ -108,7 +105,7 @@ protected:
 	std::unique_ptr<CShaderBindingTableManager>			m_pShaderBindingTable{};
 	std::unique_ptr<CAccelerationStructureManager>		m_pAccelerationStructureManager{};
 
-	// ��Ű�� �ִϸ��̼� �� ���ҽ�
+	// Animation Tool
 	ComPtr<ID3D12RootSignature>							m_pComputeRootSignature{};
 	ComPtr<ID3D12PipelineState>							m_pAnimationComputeShader{};
 
@@ -122,11 +119,11 @@ public:
 	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 private:
-	UCHAR m_PrevKeyBuffer[256] = { 0 }; // ���� Ű ���� ����
+	UCHAR m_PrevKeyBuffer[256] = { 0 }; // PrevKey
 };
 
 class CRaytracingMaterialTestScene : public CRaytracingScene {

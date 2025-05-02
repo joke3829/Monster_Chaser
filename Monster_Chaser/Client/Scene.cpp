@@ -51,7 +51,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	for (auto& animationManager : animationManagers) {
 		animationManager->UpdateCombo(fElapsedTime);
 		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
-			animationManager->ChangeAnimation(0, false); // idle�� ��ȯ
+			animationManager->ChangeAnimation(0, false); // idle State
 			test = true;
 			m_LockAnimation1 = false;
 		}
@@ -494,11 +494,11 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
 	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit");
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit", L"ShadowAnyHit");
 	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(4);
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
 	m_pRaytracingPipeline->MakePipelineState();
 
 	// Resource Ready
@@ -511,6 +511,8 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
+	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
+	m_pResourceManager->ReadyLightBufferContent();
 	m_pResourceManager->LightTest();
 	// =========================================================
 
@@ -563,6 +565,8 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	/*skinned[0]->getObjects()[98]->getMaterials()[0].m_bHasEmissionMap = true;
 	skinned[0]->getObjects()[98]->getMaterials()[0].m_nEmissionMapIndex = skinned[0]->getTextures().size();
 	skinned[0]->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Gorhorrid\\T_Gorhorrid_Emissive.dds"));*/
+
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky.dds", true));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// CBV RAII
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
@@ -584,8 +588,8 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
 
 	// Setting Camera ==============================================================
-	//m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	//m_pCamera->SetCameraLength(10.0f);
+	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetCameraLength(10.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -639,7 +643,7 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 	}
 }
 
-void CRaytracingTestScene::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
