@@ -206,7 +206,7 @@ void SESSION::process_packet(char* p) {
 	}
 	case C2S_P_MOVE:
 	{
-		lock_guard<mutex> lock(myMutex);
+	//	lock_guard<mutex> lock(myMutex);
 		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
 
 		m_pos = pkt->pos;
@@ -233,7 +233,7 @@ void SESSION::process_packet(char* p) {
 
 
 
-		BroadCasting_position(g_server.rooms[room_num].id.size());
+		//BroadCasting_position(g_server.rooms[room_num].id.size());
 		break;
 	}
 	}
