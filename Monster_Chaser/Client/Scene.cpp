@@ -551,62 +551,47 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 XMFLOAT3 CRaytracingScene::CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere)
 {
 
-	XMFLOAT3 sphereCenter = sphere.Center; //스피어 중심
-	XMFLOAT3 obbCenter = obb.Center; //박스 중심
-	XMFLOAT3 relativePos = { sphereCenter.x - obbCenter.x, sphereCenter.y - obbCenter.y, sphereCenter.z - obbCenter.z }; //상대 위치
+	XMVECTOR sphereCenter = XMLoadFloat3(&sphere.Center);
+	XMVECTOR obbCenter = XMLoadFloat3(&obb.Center);
 
-	XMVECTOR quat = XMLoadFloat4(&obb.Orientation); //쿼터니언을 XMFLOAT4로 로드
-	XMMATRIX world = XMMatrixRotationQuaternion(quat); //행렬 생성
-	XMMATRIX invWorld = XMMatrixInverse(nullptr, world); //역행렬 구하기
+	// 방향 벡터 계산
+	XMVECTOR direction = XMVector3Normalize(sphereCenter - obbCenter);
 
-	XMVECTOR localPos = XMVector3TransformCoord(XMLoadFloat3(&relativePos), invWorld); //상대 위치를 XMVECTOR로 로드한 뒤, 위에서 구한 invWorld 행렬을 적용해 OBB 로컬 좌표계 변환
-	XMFLOAT3 localPosF;
-	XMStoreFloat3(&localPosF, localPos); //XMFLOAT3으로 저장
+	// 단순히 중심 간 방향을 정규화하여 노멀로 사용
+	XMFLOAT3 normal;
+	XMStoreFloat3(&normal, direction);
 
-	float localCoords[3] = { localPosF.x, localPosF.y, localPosF.z };
-
-	float minDist = FLT_MAX;
-	XMFLOAT3 normal = { 0, 0, 0 };
-	XMFLOAT3 faceNormals[6] = { { 1, 0, 0 }, { -1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 }, { 0, 0, -1 } }; //법선 고정
-	float halfExtents[3] = { obb.Extents.x, obb.Extents.y, obb.Extents.z }; //크기 저장
-
-	//거리 계산
-	for (int i = 0; i < 6; ++i) {
-		int axis = i / 2;
-		float dist = std::fabs(localCoords[axis] - (i % 2 == 0 ? halfExtents[axis] : -halfExtents[axis]));
-		if (dist < minDist) {
-			minDist = dist;
-			normal = faceNormals[i];
-		}
-	}
-
-	XMVECTOR worldNormal = XMVector3TransformNormal(XMLoadFloat3(&normal), world); //월드좌표계로 변환
-	XMFLOAT3 result;
-	XMStoreFloat3(&result, worldNormal); //XMFLOAT3으로 저장
-	return result;
+	return normal;
 }
 
 float CRaytracingScene::CalculateDepth(const BoundingOrientedBox& obb, const BoundingSphere& sphere)
 {
-	XMVECTOR quat = XMLoadFloat4(&obb.Orientation); //XMFLOAT4로 로드
-	XMMATRIX world = XMMatrixRotationQuaternion(quat); //회전행렬 구하기
-	XMMATRIX invWorld = XMMatrixInverse(nullptr, world); //역행렬 구하기
+	XMVECTOR sphereCenter = XMLoadFloat3(&sphere.Center);
+	XMVECTOR obbCenter = XMLoadFloat3(&obb.Center);
+	XMVECTOR direction = sphereCenter - obbCenter;
 
-	XMVECTOR sphereCenter = XMVector3TransformCoord(XMLoadFloat3(&sphere.Center), invWorld); //중심을 invWorld행렬로 변환해 OBB 로컬좌표계에서 위치 구하기
-	XMFLOAT3 localCenter;
-	XMStoreFloat3(&localCenter, sphereCenter);
+	// OBB 회전 행렬
+	XMVECTOR orientation = XMLoadFloat4(&obb.Orientation);
+	XMMATRIX rotation = XMMatrixRotationQuaternion(orientation);
 
-	float localCoords[3] = { localCenter.x, localCenter.y, localCenter.z };
-	float halfExtents[3] = { obb.Extents.x, obb.Extents.y, obb.Extents.z }; //크기 저장
+	// OBB 축 벡터
+	XMVECTOR axes[3] = {
+		rotation.r[0], // X축
+		rotation.r[1], // Y축
+		rotation.r[2]  // Z축
+	};
 
-	// 가장 가까운 면까지의 거리 계산
-	float minDist = FLT_MAX;
+	XMVECTOR closest = obbCenter;
+
 	for (int i = 0; i < 3; ++i) {
-		float dist = fabs(localCoords[i]) - halfExtents[i];
-		if (dist < minDist) minDist = dist;
+		float distance = XMVectorGetX(XMVector3Dot(direction, axes[i]));
+		float extent = (&obb.Extents.x)[i];
+		distance = std::clamp(distance, -extent, extent);
+		closest += axes[i] * distance;
 	}
 
-	return sphere.Radius - minDist; // 침투 깊이
+	float dist = XMVectorGetX(XMVector3Length(sphereCenter - closest));
+	return sphere.Radius - dist;
 }
 
 void CRaytracingScene::CreateComputeShader()
