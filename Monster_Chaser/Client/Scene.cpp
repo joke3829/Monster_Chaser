@@ -539,8 +539,14 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 					if (mapOBB.Intersects(boneSphere)) {
 						XMFLOAT3 norm = CalculateCollisionNormal(mapOBB, boneSphere);
 						float dept = CalculateDepth(mapOBB, boneSphere);
-						m_pResourceManager->getSkinningObjectList()[0]->moveback(dept);
-						return;
+						// 이동 방향과 충돌 법선을 비교하여 반대 방향으로만 슬라이딩 적용
+						XMVECTOR moveDir = XMLoadFloat3(&character->getLook());
+						XMVECTOR normal = XMLoadFloat3(&norm);
+						float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
+						if (dotProduct < 0.0f) { // 이동 방향이 충돌 법선과 반대일 경우
+							character->sliding(dept, norm);
+							return;
+						}
 					}
 				}
 			}

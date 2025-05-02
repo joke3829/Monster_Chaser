@@ -978,9 +978,35 @@ void CSkinningObject::move(float fElapsedTime, short arrow) {
 	UpdateWorldMatrix();
 }
 
-void CSkinningObject::moveback(float depth)
+void CSkinningObject::sliding(float depth, const XMFLOAT3& normal)
 {
-	XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -depth));
+	XMVECTOR normalVec = XMLoadFloat3(&normal);
+	XMVECTOR moveDirVec = XMLoadFloat3(&m_xmf3Look);
+
+	float originalLookY = m_xmf3Look.y;
+
+	// 수평 방향 벡터로 변환 (y = 0)
+	XMVECTOR horizontalMoveDir = moveDirVec;
+	horizontalMoveDir = XMVectorSetY(horizontalMoveDir, 0.0f);
+	XMVECTOR horizontalNormal = normalVec;
+	horizontalNormal = XMVectorSetY(horizontalNormal, 0.0f);
+
+	XMVECTOR normalLength = XMVector3Length(horizontalNormal);
+	if (XMVectorGetX(normalLength) > 0.0001f) { //법선이 수직에 가까우면, 기본 방향으로
+		XMFLOAT3 result;
+		XMStoreFloat3(&result, horizontalMoveDir);
+		m_xmf3Sliding = result;
+		return;
+	}
+	horizontalNormal = XMVectorScale(horizontalNormal, 1.0f / XMVectorGetX(normalLength));
+
+	float dot = XMVectorGetX(XMVector3Dot(horizontalMoveDir, horizontalNormal));
+	XMVECTOR slideVector = horizontalMoveDir - (horizontalNormal * dot); // 수평 슬라이딩 방향
+
+	slideVector = XMVectorSetY(slideVector, originalLookY); //y값은 원래 값 유지
+
+	XMStoreFloat3(&m_xmf3Sliding, slideVector); //저장
+
 	UpdateWorldMatrix();
 }
 
