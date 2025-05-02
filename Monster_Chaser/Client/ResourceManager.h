@@ -22,6 +22,8 @@ struct Lights
 	Light lights[MAX_LIGHTS];
 };
 
+enum Job{ Nothing, Mage, Warrior, Healer};
+
 extern DXResources g_DxResource;
 extern std::default_random_engine g_dre;
 extern std::uniform_real_distribution<float> g_unorm;
@@ -30,7 +32,7 @@ class CResourceManager {
 public:
 	void SetUp(unsigned int nLightRootParameterIndex);		// Light Buffer Ready
 	bool AddResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront);
-	bool AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront);
+	bool AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront, Job job = Nothing);
 
 	void AddGameObjectFromFile(std::ifstream& inFile, int nParentIndex = -1);
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);

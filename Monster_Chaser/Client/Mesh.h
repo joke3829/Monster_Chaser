@@ -76,7 +76,6 @@ public:
 	bool getHasTangent() const;
 	bool getHasBiTangent() const;
 	bool getHasSubmesh() const;
-	bool getHasBoundingBox() const;
 	bool getbSkinning() const { return m_bSkinningMesh; }
 	bool getHasBoundingBox() const { return m_bHasBoundingBox; }
 
@@ -90,7 +89,6 @@ private:
 
 	bool m_bHasBoundingBox = false;
 	BoundingOrientedBox m_OBB{};						// Oriented_Bounding_Box
-	bool m_bHasOBB = false;
 
 	UINT m_nVertexCount{};								// <Positions> ����
 	ComPtr<ID3D12Resource> m_pd3dVertexBuffer{};		// DXGI_FORMAT_R32G32B32_FLOAT

@@ -162,17 +162,6 @@ void CAccelerationStructureManager::UpdateScene(XMFLOAT3& cameraEye)
 	g_DxResource.cmdList->ResourceBarrier(1, &barrier);
 }
 
-// BLASList�� BLAS�� �߰��Ѵ�.
-//void CAccelerationStructureManager::AddBLAS(ID3D12Resource* vertexBuffer, UINT vertexcount, UINT64 vertexStride, DXGI_FORMAT vertexFormat,
-//	ID3D12Resource* indexBuffer, UINT indices, DXGI_FORMAT indexFormat)
-//{
-//	ComPtr<ID3D12Resource> blas;
-//	MakeBLAS(blas, vertexBuffer, vertexcount, vertexStride, vertexFormat,
-//		indexBuffer, indices, indexFormat);
-//
-//	m_vBLASList.push_back(blas);
-//}
-
 void CAccelerationStructureManager::InitBLAS()
 {
 	std::vector<std::unique_ptr<Mesh>>& vMeshes = m_pResourceManager->getMeshList();

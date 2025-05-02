@@ -193,9 +193,9 @@ public:
 
 	XMFLOAT3 getUp() const { return m_xmf3Up; }
 
-	XMFLOAT4X4 getWorldMatrix();
-	XMFLOAT4X4 getLocalMatrix();
-	XMFLOAT4X4 getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
+	XMFLOAT4X4& getWorldMatrix();
+	XMFLOAT4X4& getLocalMatrix();
+	XMFLOAT4X4& getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
 	BoundingOrientedBox& getObjectOBB() { return m_OBB; }
 	BoundingSphere& getObjectSphere() { return m_BoundingSphere; }
 

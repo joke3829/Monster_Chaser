@@ -40,7 +40,7 @@ bool CResourceManager::AddResourceFromFile(wchar_t* FilePath, std::string textur
 	return true;
 }
 
-bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront)
+bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront, Job job)
 {
 	std::ifstream inFile{ FilePath, std::ios::binary };
 	if (!inFile) {
@@ -60,7 +60,14 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 	if (!inFile.eof()) {
 		readLabel();
 		if ("<Animation>:" == strLabel) {	// 애니메이션이 있으면 매니저 생성 & 오브젝트 지정
-			m_vAnimationManager.emplace_back(std::make_unique<CAnimationManager>(inFile));
+			switch (job) {
+			case Nothing:
+				m_vAnimationManager.emplace_back(std::make_unique<CAnimationManager>(inFile));
+				break;
+			case Mage:
+				m_vAnimationManager.emplace_back(std::make_unique<CMageManager>(inFile));
+				break;
+			}
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->SetFramesPointerFromSkinningObject(m_vSkinningObject[m_vSkinningObject.size() - 1]->getObjects());
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->MakeAnimationMatrixIndex(m_vSkinningObject[m_vSkinningObject.size() - 1].get());
 		}
