@@ -173,12 +173,12 @@ ID3D12Resource* CGameObject::getMeshCBuffer() const
 	return m_pd3dMeshCBuffer.Get();
 }
 
-XMFLOAT4X4 CGameObject::getWorldMatrix()
+XMFLOAT4X4& CGameObject::getWorldMatrix()
 {
 	return m_xmf4x4WorldMatrix;
 }
 
-XMFLOAT4X4 CGameObject::getLocalMatrix()
+XMFLOAT4X4& CGameObject::getLocalMatrix()
 {
 	return m_xmf4x4LocalMatrix;
 }
@@ -537,7 +537,10 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			}
 		}
 		else if (strLabel == "<SkinningInfo>:") {
-			m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size()));
+			if(g_ShowBoundingBox)	// Fail -> Frame not has Bound
+				m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size() - 1));
+			else
+				m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size()));
 		}
 		else if (strLabel == "<Materials>:") {
 			inFile.read((char*)&tempData, sizeof(int));
@@ -546,7 +549,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ���� �÷�
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ���� �÷�
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -572,7 +575,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ���� �÷�
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ���� �÷�
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -949,6 +952,10 @@ void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 void CSkinningObject::move(float fElapsedTime, short arrow) {
 	if (0 == arrow)
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 30.0f * fElapsedTime));
+	else if (2 == arrow)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * 30.0f * fElapsedTime));
+	else if (3 == arrow)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * -30.0f * fElapsedTime));
 	else
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -30.0f * fElapsedTime));
 	UpdateWorldMatrix();
@@ -1153,8 +1160,10 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 	g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(m_pNullResource.GetAddressOf()));
 
 
-	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo)
-		m_vMeshes[info->getRefMeshIndex()]->setSkinning(true);
+	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo) {
+		int n = info->getRefMeshIndex();
+		m_vMeshes[n]->setSkinning(true);
+	}
 	for (std::shared_ptr<Mesh>& mesh : m_vMeshes) {
 		ComPtr<ID3D12Resource> constResource{};
 		ComPtr<ID3D12Resource> vResource{};

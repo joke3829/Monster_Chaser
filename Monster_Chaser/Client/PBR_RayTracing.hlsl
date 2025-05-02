@@ -89,7 +89,7 @@ struct Light
     float   Range;
     float   SpotAngle;
     float2  padding;
-    float4  Color;
+    float4 Color;
 };
 
 struct Lights
@@ -99,6 +99,17 @@ struct Lights
     Light lights[MAX_LIGHTS];
 };
 
+struct TerrainCBV
+{
+    uint numLayer;
+    float3 padding;
+    int4 bHasDiffuse;
+    int4 bHasNormal;
+    int4 bHasMask;
+};
+
+static float refractive_index[] = { 1.0f, 1.0f / 1.33f, 1.0f / 1.31 };
+
 // Global Root Signature ============================================
 RaytracingAccelerationStructure g_Scene : register(t0, space0);
 
@@ -106,6 +117,11 @@ RWTexture2D<float4> uav : register(u0);
 
 ConstantBuffer<CameraInfo>  g_CameraInfo : register(b0, space0);
 ConstantBuffer<Lights> g_Lights : register(b0, space1);
+
+TextureCube g_EnviormentTexure : register(t3, space0);
+
+ConstantBuffer<TerrainCBV> g_TerrainInfo : register(b2, space0);
+Texture2D g_LayerTexture[13] : register(t4, space0);
 
 SamplerState g_Sampler : register(s0);
 // ==================================================================
@@ -146,6 +162,23 @@ void GetTex0FromBuffer(inout float2 uvs[3], in uint idx)
         uvs[0] = l_Tex0[idx];
         uvs[1] = l_Tex0[idx + 1];
         uvs[2] = l_Tex0[idx + 2];
+    }
+}
+
+void GetTex1FromBuffer(inout float2 uvs[3], in uint idx)
+{
+    if (0 != l_Mesh.bHasSubMeshes)
+    {
+        uint index[3] = { l_Indices[idx], l_Indices[idx + 1], l_Indices[idx + 2] };
+        uvs[0] = l_Tex1[index[0]];
+        uvs[1] = l_Tex1[index[1]];
+        uvs[2] = l_Tex1[index[2]];
+    }
+    else
+    {
+        uvs[0] = l_Tex1[idx];
+        uvs[1] = l_Tex1[idx + 1];
+        uvs[2] = l_Tex1[idx + 2];
     }
 }
 
@@ -244,9 +277,9 @@ float4 TraceRadianceRay(in RayDesc ray, uint currentRayDepth)
 }
 
 
-inline float3 GetFresnelusingSchlick(in float3 r0, in float VdotH)
+inline float3 GetFresnelusingSchlick(in float3 f0, in float VdotH)
 {
-    return r0 + (1 - r0) * pow((1 - VdotH), 5);
+    return f0 + (1 - f0) * pow((1 - VdotH), 5);
 }
 
 inline float D_GGX(in float roughness, in float NdotH)
@@ -274,7 +307,7 @@ bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
     
     ShadowPayload payload = { false };
     TraceRay(g_Scene,
-    RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_CULL_BACK_FACING_TRIANGLES,
+    RAY_FLAG_NONE,
     ~0,
     SHADOW_OFFSET,
     GEOMETRY_STRIDE,
@@ -284,22 +317,33 @@ bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
     return payload.bShadow;
 }
 
-inline float3 CalculateCookTorranceSpecular(in float roughness, in float3 R0, in float NdotV, in float NdotH, in float NdotL)
+inline float3 CalculateCookTorranceSpecular(inout float3 F, in float roughness, in float3 R0, in float NdotV, in float NdotH, in float NdotL)
 {
-    float3 F = GetFresnelusingSchlick(R0, NdotV);
+    F = GetFresnelusingSchlick(R0, NdotV);
+    //F = GetSmithGeometry(roughness, NdotV, NdotL);
+    //F = D_GGX(roughness, NdotH);
     float D = D_GGX(roughness, NdotH);
     float3 G = GetSmithGeometry(roughness, NdotV, NdotL);
     float denom = max(4 * NdotL * NdotV, 0.00001f);
     return (F * G * D) / denom;
 }
 
-float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float roughness, in float3 R0, float3 AlbedoColor)
+inline float3 CalculateBlinnPhongSpecular(inout float3 F, in float roughness, in float3 R0, in float NdotV, in float NdotH, in float NdotL)
+{
+    float glossiness = 1.0f - roughness;
+    float rh = lerp(0.0, 128.0, glossiness);
+
+    return pow(NdotH, rh);
+}
+
+float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float roughness, in float3 R0, in float3 AlbedoColor)
 {
     float3 V = normalize(-WorldRayDirection());
     float NdotV = saturate(dot(N, V));
-    
+    float3 Wpos = GetWorldPosition();
     float3 finalColor = float3(0.0, 0.0, 0.0);
-    
+    float F;
+    bool isShadow = false;
     for (uint i = 0; i < g_Lights.numLights; ++i)
     {
         switch (g_Lights.lights[i].Type)
@@ -309,80 +353,219 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                     float3 H = normalize(V + L);
                     float NdotH = saturate(dot(N, H));
                     float NdotL = saturate(dot(N, L));
-                
                     if (NdotL > 0.0f)
                     {
-                        float3 diffuseTerm = NdotL * AlbedoColor.rgb * (g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity);
-                        float3 Specular = CalculateCookTorranceSpecular(roughness, R0, NdotV, NdotH, NdotL);
+                        RayDesc shadowRay;
+                        shadowRay.Direction = L;
+                        shadowRay.Origin = GetWorldPosition() + N * 0.0001f;
+                        shadowRay.TMin = 0.0f;
+                        shadowRay.TMax = 500.0f;
+                        isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
+                        float shadowFactor = isShadow ? 0.25f : 1.0f;
+                        //float intense = (g_Lights.lights[i].Intensity > 2.5f) ? 2.5f : g_Lights.lights[i].Intensity;
+                        float3 lightColor = g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity;
+                        float3 rs = float3(0.0, 0.0, 0.0);
+                        if (!isShadow)
+                            rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                            //rs = CalculateBlinnPhongSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                        float metallic = max(max(R0.r, R0.g), R0.b);
+                        float s = lerp(0.0, 0.95, metallic);
                         if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
-                            finalColor += diffuseTerm + (NdotL * (AlbedoColor.rgb + (1 - AlbedoColor.rgb) * Specular));
+                            finalColor += NdotL * lightColor * (((1 - s) * AlbedoColor.rgb * shadowFactor) + s * rs);
                         else
-                            finalColor += Specular;
+                            finalColor += rs;
                     }
                 }
                 break;
             case POINT_LIGHT:{
-                    float3 Wpos = GetWorldPosition();
                     float dis = distance(g_Lights.lights[i].Position, Wpos);
-                    if (g_Lights.lights[i].Range <= dis)
+                    if (g_Lights.lights[i].Range >= dis)
                     {
-                        finalColor += float3(1.0, 1.0, 1.0);
+                        float3 L = normalize(g_Lights.lights[i].Position - Wpos);
+                        float3 H = normalize(V + L);
+                        float NdotH = saturate(dot(N, H));
+                        float NdotL = saturate(dot(N, L));
+                    
+                        if (NdotL > 0.0f)
+                        {
+                            float3 lightColor = lerp(g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity, float3(0.0, 0.0, 0.0), dis / g_Lights.lights[i].Range);
+                            //float att = 1.0f / dot(float3(1.0f, 0.001f, 0.0001f), float3(1.0, dis, dis * dis));
+                            //float att = 1.0f / (dis * dis);
+                            //float3 lightColor = g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity;
+                            //float3 lightColor = g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity * att;
+                            //float3 lightColor = g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity * att;
+                            //float intense = (g_Lights.lights[i].Intensity > 2.5f) ? 2.5f : g_Lights.lights[i].Intensity;
+                            //lightColor *= g_Lights.lights[i].Intensity;
+                        
+                            RayDesc shadowRay;
+                            shadowRay.Direction = L;
+                            shadowRay.Origin = Wpos + N * 0.0001f;
+                            shadowRay.TMin = 0.0f;
+                            shadowRay.TMax = dis;
+                            isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
+                            float shadowFactor = isShadow ? 0.25f : 1.0f;
+                            float3 rs = float3(0.0, 0.0, 0.0);
+                            if (!isShadow)
+                                rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                                //rs = CalculateBlinnPhongSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                            float metallic = max(max(R0.r, R0.g), R0.b);
+                            float s = lerp(0.0, 0.95, metallic);        
+                            if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
+                                finalColor += (NdotL * lightColor * (((1 - s) * AlbedoColor.rgb * shadowFactor) + (s * rs)));
+                            else
+                                finalColor += rs;
+                        }
                     }
                 }
                 break;
-            case SPOT_LIGHT:
+            case SPOT_LIGHT:{
+                    float dis = distance(g_Lights.lights[i].Position, Wpos);
+                    if (g_Lights.lights[i].Range >= dis)
+                    {
+                        float3 L = normalize(g_Lights.lights[i].Position - Wpos);
+                        float3 nLDir = normalize(g_Lights.lights[i].Direction);
+                        float LdotD = dot(-L, nLDir);
+                        float cosAngle = cos(radians(g_Lights.lights[i].SpotAngle / 2));
+                        if (LdotD > 0.0f && LdotD >= cosAngle)
+                        {
+                            float3 H = normalize(V + L);
+                            float NdotH = saturate(dot(N, H));
+                            float NdotL = saturate(dot(N, L));
+                        
+                            float cosTheta = cos(radians((g_Lights.lights[i].SpotAngle * 0.8) / 2));
+                            //float falloff = 0.5f;
+                        
+                            float fSpotFactor = max(((LdotD - cosAngle) / (cosTheta - cosAngle)), 0.0f);
+                        
+                            //float intense = (g_Lights.lights[i].Intensity > 10.0f) ? 10.0f : g_Lights.lights[i].Intensity;
+                            float3 lightColor = lerp(g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity, float3(0.0, 0.0, 0.0), dis / g_Lights.lights[i].Range);
+                   
+                            //float3 lightColor = g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity * att;
+                            //float3 lightColor = lerp(g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity, float3(0.0, 0.0, 0.0), dis / g_Lights.lights[i].Range);
+                            //lightColor *= intense;
+                        
+                            RayDesc shadowRay;
+                            shadowRay.Direction = L;
+                            shadowRay.Origin = Wpos + N * 0.0001f;
+                            shadowRay.TMin = 0.0f;
+                            shadowRay.TMax = dis;
+                            isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
+                            float shadowFactor = isShadow ? 0.25f : 1.0f;
+                            float3 rs = float3(0.0, 0.0, 0.0);
+                            if (!isShadow)
+                                rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                                //rs = CalculateBlinnPhongSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
+                            float metallic = max(max(R0.r, R0.g), R0.b);
+                            float s = lerp(0.0, 0.95, metallic);
+                            if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
+                                finalColor += NdotL * lightColor * fSpotFactor * (((1 - s) * AlbedoColor.rgb * shadowFactor) + (s * rs));
+                            else
+                                finalColor += rs;
+                        }
+                    }
+                }
                 break;
         }
     }
     
+    /*float4 ReflectColor = float4(0.0, 0.0, 0.0, 0.0);
+    if (payload.RayDepth <= 1)
+    {
+        RayDesc rRay;
+        rRay.Direction = reflect(WorldRayDirection(), N);
+        rRay.Origin = GetWorldPosition();
+        rRay.TMin = 0.001f;
+        rRay.TMax = 600.0f;
+    
+        ReflectColor = TraceRadianceRay(rRay, payload.RayDepth);
+    }*/
+
     if(g_CameraInfo.bNormalMapping & 0x0000FFFF)
-        return (AlbedoColor.rgb * 0.2) + finalColor;
+        return finalColor + (AlbedoColor.rgb * 0.2);
     else
         return (float3(0.6, 0.6, 0.6) * 0.2) + finalColor;
 }
 
-float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, uint ShaderType = 0, float2 uv = float2(0.0, 0.0))
+float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, in float4 albedoColor, uint ShaderType = 0, float2 uv = float2(0.0, 0.0), float2 uv1 = float2(0.0, 0.0))
 {
     float3 R0 = float3(0.0, 0.0, 0.0);
     float roughness = 0.0f;
     
-    float3 albedoColor = float3(1.0, 1.0, 1.0);
-    if(0!= l_Material.bHasAlbedoColor) 
-        albedoColor = l_Material.AlbedoColor.rgb;
-    if(0 != l_Material.bHasAlbedoMap)
-        albedoColor *= l_AlbedoMap.SampleLevel(g_Sampler, uv, 0).rgb;
+    float3 emissiveColor = float3(0.0, 0.0, 0.0);
+    if (0 != l_Material.bHasEmissiveColor)
+    {
+        emissiveColor = l_Material.EmissiveColor;
+    }
+    if (0 != l_Material.bHasEmissionMap)
+    {
+        if(0 != l_Material.bHasEmissiveColor)
+            emissiveColor *= l_EmissionMap.SampleLevel(g_Sampler, uv, 0).rgb;
+        else
+            emissiveColor = l_EmissionMap.SampleLevel(g_Sampler, uv, 0).rgb;
+    }
 
     switch (ShaderType)
     {
         case SHADER_TYPE_SPECULAR_MAP:{
-                float3 resultColor = float3(0.0, 0.0, 0.0);
                 float4 smSample = l_SpecularMap.SampleLevel(g_Sampler, uv, 0);
                 R0 = smSample.rgb;
-                roughness = smSample.a;
+                roughness = max(1.0f - smSample.a, 0.05f);
                 break;
             }
         case SHADER_TYPE_SPECULAR:{
-                if (0 != l_Material.bHasGlossiness) roughness = 1.0f - l_Material.Glossiness;
-                else if (0 != l_Material.bHasSmoothness) roughness = 1.0f - l_Material.Smoothness;
+                if (0 != l_Material.bHasGlossiness) roughness = max(1.0f - l_Material.Glossiness, 0.05f);
+                else if (0 != l_Material.bHasSmoothness) roughness = max(1.0f - l_Material.Smoothness, 0.05f);
                 R0 = l_Material.SpecularColor;
                 break;
             }
         case SHADER_TYPE_METALLIC_MAP:{
                 float4 metallicSample = l_MetallicMap.SampleLevel(g_Sampler, uv, 0);
                 R0 = metallicSample.rrr;
-                roughness = metallicSample.a;
+                roughness = max(1.0f - metallicSample.a, 0.05f);
                 break;
             }
         case SHADER_TYPE_METALLIC:{
-                if (0 != l_Material.bHasGlossiness) roughness = 1.0f - l_Material.Glossiness;
-                else if (0 != l_Material.bHasSmoothness) roughness = 1.0f - l_Material.Smoothness;
+                if (0 != l_Material.bHasGlossiness) roughness = max(1.0f - l_Material.Glossiness, 0.05f);
+                else if (0 != l_Material.bHasSmoothness) roughness = max(1.0f - l_Material.Smoothness, 0.05f);
                 R0 = lerp(float3(0.04, 0.04, 0.04), albedoColor.rgb, l_Material.Metallic);
                 break;
             }
     }
     
+    float t = RayTCurrent();
+    float3 finalColor;
+    if(t > 350.0f || payload.RayDepth > 3)
+        finalColor = albedoColor.rgb * 0.25;
+    else
+    {
+        if (albedoColor.a <= 0.95)
+        {
+            RayDesc tRay;
+            uint iID = InstanceID();
+            if (iID > 2)
+                iID = 0;
+            tRay.Direction = refract(WorldRayDirection(), N, refractive_index[iID]); //refractive_index[InstanceID()]);
+            tRay.Origin = GetWorldPosition();
+            tRay.TMin = 0.001f;
+            tRay.TMax = 600.0f;
+            float4 TransmissionColor = TraceRadianceRay(tRay, payload.RayDepth);
+            //float4 TransmissionColor = float4(1.0, 0.0, 1.0, 1.0);
+            
+            float3 myColor = CalculateLighting(payload, N, roughness, R0, albedoColor.rgb) + emissiveColor;
+            
+            finalColor = lerp(myColor, TransmissionColor.rgb, albedoColor.a);
+        }
+        else
+            finalColor = CalculateLighting(payload, N, roughness, R0, albedoColor.rgb) + emissiveColor;
+    }
+
+    if (payload.RayDepth == 1)
+    {
+        float3 BackGroundColor = g_EnviormentTexure.SampleLevel(g_Sampler, WorldRayDirection(), 0);
+        finalColor = lerp(finalColor, BackGroundColor, 1.0 - exp(-0.00000002 * t * t * t));
+    }
     
-    return float4(CalculateLighting(payload, N, roughness, R0, albedoColor), 1.0);
+    return float4(finalColor, albedoColor.a);
 }
 
 // =============================================================================
@@ -401,7 +584,7 @@ void RayGenShader()
     ray.Origin = g_CameraInfo.cameraEye;
     ray.Direction = normalize(world.xyz - ray.Origin);
     ray.TMin = 0.001;
-    ray.TMax = 1000;
+    ray.TMax = 600;
     
     float4 color = TraceRadianceRay(ray, 0);
     
@@ -411,15 +594,15 @@ void RayGenShader()
 [shader("miss")]
 void RadianceMiss(inout RadiancePayload payload)
 {
-    float slope = normalize(WorldRayDirection()).y;
+    /*float slope = normalize(WorldRayDirection()).y;
     float t = saturate(slope * 5 + 0.5);
     
     float3 skyTop = float3(0.24, 0.44, 0.72);
     float3 skyBottom = float3(0.75, 0.86, 0.93);
-    float3 skycolor = lerp(skyBottom, skyTop, t);
+    float3 skycolor = lerp(skyBottom, skyTop, t);*/
         
-        
-    payload.RayColor.xyz = skycolor;
+    float3 BackGroundColor = g_EnviormentTexure.SampleLevel(g_Sampler, WorldRayDirection(), 0);
+    payload.RayColor.xyz = BackGroundColor;
 }
 
 [shader("miss")]
@@ -455,6 +638,49 @@ void RadianceAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectio
         IgnoreHit();
 }
 
+[shader("anyhit")]
+void ShadowAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectionAttributes attrib)
+{
+    float2 uvs[3] = { float2(0.0, 0.0), float2(0.0, 0.0), float2(0.0, 0.0) };
+    uint index[3];
+    uint idx;
+    idx = PrimitiveIndex() * 3;
+    if (0 != l_Mesh.bHasTex0)
+        GetTex0FromBuffer(uvs, idx);
+    
+    float2 bary = float2(attrib.barycentrics.x, attrib.barycentrics.y);
+    float2 texCoord = GetInterpolationHitFloat2(uvs, bary);
+    
+    float3 emissiveColor = float3(0.0, 0.0, 0.0);
+    if (0 != l_Material.bHasEmissiveColor)
+    {
+        emissiveColor = l_Material.EmissiveColor;
+    }
+    if (0 != l_Material.bHasEmissionMap)
+    {
+        if (0 != l_Material.bHasEmissiveColor)
+            emissiveColor *= l_EmissionMap.SampleLevel(g_Sampler, texCoord, 0).rgb;
+        else
+            emissiveColor = l_EmissionMap.SampleLevel(g_Sampler, texCoord, 0).rgb;
+    }
+    
+    if(emissiveColor.x > 0.05f || emissiveColor.y > 0.05f || emissiveColor.z > 0.05f)
+        IgnoreHit();
+
+    float AlphaValue;
+        
+    if (l_Material.bHasAlbedoMap != 0)
+    {
+        AlphaValue = l_AlbedoMap.SampleLevel(g_Sampler, texCoord, 0).a;
+    }
+    else if (l_Material.bHasAlbedoColor != 0)
+        AlphaValue = l_Material.AlbedoColor.a;
+    else
+        AlphaValue = 1.0f;
+    if (AlphaValue <= 0.5)
+        IgnoreHit();
+}
+
 [shader("closesthit")]
 void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleIntersectionAttributes attrib)
 {
@@ -472,11 +698,18 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     float3 normals[3];
     
     float2 texCoord0;
+    float2 texCoord1;
     float3 lightNormal;
+    float4 albedoColor = float4(1.0, 1.0, 1.0, 1.0);
     if (0 != l_Mesh.bHasTex0)
     {
         GetTex0FromBuffer(uvs, idx);
         texCoord0 = GetInterpolationHitFloat2(uvs, bary);
+    }
+    if (0 != l_Mesh.bHasTex1)
+    {
+        GetTex1FromBuffer(uvs, idx);
+        texCoord1 = GetInterpolationHitFloat2(uvs, bary);
     }
     if (0 != l_Mesh.bHasNormals)
     {
@@ -484,20 +717,51 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
         lightNormal = normalize(GetInterpolationHitFloat3(normals, bary));
     }
     
-    if (0 != l_Material.bHasNormalMap && g_CameraInfo.bNormalMapping & 0xFFFF0000)
+    if (InstanceID() == 10)
     {
-        float3 tangents[3], bitangents[3];
-        GetTangentFromBuffer(tangents, idx);
-        GetBiTangentFromBuffer(bitangents, idx);
-        float3 HitTangent = GetInterpolationHitFloat3(tangents, bary);
-        float3 HitBiTangent = GetInterpolationHitFloat3(bitangents, bary);
-        lightNormal = GetHitNormalFromNormalMap(HitTangent, HitBiTangent, lightNormal, texCoord0);
+        albedoColor = float4(0.0, 0.0, 0.0, 0.0);
+        float4 splatfactor = g_LayerTexture[0].SampleLevel(g_Sampler, texCoord0, 0);
+        float ratio[4] = { splatfactor.r, splatfactor.g, splatfactor.b, splatfactor.a };
+        int diff[4] = { g_TerrainInfo.bHasDiffuse.r, g_TerrainInfo.bHasDiffuse.g, g_TerrainInfo.bHasDiffuse.b, g_TerrainInfo.bHasDiffuse.a };
+        for (int i = 0; i < g_TerrainInfo.numLayer; ++i)
+            if (0 != diff[i])
+            {
+                albedoColor += g_LayerTexture[(i * 3) + 1].SampleLevel(g_Sampler, texCoord1, 0) * ratio[i];
+                //albedoColor = float4(1.0, 0.0, 0.0, 1.0);
+            }
+        //albedoColor += g_LayerTexture[1].SampleLevel(g_Sampler, texCoord1, 0);
+        albedoColor.a = 1.0f;
+    }
+    else
+    {
+        if (0 != l_Material.bHasAlbedoColor) 
+            albedoColor = l_Material.AlbedoColor;
+        if (0 != l_Material.bHasAlbedoMap)
+            albedoColor *= l_AlbedoMap.SampleLevel(g_Sampler, texCoord0, 0);
+    
+        if (0 != l_Material.bHasDetailAlbedoMap)
+        {
+            float4 dAlbedo;
+            if (0 != l_Mesh.bHasTex1)
+                dAlbedo = l_DetailAlbedoMap.SampleLevel(g_Sampler, texCoord1, 0);
+            else
+                dAlbedo = l_DetailAlbedoMap.SampleLevel(g_Sampler, texCoord0, 0);
+            albedoColor = saturate(albedoColor + dAlbedo / 2);
+        }
+    
+        if (0 != l_Material.bHasNormalMap && g_CameraInfo.bNormalMapping & 0xFFFF0000)
+        {
+            float3 tangents[3], bitangents[3];
+            GetTangentFromBuffer(tangents, idx);
+            GetBiTangentFromBuffer(bitangents, idx);
+            float3 HitTangent = GetInterpolationHitFloat3(tangents, bary);
+            float3 HitBiTangent = GetInterpolationHitFloat3(bitangents, bary);
+            lightNormal = GetHitNormalFromNormalMap(HitTangent, HitBiTangent, lightNormal, texCoord0);
+        }
     }
     lightNormal = normalize(mul(lightNormal, (float3x3) ObjectToWorld4x3()));
-    //float3 testColor = float3(lightNormal.x * 0.5 + 0.5, lightNormal.y * 0.5 + 0.5, lightNormal.z * 0.5 + 0.5);
-    //payload.RayColor = float4(testColor, 1.0f);
     
-    payload.RayColor = CalculateFinalColor(payload, lightNormal, ShaderType, texCoord0);
+    payload.RayColor = CalculateFinalColor(payload, lightNormal, albedoColor, ShaderType, texCoord0, texCoord1);
 }
 
 [shader("closesthit")]

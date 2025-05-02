@@ -1,6 +1,6 @@
 // ==============================================
 // GameFramework.cpp
-// ¼³¸í Ãß°¡
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
 // ==============================================
 
 #include "GameFramework.h"
@@ -16,16 +16,16 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 
 	_tcscpy_s(m_pszFrameRate, _T("Client ("));
 
-	// device, fence ÃÊ±âÈ­
+	// device, fence ï¿½Ê±ï¿½È­
 	InitDevice();
 	
-	// RayTracing Áö¿ø ¿©ºÎ È®ÀÎ
+	// RayTracing ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
 	CheckRayTracingSupport();
 
-	// Command¿ä¼Ò »ý¼º
+	// Commandï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	InitCommand();
 
-	// SwapChain »ý¼º
+	// SwapChain ï¿½ï¿½ï¿½ï¿½
 	InitSwapChain();
 
 	// RTV, DSV
@@ -35,7 +35,7 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	if (m_bRayTracingSupport)
 		InitOutputBuffer();
 
-	// ÇÊ¿äÇÏ¸é SceneÀ» ÃÊ±âÈ­ÇÏ´Â ´Ü°èµµ Ãß°¡ÇÑ´Ù.
+	// ï¿½Ê¿ï¿½ï¿½Ï¸ï¿½ Sceneï¿½ï¿½ ï¿½Ê±ï¿½È­ï¿½Ï´ï¿½ ï¿½Ü°èµµ ï¿½ß°ï¿½ï¿½Ñ´ï¿½.
 	
 	g_DxResource.device = m_pd3dDevice.Get();
 	g_DxResource.cmdAlloc = m_pd3dCommandAllocator.Get();
@@ -43,6 +43,19 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	g_DxResource.cmdQueue = m_pd3dCommandQueue.Get();
 	g_DxResource.fence = m_pd3dFence.Get();
 	g_DxResource.pFenceHandle = &m_hFenceHandle;
+
+	// Ready NullResource
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = sizeof(XMFLOAT3);
+	m_pd3dDevice->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(g_DxResource.nullBuffer.GetAddressOf()));
+
+	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	desc.Width = desc.Height = 1;
+	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+	m_pd3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(g_DxResource.nullTexture.GetAddressOf()));
 
 	m_pCamera = std::make_shared<CCamera>();
 	m_pCamera->Setup(2);
@@ -97,22 +110,24 @@ void CGameFramework::InitCommand()
 void CGameFramework::InitSwapChain()
 {
 	DXGI_SWAP_CHAIN_DESC1 desc{};
-	desc.Width = DEFINED_UAV_BUFFER_WIDTH;	// ¹Ù²ð ¼ö ÀÖ´Ù.
+	desc.Width = DEFINED_UAV_BUFFER_WIDTH;	// ï¿½Ù²ï¿½ ï¿½ï¿½ ï¿½Ö´ï¿½.
 	desc.Height = DEFINED_UAV_BUFFER_HEIGHT;
 	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	desc.SampleDesc = NO_AA;
 	desc.BufferCount = 2;
 	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-
+	
 	IDXGISwapChain1* swapchain1{};
 	m_pdxgiFactory->CreateSwapChainForHwnd(m_pd3dCommandQueue.Get(), m_hWnd, &desc, nullptr, nullptr, &swapchain1);
 	swapchain1->QueryInterface(m_pdxgiSwapChain.GetAddressOf());
 	swapchain1->Release();
-
+	
 	if (!m_pdxgiSwapChain) {
 		OutputDebugString(L"Not SwapChain Created\n");
 		exit(0);
 	}
+
+	m_pdxgiFactory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER);
 }
 
 void CGameFramework::InitRTVDSV()
@@ -139,7 +154,7 @@ void CGameFramework::InitRTVDSV()
 	D3D12_RESOURCE_DESC resourceDesc = BASIC_BUFFER_DESC;
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	resourceDesc.Width = DEFINED_UAV_BUFFER_WIDTH;		// ¹Ù²ð ¼ö ÀÖ´Ù
+	resourceDesc.Width = DEFINED_UAV_BUFFER_WIDTH;		// ï¿½Ù²ï¿½ ï¿½ï¿½ ï¿½Ö´ï¿½
 	resourceDesc.Height = DEFINED_UAV_BUFFER_HEIGHT;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
@@ -163,7 +178,7 @@ void CGameFramework::InitOutputBuffer()
 	desc.Width = DEFINED_UAV_BUFFER_WIDTH;
 	desc.Height = DEFINED_UAV_BUFFER_HEIGHT;
 	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS | D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 
@@ -179,9 +194,9 @@ void CGameFramework::InitOutputBuffer()
 
 void CGameFramework::InitScene()
 {
-	m_pScene = std::make_unique<CRaytracingTestScene>();
+	m_pScene = std::make_unique<CRaytracingWinterLandScene>();
 	m_pScene->SetCamera(m_pCamera);
-	m_pScene->SetUp();
+	m_pScene->SetUp(m_pd3dOutputBuffer);
 }
 
 LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -210,7 +225,7 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 		case VK_ESCAPE:
 			PostQuitMessage(0);
 			break;
-		case 'p':	// ÀÓ½Ã·Î ¼³Á¤
+		//case 'p':	// ï¿½Ó½Ã·ï¿½ ï¿½ï¿½ï¿½ï¿½
 		case 'P':
 			if (m_bRayTracingSupport) {
 				m_bRaster = !m_bRaster;
@@ -228,28 +243,12 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 
 void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	if(m_pCamera->getThirdPersonState())
-		m_pScene->MouseProcessing(hWnd, nMessage, wParam, lParam);
-	else {
-		switch (nMessage) {
-		case WM_LBUTTONDOWN:
-			m_bHold = true;
-			GetCursorPos(&oldCursor);
-			break;
-		case WM_LBUTTONUP:
-			m_bHold = false;
-			break;
-		case WM_MOUSEMOVE:
-		{
-			POINT cursorpos;
-			if (m_bHold) {
-				GetCursorPos(&cursorpos);
-				m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
-				SetCursorPos(oldCursor.x, oldCursor.y);
-			}
-			break;
-		}
-		}
+	switch (nMessage) {
+	case WM_LBUTTONDOWN:;
+	case WM_LBUTTONUP:
+	case WM_MOUSEMOVE:
+		m_pScene->OnProcessingMouseMessage(hWnd, nMessage, wParam, lParam);
+		break;
 	}
 }
 
@@ -273,7 +272,7 @@ void CGameFramework::Render()
 		};
 	//m_Timer.Tick(60.0f);
 	m_Timer.Tick();
-	if (m_bRaster) {
+	if (m_bRaster) {	// Not Used
 		m_pd3dCommandAllocator->Reset();
 		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
 
@@ -288,7 +287,7 @@ void CGameFramework::Render()
 		d3dCPUHandle = m_pd3dDepthStencilView->GetCPUDescriptorHandleForHeapStart();
 		m_pd3dCommandList->ClearDepthStencilView(d3dCPUHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 		
-		// ·»´õ¸µ ÀÛ¾÷(Set & Draw) ===================
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Û¾ï¿½(Set & Draw) ===================
 
 		// ===========================================
 
@@ -305,7 +304,7 @@ void CGameFramework::Render()
 		m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
 
 		ProcessInput(m_Timer.GetTimeElapsed());
-		// ·»´õ¸µ ÀÛ¾÷(Set & Draw) ===================
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Û¾ï¿½(Set & Draw) ===================
 
 		m_pScene->UpdateObject(m_Timer.GetTimeElapsed());
 

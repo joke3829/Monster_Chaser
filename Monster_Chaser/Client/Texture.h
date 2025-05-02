@@ -11,11 +11,11 @@ extern DXResources g_DxResource;
 
 class CTexture {
 public:
-	CTexture(const wchar_t* pszFileName, bool bDDS = true);
-	void CreateSRV();
+	CTexture(const wchar_t* pszFileName, bool cubeMap = false, bool bDDS = true);
+	void CreateSRV(bool cubeMap = false);
 
 	ID3D12DescriptorHeap* getView() const;
-
+	ID3D12Resource* getTexture() const { return m_pd3dTexture.Get(); }
 	void SetTextureName(std::string name);
 	std::string getName() const;
 private:

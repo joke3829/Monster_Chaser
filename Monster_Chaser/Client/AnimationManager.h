@@ -11,6 +11,8 @@ public:
 	void UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime);
 
 	float getLength() const { return m_fLength; }
+	int getNumKeyFrame() const { return m_nKeyFrame; }
+	std::vector<std::vector<XMFLOAT4X4>>& getTransforms() { return m_vTransforms; }
 
 private:
 	std::string m_AnimationName{};
@@ -18,38 +20,41 @@ private:
 	int m_nFramePerSec{};
 	int m_nKeyFrame{};
 
-	// Å°ÇÁ·¹ÀÓº° Çà·Ä ÇàÀÌ Å° ÇÁ·¹ÀÓ ¹øÈ£¶ó »ý°¢ÇÏ¸é µÊ
-	// µÉ ¼ö ÀÖÀ¸¸é µÎ°³ÀÇ Á¤º¸´Â shared·Î º¯°æ
-	std::vector<std::vector<XMFLOAT4X4>> m_vTransforms{};		// ÇàÀÌ Å° ÇÁ·¹ÀÓ, ¿­ÀÌ Å°ÇÁ·¹ÀÓ º° Çà·Ä
-	std::vector<float> m_vKeyTime{};	// Å° ÇÁ·¹ÀÓ º° ½Ã°£(?)
-	// ÀÌ µÎ ³ðÀ» ÀÌ¿ëÇØ Çà·Ä º¸°£
+	// Å°ï¿½ï¿½ï¿½ï¿½ï¿½Óºï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å° ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È£ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½
+	// ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Î°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ sharedï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	std::vector<std::vector<XMFLOAT4X4>> m_vTransforms{};		// ï¿½ï¿½ï¿½ï¿½ Å° ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ Å°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½
+	std::vector<float> m_vKeyTime{};	// Å° ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ã°ï¿½(?)
+	// ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 };
 
-// ¿©±â¼­ ÇÁ·¹ÀÓ ÀÌ¸§ º° Æ÷ÀÎÅÍ¸¦ ¸¸µé ¿¹Á¤
+// ï¿½ï¿½ï¿½â¼­ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 class CAnimationManager {
 public:
 	CAnimationManager(std::ifstream& inFile);
 	CAnimationManager(const CAnimationManager& other);
 
-	void SetFramesPointerFromSkinningObject(std::vector<std::unique_ptr<CGameObject>>& vObjects);	// ½ºÅ°´× ÁØºñ ÇÔ¼ö
+	void SetFramesPointerFromSkinningObject(std::vector<std::unique_ptr<CGameObject>>& vObjects);	// ï¿½ï¿½Å°ï¿½ï¿½ ï¿½Øºï¿½ ï¿½Ô¼ï¿½
 
-	// SkinningInfo¸¦ ¹Þ°í ±× SkinningInfoÀÇ Çà·Ä index ¸¸µé¾î ÁØ´Ù.
+	// SkinningInfoï¿½ï¿½ ï¿½Þ°ï¿½ ï¿½ï¿½ SkinningInfoï¿½ï¿½ ï¿½ï¿½ï¿½ index ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ø´ï¿½.
 	void MakeAnimationMatrixIndex(CSkinningObject* pSkinningObject);
 
-	void TimeIncrease(float fElapsedTime);			// ½Ã°£ Áõ°¡
-	void UpdateAnimation(float fElapsedTime);		// ½Ã°£ ÁöÁ¤
+	void TimeIncrease(float fElapsedTime);			// ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½
+	void UpdateAnimation(float fElapsedTime);		// ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½
 	void UpdateAnimationMatrix();
 	void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
 	void ChangeAnimation(UINT nSet);
-	void ChangeAnimation(UINT nSet, bool playOnce = false); // playOnce ¿É¼Ç Ãß°¡
+	void ChangeAnimation(UINT nSet, bool playOnce = false); // playOnce ï¿½É¼ï¿½ ï¿½ß°ï¿½
 	void setCurrnetSet(UINT n) { m_nCurrentSet = n; }
+
+	std::shared_ptr<CAnimationSet>& getAnimationSet(int index) { return m_vAnimationSets[index]; }
+
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
 	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
 	bool IsAnimationNearEnd(float margin = 0.1f) const
 	{
 		float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 		float remainingTime = length - m_fElapsedTime;
-		return remainingTime <= margin && remainingTime >= 0.0f; //³¡³ª±â 0.0 ~ 0.1ÃÊ ÀüÀÎÁö È®ÀÎ
+		return remainingTime <= margin && remainingTime >= 0.0f; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0.0 ~ 0.1ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
 	}
 
 	bool IsLoopAnimation()const
@@ -67,7 +72,7 @@ public:
 	}
 
 	bool IsWalking() const {
-		return m_isWalk; // ÇöÀç °È±â  »óÅÂ ¹ÝÈ¯
+		return m_isWalk; // ï¿½ï¿½ï¿½ï¿½ ï¿½È±ï¿½  ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
 	}
 
 
@@ -75,7 +80,7 @@ public:
 	virtual void OnAttackInput() {};
 	virtual void UpdateCombo(float fElapsedTime) {};
 	virtual void ResetCombo() {};
-	bool IsInCombo() const { return m_bInCombo; } // ÄÞº¸ ÁøÇà Áß ¿©ºÎ
+	bool IsInCombo() const { return m_bInCombo; } // ï¿½Þºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 	virtual void StartSkill3() {};
 	virtual void OnKey3Input() {};
@@ -85,32 +90,32 @@ protected:
 	UINT m_nAnimationSets{};
 	UINT m_nCurrentSet{};
 	float m_fElapsedTime{};
-	std::vector<std::string> m_vFrameNames{};		// ÇÑ¹ø ¾²°í ¹ö¸®³ª?
+	std::vector<std::string> m_vFrameNames{};		// ï¿½Ñ¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?
 	std::vector<std::shared_ptr<CAnimationSet>> m_vAnimationSets{};
 
-	std::vector<CGameObject*> m_vFrames{};	// º¹»ç ÇÒ ¶§ ÇØ´ç °´Ã¼¿¡ ¸Â°Ô ¾÷µ¥ÀÌÆ® ÇÊ¿ä
+	std::vector<CGameObject*> m_vFrames{};	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½Ø´ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½Â°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ê¿ï¿½
 	
-	// »ó¼ö¹öÆÛ¸¦ ¿©±â¼­ ¸¸µé±î?
-	ComPtr<ID3D12Resource> m_pMatrixBuffer{};		// ¾Ö´Ï¸ÞÀÌ¼Ç Çà·ÄÀ» ³ÖÀ» »ó¼ö ¹öÆÛ
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Û¸ï¿½ ï¿½ï¿½ï¿½â¼­ ï¿½ï¿½ï¿½ï¿½ï¿½?
+	ComPtr<ID3D12Resource> m_pMatrixBuffer{};		// ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	void* m_pMappedPointer{};
-	std::vector<XMFLOAT4X4> m_vMatrixes{};			// ¾Ö´Ï¸ÞÀÌ¼Ç Çà·ÄÀ» ÀúÀåÇÒ ¹è¿­
+	std::vector<XMFLOAT4X4> m_vMatrixes{};			// ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½è¿­
 
-	bool m_bPlayOnce = false; // ÇÑ ¹ø¸¸ Àç»ý ¿©ºÎ
-	bool m_isWalk = false; // °È±â ¿©ºÎ
+	bool m_bPlayOnce = false; // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	bool m_isWalk = false; // ï¿½È±ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-	// ÄÞº¸
-	bool m_bInCombo;                     // ÄÞº¸ ÁøÇà Áß ¿©ºÎ
-	int m_CurrentComboStep;               // ÇöÀç ÄÞº¸ ´Ü°è
-	std::vector<UINT> m_vComboAnimationSets; // ÄÞº¸ ¾Ö´Ï¸ÞÀÌ¼Ç ¼¼Æ®
-	float m_fComboTimer;                   // ÄÞº¸ ÀÔ·Â ´ë±â ½Ã°£
-	const float m_fComboWaitTime = 0.5f;     // ´ÙÀ½ ÀÔ·ÂÀ» ±â´Ù¸®´Â ½Ã°£
-	bool m_bWaitingForNextInput;         // ´ÙÀ½ ÀÔ·Â ´ë±â ¿©ºÎ
-	bool m_bNextAttack = false;			// ´ÙÀ½ °ø°Ý ¿äÃ» ¿©ºÎ
+	// ï¿½Þºï¿½
+	bool m_bInCombo;                     // ï¿½Þºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	int m_CurrentComboStep;               // ï¿½ï¿½ï¿½ï¿½ ï¿½Þºï¿½ ï¿½Ü°ï¿½
+	std::vector<UINT> m_vComboAnimationSets; // ï¿½Þºï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½Æ®
+	float m_fComboTimer;                   // ï¿½Þºï¿½ ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+	const float m_fComboWaitTime = 0.5f;     // ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ ï¿½ï¿½Ù¸ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+	bool m_bWaitingForNextInput;         // ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	bool m_bNextAttack = false;			// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã» ï¿½ï¿½ï¿½ï¿½
 
-	std::vector<UINT> m_vSkillAnimationSets; //½ºÅ³ ¾Ö´Ï¸ÞÀÌ¼Ç ¼¼Æ®
+	std::vector<UINT> m_vSkillAnimationSets; //ï¿½ï¿½Å³ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½Æ®
 };
 
-class CMageManager : public CAnimationManager //¸¶¹ý»ç Àü¿ë
+class CMageManager : public CAnimationManager //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 {
 public:
 	virtual void StartCombo();

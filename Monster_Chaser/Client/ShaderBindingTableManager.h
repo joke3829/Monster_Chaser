@@ -30,8 +30,8 @@ private:
 	UINT64 m_nHitGroupSize{};
 	UINT64 m_nHitGroupStride{};
 
-	ComPtr<ID3D12Resource> m_pd3dNullBuffer{};
-	ComPtr<ID3D12Resource> m_pd3dNullTexture{};
+	//ComPtr<ID3D12Resource> m_pd3dNullBuffer{};
+	//ComPtr<ID3D12Resource> m_pd3dNullTexture{};
 	ComPtr<ID3D12DescriptorHeap> m_pd3dNullBufferView;
 };
 

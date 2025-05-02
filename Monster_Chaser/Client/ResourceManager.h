@@ -44,6 +44,9 @@ public:
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
 
 	void LightTest();
+	void AddLightsFromFile(wchar_t* FilePath);
+	void AddLightsFromFileRecursion(std::ifstream& inFile);
+	void ReadyLightBufferContent();
 	inline void SetLights() { g_DxResource.cmdList->SetComputeRootConstantBufferView(m_nLightRootParameterIndex, m_pLights->GetGPUVirtualAddress()); }
 
 	// getter
@@ -67,6 +70,7 @@ private:
 
 	// Lights
 	ComPtr<ID3D12Resource> m_pLights;
+	std::vector<Light> m_vLights{};
 	UINT m_nLightRootParameterIndex{};
 
 	// Skinning animation

@@ -74,7 +74,5 @@ private:
 	std::unique_ptr<CScene> m_pScene{};
 
 	std::shared_ptr<CCamera> m_pCamera{};
-	bool m_bHold = false;
-	POINT oldCursor;
 };
 

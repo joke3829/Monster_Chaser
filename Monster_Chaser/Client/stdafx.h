@@ -23,6 +23,7 @@
 #include <fstream>
 #include <timeapi.h>
 #include <random>
+#include <numeric>
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -89,6 +90,9 @@ struct DXResources {
 	ID3D12CommandQueue* cmdQueue{ nullptr };
 	ID3D12Fence* fence{ nullptr };
 	HANDLE* pFenceHandle{ nullptr };
+
+	ComPtr<ID3D12Resource> nullBuffer{};
+	ComPtr<ID3D12Resource> nullTexture{};
 };
 
 // GPU 작업이 끝나기까지 기다린다.

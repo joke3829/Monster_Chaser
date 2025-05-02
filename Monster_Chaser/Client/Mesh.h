@@ -1,13 +1,13 @@
 //-----------------------------------------------------------------------------
 // File: Mesh.h
-// Mesh µ¥ÀÌÅÍ¿Í µ¿ÀÛÀ» °ü¸®ÇÏ´Â Å¬·¡½º
+// Mesh ï¿½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½
 // 
 // 01.22
-// ÀÏ´ÜÀº exporter·Î ÃßÃâµÇ´Â Á¤º¸¸¦ ¸ðµÎ ¾²´ÂÁß,
-// ÇÊ¿ä¾ø´Â Á¤º¸°¡ ÀÖ´Ü ÆÇ´ÜÇÏ¸é ¼öÁ¤
-// °¢°¢ÀÇ ¸®¼Ò½º°¡ À¯ÀÇ¹ÌÇÑ Á¤º¸¸¦ °¡Áö°í ÀÖ´ÂÁö m_bHas·Î ÆÇ´Ü, ÀÌ°ÍÀ» »ó¼ö ¹öÆÛ·Î
-// ¼ÎÀÌ´õ¿¡ ³Ñ°ÜÁÙ°Å´Ù. 
-// ¶ÇÇÑ È®½ÇÇÏÁø ¾ÊÁö¸¸ ¼­ºê¸Þ½ÃÀÇ °³¼ö ¸¸Å­ ¸¶Å×¸®¾óÀÌ Á¸ÀçÇÑ´Ù ÆÇ´Ü
+// ï¿½Ï´ï¿½ï¿½ï¿½ exporterï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,
+// ï¿½Ê¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½Ç´ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½ï¿½
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ò½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ç¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ m_bHasï¿½ï¿½ ï¿½Ç´ï¿½, ï¿½Ì°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Û·ï¿½
+// ï¿½ï¿½ï¿½Ì´ï¿½ï¿½ï¿½ ï¿½Ñ°ï¿½ï¿½Ù°Å´ï¿½. 
+// ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å­ ï¿½ï¿½ï¿½×¸ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ñ´ï¿½ ï¿½Ç´ï¿½
 // 
 //-----------------------------------------------------------------------------
 #pragma once
@@ -20,7 +20,7 @@ class CHeightMapImage {
 public:
 	CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3& xmf3Scale);
 	float GetHeight(int x, int z);
-	XMFLOAT3 GetNormal(int x, int z);
+	float GetHeightinWorldSpace(float x, float z);
 
 	std::unique_ptr<WORD[]> m_pHeightMapPixels;
 
@@ -34,9 +34,9 @@ public:
 
 class Mesh {
 public:
-	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor-¸Þ½Ã Áï½Ã »ý¼º	
+	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor-ï¿½Þ½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½	
 	Mesh(CHeightMapImage* heightmap, std::string strMeshName);
-	Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName = "noNameMesh");					// boundingOBB ¸¸µé¶§ »ç¿ë
+	Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName = "noNameMesh");					// boundingOBB ï¿½ï¿½ï¿½é¶§ ï¿½ï¿½ï¿½
 	Mesh(XMFLOAT3& center, float radius, std::string meshName = "noNameMesh");
 
 	//void GetMeshNameFromFile(std::ifstream& inFile);
@@ -77,34 +77,38 @@ public:
 	bool getHasBiTangent() const;
 	bool getHasSubmesh() const;
 	bool getbSkinning() const { return m_bSkinningMesh; }
+	bool getHasBoundingBox() const { return m_bHasBoundingBox; }
 
 	UINT getSubMeshCount() const;
 	
+	std::vector<XMFLOAT2>& getTex0() { return m_vTex0; }
 	void setSkinning(bool bSkinning) { m_bSkinningMesh = bSkinning; }
 protected:
 private:
-	std::string m_MeshName{};							// MeshÀÇ ÀÌ¸§
+	std::string m_MeshName{};							// Meshï¿½ï¿½ ï¿½Ì¸ï¿½
 
+	bool m_bHasBoundingBox = false;
 	BoundingOrientedBox m_OBB{};						// Oriented_Bounding_Box
 
-	UINT m_nVertexCount{};								// <Positions> °³¼ö
+	UINT m_nVertexCount{};								// <Positions> ï¿½ï¿½ï¿½ï¿½
 	ComPtr<ID3D12Resource> m_pd3dVertexBuffer{};		// DXGI_FORMAT_R32G32B32_FLOAT
 	bool m_bHasVertex = false;
 
-	UINT m_nColorCount{};								// <Colors> °³¼ö
+	UINT m_nColorCount{};								// <Colors> ï¿½ï¿½ï¿½ï¿½
 	ComPtr<ID3D12Resource> m_pd3dColorsBuffer{};		// ?
 	bool m_bHasColor = false;
 
 	UINT m_nTexCoord0Count{};							// <TextureCoords0>
-	ComPtr<ID3D12Resource> m_pd3dTexCoord0Buffer{};		// ¾Æ¸¶µµ DXGI_FORMAT_R32G32B32_UNORM;
+	std::vector<XMFLOAT2> m_vTex0{};
+	ComPtr<ID3D12Resource> m_pd3dTexCoord0Buffer{};		// ï¿½Æ¸ï¿½ï¿½ï¿½ DXGI_FORMAT_R32G32B32_UNORM;
 	bool m_bHasTex0 = false;
 
 	UINT m_nTexCoord1Count{};							// <TextureCoords1>
-	ComPtr<ID3D12Resource> m_pd3dTexCoord1Buffer{};		// ¾Æ¸¶µµ DXGI_FORMAT_R32G32B32_UNORM;
+	ComPtr<ID3D12Resource> m_pd3dTexCoord1Buffer{};		// ï¿½Æ¸ï¿½ï¿½ï¿½ DXGI_FORMAT_R32G32B32_UNORM;
 	bool m_bHasTex1 = false;
 
 	UINT m_nNormalsCount{};								// <Normals>
-	ComPtr<ID3D12Resource> m_pd3dNormalsBuffer{};		// Á¤±ÔÈ­°ÚÁö
+	ComPtr<ID3D12Resource> m_pd3dNormalsBuffer{};		// ï¿½ï¿½ï¿½ï¿½È­ï¿½ï¿½ï¿½ï¿½
 	bool m_bHasNormals = false;
 
 	UINT m_nTangentsCount{};							// <Tangents>
@@ -115,9 +119,9 @@ private:
 	ComPtr<ID3D12Resource> m_pd3dBiTangentsBuffer{};
 	bool m_bHasBiTangents = false;
 
-	UINT m_nSubMeshesCount{};							// SubMesh°³¼ö (vector::size()·Î ¾Ë¾Æ¿Ã ¼ö ÀÖ´Ù, ÇÊ¿äÇÑ°¡?, reserveÇÒ¶§ »ç¿ë °¡´É)
-	std::vector<ComPtr<ID3D12Resource>> m_vSubMeshes;	// SubMesh(indexbuffer)°¡ ÀúÀåµÈ ¹è¿­
-	std::vector<UINT> m_vIndices;						// °¢ SubMesh¿¡ ´ëÇÑ Index °³¼ö, ÀÌ°Ô 0ÀÌ¸é Á¸ÀçÇÏÁö ¾Ê´Â´Ù.
+	UINT m_nSubMeshesCount{};							// SubMeshï¿½ï¿½ï¿½ï¿½ (vector::size()ï¿½ï¿½ ï¿½Ë¾Æ¿ï¿½ ï¿½ï¿½ ï¿½Ö´ï¿½, ï¿½Ê¿ï¿½ï¿½Ñ°ï¿½?, reserveï¿½Ò¶ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
+	std::vector<ComPtr<ID3D12Resource>> m_vSubMeshes;	// SubMesh(indexbuffer)ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½è¿­
+	std::vector<UINT> m_vIndices;						// ï¿½ï¿½ SubMeshï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Index ï¿½ï¿½ï¿½ï¿½, ï¿½Ì°ï¿½ 0ï¿½Ì¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´Â´ï¿½.
 	bool m_bHasSubMeshes = false;
 
 	bool m_bSkinningMesh = false;

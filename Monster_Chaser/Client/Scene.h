@@ -31,17 +31,19 @@ enum MoveAnimationState
 
 class CScene {
 public:
-	virtual void SetUp() {}
+	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) {}
 	virtual void SetCamera(std::shared_ptr<CCamera>& pCamera) { m_pCamera = pCamera; }
 
 	virtual void UpdateObject(float fElapsedTime) {};
 	
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
-	virtual void MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
+	virtual void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void ProcessInput(float fElapsedTime) {};
 
 	virtual void PrepareRender() {};
 	virtual void Render() {};
+
+	virtual void PrepareTerrainTexture() {}
 protected:
 	bool m_LockAnimation = false;
 	bool m_LockAnimation1 = false;
@@ -49,23 +51,55 @@ protected:
 	bool m_bRayTracing = false;
 	ComPtr<ID3D12RootSignature> m_pGlobalRootSignature{};
 	std::shared_ptr<CCamera> m_pCamera{};
+
+	bool								m_bRayTracing = false;
+	ComPtr<ID3D12RootSignature>			m_pGlobalRootSignature{};
+	std::shared_ptr<CCamera>			m_pCamera{};
+
+	POINT oldCursor;
+	bool m_bHold = false;
+};
+
+enum TitleState{Title, RoomSelect, InRoom, GoLoading};
+
+class TitleScene : public CScene {
+public:
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
+
+	//void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void CreateRootSignature();
+	void CreateRenderTargetView();
+
+	void UpdateObject(float fElapsedTime);
+	void Render();
+protected:
+	TitleState							m_nState = Title;
+
+	ComPtr<ID3D12Resource>				m_pOutputBuffer{};
+	ComPtr<ID3D12DescriptorHeap>		m_RederTargetView{};
+	ComPtr<ID3D12PipelineState>			m_UIPipelineState{};
+	std::unique_ptr<CResourceManager>	m_pResourceManager{};
 };
 
 class CRaytracingScene : public CScene {
 public:
-	virtual void SetUp() {}
+	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) {}
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
-	virtual void MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
+	virtual void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void ProcessInput(float fElapsedTime) {};
 
-	void UpdateObject(float fElapsedTime);
+	virtual void UpdateObject(float fElapsedTime);
 
 	void PrepareRender();
-	void Render();
+	virtual void Render();
 
 	void CreateRootSignature();
 	void CreateComputeRootSignature();
 	void CreateComputeShader();
+
+	virtual void PrepareTerrainTexture() {}
 protected:
 
 	ComPtr<ID3D12RootSignature>							m_pLocalRootSignature{};
@@ -77,11 +111,15 @@ protected:
 	// ��Ű�� �ִϸ��̼� �� ���ҽ�
 	ComPtr<ID3D12RootSignature>							m_pComputeRootSignature{};
 	ComPtr<ID3D12PipelineState>							m_pAnimationComputeShader{};
+
+	// terrainDescriptor
+	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
+	ComPtr<ID3D12Resource>								m_pTerrainCB{};
 };
 
 class CRaytracingTestScene : public CRaytracingScene {
 public:
-	void SetUp();
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
@@ -93,8 +131,26 @@ private:
 
 class CRaytracingMaterialTestScene : public CRaytracingScene {
 public:
-	void SetUp();
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
+	void Render();
+	void PrepareTerrainTexture();
+};
+
+// real use scene
+class CRaytracingWinterLandScene : public CRaytracingScene {
+public:
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
+	void ProcessInput(float fElapsedTime);
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void UpdateObject(float fElapsedTime);
+	void Render();
+	void PrepareTerrainTexture();
+
+	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 };
