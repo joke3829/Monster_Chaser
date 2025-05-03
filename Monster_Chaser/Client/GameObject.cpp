@@ -1051,6 +1051,64 @@ void CSkinningObject::sliding(float depth, const XMFLOAT3& normal, float meshHei
 	UpdateWorldMatrix();
 }
 
+void CSkinningObject::SetMoveDirection(int n)
+{
+	switch (n) {
+	case 0: // IDLE
+		m_xmf3MoveDirection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		break;
+	case 1: // 상 (W)
+		m_xmf3MoveDirection = m_xmf3Look;
+		break;
+	case 2: // 하 (S)
+		m_xmf3MoveDirection = XMFLOAT3(-m_xmf3Look.x, 0.0f, -m_xmf3Look.z);
+		break;
+	case 3: // 좌 (A)
+		m_xmf3MoveDirection = XMFLOAT3(-m_xmf3Right.x, 0.0f, -m_xmf3Right.z);
+		break;
+	case 4: // 우 (D)
+		m_xmf3MoveDirection = m_xmf3Right;
+		break;
+	case 5: // 좌상 (W+A)
+	{
+		XMFLOAT3 moveDir = { m_xmf3Look.x - m_xmf3Right.x, 0.0f, m_xmf3Look.z - m_xmf3Right.z };
+		XMVECTOR moveVec = XMLoadFloat3(&moveDir);
+		moveVec = XMVector3Normalize(moveVec);
+		XMStoreFloat3(&m_xmf3MoveDirection, moveVec);
+		break;
+	}
+	case 6: // 우상 (W+D)
+	{
+		XMFLOAT3 moveDir = { m_xmf3Look.x + m_xmf3Right.x, 0.0f, m_xmf3Look.z + m_xmf3Right.z };
+		XMVECTOR moveVec = XMLoadFloat3(&moveDir);
+		moveVec = XMVector3Normalize(moveVec);
+		XMStoreFloat3(&m_xmf3MoveDirection, moveVec);
+		break;
+	}
+	case 7: // 좌하 (S+A)
+	{
+		XMFLOAT3 moveDir = { -m_xmf3Look.x - m_xmf3Right.x, 0.0f, -m_xmf3Look.z - m_xmf3Right.z };
+		XMVECTOR moveVec = XMLoadFloat3(&moveDir);
+		moveVec = XMVector3Normalize(moveVec);
+		XMStoreFloat3(&m_xmf3MoveDirection, moveVec);
+		break;
+	}
+	case 8: // 우하 (S+D)
+	{
+		XMFLOAT3 moveDir = { -m_xmf3Look.x + m_xmf3Right.x, 0.0f, -m_xmf3Look.z + m_xmf3Right.z };
+		XMVECTOR moveVec = XMLoadFloat3(&moveDir);
+		moveVec = XMVector3Normalize(moveVec);
+		XMStoreFloat3(&m_xmf3MoveDirection, moveVec);
+		break;
+	}
+	}
+
+	// Look 방향을 이동 방향과 동기화 (IDLE 제외)
+	if (n != 0) {
+		SetLookDirection(m_xmf3MoveDirection, m_xmf3Up);
+	}
+}
+
 std::vector<std::unique_ptr<CSkinningInfo>>& CSkinningObject::getSkinningInfo()
 {
 	return m_vSkinningInfo;

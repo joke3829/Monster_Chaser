@@ -628,7 +628,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 			float depth = maxCollision->depth;
 			float meshHeight = maxCollision->meshHeight;
 
-			XMVECTOR moveDir = XMLoadFloat3(&character->getLook()); //이제 캐릭터 방향을 담는 값을 넘길 예정
+			XMVECTOR moveDir = XMLoadFloat3(&character->getLook()); //이제 캐릭터 방향을 담는 값을 넘길 예정 -> 넘기니까 이상한데 뭐지
 			XMVECTOR normal = XMLoadFloat3(&norm);
 			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
 			if (dotProduct < 0.0f) { // 이동 방향이 법선과 반대
@@ -967,348 +967,363 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		return;
 	}
 
-	// W 해제 while Shift held (IDLE로 전환)
+	// W release while Shift held (W -> IDLE)
 	if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// A 해제 while Shift held (IDLE로 전환)
+	// A release while Shift held (A -> IDLE)
 	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S 해제 while Shift held (IDLE로 전환)
+	// S release while Shift held (S -> IDLE)
 	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// D 해제 while Shift held (IDLE로 전환)
+	// D release while Shift held (D -> IDLE)
 	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A + Shift (왼쪽 위로 뛴다)
+	// W + A + Shift (Run Left-Up)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // 뛴다: 왼쪽 위로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // Run Left-Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(5); // Left-Up
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // 뛴다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // Keep Run Left-Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(5); // Left-Up
 		}
 	}
-	// W + A + Shift 해제 (왼쪽 위로 걷는다로 전환)
+	// W + A + Shift release (W + A -> Walk Left-Up)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // 걷는다: 왼쪽 위로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Walk Left-Up
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(5); // Left-Up
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A 입력 (왼쪽 위로 걷는다)
+	// W + A (Walk Left-Up)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // 걷는다: 왼쪽 위로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Walk Left-Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(5); // Left-Up
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // 걷는다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Keep Walk Left-Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(5); // Left-Up
 		}
 	}
-	// W + A + Shift에서 A 해제 (앞으로 뛴다로 전환)
+	// W + A + Shift, A release (W + Shift -> Run Forward)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // 뛴다: 앞으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A에서 A 해제 (앞으로 걷는다로 전환)
+	// W + A, A release (W -> Walk Forward)
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // 걷는다: 앞으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A에서 W 해제 (왼쪽으로 걷는다로 전환)
+	// W + A, W release (A -> Walk Left)
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // 걷는다: 왼쪽으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D + Shift (오른쪽 위로 뛴다)
+	// W + D + Shift (Run Right-Up)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // 뛴다: 오른쪽 위로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // Run Right-Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(6); // Right-Up
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // 뛴다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // Keep Run Right-Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(6); // Right-Up
 		}
 	}
-	// W + D + Shift 해제 (오른쪽 위로 걷는다로 전환)
+	// W + D + Shift release (W + D -> Walk Right-Up)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // 걷는다: 오른쪽 위로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Walk Right-Up
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(6); // Right-Up
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D 입력 (오른쪽 위로 걷는다)
+	// W + D (Walk Right-Up)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // 걷는다: 오른쪽 위로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Walk Right-Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(6); // Right-Up
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // 걷는다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Keep Walk Right-Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(6); // Right-Up
 		}
 	}
-	// W + D + Shift에서 D 해제 (앞으로 뛴다로 전환)
+	// W + D + Shift, D release (W + Shift -> Run Forward)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // 뛴다: 앞으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D에서 D 해제 (앞으로 걷는다로 전환)
+	// W + D, D release (W -> Walk Forward)
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // 걷는다: 앞으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D에서 W 해제 (오른쪽으로 걷는다로 전환)
+	// W + D, W release (D -> Walk Right)
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // 걷는다: 오른쪽으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A + Shift (왼쪽 아래로 뛴다)
+	// S + A + Shift (Run Left-Down)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // 뛴다: 왼쪽 아래로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // Run Left-Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(7); // Left-Down
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // 뛴다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // Keep Run Left-Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(7); // Left-Down
 		}
 	}
-	// S + A + Shift 해제 (왼쪽 아래로 걷는다로 전환)
+	// S + A + Shift release (S + A -> Walk Left-Down)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // 걷는다: 왼쪽 아래로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Walk Left-Down
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(7); // Left-Down
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A 입력 (왼쪽 아래로 걷는다)
+	// S + A (Walk Left-Down)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // 걷는다: 왼쪽 아래로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Walk Left-Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(7); // Left-Down
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // 걷는다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Keep Walk Left-Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(7); // Left-Down
 		}
 	}
-	// S + A + Shift에서 A 해제 (뒤로 뛴다로 전환)
+	// S + A + Shift, A release (S + Shift -> Run Backward)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // 뛴다: 뒤로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A에서 A 해제 (뒤로 걷는다로 전환)
+	// S + A, A release (S -> Walk Backward)
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // 걷는다: 뒤로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A에서 S 해제 (왼쪽으로 걷는다로 전환)
+	// S + A, S release (A -> Walk Left)
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // 걷는다: 왼쪽으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D + Shift (오른쪽 아래로 뛴다)
+	// S + D + Shift (Run Right-Down)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // 뛴다: 오른쪽 아래로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // Run Right-Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(8); // Right-Down
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // 뛴다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // Keep Run Right-Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(8); // Right-Down
 		}
 	}
-	// S + D + Shift 해제 (오른쪽 아래로 걷는다로 전환)
+	// S + D + Shift release (S + D -> Walk Right-Down)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // 걷는다: 오른쪽 아래로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Walk Right-Down
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(8); // Right-Down
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D 입력 (오른쪽 아래로 걷는다)
+	// S + D (Walk Right-Down)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // 걷는다: 오른쪽 아래로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Walk Right-Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(8); // Right-Down
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // 걷는다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Keep Walk Right-Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(8); // Right-Down
 		}
 	}
-	// S + D + Shift에서 D 해제 (뒤로 뛴다로 전환)
+	// S + D + Shift, D release (S + Shift -> Run Backward)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // 뛴다: 뒤로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D에서 D 해제 (뒤로 걷는다로 전환)
+	// S + D, D release (S -> Walk Backward)
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // 걷는다: 뒤로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D에서 S 해제 (오른쪽으로 걷는다로 전환)
+	// S + D, S release (D -> Walk Right)
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // 걷는다: 오른쪽으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + Shift (앞으로 뛴다)
+	// W + Shift (Run Forward)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // 뛴다: 앞으로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // 뛴다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Keep Run Forward
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
 		}
 	}
-	// W + Shift 해제 (앞으로 걷는다로 전환)
+	// W + Shift release (W -> Walk Forward)
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // 걷는다: 앞으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W 입력 (앞으로 걷는다)
+	// W (Walk Forward)
 	else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // 걷는다: 앞으로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // 걷는다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Keep Walk Forward
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
 		}
 	}
-	// S + Shift (뒤로 뛴다)
+	// S + Shift (Run Backward)
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // 뛴다: 뒤로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // 뛴다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Keep Run Backward
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
 		}
 	}
-	// S + Shift 해제 (뒤로 걷는다로 전환)
+	// S + Shift release (S -> Walk Backward)
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // 걷는다: 뒤로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S 입력 (뒤로 걷는다)
+	// S (Walk Backward)
 	else if ((keyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // 걷는다: 뒤로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // 걷는다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Keep Walk Backward
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
 		}
 	}
-	// A + Shift (왼쪽으로 뛴다)
+	// A + Shift (Run Left)
 	else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // 뛴다: 왼쪽으로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // Run Left
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // 뛴다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // Keep Run Left
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
 		}
 	}
-	// A + Shift 해제 (왼쪽으로 걷는다로 전환)
+	// A + Shift release (A -> Walk Left)
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // 걷는다: 왼쪽으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// A 입력 (왼쪽으로 걷는다)
+	// A (Walk Left)
 	else if ((keyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // 걷는다: 왼쪽으로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // 걷는다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Keep Walk Left
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
 		}
 	}
-	// D + Shift (오른쪽으로 뛴다)
+	// D + Shift (Run Right)
 	else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // 뛴다: 오른쪽으로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // Run Right
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // 뛴다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // Keep Run Right
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
 		}
 	}
-	// D + Shift 해제 (오른쪽으로 걷는다로 전환)
+	// D + Shift release (D -> Walk Right)
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // 걷는다: 오른쪽으로
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// D 입력 (오른쪽으로 걷는다)
+	// D (Walk Right)
 	else if ((keyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // 걷는다: 오른쪽으로
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
+			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // 걷는다 유지
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Keep Walk Right
 		}
 	}
-	// W 해제 (IDLE로 전환)
+	// W release (W -> IDLE)
 	else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S 해제 (IDLE로 전환)
+	// S release (S -> IDLE)
 	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// A 해제 (IDLE로 전환)
+	// A release (A -> IDLE)
 	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// D 해제 (IDLE로 전환)
+	// D release (D -> IDLE)
 	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
 
