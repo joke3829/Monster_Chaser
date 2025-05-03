@@ -1014,7 +1014,7 @@ void CSkinningObject::sliding(float depth, const XMFLOAT3& normal, float meshHei
 	// y 성분 제거 (x, z 방향으로만 밀어내기)
 	XMFLOAT3 normalNoY;
 	XMStoreFloat3(&normalNoY, normalVec);
-	normalNoY.y = 0.0f; // y 성분 제거
+	normalNoY.y = 0.0f;
 	normalVec = XMLoadFloat3(&normalNoY);
 
 	// y 성분 제거 후 방향이 0 벡터가 아닌 경우 정규화
@@ -1022,18 +1022,26 @@ void CSkinningObject::sliding(float depth, const XMFLOAT3& normal, float meshHei
 		normalVec = XMVector3Normalize(normalVec);
 	}
 	else {
-		// normalVec이 (0, 0, 0)에 가까운 경우, 밀어내지 않음
-		normalVec = XMVectorZero();
+		// 모서리에서 법선이 부정확할 경우, 이전 슬라이딩 방향 유지 또는 이동 방향 사용
+		if (XMVectorGetX(XMVector3Length(XMLoadFloat3(&m_xmf3Sliding))) > 0.01f) {
+			normalVec = XMVector3Normalize(XMLoadFloat3(&m_xmf3Sliding));
+		}
+		else {
+			normalVec = XMLoadFloat3(&m_xmf3Look); // 이동 방향으로 대체
+			XMFLOAT3 lookNoY = m_xmf3Look;
+			lookNoY.y = 0.0f;
+			normalVec = XMVector3Normalize(XMLoadFloat3(&lookNoY));
+		}
 	}
 
-	// 침투 깊이로 밀어내기 (y 방향 제외)
+	// 침투 깊이로 밀어내기
 	XMVECTOR pushOut = normalVec * depth;
 	XMMATRIX worldMatrix = XMLoadFloat4x4(&m_xmf4x4WorldMatrix);
 	XMVECTOR currentPos = worldMatrix.r[3];
 	currentPos += pushOut;
 
-	// 슬라이딩 벡터 초기화
-	m_xmf3Sliding = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	// 슬라이딩 벡터 업데이트
+	XMStoreFloat3(&m_xmf3Sliding, normalVec);
 
 	// 위치 업데이트
 	XMFLOAT3 lastPos;

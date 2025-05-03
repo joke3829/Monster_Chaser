@@ -586,35 +586,53 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 {
 	auto& meshes = m_pResourceManager->getMeshList();
 
-	for (const auto& mapObj : mapObjects) {
-		int meshIndex = mapObj->getMeshIndex();
-		if (meshIndex == -1 || meshIndex >= meshes.size()) continue;
+	struct CollisionInfo {
+		XMFLOAT3 normal;
+		float depth;
+		float meshHeight;
+	};
 
-		auto& mesh = meshes[meshIndex];
-		if (!mesh->getHasVertex() || !mesh->getHasBoundingBox()) continue;
+	for (const auto& character : characters) {
+		std::vector<CollisionInfo> collisions;
 
-		BoundingOrientedBox mapOBB;
-		mesh->getOBB().Transform(mapOBB, XMLoadFloat4x4(&mapObj->getWorldMatrix()));
+		for (const auto& mapObj : mapObjects) {
+			int meshIndex = mapObj->getMeshIndex();
+			if (meshIndex == -1 || meshIndex >= meshes.size()) continue;
 
-		float meshHeight = mapOBB.Extents.y * 2.0f;
+			auto& mesh = meshes[meshIndex];
+			if (!mesh->getHasVertex() || !mesh->getHasBoundingBox()) continue;
 
-		for (const auto& character : characters) {
+			BoundingOrientedBox mapOBB;
+			mesh->getOBB().Transform(mapOBB, XMLoadFloat4x4(&mapObj->getWorldMatrix()));
+
+			float meshHeight = mapOBB.Extents.y * 2.0f;
+
 			for (const auto& bone : character->getObjects()) {
 				if (bone->getBoundingInfo() & 0x1100) { // Sphere
 					BoundingSphere boneSphere = bone->getObjectSphere();
 					boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
 					if (mapOBB.Intersects(boneSphere)) {
 						XMFLOAT3 norm = CalculateCollisionNormal(mapOBB, boneSphere);
-						float dept = CalculateDepth(mapOBB, boneSphere);
-						XMVECTOR moveDir = XMLoadFloat3(&character->getLook());
-						XMVECTOR normal = XMLoadFloat3(&norm);
-						float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
-						if (dotProduct < 0.0f) { //이동 방향이 법선과 반대
-							character->sliding(dept, norm, meshHeight);
-							return;
-						}
+						float depth = CalculateDepth(mapOBB, boneSphere);
+						collisions.push_back({ norm, depth, meshHeight });
 					}
 				}
+			}
+		}
+
+		// 다중 충돌 처리: 가장 큰 침투 깊이 선택
+		if (!collisions.empty()) {
+			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
+
+			XMFLOAT3 norm = maxCollision->normal;
+			float depth = maxCollision->depth;
+			float meshHeight = maxCollision->meshHeight;
+
+			XMVECTOR moveDir = XMLoadFloat3(&character->getLook()); //이제 캐릭터 방향을 담는 값을 넘길 예정
+			XMVECTOR normal = XMLoadFloat3(&norm);
+			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
+			if (dotProduct < 0.0f) { // 이동 방향이 법선과 반대
+				character->sliding(depth, norm, meshHeight);
 			}
 		}
 	}
@@ -625,14 +643,30 @@ XMFLOAT3 CRaytracingScene::CalculateCollisionNormal(const BoundingOrientedBox& o
 
 	XMVECTOR sphereCenter = XMLoadFloat3(&sphere.Center);
 	XMVECTOR obbCenter = XMLoadFloat3(&obb.Center);
+	XMVECTOR orientation = XMLoadFloat4(&obb.Orientation);
+	XMMATRIX rotation = XMMatrixRotationQuaternion(orientation);
 
-	// ���� ���� ���
-	XMVECTOR direction = XMVector3Normalize(sphereCenter - obbCenter);
+	// OBB의 각 축 추출
+	XMVECTOR axes[3] = {
+		rotation.r[0],
+		rotation.r[1],
+		rotation.r[2]
+	};
 
-	// �ܼ��� �߽� �� ������ ����ȭ�Ͽ� ��ַ� ���
+	// 가장 가까운 점 계산
+	XMVECTOR closestPoint = obbCenter;
+	XMVECTOR d = sphereCenter - obbCenter;
+
+	for (int i = 0; i < 3; ++i) {
+		float distance = XMVectorGetX(XMVector3Dot(d, axes[i]));
+		float extent = (&obb.Extents.x)[i];
+		distance = std::clamp(distance, -extent, extent);
+		closestPoint += axes[i] * distance;
+	}
+
+	XMVECTOR normalVec = XMVector3Normalize(sphereCenter - closestPoint);
 	XMFLOAT3 normal;
-	XMStoreFloat3(&normal, direction);
-
+	XMStoreFloat3(&normal, normalVec);
 	return normal;
 }
 
@@ -640,29 +674,26 @@ float CRaytracingScene::CalculateDepth(const BoundingOrientedBox& obb, const Bou
 {
 	XMVECTOR sphereCenter = XMLoadFloat3(&sphere.Center);
 	XMVECTOR obbCenter = XMLoadFloat3(&obb.Center);
-	XMVECTOR direction = sphereCenter - obbCenter;
-
-	// OBB ȸ�� ���
 	XMVECTOR orientation = XMLoadFloat4(&obb.Orientation);
 	XMMATRIX rotation = XMMatrixRotationQuaternion(orientation);
 
-	// OBB �� ����
 	XMVECTOR axes[3] = {
-		rotation.r[0], // X��
-		rotation.r[1], // Y��
-		rotation.r[2]  // Z��
+		rotation.r[0],
+		rotation.r[1],
+		rotation.r[2]
 	};
 
-	XMVECTOR closest = obbCenter;
+	XMVECTOR closestPoint = obbCenter;
+	XMVECTOR d = sphereCenter - obbCenter;
 
 	for (int i = 0; i < 3; ++i) {
-		float distance = XMVectorGetX(XMVector3Dot(direction, axes[i]));
+		float distance = XMVectorGetX(XMVector3Dot(d, axes[i]));
 		float extent = (&obb.Extents.x)[i];
 		distance = std::clamp(distance, -extent, extent);
-		closest += axes[i] * distance;
+		closestPoint += axes[i] * distance;
 	}
 
-	float dist = XMVectorGetX(XMVector3Length(sphereCenter - closest));
+	float dist = XMVectorGetX(XMVector3Length(sphereCenter - closestPoint));
 	return sphere.Radius - dist;
 }
 
