@@ -9,26 +9,7 @@
 
 extern DXResources g_DxResource;
 
-enum MoveAnimationState
-{
-	IDLE = 0,
-	WALK_FORWARD = 5,
-	WALK_LEFT_UP = 6,
-	WALK_RIGHT_UP = 7,
-	WALK_LEFT = 8,
-	WALK_RIGHT = 9,
-	WALK_BACKWARD = 10,
-	WALK_LEFT_DOWN = 11,
-	WALK_RIGHT_DOWN = 12,
-	RUN_FORWARD = 13,
-	RUN_LEFT_UP = 14,
-	RUN_RIGHT_UP = 15,
-	RUN_LEFT = 16,
-	RUN_RIGHT = 17,
-	RUN_BACKWARD = 18,
-	RUN_LEFT_DOWN = 19,
-	RUN_RIGHT_DOWN = 20,
-};
+
 
 
 
@@ -78,7 +59,7 @@ protected:
 	std::unique_ptr<CShaderBindingTableManager>			m_pShaderBindingTable{};
 	std::unique_ptr<CAccelerationStructureManager>		m_pAccelerationStructureManager{};
 
-	// ��Ű�� �ִϸ��̼� �� ���ҽ�
+	// 占쏙옙키占쏙옙 占쌍니몌옙占싱쇽옙 占쏙옙 占쏙옙占쌀쏙옙
 	ComPtr<ID3D12RootSignature>							m_pComputeRootSignature{};
 	ComPtr<ID3D12PipelineState>							m_pAnimationComputeShader{};
 };
@@ -92,7 +73,7 @@ public:
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 private:
-	UCHAR m_PrevKeyBuffer[256] = { 0 }; // ���� Ű ���� ����
+	UCHAR m_PrevKeyBuffer[256] = { 0 }; // 占쏙옙占쏙옙 키 占쏙옙占쏙옙 占쏙옙占쏙옙
 };
 
 class CRaytracingMaterialTestScene : public CRaytracingScene {

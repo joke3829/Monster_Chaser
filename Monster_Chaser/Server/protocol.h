@@ -13,6 +13,26 @@ constexpr int MAX_ROOM_MEMBER = 3;
 constexpr char MAX_ID_LEN = 20;
 
 
+enum MoveAnimationState
+{
+	IDLE = 0,
+	WALK_FORWARD = 5,
+	WALK_LEFT_UP = 6,
+	WALK_RIGHT_UP = 7,
+	WALK_LEFT = 8,
+	WALK_RIGHT = 9,
+	WALK_BACKWARD = 10,
+	WALK_LEFT_DOWN = 11,
+	WALK_RIGHT_DOWN = 12,
+	RUN_FORWARD = 13,
+	RUN_LEFT_UP = 14,
+	RUN_RIGHT_UP = 15,
+	RUN_LEFT = 16,
+	RUN_RIGHT = 17,
+	RUN_BACKWARD = 18,
+	RUN_LEFT_DOWN = 19,
+	RUN_RIGHT_DOWN = 20,
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,7 +57,7 @@ constexpr char S2C_P_ENTER = 1;
 struct sc_packet_enter {			//accept되는순간 처리 
 	unsigned char size;
 	char type;
-	
+
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -59,7 +79,7 @@ struct sc_packet_select_room {			//방 번호 선택했을 때
 	char type;
 	int Local_id;		//이제 필요없음
 	char room_number;
-	
+
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +100,7 @@ struct sc_packet_room_info {			//방 정보 업데이트
 	unsigned char size;
 	char type;
 	int room_info[10];
-	
+
 
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +111,7 @@ struct sc_packet_set_ready {			//클라가 준비했을 때
 	char type;
 	int Local_id;
 	char room_number;
-	bool is_ready;		
+	bool is_ready;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -101,7 +121,8 @@ struct sc_packet_move {
 	char type;
 	int Local_id;
 	XMFLOAT4X4 pos;
-	//float time;
+	float time;
+	MoveAnimationState state;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -163,20 +184,21 @@ struct cs_packet_enter_room {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr char C2S_P_READY = 54;
-struct cs_packet_ready {
+constexpr char C2S_P_GetREADY = 54;
+struct cs_packet_getready {
 	unsigned char size;
 	char type;
 	char room_number;
+	bool isReady;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr char C2S_P_READY_Cancel = 55;
-struct cs_packet_cancel_ready {
-	unsigned char size;
-	char type;
-	char room_number;
-};
+//constexpr char C2S_P_READY_Cancel = 55;
+//struct cs_packet_cancel_ready {
+//	unsigned char size;
+//	char type;
+//	char room_number;
+//};
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //여기다가 방 다시 선택하는 패킷 할지말지 고민 중
@@ -195,7 +217,8 @@ struct cs_packet_move {
 	unsigned char  size;
 	char  type;
 	XMFLOAT4X4 pos;
-
+	float time;
+	MoveAnimationState state;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

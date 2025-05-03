@@ -60,6 +60,26 @@ using Microsoft::WRL::ComPtr;
 enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...?
 	ALBEDO_COLOR, EMISSIVE_COLOR, SPECULAR_COLOR, GLOSSINESS
 };
+enum MoveAnimationState
+{
+	IDLE = 0,
+	WALK_FORWARD = 5,
+	WALK_LEFT_UP = 6,
+	WALK_RIGHT_UP = 7,
+	WALK_LEFT = 8,
+	WALK_RIGHT = 9,
+	WALK_BACKWARD = 10,
+	WALK_LEFT_DOWN = 11,
+	WALK_RIGHT_DOWN = 12,
+	RUN_FORWARD = 13,
+	RUN_LEFT_UP = 14,
+	RUN_RIGHT_UP = 15,
+	RUN_LEFT = 16,
+	RUN_RIGHT = 17,
+	RUN_BACKWARD = 18,
+	RUN_LEFT_DOWN = 19,
+	RUN_RIGHT_DOWN = 20,
+};
 //========================================================================================
 
 // 상수 정의 ===========================================================================

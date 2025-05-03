@@ -127,40 +127,21 @@ void SESSION::process_packet(char* p) {
 
 		break;
 	}
-	case C2S_P_READY_Cancel: {
-		cs_packet_cancel_ready* pkt = reinterpret_cast<cs_packet_cancel_ready*>(p);
-		int room_num = static_cast<int>(pkt->room_number);
-		bool is_ready = false;
-		g_server.rooms[room_num].setReadyUser(-1);
-
-
-		vector<int> ids;
-		for (int i = 0; i < g_server.rooms[room_num].GetPlayerCount(); ++i) {
-			ids.emplace_back(g_server.rooms[room_num].getID(i));
-		}
-
-
-		sc_packet_set_ready cp;
-		cp.size = sizeof(cp);
-		cp.type = S2C_P_SETREADY;
-		cp.Local_id = g_server.users[m_uniqueNo]->local_id;
-		cp.room_number = room_num;
-		cp.is_ready = is_ready;
-
-		for (int id : ids)
-			g_server.users[id]->do_send(&cp);
-
-
-		std::cout << "[클라이언트 " << m_uniqueNo << "]이 준비를 취소했습니다." << std::endl;
-		break;
-	}
-	case C2S_P_READY: {
-		lock_guard<mutex> lock(myMutex);
-		cs_packet_ready* pkt = reinterpret_cast<cs_packet_ready*>(p);
+	
+	case C2S_P_GetREADY: {
+		//lock_guard<mutex> lock(myMutex);
+		cs_packet_getready* pkt = reinterpret_cast<cs_packet_getready*>(p);
 
 		int room_num = static_cast<int>(pkt->room_number);		//이미 방에 들어갈 떄 진행하니까 굳이 필요는 x
-		bool is_ready = true;
-		g_server.rooms[room_num].setReadyUser(1);
+		bool ready = pkt->isReady;
+		if (ready == true)
+			g_server.rooms[room_num].setReadyUser(1);
+
+		else
+		{
+			g_server.rooms[room_num].setReadyUser(-1);
+			
+		}
 		std::vector<int> room_players;
 
 		// 3명 다 준비 완료일 때
@@ -192,25 +173,28 @@ void SESSION::process_packet(char* p) {
 			rp.type = S2C_P_SETREADY;
 			rp.Local_id = g_server.users[m_uniqueNo]->local_id;
 			rp.room_number = static_cast<char>(room_num);
-			rp.is_ready = is_ready;
+			rp.is_ready = ready;
 
 			for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)
 				room_players.emplace_back(g_server.rooms[room_num].getID(i));
 
 			for (auto& id : room_players)
 				g_server.users[id]->do_send(&rp);
-
+			if(ready)
 			std::cout << "[클라이언트 " << m_uniqueNo << "]이 " << (int)room_num << "번 방에서 준비완료했습니다." << std::endl;
+			else
+				std::cout << "[클라이언트 " << m_uniqueNo << "]이 준비를 취소했습니다." << std::endl;
 		}
 		break;
 	}
 	case C2S_P_MOVE:
 	{
-	//	lock_guard<mutex> lock(myMutex);
+
 		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
 
 		m_pos = pkt->pos;
-		
+		float time = pkt->time;
+		MoveAnimationState state = pkt->state;
 		//collision check
 		/*{
 			이동
@@ -223,6 +207,9 @@ void SESSION::process_packet(char* p) {
 		mp.type = S2C_P_MOVE;
 		mp.Local_id = this->local_id;
 		mp.pos = m_pos;
+		mp.time = time;
+		mp.state = state;
+
 
 		vector <int> room_players;
 		for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)

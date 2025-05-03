@@ -50,6 +50,54 @@ void C_Socket::send_packet(void* pkt)
 	}
 }
 
+void C_Socket::SendLogin(const char* UserID, const char* Userpassword)
+{
+}
+
+void C_Socket::SendCreateUser(const char* UserID, const char* Userpassword, const char* userNickName)
+{
+}
+
+void C_Socket::SendEnterRoom(const int RoomNum)
+{
+	cs_packet_enter_room p;
+	p.size = sizeof(p);
+	p.type = C2S_P_ENTER_ROOM;
+	p.room_number = (char)RoomNum;
+	Client.send_packet(&p);
+}
+
+void C_Socket::SendsetReady(const bool isReady, const int room_num)
+{
+	cs_packet_getready rp;
+	rp.size = sizeof(rp);
+	rp.type = C2S_P_GetREADY;
+	rp.room_number = room_num;
+	rp.isReady = isReady;
+	Client.send_packet(&rp);
+}
+
+void C_Socket::SendBroadCastRoom()
+{
+	cs_packet_room_refresh rp;
+	rp.size = sizeof(rp);
+	rp.type = C2S_P_ROOM_UPDATE;
+	Client.send_packet(&rp);
+}
+
+void C_Socket::SendMovePacket(const float& Time, const MoveAnimationState State)
+{
+	cs_packet_move mp;
+	mp.size = sizeof(mp);
+	mp.type = C2S_P_MOVE;
+	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
+	mp.time = Time;
+	mp.state = State;
+	Client.send_packet(&mp);
+}
+
+
+
 void C_Socket::process_packet(char* ptr)
 {
 	char type = ptr[1];
@@ -165,8 +213,7 @@ void C_Socket::do_recv()
 		}
 		if (io_byte == SOCKET_ERROR) {
 			int err = WSAGetLastError();
-
-			MessageBoxA(NULL, "서버와의 연결이 끊어졌습니다.", "연결 종료", MB_OK | MB_ICONERROR);
+			MessageBoxW(NULL, L"서버와의 연결이 끊어졌습니다.", L"연결 종료", MB_OK | MB_ICONERROR);
 			PostQuitMessage(0);  // 윈도우 루프 종료
 			return;
 

@@ -109,11 +109,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		
 		int room_num = static_cast<char>(num);
 
-		cs_packet_enter_room p;
-		p.size = sizeof(p);
-		p.type = C2S_P_ENTER_ROOM;
-		p.room_number = (char)num;
-		Client.send_packet(&p);
+		Client.SendEnterRoom(room_num);
+		
 
 
 		
@@ -125,21 +122,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 				case 'r':
 
 					if (!ready) {
-						cs_packet_ready rp;
-						rp.size = sizeof(rp);
-						rp.type = C2S_P_READY;
-						rp.room_number = room_num;
-						Client.send_packet(&rp);
-						
-
+						Client.SendsetReady(true, room_num);
+					
 					}
 					else {
-						cs_packet_cancel_ready cp;
-						cp.size = sizeof(cp);
-						cp.room_number = room_num;
-						cp.type = C2S_P_READY_Cancel;
-						Client.send_packet(&cp);
-
+						Client.SendsetReady(false, room_num);
 					}
 					ready = ready ? 0 : 1;
 					break;
