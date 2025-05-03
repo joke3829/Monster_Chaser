@@ -51,13 +51,18 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	for (auto& animationManager : animationManagers) {
 		animationManager->UpdateCombo(fElapsedTime);
 		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
-			animationManager->ChangeAnimation(0, false); // idle State
+			animationManager->ChangeAnimation(IDLE, false);
 			test = true;
 			m_bLockAnimation1 = false;
+			m_bLockAnimation = false;
+			m_bDoingCombo = false;
 		}
 		if (animationManager->IsComboInterrupted()) {
 			test = true;
-			animationManager->ClearComboInterrupted(); // �÷��� �ʱ�ȭ
+			animationManager->ClearComboInterrupted();
+			m_bLockAnimation1 = false;
+			m_bLockAnimation = false;
+			m_bDoingCombo = false;
 		}
 	}
 
@@ -466,7 +471,7 @@ void CRaytracingScene::CreateComputeRootSignature()
 }
 
 template<typename T, typename U>
-requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
+	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
 inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2)
 {
 	bool collisionDetected = false;
@@ -524,7 +529,7 @@ inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique
 }
 
 template<typename T, typename U>
-requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
+	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
 inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2)
 {
 	auto& meshes = m_pResourceManager->getMeshList();
@@ -861,6 +866,7 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 	GetCursorPos(&currentPos);
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 cameraUp = m_pCamera->getUp();
+
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
@@ -869,6 +875,7 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 			for (auto& animationManager : animationManagers) {
 				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 				animationManager->OnAttackInput();
+				m_bDoingCombo = true;
 			}
 		}
 		break;
@@ -879,19 +886,16 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 		float deltaX = static_cast<float>(currentPos.x - screenCenter.x);
 
 		if (deltaX != 0.0f) {
-			// ī�޶� ȸ��
-			m_pCamera->Rotate(deltaX * 1.5f, 0.0f); // ���� ���� ����
+			m_pCamera->Rotate(deltaX * 1.5f, 0.0f);
 
-			// ĳ���� ȸ��
 			auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
 			if (animationManager && !animationManager->getFrame().empty()) {
 				CGameObject* frame = animationManager->getFrame()[0];
-				if (!m_bLockAnimation && !m_bLockAnimation1 && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) { //�ִϸ��̼� �߿��� ĳ���� ȸ�� X
+				if (!m_bLockAnimation && !m_bLockAnimation1 && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
 					m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 				}
 			}
 
-			// ���콺 �ٽ� ȭ�� ����� ����
 			SetCursorPos(screenCenter.x, screenCenter.y);
 		}
 		break;
@@ -925,13 +929,12 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	if (m_bLockAnimation && !m_pResourceManager->getAnimationManagers()[0]->IsInCombo()) {
 		m_bLockAnimation = false;
 	}
-	if (m_bLockAnimation1 && m_pResourceManager->getAnimationManagers()[0]->IsAnimationFinished()) {
-		m_bLockAnimation1 = false;
-	}
 
-	if (m_bLockAnimation || m_bLockAnimation1) {
+	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
 		return;
 	}
+
 	// W 해제 while Shift held (IDLE로 전환)
 	if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
@@ -1297,68 +1300,47 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	//	}
 	//}
 
-	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(1, true); //���ϰ� �±�
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
-		m_bLockAnimation1 = true;
-	}
-
-	if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(2, true); //���ϰ� �°� �ױ�
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
-		m_bLockAnimation1 = true;
-	}
-
-	if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(21, true); //Dodge
-		m_bLockAnimation1 = true;
-	}
-
-	if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(3, true); //���ϰ� �±�
-		m_bLockAnimation1 = true;
-	}
-
-	//if (keyBuffer['N'] & 0x80) {
-	//	if (!(m_PrevKeyBuffer['N'] & 0x80)) {
-	//		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(6, true); // �ȱ�: ����
-	//		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
-	//		m_pResourceManager->UpdatePosition(fElapsedTime);
-	//	}
-	//	else {
-	//		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(6, true); // �ȱ� ����
-	//	}
-	//}
-
-	//if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80)) {
-	//	TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
-	//}
-
-	if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(4, true); //���ϰ� �°� �ױ�
-		m_bLockAnimation1 = true;
-	}
-
-	if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(31, true); //��ų2
-		m_bLockAnimation1 = true;
-	}
-
-	if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(32, true); //��ų1
-		m_bLockAnimation1 = true;
-	}
-
-	if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
-		m_pResourceManager->getAnimationManagers()[0]->StartSkill3(); //��ų3
-		m_bLockAnimation = true;
+	if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo) {
+		if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(HIT, true);
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_bLockAnimation1 = true;
+		}
+		if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(HIT_DEATH, true);
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_bLockAnimation1 = true;
+		}
+		if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(DODGE, true);
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_bLockAnimation1 = true;
+		}
+		if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(BIGHIT, true);
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_bLockAnimation1 = true;
+		}
+		if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(BIGHIT_DEATH, true);
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_bLockAnimation1 = true;
+		}
+		if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(SKILL2, true);
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_bLockAnimation1 = true;
+		}
+		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(SKILL1, true);
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_bLockAnimation1 = true;
+		}
+		if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
+			m_pResourceManager->getAnimationManagers()[0]->OnKey3Input();
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
+			m_bLockAnimation = true;
+		}
 	}
 	// ���� Ű ���¸� ���� ���·� ����
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
@@ -1620,7 +1602,7 @@ void CRaytracingMaterialTestScene::ProcessInput(float fElapsedTime)
 {
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
-	
+
 	bool shiftDown = false;
 	if (keyBuffer[VK_SHIFT] & 0x80)
 		shiftDown = true;
@@ -1697,7 +1679,7 @@ void CRaytracingMaterialTestScene::PrepareTerrainTexture()
 
 	g_DxResource.device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_pTerrainDescriptor.GetAddressOf()));
 
-	struct alignas(16) terrainINFO  {
+	struct alignas(16) terrainINFO {
 		int numLayer{};
 		float padding[3]{};
 		int bHasDiffuse[4]{};
@@ -1749,7 +1731,7 @@ void CRaytracingMaterialTestScene::PrepareTerrainTexture()
 
 	g_DxResource.device->CreateShaderResourceView(textures[textureIndex]->getTexture(), &srvDesc, handle);
 	handle.ptr += increment;
-	
+
 	// layer 0 ===============================================================
 
 	d3dRD = textures[textureIndex + 1]->getTexture()->GetDesc();
