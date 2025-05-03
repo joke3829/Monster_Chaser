@@ -990,9 +990,6 @@ void CSkinningObject::sliding(float depth, const XMFLOAT3& normal, float meshHei
 	XMVECTOR normalVec = XMLoadFloat3(&normal);
 	XMVECTOR moveDirVec = XMLoadFloat3(&m_xmf3Look);
 
-	normalVec = XMVector3Normalize(normalVec);
-	moveDirVec = XMVector3Normalize(moveDirVec);
-
 	// push character (depth)
 	XMVECTOR pushOut = normalVec * depth;
 	XMMATRIX worldMatrix = XMLoadFloat4x4(&m_xmf4x4WorldMatrix);
