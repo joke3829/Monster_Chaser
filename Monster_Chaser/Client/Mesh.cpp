@@ -314,8 +314,8 @@ Mesh::Mesh(XMFLOAT3& center, float radius, std::string meshName)
 	m_bHasBoundingBox = true;
 	m_OBB = BoundingOrientedBox(center, XMFLOAT3(radius, radius, radius), XMFLOAT4(0.0, 0.0, 0.0, 1.0));
 
-	const UINT sliceCount = 80;
-	const UINT stackCount = 80;
+	const UINT sliceCount = 20;
+	const UINT stackCount = 20;
 
 	std::vector<XMFLOAT3> positions;
 	std::vector<XMFLOAT3> normals;
