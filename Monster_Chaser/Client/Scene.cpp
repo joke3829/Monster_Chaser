@@ -1911,7 +1911,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->SetUp(3);
 	// ���⿡ ���� �ֱ� ========================================	! ��� ������ �ѹ����� �б� !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	// ���� �߰�
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
@@ -1981,7 +1981,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// ���⼭ �ʿ��� ��ü(normalObject) ���� & ��� ���� ===============================
 
-	skinned[0]->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
 	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -998.0f));
 	skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));

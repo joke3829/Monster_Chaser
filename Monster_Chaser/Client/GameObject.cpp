@@ -473,6 +473,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 {
 	UINT nCurrentObjectIndex = m_vObjects.size();
 	bool bBoneBound = false;
+	bool bOBB = false;
 	m_vObjects.emplace_back(std::make_unique<CGameObject>());
 	m_vObjects[nCurrentObjectIndex]->InitializeObjectFromFile(inFile);
 
@@ -567,8 +568,9 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			inFile.read((char*)&center, sizeof(XMFLOAT3));
 			inFile.read((char*)&extent, sizeof(XMFLOAT3));
 			m_vObjects[nCurrentObjectIndex]->SetBoundingOBB(center, extent);
-			if (g_ShowBoundingBox) {
+			if (g_ShowBoundingBox && false == bBoneBound) {
 				bBoneBound = true;
+				bOBB = true;
 				m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
 				m_vMeshes.emplace_back(std::make_shared<Mesh>(center, extent));
 
@@ -584,6 +586,23 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			inFile.read((char*)&center, sizeof(XMFLOAT3));
 			inFile.read((char*)&rad, sizeof(float));
 			m_vObjects[nCurrentObjectIndex]->SetBoundingSphere(center, rad);
+			if (g_ShowBoundingBox) {
+				bBoneBound = true;
+				if (bOBB) {
+					m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
+					m_vMeshes.emplace_back(std::make_shared<Mesh>(center, rad));
+				}
+				else {
+					m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
+					m_vMeshes.emplace_back(std::make_shared<Mesh>(center, rad));
+
+					std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
+					tempV.clear();
+					Material tempM;
+					tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ���� �÷�
+					tempV.emplace_back(tempM);
+				}
+			}
 		}
 		else if (strLabel == "</Frame>")
 			break;
