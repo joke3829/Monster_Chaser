@@ -929,7 +929,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_bLockAnimation1 = false;
 	}
 
-	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
+	if (m_bLockAnimation || m_bLockAnimation1) {
 		return;
 	}
 	// W 해제 while Shift held (IDLE로 전환)
