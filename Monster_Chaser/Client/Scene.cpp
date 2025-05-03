@@ -628,7 +628,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 			float depth = maxCollision->depth;
 			float meshHeight = maxCollision->meshHeight;
 
-			XMVECTOR moveDir = XMLoadFloat3(&character->getLook()); //이제 캐릭터 방향을 담는 값을 넘길 예정 -> 넘기니까 이상한데 뭐지
+			XMVECTOR moveDir = XMLoadFloat3(&character->getLook()); //이제 캐릭터 방향을 담는 값을 넘길 예정
 			XMVECTOR normal = XMLoadFloat3(&norm);
 			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
 			if (dotProduct < 0.0f) { // 이동 방향이 법선과 반대
@@ -967,363 +967,348 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		return;
 	}
 
-	// W release while Shift held (W -> IDLE)
+	// W -> IDLE while Shift held
 	if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// A release while Shift held (A -> IDLE)
+	// A -> IDLE while Shift held
 	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S release while Shift held (S -> IDLE)
+	// S -> IDLE while Shift held
 	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// D release while Shift held (D -> IDLE)
+	// D -> IDLE while Shift held
 	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A + Shift (Run Left-Up)
+	// W + A + Shift -> Run Left Up
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // Run Left-Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(5); // Left-Up
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // Run Left Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // Keep Run Left-Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(5); // Left-Up
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // Maintain Run
 		}
 	}
-	// W + A + Shift release (W + A -> Walk Left-Up)
+	// W + A + Shift -> Walk Left Up
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Walk Left-Up
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(5); // Left-Up
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Walk Left Up
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A (Walk Left-Up)
+	// W + A -> Walk Left Up
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Walk Left-Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(5); // Left-Up
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Walk Left Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Keep Walk Left-Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(5); // Left-Up
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Maintain Walk
 		}
 	}
-	// W + A + Shift, A release (W + Shift -> Run Forward)
+	// W + A + Shift, A -> Run Forward
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A, A release (W -> Walk Forward)
+	// W + A, A -> Walk Forward
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A, W release (A -> Walk Left)
+	// W + A, W -> Walk Left
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D + Shift (Run Right-Up)
+	// W + D + Shift -> Run Right Up
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // Run Right-Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(6); // Right-Up
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // Run Right Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // Keep Run Right-Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(6); // Right-Up
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // Maintain Run
 		}
 	}
-	// W + D + Shift release (W + D -> Walk Right-Up)
+	// W + D + Shift -> Walk Right Up
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Walk Right-Up
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(6); // Right-Up
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Walk Right Up
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D (Walk Right-Up)
+	// W + D -> Walk Right Up
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Walk Right-Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(6); // Right-Up
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Walk Right Up
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Keep Walk Right-Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(6); // Right-Up
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Maintain Walk
 		}
 	}
-	// W + D + Shift, D release (W + Shift -> Run Forward)
+	// W + D + Shift, D -> Run Forward
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D, D release (W -> Walk Forward)
+	// W + D, D -> Walk Forward
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D, W release (D -> Walk Right)
+	// W + D, W -> Walk Right
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A + Shift (Run Left-Down)
+	// S + A + Shift -> Run Left Down
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // Run Left-Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(7); // Left-Down
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // Run Left Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // Keep Run Left-Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(7); // Left-Down
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // Maintain Run
 		}
 	}
-	// S + A + Shift release (S + A -> Walk Left-Down)
+	// S + A + Shift -> Walk Left Down
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Walk Left-Down
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(7); // Left-Down
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Walk Left Down
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A (Walk Left-Down)
+	// S + A -> Walk Left Down
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Walk Left-Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(7); // Left-Down
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Walk Left Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Keep Walk Left-Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(7); // Left-Down
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Maintain Walk
 		}
 	}
-	// S + A + Shift, A release (S + Shift -> Run Backward)
+	// S + A + Shift, A -> Run Backward
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A, A release (S -> Walk Backward)
+	// S + A, A -> Walk Backward
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A, S release (A -> Walk Left)
+	// S + A, S -> Walk Left
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D + Shift (Run Right-Down)
+	// S + D + Shift -> Run Right Down
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // Run Right-Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(8); // Right-Down
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // Run Right Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // Keep Run Right-Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(8); // Right-Down
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // Maintain Run
 		}
 	}
-	// S + D + Shift release (S + D -> Walk Right-Down)
+	// S + D + Shift -> Walk Right Down
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Walk Right-Down
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(8); // Right-Down
+		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Walk Right Down
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D (Walk Right-Down)
+	// S + D -> Walk Right Down
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Walk Right-Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(8); // Right-Down
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Walk Right Down
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Keep Walk Right-Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(8); // Right-Down
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Maintain Walk
 		}
 	}
-	// S + D + Shift, D release (S + Shift -> Run Backward)
+	// S + D + Shift, D -> Run Backward
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D, D release (S -> Walk Backward)
+	// S + D, D -> Walk Backward
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D, S release (D -> Walk Right)
+	// S + D, S -> Walk Right
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + Shift (Run Forward)
+	// W + Shift -> Run Forward
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Keep Run Forward
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Maintain Run
 		}
 	}
-	// W + Shift release (W -> Walk Forward)
+	// W + Shift -> Walk Forward
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W (Walk Forward)
+	// W -> Walk Forward
 	else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Keep Walk Forward
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(1); // Forward
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Maintain Walk
 		}
 	}
-	// S + Shift (Run Backward)
+	// S + Shift -> Run Backward
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Keep Run Backward
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Maintain Run
 		}
 	}
-	// S + Shift release (S -> Walk Backward)
+	// S + Shift -> Walk Backward
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S (Walk Backward)
+	// S -> Walk Backward
 	else if ((keyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Keep Walk Backward
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(2); // Backward
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Maintain Walk
 		}
 	}
-	// A + Shift (Run Left)
+	// A + Shift -> Run Left
 	else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // Run Left
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // Keep Run Left
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // Maintain Run
 		}
 	}
-	// A + Shift release (A -> Walk Left)
+	// A + Shift -> Walk Left
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// A (Walk Left)
+	// A -> Walk Left
 	else if ((keyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['A'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Keep Walk Left
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(3); // Left
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Maintain Walk
 		}
 	}
-	// D + Shift (Run Right)
+	// D + Shift -> Run Right
 	else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // Run Right
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // Keep Run Right
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // Maintain Run
 		}
 	}
-	// D + Shift release (D -> Walk Right)
+	// D + Shift -> Walk Right
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// D (Walk Right)
+	// D -> Walk Right
 	else if ((keyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['D'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-			m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(4); // Right
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 			m_pResourceManager->UpdatePosition(fElapsedTime);
 		}
 		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Keep Walk Right
+			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Maintain Walk
 		}
 	}
-	// W release (W -> IDLE)
+	// W -> IDLE
 	else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S release (S -> IDLE)
+	// S -> IDLE
 	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// A release (A -> IDLE)
+	// A -> IDLE
 	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// D release (D -> IDLE)
+	// D -> IDLE
 	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(0); // IDLE
+		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
 
