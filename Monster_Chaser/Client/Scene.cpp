@@ -891,8 +891,9 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 			auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
 			if (animationManager && !animationManager->getFrame().empty()) {
 				CGameObject* frame = animationManager->getFrame()[0];
-				if (!m_bLockAnimation && !m_bLockAnimation1 && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
+				if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
 					m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
+					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 				}
 			}
 
