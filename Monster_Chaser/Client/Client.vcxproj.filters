@@ -214,5 +214,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="AnimationComputeShader.hlsl" />
+    <None Include="UIShader.hlsl" />
   </ItemGroup>
 </Project>

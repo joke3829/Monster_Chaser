@@ -2,10 +2,62 @@
 
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
+void CScene::CreateRTVDSV()
+{
+	D3D12_DESCRIPTOR_HEAP_DESC desc{};
+	desc.NumDescriptors = 1;
+	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+
+	ID3D12Device5* device = g_DxResource.device;
+	device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_RTV.GetAddressOf()));
+
+	device->CreateRenderTargetView(m_pOutputBuffer.Get(), nullptr, m_RTV->GetCPUDescriptorHandleForHeapStart());
+
+	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_DSV.GetAddressOf()));
+
+	D3D12_RESOURCE_DESC resourceDesc = BASIC_BUFFER_DESC;
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	resourceDesc.Width = DEFINED_UAV_BUFFER_WIDTH;		// Subject to change
+	resourceDesc.Height = DEFINED_UAV_BUFFER_HEIGHT;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, nullptr, IID_PPV_ARGS(m_pDepthStencilBuffer.GetAddressOf()));
+	device->CreateDepthStencilView(m_pDepthStencilBuffer.Get(), nullptr, m_DSV->GetCPUDescriptorHandleForHeapStart());
+}
+
+// ==================================================================================
+
 void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
 	m_pOutputBuffer = outputBuffer;
 
+	CreateRTVDSV();
+	CreateRootSignature();
+	CreatePipelineState();
+
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = Align(sizeof(XMFLOAT4X4), 256);
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cameraCB.GetAddressOf()));
+
+	XMFLOAT4X4 ortho{};
+	XMStoreFloat4x4(&ortho, XMMatrixTranspose(XMMatrixOrthographicLH(960, 540, -1, 1)));
+
+	void* temp{};
+	m_cameraCB->Map(0, nullptr, &temp);
+	memcpy(temp, &ortho, sizeof(XMFLOAT4X4));
+	m_cameraCB->Unmap(0, nullptr);
+
+	m_pResourceManager = std::make_unique<CResourceManager>();
+
+	std::vector<std::unique_ptr<CGameObject>>& objects = m_pResourceManager->getGameObjectList();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Greycloak\\texture.dds"));
 }
 
 //void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
@@ -16,11 +68,96 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 
 void TitleScene::CreateRootSignature()
 {
+	D3D12_DESCRIPTOR_RANGE tRange{};
+	tRange.BaseShaderRegister = 0;
+	tRange.NumDescriptors = 1;
+	tRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 
+	D3D12_ROOT_PARAMETER params[2]{};
+	params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	params[0].Descriptor.RegisterSpace = 0;
+	params[0].Descriptor.ShaderRegister = 0;
+
+	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[1].DescriptorTable.NumDescriptorRanges = 1;
+	params[1].DescriptorTable.pDescriptorRanges = &tRange;
+
+	D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
+	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	samplerDesc.RegisterSpace = 0;
+	samplerDesc.ShaderRegister = 0;
+	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	D3D12_ROOT_SIGNATURE_DESC rtDesc{};
+	rtDesc.NumParameters = 2;
+	rtDesc.NumStaticSamplers = 1;
+	rtDesc.pParameters = params;
+	rtDesc.pStaticSamplers = &samplerDesc;
+	rtDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	ID3DBlob* pBlob{};
+	D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pGlobalRootSignature.GetAddressOf()));
+	pBlob->Release();
 }
-void TitleScene::CreateRenderTargetView()
+void TitleScene::CreatePipelineState()
 {
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dPBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_pGlobalRootSignature.Get();
 
+	D3D12_INPUT_ELEMENT_DESC ldesc[2]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 2;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 1;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "PSMain", "ps_5_1", 0, 0, &pd3dPBlob, nullptr);
+	d3dPipelineState.PS.BytecodeLength = pd3dPBlob->GetBufferSize();
+	d3dPipelineState.PS.pShaderBytecode = pd3dPBlob->GetBufferPointer();
+	
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, __uuidof(ID3D12PipelineState), (void**)m_UIPipelineState.GetAddressOf());
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dPBlob)
+		pd3dPBlob->Release();
 }
 
 void TitleScene::UpdateObject(float fElapsedTime)
@@ -29,7 +166,63 @@ void TitleScene::UpdateObject(float fElapsedTime)
 }
 void TitleScene::Render()
 {
+	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
+	auto barrier = [&](ID3D12Resource* pResource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
+		{
+			D3D12_RESOURCE_BARRIER resBarrier{};
+			resBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			resBarrier.Transition.pResource = pResource;
+			resBarrier.Transition.StateBefore = before;
+			resBarrier.Transition.StateAfter = after;
+			resBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
+			cmdList->ResourceBarrier(1, &resBarrier);
+		};
+
+	std::vector<std::unique_ptr<CGameObject>>& objects = m_pResourceManager->getGameObjectList();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	
+	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	D3D12_VIEWPORT vv{};
+	vv.Width = 960; vv.Height = 540; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
+	cmdList->RSSetViewports(1, &vv);
+	D3D12_RECT ss{ 0, 0, 960, 540 };
+	cmdList->RSSetScissorRects(1, &ss);
+	float color[4] = { 0.5, 0.5, 1.0, 1.0 };
+	cmdList->ClearRenderTargetView(m_RTV->GetCPUDescriptorHandleForHeapStart(), color, 0, NULL);
+	cmdList->ClearDepthStencilView(m_DSV->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
+		1.0f, 0, 0, NULL);
+	cmdList->OMSetRenderTargets(1, &m_RTV->GetCPUDescriptorHandleForHeapStart(), FALSE, &m_DSV->GetCPUDescriptorHandleForHeapStart());
+	cmdList->SetGraphicsRootSignature(m_pGlobalRootSignature.Get());
+	cmdList->SetPipelineState(m_UIPipelineState.Get());
+
+
+	cmdList->SetGraphicsRootConstantBufferView(0, m_cameraCB->GetGPUVirtualAddress());
+	ID3D12DescriptorHeap* tt = textures[0]->getView();
+	cmdList->SetDescriptorHeaps(1, &tt);
+	cmdList->SetGraphicsRootDescriptorTable(1, textures[0]->getView()->GetGPUDescriptorHandleForHeapStart());
+
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	D3D12_VERTEX_BUFFER_VIEW vview[2]{};
+	vview[0].BufferLocation = meshes[0]->getVertexBuffer()->GetGPUVirtualAddress();
+	vview[0].SizeInBytes = sizeof(XMFLOAT3) * meshes[0]->getVertexCount();
+	vview[0].StrideInBytes = sizeof(XMFLOAT3);
+
+	vview[1].BufferLocation = meshes[0]->getTexCoord0Buffer()->GetGPUVirtualAddress();
+	vview[1].SizeInBytes = sizeof(XMFLOAT2) * meshes[0]->getTexCoord0Count();
+	vview[1].StrideInBytes = sizeof(XMFLOAT2);
+
+	cmdList->IASetVertexBuffers(0, 2, vview);
+	D3D12_INDEX_BUFFER_VIEW iv{};
+	iv.BufferLocation = meshes[0]->getIndexBuffer(0)->GetGPUVirtualAddress();
+	iv.Format = DXGI_FORMAT_R32_UINT;
+	iv.SizeInBytes = sizeof(UINT) * meshes[0]->getIndexCount(0);
+	cmdList->IASetIndexBuffer(&iv);
+	cmdList->DrawIndexedInstanced(meshes[0]->getIndexCount(0), 1, 0, 0, 0);
+
+	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
 
 // ==================================================================================

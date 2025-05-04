@@ -31,8 +31,9 @@ enum MoveAnimationState
 
 class CScene {
 public:
-	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) {}
+	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) { m_pOutputBuffer = outputBuffer; }
 	virtual void SetCamera(std::shared_ptr<CCamera>& pCamera) { m_pCamera = pCamera; }
+	virtual void CreateRTVDSV();
 
 	virtual void UpdateObject(float fElapsedTime) {};
 	
@@ -45,6 +46,12 @@ public:
 
 	virtual void PrepareTerrainTexture() {}
 protected:
+	ComPtr<ID3D12Resource>				m_pOutputBuffer{};
+	ComPtr<ID3D12DescriptorHeap>		m_RTV{};
+	ComPtr<ID3D12PipelineState>			m_UIPipelineState{};
+	ComPtr<ID3D12Resource>				m_pDepthStencilBuffer{};
+	ComPtr<ID3D12DescriptorHeap>		m_DSV{};
+
 	bool m_bLockAnimation = false;
 	bool m_bLockAnimation1 = false;
 	bool m_bStopAnimaiton = false;
@@ -68,17 +75,15 @@ public:
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	void CreateRootSignature();
-	void CreateRenderTargetView();
+	void CreatePipelineState();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();
 protected:
 	TitleState							m_nState = Title;
-
-	ComPtr<ID3D12Resource>				m_pOutputBuffer{};
-	ComPtr<ID3D12DescriptorHeap>		m_RederTargetView{};
-	ComPtr<ID3D12PipelineState>			m_UIPipelineState{};
 	std::unique_ptr<CResourceManager>	m_pResourceManager{};
+
+	ComPtr<ID3D12Resource>				m_cameraCB{};
 };
 
 template<typename T>

@@ -194,7 +194,7 @@ void CGameFramework::InitOutputBuffer()
 
 void CGameFramework::InitScene()
 {
-	m_pScene = std::make_unique<CRaytracingTestScene>();
+	m_pScene = std::make_unique<TitleScene>();
 	m_pScene->SetCamera(m_pCamera);
 	m_pScene->SetUp(m_pd3dOutputBuffer);
 }
@@ -314,9 +314,10 @@ void CGameFramework::Render()
 
 		m_pScene->PrepareRender();
 
-		m_pd3dCommandList->SetDescriptorHeaps(1, m_pd3dOutputBufferView.GetAddressOf());
-		m_pd3dCommandList->SetComputeRootDescriptorTable(0, m_pd3dOutputBufferView->GetGPUDescriptorHandleForHeapStart());
-
+		if (bIngame) {
+			m_pd3dCommandList->SetDescriptorHeaps(1, m_pd3dOutputBufferView.GetAddressOf());
+			m_pd3dCommandList->SetComputeRootDescriptorTable(0, m_pd3dOutputBufferView->GetGPUDescriptorHandleForHeapStart());
+		}
 		m_pScene->Render();
 		// ===========================================
 

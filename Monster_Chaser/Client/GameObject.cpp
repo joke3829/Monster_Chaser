@@ -1236,8 +1236,10 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 
 
 	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo) {
-		int n = info->getRefMeshIndex();
-		m_vMeshes[n]->setSkinning(true);
+		if (!g_ShowBoundingBox) {
+			int n = info->getRefMeshIndex();
+			m_vMeshes[n]->setSkinning(true);
+		}
 	}
 	for (std::shared_ptr<Mesh>& mesh : m_vMeshes) {
 		ComPtr<ID3D12Resource> constResource{};
