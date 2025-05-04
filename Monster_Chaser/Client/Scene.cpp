@@ -964,7 +964,6 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		//dskfhaskdf
 		return;
 	}
 
