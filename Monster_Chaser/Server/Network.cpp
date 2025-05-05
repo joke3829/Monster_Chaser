@@ -51,7 +51,7 @@ void SESSION::process_packet(char* p) {
 	}
 	case C2S_P_ENTER_ROOM: {
 
-		lock_guard<mutex> lock(myMutex);
+		
 		cs_packet_enter_room* pkt = reinterpret_cast<cs_packet_enter_room*>(p);
 
 		int room_Num = static_cast<int>(pkt->room_number);
@@ -189,7 +189,7 @@ void SESSION::process_packet(char* p) {
 	}
 	case C2S_P_MOVE:
 	{
-
+		auto start_time = high_resolution_clock::now();
 		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
 
 		m_pos = pkt->pos;
@@ -209,7 +209,10 @@ void SESSION::process_packet(char* p) {
 		mp.pos = m_pos;
 		mp.time = time;
 		mp.state = state;
-
+		auto end_time = high_resolution_clock::now();
+		auto duration = duration_cast<milliseconds>(end_time - start_time).count();
+		mp.pingTime = static_cast<UINT>(duration); // 서버 핑 시간
+		//mp.pingTime;		//여기다가 서버에서 패킷 처리하면서 걸린 시간을 넣어서 클라에게 넘겨주기
 
 		vector <int> room_players;
 		for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)

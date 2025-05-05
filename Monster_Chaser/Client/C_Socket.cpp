@@ -94,6 +94,7 @@ void C_Socket::SendMovePacket(const float& Time, const MoveAnimationState State)
 	mp.time = Time;
 	mp.state = State;
 	Client.send_packet(&mp);
+
 }
 
 

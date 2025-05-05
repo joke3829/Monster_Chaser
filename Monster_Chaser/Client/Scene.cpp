@@ -718,6 +718,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(RUN_LEFT_UP, true); // 뛰기 유지
 		}
 	}
+	
 	// W + A + Shift 뗀 순간 (왼쪽 대각선 위 걷기로 전환)
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(WALK_LEFT_UP, true); // 걷기: 왼쪽 대각선 위
@@ -1052,12 +1053,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 
 
-	//Players[Client.get_id()].getRenderingObject()->UpdateWorldMatrix();  // ★ 이걸 꼭 호출
-	//cs_packet_move mp;
-	//mp.size = sizeof(mp);
-	//mp.type = C2S_P_MOVE;
-	//mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
-	//Client.send_packet(&mp);
+	//Client.SendMovePacket(1,RUN_FORWARD);
+	cs_packet_move mp;
+	mp.size = sizeof(mp);
+	mp.type = C2S_P_MOVE;
+	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
+	Client.send_packet(&mp);	//프레임 단위로 보내줌
+	
 }
 
 
