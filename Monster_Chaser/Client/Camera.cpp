@@ -1,5 +1,10 @@
 #include "Camera.h"
 
+CCamera::~CCamera()
+{
+	if (m_pd3dCameraBuffer)
+		m_pd3dCameraBuffer->Unmap(0, nullptr);
+}
 
 void CCamera::Setup(int nRootParameterIndex)
 {
@@ -70,7 +75,7 @@ void CCamera::Move(int arrow, float fElapsedTime, bool shift)
 void CCamera::UpdateViewMatrix()
 {
 	if (m_bThirdPerson) {
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_pTarget->getPositionFromWMatrix()) + XMLoadFloat3(&m_xmf3Offset) * m_fCameraLength);
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_pTarget->getPositionFromWMatrix()) + XMLoadFloat3(&m_xmf3hOffset) + XMLoadFloat3(&m_xmf3Offset) * m_fCameraLength);
 		m_xmf3At = m_pTarget->getPositionFromWMatrix();
 	}
 	else {

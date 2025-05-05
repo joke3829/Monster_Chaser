@@ -150,6 +150,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 			m_nState = InRoom;
 			break;
 		case InRoom:
+			startTime = 0.0f;
 			m_nState = GoLoading;
 			wOpacity = 0.0f;
 			break;
@@ -303,10 +304,16 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		break;
 	}
 	case GoLoading: {
-		wOpacity += 0.35f * fElapsedTime;
-		if (wOpacity > 1.0f)
-			wOpacity = 1.0f;
-		m_vInRoomUIs[1]->setColor(0.0, 0.0, 0.0, wOpacity);
+		if (startTime < 3.5f) {
+			startTime += fElapsedTime;
+			wOpacity += 0.35f * fElapsedTime;
+			if (wOpacity > 1.0f)
+				wOpacity = 1.0f;
+			m_vInRoomUIs[1]->setColor(0.0, 0.0, 0.0, wOpacity);
+		}
+		else {
+			m_nNextScene = SCENE_WINTERLAND;
+		}
 		break;
 	}
 	}
@@ -2250,7 +2257,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		return p->getFrameName() == "Water";
 		});
 	if (p != normalObjects.end()) {
-		(*p)->SetInstanceID(1);
+		(*p)->SetInstanceID(2);
 		(*p)->getMaterials().emplace_back();
 		Material& mt = (*p)->getMaterials()[0];
 		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
@@ -2293,6 +2300,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// ī�޶� ���� ==============================================================
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetHOffset(3.5f);
 	m_pCamera->SetCameraLength(15.0f);
 	// ==========================================================================
 

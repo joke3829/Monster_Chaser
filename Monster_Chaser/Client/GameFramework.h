@@ -21,7 +21,7 @@ public:
 	void InitSwapChain();
 
 	// Rasterization
-	void InitRTVDSV();
+	//void InitRTVDSV();
 
 	// DXR
 	void InitOutputBuffer();
@@ -34,6 +34,9 @@ public:
 	LRESULT CALLBACK WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void CheckSceneFinish();
+	void ChangeScene(short definedScene);
 
 	void ProcessInput(float fElapsedTime);
 
@@ -57,12 +60,12 @@ private:
 	bool m_bRaster{};				// Rendering 방식 결정 값
 
 	// Rasterization
-	ComPtr<ID3D12Resource> m_pd3dBackBuffer[2]{};
+	/*ComPtr<ID3D12Resource> m_pd3dBackBuffer[2]{};
 	ComPtr<ID3D12DescriptorHeap> m_pd3dRenderTargetView{};
 	UINT m_nRTVIncrementSize{};
 
 	ComPtr<ID3D12Resource> m_pd3dDepthStencilBuffer{};
-	ComPtr<ID3D12DescriptorHeap> m_pd3dDepthStencilView{};
+	ComPtr<ID3D12DescriptorHeap> m_pd3dDepthStencilView{};*/
 
 	// DXR
 	ComPtr<ID3D12Resource> m_pd3dOutputBuffer{};
@@ -75,6 +78,6 @@ private:
 
 	std::shared_ptr<CCamera> m_pCamera{};
 
-	bool bIngame = true;
+	bool bIngame = false;
 };
 

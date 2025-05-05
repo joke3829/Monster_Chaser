@@ -63,6 +63,12 @@ constexpr unsigned short DEFINED_UAV_BUFFER_WIDTH = 960;
 constexpr unsigned short DEFINED_UAV_BUFFER_HEIGHT = 540;
 // 위 네개 정의는 바뀔 수 있다.
 
+// define Scene
+constexpr unsigned short SCENE_TITLE		= 0;
+constexpr unsigned short SCENE_PLAIN		= 1;
+constexpr unsigned short SCENE_CAVE			= 2;
+constexpr unsigned short SCENE_WINTERLAND	= 3;
+
 // 조명 관련 정의
 constexpr int MAX_LIGHTS = 64;
 

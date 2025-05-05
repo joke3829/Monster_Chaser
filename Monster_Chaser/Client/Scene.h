@@ -45,6 +45,8 @@ public:
 	virtual void PrepareRender() {};
 	virtual void Render() {};
 
+	short getNextSceneNumber() const { return m_nNextScene; }
+
 	virtual void PrepareTerrainTexture() {}
 protected:
 	ComPtr<ID3D12Resource>				m_pOutputBuffer{};
@@ -64,6 +66,8 @@ protected:
 
 	POINT oldCursor;
 	bool m_bHold = false;
+
+	short m_nNextScene = -1;
 };
 
 enum TitleState{Title, RoomSelect, InRoom, GoLoading};
@@ -90,11 +94,11 @@ protected:
 	std::vector<std::unique_ptr<UIObject>>	m_vInRoomUIs;
 
 	// Title variables
-	float wOpacity = 1.0f;
-	float startTime{};
+	float									wOpacity = 1.0f;
+	float									startTime{};
 	// Room Select variables
-	int peopleindex{};
-	std::array<short, 10> userPerRoom{ 1, 0, 0, 3, 2, 2, 3, 0, 2, 1 };
+	int										peopleindex{};
+	std::array<short, 10>					userPerRoom{ 1, 0, 0, 3, 2, 2, 3, 0, 2, 1 };
 };
 
 template<typename T>
