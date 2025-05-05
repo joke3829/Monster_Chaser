@@ -28,16 +28,8 @@ void CScene::CreateRTVDSV()
 	device->CreateDepthStencilView(m_pDepthStencilBuffer.Get(), nullptr, m_DSV->GetCPUDescriptorHandleForHeapStart());
 }
 
-// ==================================================================================
-
-void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
+void CScene::CreateOrthoMatrixBuffer()
 {
-	m_pOutputBuffer = outputBuffer;
-
-	CreateRTVDSV();
-	CreateRootSignature();
-	CreatePipelineState();
-
 	auto desc = BASIC_BUFFER_DESC;
 	desc.Width = Align(sizeof(XMFLOAT4X4), 256);
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cameraCB.GetAddressOf()));
@@ -49,6 +41,19 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_cameraCB->Map(0, nullptr, &temp);
 	memcpy(temp, &ortho, sizeof(XMFLOAT4X4));
 	m_cameraCB->Unmap(0, nullptr);
+}
+
+// ==================================================================================
+
+void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
+{
+	m_pOutputBuffer = outputBuffer;
+
+	CreateRTVDSV();
+	CreateRootSignature();
+	CreatePipelineState();
+
+	CreateOrthoMatrixBuffer();
 
 	m_pResourceManager = std::make_unique<CResourceManager>();
 
@@ -142,6 +147,12 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 {
 	switch (nMessage) {
 	case WM_LBUTTONDOWN: {
+		int x = LOWORD(lParam);
+		int y = HIWORD(lParam);
+
+		wchar_t buffer[100];
+		swprintf_s(buffer, L"(%d, %d)\n", x, y);
+		OutputDebugString(buffer);
 		switch (m_nState) {
 		case Title:
 			m_nState = RoomSelect;
@@ -340,7 +351,6 @@ void TitleScene::Render()
 	cmdList->RSSetViewports(1, &vv);
 	D3D12_RECT ss{ 0, 0, 960, 540 };
 	cmdList->RSSetScissorRects(1, &ss);
-	float color[4] = { 0.5, 0.5, 1.0, 1.0 };
 	cmdList->OMSetRenderTargets(1, &m_RTV->GetCPUDescriptorHandleForHeapStart(), FALSE, &m_DSV->GetCPUDescriptorHandleForHeapStart());
 	cmdList->SetGraphicsRootSignature(m_pGlobalRootSignature.Get());
 	cmdList->SetPipelineState(m_UIPipelineState.Get());
@@ -2196,6 +2206,13 @@ void CRaytracingMaterialTestScene::Render()
 
 void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
+	m_pOutputBuffer = outputBuffer;
+	// CreateUISetup
+	CreateOrthoMatrixBuffer();
+	CreateRTVDSV();
+	CreateUIRootSignature();
+	CreateUIPipelineState();
+
 	// Create Global & Local Root Signature
 	CreateRootSignature();
 
@@ -2277,6 +2294,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	PrepareTerrainTexture();
 
 	// cubeMap Ready
+	m_nSkyboxIndex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky2.dds", true));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// ��� ������Ʈ ������� ���� & �ʱ�ȭ
@@ -2309,6 +2327,12 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
 	m_pAccelerationStructureManager->InitBLAS();
 	m_pAccelerationStructureManager->InitTLAS();
+
+	// UISetup ========================================================================
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
+	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 }
 
 void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -2316,12 +2340,6 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 	switch (nMessage) {
 	case WM_KEYDOWN:
 		switch (wParam) {
-		case '1':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
-			break;
-		case '2':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
-			break;
 		case 'n':
 		case 'N':
 			m_pCamera->toggleNormalMapping();
@@ -2335,6 +2353,12 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			break;
 		case '0':
 			m_pCamera->SetThirdPersonMode(true);
+			break;
+		case '8':
+			if (m_nState == IS_GAMING) {
+				startTime = 0.0f;
+				m_nState = IS_FINISH;
+			}
 			break;
 		}
 		break;
@@ -2375,32 +2399,34 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer[VK_SHIFT] & 0x80)
 		shiftDown = true;
 
-	if (false == m_pCamera->getThirdPersonState()) {
-		if (keyBuffer['W'] & 0x80)
-			m_pCamera->Move(0, fElapsedTime, shiftDown);
-		if (keyBuffer['S'] & 0x80)
-			m_pCamera->Move(5, fElapsedTime, shiftDown);
-		if (keyBuffer['D'] & 0x80)
-			m_pCamera->Move(3, fElapsedTime, shiftDown);
-		if (keyBuffer['A'] & 0x80)
-			m_pCamera->Move(4, fElapsedTime, shiftDown);
-		if (keyBuffer[VK_SPACE] & 0x80)
-			m_pCamera->Move(1, fElapsedTime, shiftDown);
-		if (keyBuffer[VK_CONTROL] & 0x80)
-			m_pCamera->Move(2, fElapsedTime, shiftDown);
-	}
-	else {
-		if (keyBuffer['W'] & 0x80) {
-			m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
+	if (m_nState == IS_GAMING) {
+		if (false == m_pCamera->getThirdPersonState()) {
+			if (keyBuffer['W'] & 0x80)
+				m_pCamera->Move(0, fElapsedTime, shiftDown);
+			if (keyBuffer['S'] & 0x80)
+				m_pCamera->Move(5, fElapsedTime, shiftDown);
+			if (keyBuffer['D'] & 0x80)
+				m_pCamera->Move(3, fElapsedTime, shiftDown);
+			if (keyBuffer['A'] & 0x80)
+				m_pCamera->Move(4, fElapsedTime, shiftDown);
+			if (keyBuffer[VK_SPACE] & 0x80)
+				m_pCamera->Move(1, fElapsedTime, shiftDown);
+			if (keyBuffer[VK_CONTROL] & 0x80)
+				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
-		if (keyBuffer['S'] & 0x80) {
-			m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
-		}
-		if (keyBuffer['A'] & 0x80) {
-			m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, -90.0f * fElapsedTime, 0.0f));
-		}
-		if (keyBuffer['D'] & 0x80) {
-			m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, 90.0f * fElapsedTime, 0.0f));
+		else {
+			if (keyBuffer['W'] & 0x80) {
+				m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
+			}
+			if (keyBuffer['S'] & 0x80) {
+				m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
+			}
+			if (keyBuffer['A'] & 0x80) {
+				m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, -90.0f * fElapsedTime, 0.0f));
+			}
+			if (keyBuffer['D'] & 0x80) {
+				m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, 90.0f * fElapsedTime, 0.0f));
+			}
 		}
 	}
 
@@ -2411,9 +2437,111 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer['O'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 3);
 	}
+}
 
-	if (keyBuffer[VK_RIGHT] & 0x80)
-		m_pResourceManager->getAnimationManagers()[0]->TimeIncrease(fElapsedTime);
+void CRaytracingWinterLandScene::CreateUIRootSignature()
+{
+	D3D12_DESCRIPTOR_RANGE tRange{};
+	tRange.BaseShaderRegister = 0;
+	tRange.NumDescriptors = 1;
+	tRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+
+	D3D12_ROOT_PARAMETER params[3]{};
+	params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	params[0].Descriptor.RegisterSpace = 0;
+	params[0].Descriptor.ShaderRegister = 0;
+
+	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	params[1].Descriptor.RegisterSpace = 0;
+	params[1].Descriptor.ShaderRegister = 1;
+
+	params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[2].DescriptorTable.NumDescriptorRanges = 1;
+	params[2].DescriptorTable.pDescriptorRanges = &tRange;
+
+	D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
+	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	samplerDesc.RegisterSpace = 0;
+	samplerDesc.ShaderRegister = 0;
+	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	D3D12_ROOT_SIGNATURE_DESC rtDesc{};
+	rtDesc.NumParameters = 3;
+	rtDesc.NumStaticSamplers = 1;
+	rtDesc.pParameters = params;
+	rtDesc.pStaticSamplers = &samplerDesc;
+	rtDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	ID3DBlob* pBlob{};
+	D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_UIRootSignature.GetAddressOf()));
+	pBlob->Release();
+}
+void CRaytracingWinterLandScene::CreateUIPipelineState()
+{
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dPBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_UIRootSignature.Get();
+
+	D3D12_INPUT_ELEMENT_DESC ldesc[3]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 3;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 1;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "PSMain", "ps_5_1", 0, 0, &pd3dPBlob, nullptr);
+	d3dPipelineState.PS.BytecodeLength = pd3dPBlob->GetBufferSize();
+	d3dPipelineState.PS.pShaderBytecode = pd3dPBlob->GetBufferPointer();
+
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(m_UIPipelineState.GetAddressOf()));
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dPBlob)
+		pd3dPBlob->Release();
 }
 
 void CRaytracingWinterLandScene::PrepareTerrainTexture()
@@ -2609,6 +2737,30 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 
 	m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
+
+	switch (m_nState) {
+	case IS_LOADING: {
+			wOpacity -= 0.5 * fElapsedTime;
+			if (wOpacity < 0.0f) {
+				m_nState = IS_GAMING;
+				wOpacity = 0.0f;
+			}
+			m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
+		break;
+	}
+	case IS_GAMING: {
+		break;
+	}
+	case IS_FINISH: {
+			wOpacity += 0.2 * fElapsedTime;
+			if (wOpacity > 1.0f) {
+				m_nNextScene = SCENE_TITLE;
+				wOpacity = 1.0f;
+			}
+			m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
+		break;
+	}
+	}
 }
 
 void CRaytracingWinterLandScene::Render()
@@ -2617,7 +2769,7 @@ void CRaytracingWinterLandScene::Render()
 	m_pAccelerationStructureManager->SetScene();
 	m_pResourceManager->SetLights();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
-	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[textures.size() - 1]->getView()->GetGPUDescriptorHandleForHeapStart());
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[m_nSkyboxIndex]->getView()->GetGPUDescriptorHandleForHeapStart());
 	g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
@@ -2637,4 +2789,37 @@ void CRaytracingWinterLandScene::Render()
 	raydesc.HitGroupTable.StrideInBytes = m_pShaderBindingTable->getHitGroupStride();
 
 	g_DxResource.cmdList->DispatchRays(&raydesc);
+
+	// UI Render ==================================================================================
+
+	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
+	auto barrier = [&](ID3D12Resource* pResource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
+		{
+			D3D12_RESOURCE_BARRIER resBarrier{};
+			resBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			resBarrier.Transition.pResource = pResource;
+			resBarrier.Transition.StateBefore = before;
+			resBarrier.Transition.StateAfter = after;
+			resBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+			cmdList->ResourceBarrier(1, &resBarrier);
+		};
+
+	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	D3D12_VIEWPORT vv{};
+	vv.Width = 960; vv.Height = 540; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
+	cmdList->RSSetViewports(1, &vv);
+	D3D12_RECT ss{ 0, 0, 960, 540 };
+	cmdList->RSSetScissorRects(1, &ss);
+	cmdList->OMSetRenderTargets(1, &m_RTV->GetCPUDescriptorHandleForHeapStart(), FALSE, &m_DSV->GetCPUDescriptorHandleForHeapStart());
+	cmdList->SetGraphicsRootSignature(m_UIRootSignature.Get());
+	cmdList->SetPipelineState(m_UIPipelineState.Get());
+	cmdList->SetGraphicsRootConstantBufferView(0, m_cameraCB->GetGPUVirtualAddress());
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	for (auto& p : m_vUIs)
+		p->Render();
+
+	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }

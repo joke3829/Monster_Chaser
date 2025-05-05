@@ -35,6 +35,7 @@ public:
 	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) { m_pOutputBuffer = outputBuffer; }
 	virtual void SetCamera(std::shared_ptr<CCamera>& pCamera) { m_pCamera = pCamera; }
 	virtual void CreateRTVDSV();
+	virtual void CreateOrthoMatrixBuffer();
 
 	virtual void UpdateObject(float fElapsedTime) {};
 	
@@ -67,6 +68,7 @@ protected:
 	POINT oldCursor;
 	bool m_bHold = false;
 
+	ComPtr<ID3D12Resource>					m_cameraCB{};
 	short m_nNextScene = -1;
 };
 
@@ -88,7 +90,6 @@ protected:
 	TitleState								m_nState = Title;
 	std::unique_ptr<CResourceManager>		m_pResourceManager{};
 
-	ComPtr<ID3D12Resource>					m_cameraCB{};
 	std::vector<std::unique_ptr<UIObject>>	m_vTitleUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vRoomSelectUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vInRoomUIs;
@@ -186,6 +187,8 @@ public:
 	void PrepareTerrainTexture();
 };
 
+enum InGameState{IS_LOADING, IS_GAMING, IS_FINISH};
+
 // real use scene
 class CRaytracingWinterLandScene : public CRaytracingScene {
 public:
@@ -194,9 +197,21 @@ public:
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
+	void CreateUIRootSignature();
+	void CreateUIPipelineState();
+
 	void UpdateObject(float fElapsedTime);
 	void Render();
 	void PrepareTerrainTexture();
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+protected:
+	unsigned int								m_nSkyboxIndex{};
+
+	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
+	InGameState									m_nState{};
+
+	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
+	float										startTime{};
+	float										wOpacity = 1.0f;
 };
