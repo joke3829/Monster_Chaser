@@ -4,6 +4,7 @@
 #include "ResourceManager.h"
 #include "ShaderBindingTableManager.h"
 #include "AccelerationStructureManager.h"
+#include "UIObject.h"
 #include "stdfxh.h"
 
 extern DXResources g_DxResource;
@@ -71,7 +72,7 @@ class TitleScene : public CScene {
 public:
 	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
 
-	//void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	void CreateRootSignature();
@@ -80,10 +81,20 @@ public:
 	void UpdateObject(float fElapsedTime);
 	void Render();
 protected:
-	TitleState							m_nState = Title;
-	std::unique_ptr<CResourceManager>	m_pResourceManager{};
+	TitleState								m_nState = Title;
+	std::unique_ptr<CResourceManager>		m_pResourceManager{};
 
-	ComPtr<ID3D12Resource>				m_cameraCB{};
+	ComPtr<ID3D12Resource>					m_cameraCB{};
+	std::vector<std::unique_ptr<UIObject>>	m_vTitleUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vRoomSelectUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vInRoomUIs;
+
+	// Title variables
+	float wOpacity = 1.0f;
+	float startTime{};
+	// Room Select variables
+	int peopleindex{};
+	std::array<short, 10> userPerRoom{ 1, 0, 0, 3, 2, 2, 3, 0, 2, 1 };
 };
 
 template<typename T>

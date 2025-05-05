@@ -29,7 +29,7 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	InitSwapChain();
 
 	// RTV, DSV
-	InitRTVDSV();
+	//InitRTVDSV();
 
 	// UAV Buffer
 	if (m_bRayTracingSupport)
@@ -314,6 +314,7 @@ void CGameFramework::Render()
 
 		m_pScene->PrepareRender();
 
+		bIngame = false;
 		if (bIngame) {
 			m_pd3dCommandList->SetDescriptorHeaps(1, m_pd3dOutputBufferView.GetAddressOf());
 			m_pd3dCommandList->SetComputeRootDescriptorTable(0, m_pd3dOutputBufferView->GetGPUDescriptorHandleForHeapStart());

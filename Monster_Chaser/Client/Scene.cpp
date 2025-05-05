@@ -52,18 +52,117 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	m_pResourceManager = std::make_unique<CResourceManager>();
 
-	std::vector<std::unique_ptr<CGameObject>>& objects = m_pResourceManager->getGameObjectList();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Greycloak\\texture.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\Title\\title.dds"));
+	m_vTitleUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+	m_vTitleUIs[m_vTitleUIs.size() - 1]->setPositionInViewport(0, 0);
+
+	m_vTitleUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vTitleUIs[m_vTitleUIs.size() - 1]->setPositionInViewport(0, 0);
+	m_vTitleUIs[m_vTitleUIs.size() - 1]->setColor(1.0, 1.0, 1.0, 1.0);
+
+	// =======================================================================================
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
+	m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+	m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(0, 0);
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 440, 84));
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\people.dds"));
+	for (int i = 0; i < 10; ++i) {
+		int j = i % 2;
+		if (j == 0) {
+			m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(20, i / 2 * 100 + 20);
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+		}
+		else {
+			m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(500, i / 2 * 100 + 20);
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+		}
+	}
+	peopleindex = m_vRoomSelectUIs.size();
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 30, 84));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\people.dds"));
+	for (int i = 0; i < 10; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			int k = i % 2;
+			if (k == 0) {
+				m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+				m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(350 + (j * 40), i / 2 * 100 + 20);
+			}
+			else {
+				m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+				m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(830 + (j * 40), i / 2 * 100 + 20);
+			}
+		}
+	}
+
+	// =============================================================================================
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
+	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
+
+	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
+	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.0);
 }
 
-//void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN: {
+		switch (m_nState) {
+		case Title:
+			m_nState = RoomSelect;
+			break;
+		case RoomSelect:
+			switch (wParam) {
+			case 'R':
+				++userPerRoom[1];
+				break;
+			}
+			break;
+		}
+		break;
+	}
+	case WM_KEYUP:
+		break;
+	}
+}
 void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-
+	switch (nMessage) {
+	case WM_LBUTTONDOWN: {
+		switch (m_nState) {
+		case Title:
+			m_nState = RoomSelect;
+			break;
+		case RoomSelect:
+			m_nState = InRoom;
+			break;
+		case InRoom:
+			m_nState = GoLoading;
+			wOpacity = 0.0f;
+			break;
+		}
+		break;
+	}
+	case WM_LBUTTONUP: {
+		break;
+	}
+	case WM_MOUSEMOVE: {
+		break;
+	}
+	}
 }
 
 void TitleScene::CreateRootSignature()
@@ -73,14 +172,18 @@ void TitleScene::CreateRootSignature()
 	tRange.NumDescriptors = 1;
 	tRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 
-	D3D12_ROOT_PARAMETER params[2]{};
+	D3D12_ROOT_PARAMETER params[3]{};
 	params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	params[0].Descriptor.RegisterSpace = 0;
 	params[0].Descriptor.ShaderRegister = 0;
 
-	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	params[1].DescriptorTable.NumDescriptorRanges = 1;
-	params[1].DescriptorTable.pDescriptorRanges = &tRange;
+	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	params[1].Descriptor.RegisterSpace = 0;
+	params[1].Descriptor.ShaderRegister = 1;
+
+	params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[2].DescriptorTable.NumDescriptorRanges = 1;
+	params[2].DescriptorTable.pDescriptorRanges = &tRange;
 
 	D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
 	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -94,7 +197,7 @@ void TitleScene::CreateRootSignature()
 	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	D3D12_ROOT_SIGNATURE_DESC rtDesc{};
-	rtDesc.NumParameters = 2;
+	rtDesc.NumParameters = 3;
 	rtDesc.NumStaticSamplers = 1;
 	rtDesc.pParameters = params;
 	rtDesc.pStaticSamplers = &samplerDesc;
@@ -113,11 +216,12 @@ void TitleScene::CreatePipelineState()
 	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 	d3dPipelineState.pRootSignature = m_pGlobalRootSignature.Get();
 
-	D3D12_INPUT_ELEMENT_DESC ldesc[2]{};
+	D3D12_INPUT_ELEMENT_DESC ldesc[3]{};
 	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	ldesc[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
-	d3dPipelineState.InputLayout.NumElements = 2;
+	d3dPipelineState.InputLayout.NumElements = 3;
 
 	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
 	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
@@ -133,7 +237,13 @@ void TitleScene::CreatePipelineState()
 
 	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
 	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
-	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
 	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
@@ -152,7 +262,7 @@ void TitleScene::CreatePipelineState()
 	d3dPipelineState.PS.BytecodeLength = pd3dPBlob->GetBufferSize();
 	d3dPipelineState.PS.pShaderBytecode = pd3dPBlob->GetBufferPointer();
 	
-	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, __uuidof(ID3D12PipelineState), (void**)m_UIPipelineState.GetAddressOf());
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(m_UIPipelineState.GetAddressOf()));
 
 	if (pd3dVBlob)
 		pd3dVBlob->Release();
@@ -162,7 +272,44 @@ void TitleScene::CreatePipelineState()
 
 void TitleScene::UpdateObject(float fElapsedTime)
 {
+	switch (m_nState) {
+	case Title:
+		if (startTime < 3.0f)
+			startTime += fElapsedTime;
+		else {
+			wOpacity -= 0.3f * fElapsedTime;
+			if (wOpacity < 0.0f)
+				wOpacity = 0.0f;
+			m_vTitleUIs[1]->setColor(1.0, 1.0, 1.0, wOpacity);
+		}
+		break;
+	case RoomSelect: {
+		m_vRoomSelectUIs[0]->Animation(fElapsedTime);
 
+
+		for (int i = 0; i < 10; ++i) {
+			for (int j = 0; j < 3; ++j) {
+				if (j < userPerRoom[i]) {
+					m_vRoomSelectUIs[(i * 3) + j + peopleindex]->setRenderState(true);
+				}
+				else
+					m_vRoomSelectUIs[(i*3) + j + peopleindex]->setRenderState(false);
+			}
+		}
+		break;
+	}
+	case InRoom: {
+		m_vInRoomUIs[0]->Animation(fElapsedTime);
+		break;
+	}
+	case GoLoading: {
+		wOpacity += 0.35f * fElapsedTime;
+		if (wOpacity > 1.0f)
+			wOpacity = 1.0f;
+		m_vInRoomUIs[1]->setColor(0.0, 0.0, 0.0, wOpacity);
+		break;
+	}
+	}
 }
 void TitleScene::Render()
 {
@@ -178,10 +325,6 @@ void TitleScene::Render()
 
 			cmdList->ResourceBarrier(1, &resBarrier);
 		};
-
-	std::vector<std::unique_ptr<CGameObject>>& objects = m_pResourceManager->getGameObjectList();
-	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
-	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 	
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
@@ -191,36 +334,27 @@ void TitleScene::Render()
 	D3D12_RECT ss{ 0, 0, 960, 540 };
 	cmdList->RSSetScissorRects(1, &ss);
 	float color[4] = { 0.5, 0.5, 1.0, 1.0 };
-	cmdList->ClearRenderTargetView(m_RTV->GetCPUDescriptorHandleForHeapStart(), color, 0, NULL);
-	cmdList->ClearDepthStencilView(m_DSV->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL,
-		1.0f, 0, 0, NULL);
 	cmdList->OMSetRenderTargets(1, &m_RTV->GetCPUDescriptorHandleForHeapStart(), FALSE, &m_DSV->GetCPUDescriptorHandleForHeapStart());
 	cmdList->SetGraphicsRootSignature(m_pGlobalRootSignature.Get());
 	cmdList->SetPipelineState(m_UIPipelineState.Get());
-
-
 	cmdList->SetGraphicsRootConstantBufferView(0, m_cameraCB->GetGPUVirtualAddress());
-	ID3D12DescriptorHeap* tt = textures[0]->getView();
-	cmdList->SetDescriptorHeaps(1, &tt);
-	cmdList->SetGraphicsRootDescriptorTable(1, textures[0]->getView()->GetGPUDescriptorHandleForHeapStart());
-
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	D3D12_VERTEX_BUFFER_VIEW vview[2]{};
-	vview[0].BufferLocation = meshes[0]->getVertexBuffer()->GetGPUVirtualAddress();
-	vview[0].SizeInBytes = sizeof(XMFLOAT3) * meshes[0]->getVertexCount();
-	vview[0].StrideInBytes = sizeof(XMFLOAT3);
 
-	vview[1].BufferLocation = meshes[0]->getTexCoord0Buffer()->GetGPUVirtualAddress();
-	vview[1].SizeInBytes = sizeof(XMFLOAT2) * meshes[0]->getTexCoord0Count();
-	vview[1].StrideInBytes = sizeof(XMFLOAT2);
-
-	cmdList->IASetVertexBuffers(0, 2, vview);
-	D3D12_INDEX_BUFFER_VIEW iv{};
-	iv.BufferLocation = meshes[0]->getIndexBuffer(0)->GetGPUVirtualAddress();
-	iv.Format = DXGI_FORMAT_R32_UINT;
-	iv.SizeInBytes = sizeof(UINT) * meshes[0]->getIndexCount(0);
-	cmdList->IASetIndexBuffer(&iv);
-	cmdList->DrawIndexedInstanced(meshes[0]->getIndexCount(0), 1, 0, 0, 0);
+	switch (m_nState) {
+	case Title:
+		for (auto& p : m_vTitleUIs)
+			p->Render();
+		break;
+	case RoomSelect:
+		for (auto& p : m_vRoomSelectUIs)
+			p->Render();
+		break;
+	case InRoom:
+	case GoLoading:
+		for (auto& p : m_vInRoomUIs)
+			p->Render();
+		break;
+	}
 
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
@@ -962,7 +1096,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	skinned[0]->getObjects()[98]->getMaterials()[0].m_nEmissionMapIndex = skinned[0]->getTextures().size();
 	skinned[0]->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Gorhorrid\\T_Gorhorrid_Emissive.dds"));*/
 
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky.dds", true));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky2.dds", true));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// CBV RAII
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
@@ -2136,7 +2270,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	PrepareTerrainTexture();
 
 	// cubeMap Ready
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky.dds", true));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky2.dds", true));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// ��� ������Ʈ ������� ���� & �ʱ�ȭ
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject

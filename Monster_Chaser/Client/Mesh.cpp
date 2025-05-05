@@ -422,13 +422,18 @@ Mesh::Mesh(XMFLOAT3& center, float radius, std::string meshName)
 
 Mesh::Mesh(XMFLOAT3& center, float width, float height)
 {
-	float hw = width / 2;
-	float hh = height / 2;
+	//float hw = width / 2;
+	//float hh = height / 2;
 	std::vector<XMFLOAT3> pos(4);
-	pos[0] = XMFLOAT3(center.x - hw, center.y - hh, 0.0f);
+	/*pos[0] = XMFLOAT3(center.x - hw, center.y - hh, 0.0f);
 	pos[1] = XMFLOAT3(center.x + hw, center.y - hh, 0.0f);
 	pos[2] = XMFLOAT3(center.x + hw, center.y + hh, 0.0f);
-	pos[3] = XMFLOAT3(center.x - hw, center.y + hh, 0.0f);
+	pos[3] = XMFLOAT3(center.x - hw, center.y + hh, 0.0f);*/
+
+	pos[0] = XMFLOAT3(0.0f, -height, 0.0f);
+	pos[1] = XMFLOAT3(width, -height, 0.0f);
+	pos[2] = XMFLOAT3(width, 0.0f, 0.0f);
+	pos[3] = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	m_bHasVertex = true;
 	m_nVertexCount = 4;

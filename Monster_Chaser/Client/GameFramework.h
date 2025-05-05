@@ -75,6 +75,6 @@ private:
 
 	std::shared_ptr<CCamera> m_pCamera{};
 
-	bool bIngame = false;
+	bool bIngame = true;
 };
 
