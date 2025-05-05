@@ -885,7 +885,7 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 
 void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	static bool isInitialized = false; // 초기화 여부
+	static bool isInitialized = false; // 초기화 1번만 진행
 	static POINT screenCenter;
 	if (!isInitialized) {
 		ShowCursor(FALSE);  // Ŀ�� ����
