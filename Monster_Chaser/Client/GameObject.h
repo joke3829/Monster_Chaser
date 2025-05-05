@@ -423,5 +423,4 @@ protected:
 	float m_fElapsedTime = 0.0f;
 
 	bool m_bActive = false;
-
 };
