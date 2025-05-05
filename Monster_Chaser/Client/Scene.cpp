@@ -885,19 +885,24 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 
 void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	ShowCursor(FALSE);  // Ŀ�� ����
-	RECT clientRect;
-	GetClientRect(hWnd, &clientRect);
-	POINT center;
-	center.x = (clientRect.right - clientRect.left) / 2;
-	center.y = (clientRect.bottom - clientRect.top) / 2;
-	POINT screenCenter = center;
-	ClientToScreen(hWnd, &screenCenter);
+	static bool isInitialized = false; // 초기화 여부
+	static POINT screenCenter;
+	if (!isInitialized) {
+		ShowCursor(FALSE);  // Ŀ�� ����
+		RECT clientRect;
+		GetClientRect(hWnd, &clientRect);
+		POINT center;
+		center.x = (clientRect.right - clientRect.left) / 2;
+		center.y = (clientRect.bottom - clientRect.top) / 2;
+		screenCenter = center;
+		ClientToScreen(hWnd, &screenCenter);
+		SetCursorPos(screenCenter.x, screenCenter.y);
+		isInitialized = true;
+	}
 	POINT currentPos;
 	GetCursorPos(&currentPos);
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 cameraUp = m_pCamera->getUp();
-
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
