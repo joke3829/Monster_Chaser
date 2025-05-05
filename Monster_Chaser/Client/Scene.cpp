@@ -769,9 +769,16 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<CProjectile>>& projectile = m_pResourceManager->getProjectileList();
 	// Create new Objects, Copy SkinningObject here ========================================
 
+
+	UINT finalindex = normalObjects.size();
+	UINT finalmesh = meshes.size();
+
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), "box"));
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+
 	projectile.emplace_back(std::make_unique<CProjectile>());
-	projectile[projectile.size() - 1]->setMesh(meshes[meshes.size() - 1].get());
+	projectile[0]->setGameObject(normalObjects[finalindex].get()); //없어도 될 거 같은데
 
 	// Copy Example
 	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());

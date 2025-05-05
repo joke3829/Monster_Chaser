@@ -398,21 +398,18 @@ public:
 	void setPosition(XMFLOAT3 pos) { m_xmf3Position = pos; m_xmf3Position.y += 10.0f; }
 	void setSpeed(float spd) { m_fSpeed = spd; }
 	void setLifetime(float life) { m_fLifetime = life; }
-	void setMesh(Mesh* mesh){m_mesh = mesh;}
-	void setTexture(CTexture* texture){m_texture = texture;}
+	void setGameObject(CGameObject* object) { m_Objects = object; }
 
 	void IsMoving(float fElapsedTime);
 	void UpdateWorldMatrix();
 
-	Mesh& getMesh() {return *m_mesh;}
+	CGameObject& getObjects() { return *m_Objects; }
 	XMFLOAT4X4& getWorldMatrix() { return m_xmf4x4WorldMatrix; }
 	XMFLOAT3& getPosition() { return m_xmf3Position; }
 	bool getActive() const { return m_bActive; }
 
 protected:
-	Mesh* m_mesh{};
-	CTexture* m_texture{};
-
+	CGameObject* m_Objects{};
 	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
 
 	XMFLOAT3 m_xmf3MoveDirection{};
