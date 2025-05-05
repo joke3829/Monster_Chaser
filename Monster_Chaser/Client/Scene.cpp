@@ -66,6 +66,11 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
+	auto& proj = m_pResourceManager->getProjectileList();
+	for (auto& pr : proj) {
+		pr->IsMoving(fElapsedTime);
+	}
+
 	m_pResourceManager->UpdateWorldMatrix();
 
 	TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
@@ -766,7 +771,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), "box"));
 	projectile.emplace_back(std::make_unique<CProjectile>());
-	projectile[projectile.size() - 1]->setMesh(std::move(meshes[meshes.size() - 1]));
+	projectile[projectile.size() - 1]->setMesh(meshes[meshes.size() - 1].get());
 
 	// Copy Example
 	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
