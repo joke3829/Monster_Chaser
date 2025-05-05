@@ -761,8 +761,12 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
+	std::vector<std::unique_ptr<CProjectile>>& projectile = m_pResourceManager->getProjectileList();
 	// Create new Objects, Copy SkinningObject here ========================================
 
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), "box"));
+	projectile.emplace_back(std::make_unique<CProjectile>());
+	projectile[projectile.size() - 1]->setMesh(meshes[meshes.size() - 1]);
 	// Copy Example
 	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 	//skinned[1]->CopyFromOtherObject(skinned[0].get());

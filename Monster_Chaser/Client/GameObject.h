@@ -387,3 +387,41 @@ protected:
 	std::vector<ComPtr<ID3D12DescriptorHeap>> m_vInsertDescriptorHeap{};
 	ComPtr<ID3D12Resource> m_pNullResource{};
 };
+
+class CProjectile
+{
+public:
+	CProjectile();
+
+	void setMoveDirection(XMFLOAT3 direction) { m_xmf3MoveDirection = direction; }
+	void setActive(bool state) { m_bActive = state; }
+	void setPosition(XMFLOAT3 pos) { m_xmf3Position = pos; }
+	void setSpeed(float spd) { m_fSpeed = spd; }
+	void setLifetime(float life) { m_fLifetime = life; }
+	void setMesh(std::shared_ptr<Mesh> mesh){m_mesh = mesh;}
+	void setTexture(std::shared_ptr<CTexture> texture){m_texture = texture;}
+
+	void IsMoving(float fElapsedTime);
+	void UpdateWorldMatrix();
+
+	std::shared_ptr<Mesh>& getMesh() {return m_mesh;}
+	XMFLOAT4X4& getWorldMatrix() { return m_xmf4x4WorldMatrix; }
+	XMFLOAT3& getPosition() { return m_xmf3Position; }
+	bool getActive() const { return m_bActive; }
+
+protected:
+	std::shared_ptr<Mesh> m_mesh{};
+	std::shared_ptr<CTexture> m_texture{};
+
+	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
+
+	XMFLOAT3 m_xmf3MoveDirection{};
+	XMFLOAT3 m_xmf3Position{};
+
+	float m_fSpeed = 5.0f;
+	float m_fLifetime = 0.0f;
+	float m_fElapsedTime = 0.0f;
+
+	bool m_bActive = false;
+
+};

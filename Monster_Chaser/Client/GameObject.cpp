@@ -1475,3 +1475,33 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 		m_vInsertDescriptorHeap.emplace_back(insert);
 	}
 }
+
+/// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+CProjectile::CProjectile()
+{
+	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, XMMatrixIdentity());
+}
+
+void CProjectile::IsMoving(float fElapsedTime)
+{
+	if (!m_bActive) return;
+
+	m_xmf3Position.x += m_xmf3MoveDirection.x * m_fSpeed * fElapsedTime;
+	m_xmf3Position.y += m_xmf3MoveDirection.y * m_fSpeed * fElapsedTime;
+	m_xmf3Position.z += m_xmf3MoveDirection.z * m_fSpeed * fElapsedTime;
+
+	UpdateWorldMatrix();
+
+	m_fElapsedTime += fElapsedTime;
+	if (m_fLifetime > 0.0f && m_fElapsedTime >= m_fLifetime)
+	{
+		m_bActive = false;
+	}
+}
+
+void CProjectile::UpdateWorldMatrix()
+{
+	XMMATRIX mtxTranslate = XMMatrixTranslation(m_xmf3Position.x, m_xmf3Position.y, m_xmf3Position.z);
+	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, mtxTranslate);
+}

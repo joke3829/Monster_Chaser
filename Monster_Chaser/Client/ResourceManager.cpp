@@ -459,6 +459,11 @@ std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 	return m_vTextureList;
 }
 
+std::vector<std::unique_ptr<CProjectile>>& CResourceManager::getProjectileList()
+{
+	return m_vProjectileList;
+}
+
 void CResourceManager::LightTest()
 {
 	Lights testLight{};
