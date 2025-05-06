@@ -14,6 +14,8 @@ struct CB_CAMERA_INFO {
 
 class CCamera {
 public:
+	~CCamera();
+
 	void Setup(int nRootParameterIndex);
 
 	void Rotate(int cxDelta, int cyDelta);
@@ -28,6 +30,7 @@ public:
 	void SetTarget(CGameObject* target);
 	void SetThirdPersonMode(bool bThirdPerson);
 	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }
+	void SetHOffset(float height) { m_xmf3hOffset.y = height; }
 
 	void toggleNormalMapping() 
 	{ 
@@ -60,7 +63,8 @@ protected:
 	XMFLOAT3 m_xmf3Up{ 0.0f, 1.0f, 0.0f };
 
 	XMFLOAT3 m_xmf3Dir{ 0.0f, 0.0f, 1.0f };
-	XMFLOAT3 m_xmf3Offset{ 0.0f, 0.6f, -1.0f };
+	XMFLOAT3 m_xmf3Offset{ 0.0f, 0.0f, -1.0f };
+	XMFLOAT3 m_xmf3hOffset{ 0.0f, 0.0f, 0.0f };
 
 	XMFLOAT4X4 m_xmf4x4View;
 	XMFLOAT4X4 m_xmf4x4Proj;

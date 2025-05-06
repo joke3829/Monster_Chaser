@@ -40,7 +40,7 @@ bool CResourceManager::AddResourceFromFile(wchar_t* FilePath, std::string textur
 	return true;
 }
 
-bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront, Job job)
+bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront, unsigned short job)
 {
 	std::ifstream inFile{ FilePath, std::ios::binary };
 	if (!inFile) {
@@ -61,10 +61,10 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 		readLabel();
 		if ("<Animation>:" == strLabel) {	// 애니메이션이 있으면 매니저 생성 & 오브젝트 지정
 			switch (job) {
-			case Nothing:
+			case JOB_NOTHING:
 				m_vAnimationManager.emplace_back(std::make_unique<CAnimationManager>(inFile));
 				break;
-			case Mage:
+			case JOB_MAGE:
 				m_vAnimationManager.emplace_back(std::make_unique<CMageManager>(inFile));
 				break;
 			}

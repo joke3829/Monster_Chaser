@@ -266,7 +266,7 @@ float4 TraceRadianceRay(in RayDesc ray, uint currentRayDepth)
     
     RadiancePayload payload = { float4(0.0f, 0.0f, 0.0f, 0.0f), currentRayDepth + 1 };
     TraceRay(g_Scene,
-    RAY_FLAG_CULL_BACK_FACING_TRIANGLES,
+    RAY_FLAG_NONE,
     ~0,
     RADIANCE_OFFSET,
     GEOMETRY_STRIDE,

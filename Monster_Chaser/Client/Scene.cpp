@@ -2,34 +2,447 @@
 
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
+void CScene::CreateRTVDSV()
+{
+	D3D12_DESCRIPTOR_HEAP_DESC desc{};
+	desc.NumDescriptors = 1;
+	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+
+	ID3D12Device5* device = g_DxResource.device;
+	device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_RTV.GetAddressOf()));
+
+	device->CreateRenderTargetView(m_pOutputBuffer.Get(), nullptr, m_RTV->GetCPUDescriptorHandleForHeapStart());
+
+	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_DSV.GetAddressOf()));
+
+	D3D12_RESOURCE_DESC resourceDesc = BASIC_BUFFER_DESC;
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	resourceDesc.Width = DEFINED_UAV_BUFFER_WIDTH;		// Subject to change
+	resourceDesc.Height = DEFINED_UAV_BUFFER_HEIGHT;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_DEPTH_WRITE, nullptr, IID_PPV_ARGS(m_pDepthStencilBuffer.GetAddressOf()));
+	device->CreateDepthStencilView(m_pDepthStencilBuffer.Get(), nullptr, m_DSV->GetCPUDescriptorHandleForHeapStart());
+}
+
+void CScene::CreateOrthoMatrixBuffer()
+{
+	auto desc = BASIC_BUFFER_DESC;
+	desc.Width = Align(sizeof(XMFLOAT4X4), 256);
+	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cameraCB.GetAddressOf()));
+
+	XMFLOAT4X4 ortho{};
+	XMStoreFloat4x4(&ortho, XMMatrixTranspose(XMMatrixOrthographicLH(960, 540, -1, 1)));
+
+	void* temp{};
+	m_cameraCB->Map(0, nullptr, &temp);
+	memcpy(temp, &ortho, sizeof(XMFLOAT4X4));
+	m_cameraCB->Unmap(0, nullptr);
+}
+
+// ==================================================================================
+
 void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
 	m_pOutputBuffer = outputBuffer;
 
+	CreateRTVDSV();
+	CreateRootSignature();
+	CreatePipelineState();
+
+	CreateOrthoMatrixBuffer();
+
+	m_pResourceManager = std::make_unique<CResourceManager>();
+
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\Title\\title.dds"));
+	m_vTitleUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+	m_vTitleUIs[m_vTitleUIs.size() - 1]->setPositionInViewport(0, 0);
+
+	m_vTitleUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vTitleUIs[m_vTitleUIs.size() - 1]->setPositionInViewport(0, 0);
+	m_vTitleUIs[m_vTitleUIs.size() - 1]->setColor(1.0, 1.0, 1.0, 1.0);
+
+	// =======================================================================================
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
+	m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+	m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(0, 0);
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 440, 84));
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\people.dds"));
+	for (int i = 0; i < 10; ++i) {
+		int j = i % 2;
+		if (j == 0) {
+			m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(20, i / 2 * 100 + 20);
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+		}
+		else {
+			m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(500, i / 2 * 100 + 20);
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+		}
+	}
+	peopleindex = m_vRoomSelectUIs.size();
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 30, 84));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\people.dds"));
+	for (int i = 0; i < 10; ++i) {
+		for (int j = 0; j < 3; ++j) {
+			int k = i % 2;
+			if (k == 0) {
+				m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+				m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(350 + (j * 40), i / 2 * 100 + 20);
+			}
+			else {
+				m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+				m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(830 + (j * 40), i / 2 * 100 + 20);
+			}
+		}
+	}
+
+	// =============================================================================================
+
+	int tempIndex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
+	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
+
+	backUIIndex = m_vInRoomUIs.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 296, 484));
+	for (int i = 0; i < 3; ++i) {
+		m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport((i * 296) + (18 * (i + 1)), 18);
+		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+	}
+
+	readyUIIndex = m_vInRoomUIs.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 175, 65));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InRoom\\ReadyText.dds"));
+	for (int i = 0; i < 3; ++i) {
+		m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport((i * 296) + (18 * (i + 1)) + 130, 437);
+	}
+
+	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[tempIndex].get()));
+	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
+	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.0);
+
+
+
 }
 
-//void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN: {
+		switch (m_nState) {
+		case Title:
+			m_nState = RoomSelect;
+			break;
+		case RoomSelect:
+			switch (wParam) {
+			case 'R':
+				++userPerRoom[1];
+				break;
+			}
+			break;
+		case InRoom: {
+			switch (wParam) {
+			case 'R':
+				userReadyState[local_uid] = !userReadyState[local_uid];
+				break;
+			case VK_BACK:
+				--userPerRoom[currentRoom];
+				m_nState = RoomSelect;
+				break;
+			}
+			break;
+		}
+		}
+		break;
+	}
+	case WM_KEYUP:
+		break;
+	}
+}
 void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
+	switch (nMessage) {
+	case WM_LBUTTONDOWN: {
+		int mx = LOWORD(lParam);
+		int my = HIWORD(lParam);
 
+		wchar_t buffer[100];
+		swprintf_s(buffer, L"(%d, %d)\n", mx, my);
+		OutputDebugString(buffer);
+		switch (m_nState) {
+		case Title:
+			m_nState = RoomSelect;
+			break;
+		case RoomSelect:
+			for (int i = 0; i < 10; ++i) {
+				int j = i % 2;
+				if (j == 0) {
+					int x1 = 20, x2 = 460;
+					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
+					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
+						if (userPerRoom[i] < 3) {
+							local_uid = userPerRoom[i]++;
+							currentRoom = i;
+							m_nState = InRoom;
+							break;
+						}
+					}
+				}
+				else {
+					int x1 = 500, x2 = 940;
+					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
+					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
+						if (userPerRoom[i] < 3) {
+							local_uid = userPerRoom[i]++;
+							currentRoom = i;
+							m_nState = InRoom;
+							break;
+						}
+					}
+				}
+			}
+			break;
+		case InRoom:
+			break;
+		}
+		break;
+	}
+	case WM_LBUTTONUP: {
+		break;
+	}
+	case WM_MOUSEMOVE: {
+		break;
+	}
+	}
 }
 
 void TitleScene::CreateRootSignature()
 {
+	D3D12_DESCRIPTOR_RANGE tRange{};
+	tRange.BaseShaderRegister = 0;
+	tRange.NumDescriptors = 1;
+	tRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 
+	D3D12_ROOT_PARAMETER params[3]{};
+	params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	params[0].Descriptor.RegisterSpace = 0;
+	params[0].Descriptor.ShaderRegister = 0;
+
+	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	params[1].Descriptor.RegisterSpace = 0;
+	params[1].Descriptor.ShaderRegister = 1;
+
+	params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[2].DescriptorTable.NumDescriptorRanges = 1;
+	params[2].DescriptorTable.pDescriptorRanges = &tRange;
+
+	D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
+	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	samplerDesc.RegisterSpace = 0;
+	samplerDesc.ShaderRegister = 0;
+	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	D3D12_ROOT_SIGNATURE_DESC rtDesc{};
+	rtDesc.NumParameters = 3;
+	rtDesc.NumStaticSamplers = 1;
+	rtDesc.pParameters = params;
+	rtDesc.pStaticSamplers = &samplerDesc;
+	rtDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	ID3DBlob* pBlob{};
+	D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pGlobalRootSignature.GetAddressOf()));
+	pBlob->Release();
 }
-void TitleScene::CreateRenderTargetView()
+void TitleScene::CreatePipelineState()
 {
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dPBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_pGlobalRootSignature.Get();
 
+	D3D12_INPUT_ELEMENT_DESC ldesc[3]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 3;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 1;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "PSMain", "ps_5_1", 0, 0, &pd3dPBlob, nullptr);
+	d3dPipelineState.PS.BytecodeLength = pd3dPBlob->GetBufferSize();
+	d3dPipelineState.PS.pShaderBytecode = pd3dPBlob->GetBufferPointer();
+	
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(m_UIPipelineState.GetAddressOf()));
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dPBlob)
+		pd3dPBlob->Release();
 }
 
 void TitleScene::UpdateObject(float fElapsedTime)
 {
-
+	switch (m_nState) {
+	case Title:
+		if (startTime < 3.0f)
+			startTime += fElapsedTime;
+		else {
+			wOpacity -= 0.3f * fElapsedTime;
+			if (wOpacity < 0.0f)
+				wOpacity = 0.0f;
+			m_vTitleUIs[1]->setColor(1.0, 1.0, 1.0, wOpacity);
+		}
+		break;
+	case RoomSelect: {
+		m_vRoomSelectUIs[0]->Animation(fElapsedTime);
+		for (int i = 0; i < 10; ++i) {
+			for (int j = 0; j < 3; ++j) {
+				if (j < userPerRoom[i]) {
+					m_vRoomSelectUIs[(i * 3) + j + peopleindex]->setRenderState(true);
+				}
+				else
+					m_vRoomSelectUIs[(i*3) + j + peopleindex]->setRenderState(false);
+			}
+		}
+		break;
+	}
+	case InRoom: {
+		m_vInRoomUIs[0]->Animation(fElapsedTime);
+		bool allready = true;
+		for (int i = 0; i < 3; ++i) {
+			if (i < userPerRoom[currentRoom]) {
+				m_vInRoomUIs[backUIIndex + i]->setRenderState(true);
+				if(userReadyState[i])
+					m_vInRoomUIs[readyUIIndex + i]->setRenderState(true);
+				else {
+					m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
+					allready = false;
+				}
+			}
+			else {
+				m_vInRoomUIs[backUIIndex + i]->setRenderState(false);
+				m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
+			}
+		}
+		if (allready) {
+			wOpacity = 0.0f;
+			m_nState = GoLoading;
+		}
+		break;
+	}
+	case GoLoading: {
+			wOpacity += 0.35f * fElapsedTime;
+			if (wOpacity > 1.0f) {
+				wOpacity = 1.0f;
+				m_nNextScene = SCENE_WINTERLAND;
+			}
+			m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
+		break;
+	}
+	}
 }
 void TitleScene::Render()
 {
+	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
+	auto barrier = [&](ID3D12Resource* pResource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
+		{
+			D3D12_RESOURCE_BARRIER resBarrier{};
+			resBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			resBarrier.Transition.pResource = pResource;
+			resBarrier.Transition.StateBefore = before;
+			resBarrier.Transition.StateAfter = after;
+			resBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
+			cmdList->ResourceBarrier(1, &resBarrier);
+		};
+	
+	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	D3D12_VIEWPORT vv{};
+	vv.Width = 960; vv.Height = 540; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
+	cmdList->RSSetViewports(1, &vv);
+	D3D12_RECT ss{ 0, 0, 960, 540 };
+	cmdList->RSSetScissorRects(1, &ss);
+	cmdList->OMSetRenderTargets(1, &m_RTV->GetCPUDescriptorHandleForHeapStart(), FALSE, &m_DSV->GetCPUDescriptorHandleForHeapStart());
+	cmdList->SetGraphicsRootSignature(m_pGlobalRootSignature.Get());
+	cmdList->SetPipelineState(m_UIPipelineState.Get());
+	cmdList->SetGraphicsRootConstantBufferView(0, m_cameraCB->GetGPUVirtualAddress());
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	switch (m_nState) {
+	case Title:
+		for (auto& p : m_vTitleUIs)
+			p->Render();
+		break;
+	case RoomSelect:
+		for (auto& p : m_vRoomSelectUIs)
+			p->Render();
+		break;
+	case InRoom:
+	case GoLoading:
+		for (auto& p : m_vInRoomUIs)
+			p->Render();
+		break;
+	}
+
+	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
 
 // ==================================================================================
@@ -710,7 +1123,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// Read File Here ========================================	! All Files Are Read Once !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", Mage);
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
@@ -769,7 +1182,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	skinned[0]->getObjects()[98]->getMaterials()[0].m_nEmissionMapIndex = skinned[0]->getTextures().size();
 	skinned[0]->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Gorhorrid\\T_Gorhorrid_Emissive.dds"));*/
 
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky.dds", true));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky2.dds", true));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// CBV RAII
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
@@ -931,7 +1344,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
 		return;
 	}
-	// W + A (���� �밢�� ��)
+	// W + A 
 	if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // �ٱ�: ���� �밢�� ��
@@ -942,13 +1355,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // �ٱ� ����
 		}
 	}
-	// W + A + Shift �� ���� (���� �밢�� �� �ȱ�� ��ȯ)
+	// W + A + Shift 
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // �ȱ�: ���� �밢�� ��
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A �ܵ� (���� �밢�� �� �ȱ�)
+	// W + A 
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // �ȱ�: ���� �밢�� ��
@@ -959,25 +1372,25 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // �ȱ� ����
 		}
 	}
-	// W + A + Shift���� A �� ���� (���� �ٱ�� ��ȯ)
+	// W + A + Shift
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // �ٱ�: ����
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A���� A �� ���� (���� �ȱ�� ��ȯ)
+	// W + A
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // �ȱ�: ����
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + A���� W �� ���� (���� �ȱ�� ��ȯ)
+	// W + A
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // �ȱ�: ���� (����: 8)
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D + Shift (������ �밢�� �� �ٱ�)
+	// W + D + Shift 
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // �ٱ�: ������ �밢�� ��
@@ -988,13 +1401,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // �ٱ� ����
 		}
 	}
-	// W + D + Shift �� ���� (������ �밢�� �� �ȱ�� ��ȯ)
+	// W + D + Shift
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // �ȱ�: ������ �밢�� ��
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D �ܵ� (������ �밢�� �� �ȱ�)
+	// W + D
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // �ȱ�: ������ �밢�� ��
@@ -1005,25 +1418,25 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // �ȱ� ����
 		}
 	}
-	// W + D + Shift���� D �� ���� (���� �ٱ�� ��ȯ)
+	// W + D + Shift
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // �ٱ�: ����
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D���� D �� ���� (���� �ȱ��?��ȯ)
+	// W + D
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // �ȱ�: ����
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + D���� W �� ���� (���� �ȱ��?��ȯ)
+	// W + D
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // �ȱ�: ���� (����: 9)
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A + Shift (���� �밢�� �� �ٱ�)
+	// S + A + Shift 
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // �ٱ�: �� �� �밢�� ��
@@ -1034,13 +1447,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // �ٱ� ����
 		}
 	}
-	// S + A + Shift �� ���� (���� �밢�� �� �ȱ��?��ȯ)
+	// S + A + Shift 
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // �ȱ�: ���� �밢�� ��
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A �ܵ� (���� �밢�� �� �ȱ�)
+	// S + A 
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // �ȱ�: ���� �밢�� ��
@@ -1051,25 +1464,25 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // �ȱ� ����
 		}
 	}
-	// S + A + Shift���� A �� ���� (���� �ٱ��?��ȯ)
+	// S + A + Shift
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // �ٱ�: ���� (����: 20)
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A���� A �� ���� (���� �ȱ��?��ȯ)
+	// S + A
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // �ȱ�: ����
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + A���� S �� ���� (���� �ȱ��?��ȯ)
+	// S + A
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // �ȱ�: ���� (����: 8)
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D + Shift (������ �밢�� �� �ٱ�)
+	// S + D + Shift 
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // �ٱ�: ������ �밢�� ��
@@ -1080,13 +1493,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // �ٱ� ����
 		}
 	}
-	// S + D + Shift �� ���� (������ �밢�� �� �ȱ��?��ȯ)
+	// S + D + Shift 
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // �ȱ�: ������ �밢�� ��
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D �ܵ� (������ �밢�� �� �ȱ�)
+	// S + D 
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // �ȱ�: ������ �밢�� ��
@@ -1097,25 +1510,25 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // �ȱ� ����
 		}
 	}
-	// S + D + Shift���� D �� ���� (���� �ٱ��?��ȯ)
+	// S + D + Shift
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // �ٱ�: ���� (����: 20)
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D���� D �� ���� (���� �ȱ��?��ȯ)
+	// S + D
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // �ȱ�: ����
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S + D���� S �� ���� (���� �ȱ��?��ȯ)
+	// S + D
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // �ȱ�: ���� (����: 9)
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W + Shift (���� �ٱ�)
+	// W + Shift 
 	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // �ٱ�: ����
@@ -1126,13 +1539,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // �ٱ� ����
 		}
 	}
-	// W + Shift �� ���� (���� �ȱ��?��ȯ)
+	// W + Shift 
 	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // �ȱ�: ����
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// W �ܵ� (���� �ȱ�)
+	// W 
 	else if (keyBuffer['W'] & 0x80) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // �ȱ�: ����
@@ -1143,7 +1556,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // �ȱ� ����
 		}
 	}
-	// S + Shift (���� �ٱ�)
+	// S + Shift 
 	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // �ٱ�: ���� (����: 20)
@@ -1154,13 +1567,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // �ٱ� ����
 		}
 	}
-	// S + Shift �� ���� (���� �ȱ��?��ȯ)
+	// S + Shift 
 	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // �ȱ�: ����
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S �ܵ� (���� �ȱ�)
+	// S 
 	else if (keyBuffer['S'] & 0x80) {
 		if (!(m_PrevKeyBuffer['S'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // �ȱ�: ����
@@ -1171,7 +1584,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // �ȱ� ����
 		}
 	}
-	// A + Shift (���� �ٱ�)
+	// A + Shift 
 	else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // �ٱ�: ���� (����: 18)
@@ -1182,13 +1595,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // �ٱ� ����
 		}
 	}
-	// A + Shift �� ���� (���� �ȱ��?��ȯ)
+	// A + Shift 
 	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // �ȱ�: ���� (����: 8)
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// A �ܵ� (���� �ȱ�)
+	// A 
 	else if (keyBuffer['A'] & 0x80) {
 		if (!(m_PrevKeyBuffer['A'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // �ȱ�: ���� (����: 8)
@@ -1199,7 +1612,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // �ȱ� ����
 		}
 	}
-	// D + Shift (���� �ٱ�)
+	// D + Shift 
 	else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // �ٱ�: ���� (����: 19)
@@ -1210,13 +1623,13 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // �ٱ� ����
 		}
 	}
-	// D + Shift �� ���� (���� �ȱ��?��ȯ)
+	// D + Shift 
 	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // �ȱ�: ���� (����: 9)
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// D �ܵ� (���� �ȱ�)
+	// D 
 	else if (keyBuffer['D'] & 0x80) {
 		if (!(m_PrevKeyBuffer['D'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // �ȱ�: ���� (����: 9)
@@ -1227,25 +1640,25 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // �ȱ� ����
 		}
 	}
-	// W �� ���� (IDLE�� ��ȯ)
+	// W 
 	else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// S �� ���� (IDLE�� ��ȯ)
+	// S 
 	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// A �� ���� (IDLE�� ��ȯ)
+	// A 
 	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-	// D �� ���� (IDLE�� ��ȯ)
+	// D 
 	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(cameraDir, cameraUp);
@@ -1860,8 +2273,16 @@ void CRaytracingMaterialTestScene::Render()
 
 // =====================================================================================
 
+
 void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
+	m_pOutputBuffer = outputBuffer;
+	// CreateUISetup
+	CreateOrthoMatrixBuffer();
+	CreateRTVDSV();
+	CreateUIRootSignature();
+	CreateUIPipelineState();
+
 	// Create Global & Local Root Signature
 	CreateRootSignature();
 
@@ -1886,7 +2307,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->SetUp(3);
 	// ���⿡ ���� �ֱ� ========================================	! ��� ������ �ѹ����� �б� !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	// ���� �߰�
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
@@ -1923,7 +2344,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		return p->getFrameName() == "Water";
 		});
 	if (p != normalObjects.end()) {
-		(*p)->SetInstanceID(1);
+		(*p)->SetInstanceID(2);
 		(*p)->getMaterials().emplace_back();
 		Material& mt = (*p)->getMaterials()[0];
 		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
@@ -1943,7 +2364,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	PrepareTerrainTexture();
 
 	// cubeMap Ready
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky.dds", true));
+	m_nSkyboxIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky2.dds", true));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// ��� ������Ʈ ������� ���� & �ʱ�ȭ
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
@@ -1966,6 +2388,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// ī�޶� ���� ==============================================================
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetHOffset(3.5f);
 	m_pCamera->SetCameraLength(15.0f);
 	// ==========================================================================
 
@@ -1974,6 +2397,12 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
 	m_pAccelerationStructureManager->InitBLAS();
 	m_pAccelerationStructureManager->InitTLAS();
+
+	// UISetup ========================================================================
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
+	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 }
 
 void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -1981,12 +2410,6 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 	switch (nMessage) {
 	case WM_KEYDOWN:
 		switch (wParam) {
-		case '1':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
-			break;
-		case '2':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
-			break;
 		case 'n':
 		case 'N':
 			m_pCamera->toggleNormalMapping();
@@ -2000,6 +2423,18 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			break;
 		case '0':
 			m_pCamera->SetThirdPersonMode(true);
+			break;
+		case '8':
+			if (m_nState == IS_GAMING) {
+				startTime = 0.0f;
+				m_nState = IS_FINISH;
+			}
+			break;
+		case '1':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
+			break;
+		case '2':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
 			break;
 		}
 		break;
@@ -2040,32 +2475,34 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer[VK_SHIFT] & 0x80)
 		shiftDown = true;
 
-	if (false == m_pCamera->getThirdPersonState()) {
-		if (keyBuffer['W'] & 0x80)
-			m_pCamera->Move(0, fElapsedTime, shiftDown);
-		if (keyBuffer['S'] & 0x80)
-			m_pCamera->Move(5, fElapsedTime, shiftDown);
-		if (keyBuffer['D'] & 0x80)
-			m_pCamera->Move(3, fElapsedTime, shiftDown);
-		if (keyBuffer['A'] & 0x80)
-			m_pCamera->Move(4, fElapsedTime, shiftDown);
-		if (keyBuffer[VK_SPACE] & 0x80)
-			m_pCamera->Move(1, fElapsedTime, shiftDown);
-		if (keyBuffer[VK_CONTROL] & 0x80)
-			m_pCamera->Move(2, fElapsedTime, shiftDown);
-	}
-	else {
-		if (keyBuffer['W'] & 0x80) {
-			m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
+	if (m_nState == IS_GAMING) {
+		if (false == m_pCamera->getThirdPersonState()) {
+			if (keyBuffer['W'] & 0x80)
+				m_pCamera->Move(0, fElapsedTime, shiftDown);
+			if (keyBuffer['S'] & 0x80)
+				m_pCamera->Move(5, fElapsedTime, shiftDown);
+			if (keyBuffer['D'] & 0x80)
+				m_pCamera->Move(3, fElapsedTime, shiftDown);
+			if (keyBuffer['A'] & 0x80)
+				m_pCamera->Move(4, fElapsedTime, shiftDown);
+			if (keyBuffer[VK_SPACE] & 0x80)
+				m_pCamera->Move(1, fElapsedTime, shiftDown);
+			if (keyBuffer[VK_CONTROL] & 0x80)
+				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
-		if (keyBuffer['S'] & 0x80) {
-			m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
-		}
-		if (keyBuffer['A'] & 0x80) {
-			m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, -90.0f * fElapsedTime, 0.0f));
-		}
-		if (keyBuffer['D'] & 0x80) {
-			m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, 90.0f * fElapsedTime, 0.0f));
+		else {
+			if (keyBuffer['W'] & 0x80) {
+				m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
+			}
+			if (keyBuffer['S'] & 0x80) {
+				m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
+			}
+			if (keyBuffer['A'] & 0x80) {
+				m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, -90.0f * fElapsedTime, 0.0f));
+			}
+			if (keyBuffer['D'] & 0x80) {
+				m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, 90.0f * fElapsedTime, 0.0f));
+			}
 		}
 	}
 
@@ -2076,9 +2513,111 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 	if (keyBuffer['O'] & 0x80) {
 		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 3);
 	}
+}
 
-	if (keyBuffer[VK_RIGHT] & 0x80)
-		m_pResourceManager->getAnimationManagers()[0]->TimeIncrease(fElapsedTime);
+void CRaytracingWinterLandScene::CreateUIRootSignature()
+{
+	D3D12_DESCRIPTOR_RANGE tRange{};
+	tRange.BaseShaderRegister = 0;
+	tRange.NumDescriptors = 1;
+	tRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+
+	D3D12_ROOT_PARAMETER params[3]{};
+	params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	params[0].Descriptor.RegisterSpace = 0;
+	params[0].Descriptor.ShaderRegister = 0;
+
+	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	params[1].Descriptor.RegisterSpace = 0;
+	params[1].Descriptor.ShaderRegister = 1;
+
+	params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[2].DescriptorTable.NumDescriptorRanges = 1;
+	params[2].DescriptorTable.pDescriptorRanges = &tRange;
+
+	D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
+	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	samplerDesc.RegisterSpace = 0;
+	samplerDesc.ShaderRegister = 0;
+	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	D3D12_ROOT_SIGNATURE_DESC rtDesc{};
+	rtDesc.NumParameters = 3;
+	rtDesc.NumStaticSamplers = 1;
+	rtDesc.pParameters = params;
+	rtDesc.pStaticSamplers = &samplerDesc;
+	rtDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	ID3DBlob* pBlob{};
+	D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_UIRootSignature.GetAddressOf()));
+	pBlob->Release();
+}
+void CRaytracingWinterLandScene::CreateUIPipelineState()
+{
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dPBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_UIRootSignature.Get();
+
+	D3D12_INPUT_ELEMENT_DESC ldesc[3]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 3;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 1;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "PSMain", "ps_5_1", 0, 0, &pd3dPBlob, nullptr);
+	d3dPipelineState.PS.BytecodeLength = pd3dPBlob->GetBufferSize();
+	d3dPipelineState.PS.pShaderBytecode = pd3dPBlob->GetBufferPointer();
+
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(m_UIPipelineState.GetAddressOf()));
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dPBlob)
+		pd3dPBlob->Release();
 }
 
 void CRaytracingWinterLandScene::PrepareTerrainTexture()
@@ -2259,8 +2798,10 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	// Skinning Object BLAS ReBuild
 	m_pResourceManager->ReBuildBLAS();
 
+	m_pResourceManager->UpdateWorldMatrix();
+
 	for (auto& p : m_pResourceManager->getSkinningObjectList()) {
-		XMFLOAT4X4& playerWorld = p->getWorldMatrix();
+		/*XMFLOAT4X4& playerWorld = p->getWorldMatrix();
 		playerWorld._42 -= (30 * fElapsedTime);
 		p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
 
@@ -2268,12 +2809,50 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		if (terrainHeight > playerWorld._42) {
 			playerWorld._42 = terrainHeight;
 			p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
+		}*/
+		XMFLOAT4X4& playerWorld = p->getWorldMatrix();
+		XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
+		float fy = objectWorld._42 - (30 * fElapsedTime);
+
+		float terrainHeight = m_pHeightMap->GetHeightinWorldSpace(objectWorld ._41 + 1024.0f, objectWorld._43 + 1024.0f);
+		if (fy < terrainHeight) {
+			playerWorld._42 = terrainHeight;
+			p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
 		}
+		else {
+			playerWorld._42 -= (30 * fElapsedTime);
+			p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
+		}
+		p->UpdatePreWorldMatrix();
 	}
-	m_pResourceManager->UpdateWorldMatrix();
+
 
 	m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
+
+	switch (m_nState) {
+	case IS_LOADING: {
+			wOpacity -= 0.5 * fElapsedTime;
+			if (wOpacity < 0.0f) {
+				m_nState = IS_GAMING;
+				wOpacity = 0.0f;
+			}
+			m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
+		break;
+	}
+	case IS_GAMING: {
+		break;
+	}
+	case IS_FINISH: {
+			wOpacity += 0.2 * fElapsedTime;
+			if (wOpacity > 1.0f) {
+				m_nNextScene = SCENE_TITLE;
+				wOpacity = 1.0f;
+			}
+			m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
+		break;
+	}
+	}
 }
 
 void CRaytracingWinterLandScene::Render()
@@ -2282,7 +2861,7 @@ void CRaytracingWinterLandScene::Render()
 	m_pAccelerationStructureManager->SetScene();
 	m_pResourceManager->SetLights();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
-	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[textures.size() - 1]->getView()->GetGPUDescriptorHandleForHeapStart());
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[m_nSkyboxIndex]->getView()->GetGPUDescriptorHandleForHeapStart());
 	g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
@@ -2302,4 +2881,37 @@ void CRaytracingWinterLandScene::Render()
 	raydesc.HitGroupTable.StrideInBytes = m_pShaderBindingTable->getHitGroupStride();
 
 	g_DxResource.cmdList->DispatchRays(&raydesc);
+
+	// UI Render ==================================================================================
+
+	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
+	auto barrier = [&](ID3D12Resource* pResource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
+		{
+			D3D12_RESOURCE_BARRIER resBarrier{};
+			resBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			resBarrier.Transition.pResource = pResource;
+			resBarrier.Transition.StateBefore = before;
+			resBarrier.Transition.StateAfter = after;
+			resBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+			cmdList->ResourceBarrier(1, &resBarrier);
+		};
+
+	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	D3D12_VIEWPORT vv{};
+	vv.Width = 960; vv.Height = 540; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
+	cmdList->RSSetViewports(1, &vv);
+	D3D12_RECT ss{ 0, 0, 960, 540 };
+	cmdList->RSSetScissorRects(1, &ss);
+	cmdList->OMSetRenderTargets(1, &m_RTV->GetCPUDescriptorHandleForHeapStart(), FALSE, &m_DSV->GetCPUDescriptorHandleForHeapStart());
+	cmdList->SetGraphicsRootSignature(m_UIRootSignature.Get());
+	cmdList->SetPipelineState(m_UIPipelineState.Get());
+	cmdList->SetGraphicsRootConstantBufferView(0, m_cameraCB->GetGPUVirtualAddress());
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	for (auto& p : m_vUIs)
+		p->Render();
+
+	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
