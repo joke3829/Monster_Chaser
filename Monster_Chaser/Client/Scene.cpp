@@ -657,7 +657,7 @@ void CRaytracingScene::TestShootCollision(const std::vector<std::unique_ptr<CPro
 					BoundingSphere boneSphere = bone->getObjectSphere();
 					boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
 					if (projectileOBB.Intersects(boneSphere)) {
-						return;
+						m_pResourceManager->getAnimationManagers()[i]->ChangeAnimation(0,false);
 					}
 				}
 			}
@@ -867,6 +867,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	m_pResourceManager->PrepareObject();
 	m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
+	m_pResourceManager->getAnimationManagers()[1]->setCurrnetSet(1);
 
 	// Setting Camera ==============================================================
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
@@ -956,6 +957,7 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 				m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[0]->getPosition());
 				m_pResourceManager->getProjectileList()[0]->setMoveDirection(characterDir);
 				m_pResourceManager->getProjectileList()[0]->setActive(true);
+				m_pResourceManager->getProjectileList()[0]->setTime(0.0f);
 				m_bDoingCombo = true;
 			}
 		}

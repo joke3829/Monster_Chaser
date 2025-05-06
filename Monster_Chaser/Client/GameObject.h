@@ -398,6 +398,7 @@ public:
 	void setPosition(XMFLOAT3 pos) { m_xmf3Position = pos; m_xmf3Position.y = 3.0f; }
 	void setSpeed(float spd) { m_fSpeed = spd; }
 	void setLifetime(float life) { m_fLifetime = life; }
+	void setTime(float time) { m_fElapsedTime = time; }
 	void setGameObject(CGameObject* object) { m_Objects = object; }
 
 	void IsMoving(float fElapsedTime);
