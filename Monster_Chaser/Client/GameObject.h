@@ -415,7 +415,7 @@ protected:
 	XMFLOAT3 m_xmf3MoveDirection{};
 	XMFLOAT3 m_xmf3Position{};
 
-	float m_fSpeed = 1.0f;
+	float m_fSpeed = 10.0f;
 	float m_fLifetime = 10.0f;
 	float m_fElapsedTime = 0.0f;
 

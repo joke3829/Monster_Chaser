@@ -1497,6 +1497,7 @@ void CProjectile::IsMoving(float fElapsedTime)
 	if (m_fLifetime > 0.0f && m_fElapsedTime >= m_fLifetime)
 	{
 		m_bActive = false;
+		m_fElapsedTime = 0.0f;
 	}
 }
 
