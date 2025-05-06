@@ -111,14 +111,34 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// =============================================================================================
 
+	int tempIndex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
 	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
 
-	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	backUIIndex = m_vInRoomUIs.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 296, 484));
+	for (int i = 0; i < 3; ++i) {
+		m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport((i * 296) + (18 * (i + 1)), 18);
+		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+	}
+
+	readyUIIndex = m_vInRoomUIs.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 175, 65));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InRoom\\ReadyText.dds"));
+	for (int i = 0; i < 3; ++i) {
+		m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport((i * 296) + (18 * (i + 1)) + 130, 437);
+	}
+
+	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[tempIndex].get()));
 	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.0);
+
+
+
 }
 
 void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -136,6 +156,18 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 				break;
 			}
 			break;
+		case InRoom: {
+			switch (wParam) {
+			case 'R':
+				userReadyState[local_uid] = !userReadyState[local_uid];
+				break;
+			case VK_BACK:
+				--userPerRoom[currentRoom];
+				m_nState = RoomSelect;
+				break;
+			}
+			break;
+		}
 		}
 		break;
 	}
@@ -147,23 +179,46 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 {
 	switch (nMessage) {
 	case WM_LBUTTONDOWN: {
-		int x = LOWORD(lParam);
-		int y = HIWORD(lParam);
+		int mx = LOWORD(lParam);
+		int my = HIWORD(lParam);
 
 		wchar_t buffer[100];
-		swprintf_s(buffer, L"(%d, %d)\n", x, y);
+		swprintf_s(buffer, L"(%d, %d)\n", mx, my);
 		OutputDebugString(buffer);
 		switch (m_nState) {
 		case Title:
 			m_nState = RoomSelect;
 			break;
 		case RoomSelect:
-			m_nState = InRoom;
+			for (int i = 0; i < 10; ++i) {
+				int j = i % 2;
+				if (j == 0) {
+					int x1 = 20, x2 = 460;
+					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
+					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
+						if (userPerRoom[i] < 3) {
+							local_uid = userPerRoom[i]++;
+							currentRoom = i;
+							m_nState = InRoom;
+							break;
+						}
+					}
+				}
+				else {
+					int x1 = 500, x2 = 940;
+					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
+					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
+						if (userPerRoom[i] < 3) {
+							local_uid = userPerRoom[i]++;
+							currentRoom = i;
+							m_nState = InRoom;
+							break;
+						}
+					}
+				}
+			}
 			break;
 		case InRoom:
-			startTime = 0.0f;
-			m_nState = GoLoading;
-			wOpacity = 0.0f;
 			break;
 		}
 		break;
@@ -297,8 +352,6 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		break;
 	case RoomSelect: {
 		m_vRoomSelectUIs[0]->Animation(fElapsedTime);
-
-
 		for (int i = 0; i < 10; ++i) {
 			for (int j = 0; j < 3; ++j) {
 				if (j < userPerRoom[i]) {
@@ -312,19 +365,35 @@ void TitleScene::UpdateObject(float fElapsedTime)
 	}
 	case InRoom: {
 		m_vInRoomUIs[0]->Animation(fElapsedTime);
+		bool allready = true;
+		for (int i = 0; i < 3; ++i) {
+			if (i < userPerRoom[currentRoom]) {
+				m_vInRoomUIs[backUIIndex + i]->setRenderState(true);
+				if(userReadyState[i])
+					m_vInRoomUIs[readyUIIndex + i]->setRenderState(true);
+				else {
+					m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
+					allready = false;
+				}
+			}
+			else {
+				m_vInRoomUIs[backUIIndex + i]->setRenderState(false);
+				m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
+			}
+		}
+		if (allready) {
+			wOpacity = 0.0f;
+			m_nState = GoLoading;
+		}
 		break;
 	}
 	case GoLoading: {
-		if (startTime < 3.5f) {
-			startTime += fElapsedTime;
 			wOpacity += 0.35f * fElapsedTime;
-			if (wOpacity > 1.0f)
+			if (wOpacity > 1.0f) {
 				wOpacity = 1.0f;
-			m_vInRoomUIs[1]->setColor(0.0, 0.0, 0.0, wOpacity);
-		}
-		else {
-			m_nNextScene = SCENE_WINTERLAND;
-		}
+				m_nNextScene = SCENE_WINTERLAND;
+			}
+			m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
 	}
 	}
@@ -1054,7 +1123,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// Read File Here ========================================	! All Files Are Read Once !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", Mage);
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
@@ -2204,6 +2273,7 @@ void CRaytracingMaterialTestScene::Render()
 
 // =====================================================================================
 
+
 void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
 	m_pOutputBuffer = outputBuffer;
@@ -2237,7 +2307,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->SetUp(3);
 	// ���⿡ ���� �ֱ� ========================================	! ��� ������ �ѹ����� �б� !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	// ���� �߰�
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");

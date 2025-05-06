@@ -32,6 +32,7 @@ enum MoveAnimationState
 
 class CScene {
 public:
+	virtual ~CScene() {}
 	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) { m_pOutputBuffer = outputBuffer; }
 	virtual void SetCamera(std::shared_ptr<CCamera>& pCamera) { m_pCamera = pCamera; }
 	virtual void CreateRTVDSV();
@@ -100,6 +101,14 @@ protected:
 	// Room Select variables
 	int										peopleindex{};
 	std::array<short, 10>					userPerRoom{ 1, 0, 0, 3, 2, 2, 3, 0, 2, 1 };
+
+	// InRoom variables
+	short									local_uid{};
+	short									currentRoom{};
+	std::array<short, 3>					userJob{ JOB_MAGE, JOB_MAGE, JOB_MAGE };
+	std::array<bool, 3>						userReadyState{};
+	short									readyUIIndex{};
+	short									backUIIndex{};
 };
 
 template<typename T>

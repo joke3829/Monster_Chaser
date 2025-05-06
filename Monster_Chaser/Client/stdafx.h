@@ -69,6 +69,12 @@ constexpr unsigned short SCENE_PLAIN		= 1;
 constexpr unsigned short SCENE_CAVE			= 2;
 constexpr unsigned short SCENE_WINTERLAND	= 3;
 
+// define job
+constexpr unsigned short JOB_NOTHING		= 0;
+constexpr unsigned short JOB_MAGE			= 1;
+constexpr unsigned short JOB_WARRIOR		= 2;
+constexpr unsigned short JOB_HEALER			= 3;
+
 // 조명 관련 정의
 constexpr int MAX_LIGHTS = 64;
 
