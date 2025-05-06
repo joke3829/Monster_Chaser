@@ -9,22 +9,28 @@ struct CB_CAMERA_INFO {
 	XMFLOAT4X4 xmf4x4ViewProj;
 	XMFLOAT4X4 xmf4x4InverseViewProj;
 	XMFLOAT3 xmf3Eye;
-	int bNormalMapping;	// ¾Õ 2byte normal, µÚ 2byte albedo
+	int bNormalMapping;	// ï¿½ï¿½ 2byte normal, ï¿½ï¿½ 2byte albedo
 };
 
 class CCamera {
 public:
+	~CCamera();
+
 	void Setup(int nRootParameterIndex);
 
 	void Rotate(int cxDelta, int cyDelta);
-	void Move(int arrow, float fElapsedTime);
+	void Move(int arrow, float fElapsedTime, bool shift = false);
 
 	void UpdateViewMatrix();
 	void SetShaderVariable();
 
+	XMFLOAT3& getEye() { return m_xmf3Eye; }
+	bool getThirdPersonState() const { return m_bThirdPerson; }
+
 	void SetTarget(CGameObject* target);
 	void SetThirdPersonMode(bool bThirdPerson);
 	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }
+	void SetHOffset(float height) { m_xmf3hOffset.y = height; }
 
 	void toggleNormalMapping() 
 	{ 
@@ -42,8 +48,8 @@ public:
 		m_pCameraInfo->bNormalMapping = fByte | bByte;
 		//m_pCameraInfo->bNormalMapping |= 0x0000; 
 	}
-	bool getThirdPersonState() const { return m_bThirdPerson; }
-
+	XMFLOAT3 getDir() const { return m_xmf3Dir; }
+	XMFLOAT3 getUp() const { return m_xmf3Up; }
 protected:
 	bool m_bThirdPerson = false;
 	CGameObject* m_pTarget = nullptr;
@@ -57,7 +63,8 @@ protected:
 	XMFLOAT3 m_xmf3Up{ 0.0f, 1.0f, 0.0f };
 
 	XMFLOAT3 m_xmf3Dir{ 0.0f, 0.0f, 1.0f };
-	XMFLOAT3 m_xmf3Offset{ 0.0f, 0.6f, -1.0f };
+	XMFLOAT3 m_xmf3Offset{ 0.0f, 0.0f, -1.0f };
+	XMFLOAT3 m_xmf3hOffset{ 0.0f, 0.0f, 0.0f };
 
 	XMFLOAT4X4 m_xmf4x4View;
 	XMFLOAT4X4 m_xmf4x4Proj;
@@ -68,7 +75,7 @@ protected:
 	float m_fFar = 1000.0f;
 
 	float m_fLimitcy{};
-	float m_fCameraLength{ 30.0f };		// Ä«¸Þ¶ó °Å¸®
+	float m_fCameraLength{ 30.0f };		// Ä«ï¿½Þ¶ï¿½ ï¿½Å¸ï¿½
 
 	int m_nRootParameterIndex{};
 };

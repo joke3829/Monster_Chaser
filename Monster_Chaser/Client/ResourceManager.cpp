@@ -40,7 +40,7 @@ bool CResourceManager::AddResourceFromFile(wchar_t* FilePath, std::string textur
 	return true;
 }
 
-bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront)
+bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront, unsigned short job)
 {
 	std::ifstream inFile{ FilePath, std::ios::binary };
 	if (!inFile) {
@@ -60,7 +60,14 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 	if (!inFile.eof()) {
 		readLabel();
 		if ("<Animation>:" == strLabel) {	// 애니메이션이 있으면 매니저 생성 & 오브젝트 지정
-			m_vAnimationManager.emplace_back(std::make_unique<CAnimationManager>(inFile));
+			switch (job) {
+			case JOB_NOTHING:
+				m_vAnimationManager.emplace_back(std::make_unique<CAnimationManager>(inFile));
+				break;
+			case JOB_MAGE:
+				m_vAnimationManager.emplace_back(std::make_unique<CMageManager>(inFile));
+				break;
+			}
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->SetFramesPointerFromSkinningObject(m_vSkinningObject[m_vSkinningObject.size() - 1]->getObjects());
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->MakeAnimationMatrixIndex(m_vSkinningObject[m_vSkinningObject.size() - 1].get());
 		}
@@ -119,7 +126,7 @@ void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentI
 			if (g_ShowBoundingBox) {
 				m_vGameObjectList[nCurrentObjectIndex]->getMaterials().clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// 랜덤 컬러
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// 랜덤 컬러
 				m_vGameObjectList[nCurrentObjectIndex]->getMaterials().emplace_back(tempM);
 			}
 		}
@@ -391,7 +398,7 @@ void CResourceManager::UpdatePosition(float fElapsedTime)
 {
 	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
 		if (m_vAnimationManager[i]) {
-			CSkinningObject* skinningObject = GetSkinningObject(i);
+			CSkinningObject* skinningObject = getSkinningObjectList()[0].get();
 			if (skinningObject) {
 				m_vAnimationManager[i]->UpdateAniPosition(fElapsedTime, skinningObject);
 			}
@@ -420,24 +427,28 @@ void CResourceManager::UpdateWorldMatrix()
 	}
 	for (std::unique_ptr<CSkinningObject>& Skinning : m_vSkinningObject) {
 		Skinning->UpdateFrameWorldMatrix();
-		//std::vector<std::unique_ptr<CGameObject>>& sObjects = Skinning->getObjects();
-		//for (std::unique_ptr<CGameObject>& object : sObjects) {
-		//	if (object->getParentIndex() != -1) {
-		//		XMFLOAT4X4 wmtx = sObjects[object->getParentIndex()]->getWorldMatrix();
-		//		XMFLOAT4X4 lmtx = object->getLocalMatrix();
-		//		XMStoreFloat4x4(&lmtx, XMLoadFloat4x4(&lmtx) * XMLoadFloat4x4(&wmtx));
-		//		object->SetWorlaMatrix(lmtx);
-		//	}
-		//	else
-		//		object->SetWorlaMatrix(object->getLocalMatrix());
-		//		//object->UpdateWorldMatrix();
-		//}
 	}
 }
 
 std::vector<std::unique_ptr<CGameObject>>& CResourceManager::getGameObjectList()
 {
 	return m_vGameObjectList;
+}
+std::vector<CGameObject*> CResourceManager::getGameObjectPtrList()
+{
+	std::vector<CGameObject*> ptrList;
+	for (const auto& obj : m_vGameObjectList) {
+		if (obj)ptrList.push_back(obj.get());
+	}
+	return ptrList;
+}
+std::vector<Mesh*> CResourceManager::getMeshPtrList()
+{
+	std::vector<Mesh*> ptrList;
+	for (const auto& obj : m_vMeshList) {
+		if (obj)ptrList.push_back(obj.get());
+	}
+	return ptrList;
 }
 std::vector<std::unique_ptr<Mesh>>& CResourceManager::getMeshList()
 {
@@ -453,17 +464,216 @@ void CResourceManager::LightTest()
 	Lights testLight{};
 	testLight.numLights = 1;
 	testLight.lights[0].Type = DIRECTIONAL_LIGHT;
-	testLight.lights[0].Intensity = 1.0f;
+	testLight.lights[0].Intensity =  1.0f;
 	testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
+	//testLight.lights[0].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
+	//testLight.lights[0].Direction = XMFLOAT3(1.0, -1.0, 0.0);
 
-	testLight.lights[1].Type = DIRECTIONAL_LIGHT;
-	testLight.lights[1].Intensity = 1;
-	testLight.lights[1].Color = XMFLOAT4(1.0f, 0.0f ,1.0f, 1.0f);
-	testLight.lights[1].Direction = XMFLOAT3(-0.7527212f, 0.6549893f, 0.06633252f);
+	///*testLight.lights[0].Type = SPOT_LIGHT;
+	//testLight.lights[0].Intensity = 5.0f;
+	//testLight.lights[0].Color = XMFLOAT4(1.0f, 1.0f ,1.0f, 1.0f);
+	//testLight.lights[0].Position = XMFLOAT3(0.0, 10.0f, 0.0f);
+	//testLight.lights[0].Direction = XMFLOAT3(0.0, -1.0, 0.0);
+	//testLight.lights[0].SpotAngle = 85.5f;
+	//testLight.lights[0].Range = 12.0f;*/
+
+	///*testLight.lights[0].Type = POINT_LIGHT;
+	//testLight.lights[0].Intensity = 5.0f;
+	//testLight.lights[0].Color = XMFLOAT4(.0f, 1.0f, 1.0f, 1.0f);
+	//testLight.lights[0].Position = XMFLOAT3(0.0, 20.0f, 15.0f);
+	//testLight.lights[0].Range = 60.0f;*/
 
 	Lights* mapptr{};
 	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
-	memcpy(mapptr, &testLight, sizeof(Lights));
+	//memcpy(mapptr, &testLight, sizeof(Lights));
+	mapptr->lights[22].Intensity = 1.0f;
+	mapptr->lights[23].Intensity = 0.6f;
+	m_pLights->Unmap(0, nullptr);
+}
+
+void CResourceManager::AddLightsFromFile(wchar_t* FilePath)
+{
+	std::ifstream inFile{ FilePath, std::ios::binary };
+	if (!inFile) {
+		OutputDebugString(L"Can't File Open!\n");
+		return;
+	}
+	std::string strLabel{};
+	auto readLabel = [&]() {
+		char nStrLength{};
+		inFile.read(&nStrLength, sizeof(char));
+		strLabel.assign(nStrLength, ' ');
+		inFile.read(strLabel.data(), nStrLength);
+		};
+
+	while (!inFile.eof()) {
+		readLabel();
+		if ("</Hierarchy>:" == strLabel)
+			break;
+		if ("<Frame>:" == strLabel)
+			AddLightsFromFileRecursion(inFile);
+	}
+}
+
+void CResourceManager::AddLightsFromFileRecursion(std::ifstream& inFile)
+{
+	std::string strLabel{};
+	auto readLabel = [&]() {
+		char nStrLength{};
+		inFile.read(&nStrLength, sizeof(char));
+		strLabel.assign(nStrLength, ' ');
+		inFile.read(strLabel.data(), nStrLength);
+		};
+
+	int tempData{};
+	inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+	inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+	readLabel();
+
+	while (1) {
+		readLabel();
+		if ("</Frame>" == strLabel)
+			break;
+		if ("<Transform>:" == strLabel) {
+			for(int i = 0 ; i < 13; ++i)
+				inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+		}
+		else if ("<TransformMatrix>:" == strLabel) {
+			for (int i = 0; i < 16; ++i)
+				inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+		}
+		else if ("<Bound>:" == strLabel) {
+			for (int i = 0; i < 6; ++i)
+				inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+		}
+		else if ("<Mesh>:" == strLabel) {
+			inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+			readLabel();
+			Mesh* tempMesh = new Mesh(inFile, "noName");
+			delete tempMesh;
+		}
+		else if ("<Materials>:" == strLabel) {
+			inFile.read((char*)&tempData, sizeof(int));
+			while (1) {
+				readLabel();
+				if (strLabel == "<Material>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<AlbedoColor>:") {
+					for(int i = 0; i < 4; ++i)
+						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<EmissiveColor>:") {
+					for(int i = 0 ; i < 4; ++i)
+						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));;
+				}
+				else if (strLabel == "<SpecularColor>:") {
+					for(int i = 0; i < 4; ++i)
+						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<Glossiness>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<Smoothness>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<Metallic>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<SpecularHighlight>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<GlossyReflection>:") {
+					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
+				}
+				else if (strLabel == "<AlbedoMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<SpecularMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<MetallicMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<NormalMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<EmissionMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<DetailAlbedoMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "<DetailNormalMap>:") {
+					readLabel();
+				}
+				else if (strLabel == "</Materials>")
+					break;
+			}
+		}
+		else if ("<Children>:" == strLabel) {
+			int nChild{};
+			inFile.read(reinterpret_cast<char*>(&nChild), sizeof(int));
+			if (nChild > 0) {
+				for (int i = 0; i < nChild; ++i) {
+					readLabel();
+					AddLightsFromFileRecursion(inFile);
+				}
+			}
+		}
+		else if ("<Light>:" == strLabel) {
+			readLabel();
+			size_t myIndex = m_vLights.size();
+			m_vLights.emplace_back();
+			while (1) {
+				readLabel();
+				if ("</Light>" == strLabel)
+					break;
+				if ("<Type>:" == strLabel) {
+					readLabel();
+					if ("Directional" == strLabel)
+						m_vLights[myIndex].Type = DIRECTIONAL_LIGHT;
+					else if ("Point" == strLabel)
+						m_vLights[myIndex].Type = POINT_LIGHT;
+					else if ("Spot" == strLabel)
+						m_vLights[myIndex].Type = SPOT_LIGHT;
+					continue;
+				}
+				if ("<Position>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].Position), sizeof(XMFLOAT3));
+					continue;
+				}
+				if ("<Direction>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].Direction), sizeof(XMFLOAT3));
+					continue;
+				}
+				if ("<Color>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].Color), sizeof(XMFLOAT4));
+					continue;
+				}
+				if ("<Intensity>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].Intensity), sizeof(float));
+					continue;
+				}
+				if ("<Range>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].Range), sizeof(float));
+					continue;
+				}
+				if ("<SpotAngle>:" == strLabel) {
+					inFile.read(reinterpret_cast<char*>(&m_vLights[myIndex].SpotAngle), sizeof(float));
+					continue;
+				}
+			}
+		}
+	}
+}
+
+void CResourceManager::ReadyLightBufferContent()
+{
+	Lights* mapptr{};
+	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
+	mapptr->numLights = m_vLights.size();
+	memcpy(mapptr->lights, m_vLights.data(), sizeof(Light) * m_vLights.size());
 	m_pLights->Unmap(0, nullptr);
 }
