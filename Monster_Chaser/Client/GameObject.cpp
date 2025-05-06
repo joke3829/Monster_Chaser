@@ -1491,7 +1491,7 @@ void CProjectile::IsMoving(float fElapsedTime)
 	m_xmf3Position.y += m_xmf3MoveDirection.y * m_fSpeed * fElapsedTime;
 	m_xmf3Position.z += m_xmf3MoveDirection.z * m_fSpeed * fElapsedTime;
 
-	UpdateWorldMatrix();
+	m_Objects->SetPosition(m_xmf3Position);
 
 	m_fElapsedTime += fElapsedTime;
 	if (m_fLifetime > 0.0f && m_fElapsedTime >= m_fLifetime)

@@ -773,12 +773,14 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
 
+
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), "box"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	normalObjects[finalindex]->getMaterials().emplace_back();
 
 	projectile.emplace_back(std::make_unique<CProjectile>());
-	projectile[0]->setGameObject(normalObjects[finalindex].get()); //없어도 될 거 같은데
+	projectile[0]->setGameObject(normalObjects[finalindex].get());
 
 	// Copy Example
 	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
