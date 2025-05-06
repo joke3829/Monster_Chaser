@@ -74,6 +74,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->UpdateWorldMatrix();
 
 	TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
+	TestShootCollision(m_pResourceManager->getProjectileList(), m_pResourceManager->getSkinningObjectList());
 
 	if (test) {
 		m_pResourceManager->UpdatePosition(fElapsedTime); //��ġ ������Ʈ
@@ -643,6 +644,27 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 	}
 }
 
+void CRaytracingScene::TestShootCollision(const std::vector<std::unique_ptr<CProjectile>>& Objects, const std::vector<std::unique_ptr<CSkinningObject>>& characters)
+{
+	for (const auto& projectile : Objects) {
+		BoundingOrientedBox projectileOBB = projectile->getObjects().getObjectOBB();
+		projectileOBB.Transform(projectileOBB, XMLoadFloat4x4(&projectile->getObjects().getWorldMatrix()));
+
+		for (size_t i = 1; i < characters.size(); ++i) {
+			const auto& character = characters[i];
+			for (const auto& bone : character->getObjects()) {
+				if (bone->getBoundingInfo() & 0x1100) { // Sphere
+					BoundingSphere boneSphere = bone->getObjectSphere();
+					boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
+					if (projectileOBB.Intersects(boneSphere)) {
+						return;
+					}
+				}
+			}
+		}
+	}
+}
+
 XMFLOAT3 CRaytracingScene::CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere)
 {
 
@@ -753,7 +775,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", Mage);
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
@@ -838,8 +860,8 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// Normal Object Copy & Manipulation Matrix Here ================================
 	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
-	//skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-	//skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
+	skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[1]->SetPosition(XMFLOAT3(0.0f, 0.0f, 70.0f));
 	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	// ==============================================================================
 

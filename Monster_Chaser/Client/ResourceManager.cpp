@@ -398,7 +398,7 @@ void CResourceManager::UpdatePosition(float fElapsedTime)
 {
 	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
 		if (m_vAnimationManager[i]) {
-			CSkinningObject* skinningObject = getSkinningObjectList()[0].get();
+			CSkinningObject* skinningObject = getSkinningObjectList()[i].get();
 			if (skinningObject) {
 				m_vAnimationManager[i]->UpdateAniPosition(fElapsedTime, skinningObject);
 			}
