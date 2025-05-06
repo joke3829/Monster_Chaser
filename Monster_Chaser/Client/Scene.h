@@ -215,6 +215,8 @@ public:
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 protected:
+	UCHAR m_PrevKeyBuffer[256] = { 0 }; // PrevKey
+
 	unsigned int								m_nSkyboxIndex{};
 
 	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};

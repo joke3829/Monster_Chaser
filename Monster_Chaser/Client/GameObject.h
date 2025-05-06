@@ -300,6 +300,7 @@ public:
 	void InitializeGameObjectCBuffer();
 	void setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 position);
 	void UpdateFrameWorldMatrix();
+	void UpdatePreWorldMatrix();
 	void UpdateWorldMatrix();
 
 	void SetPosition(XMFLOAT3 pos);
