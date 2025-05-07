@@ -15,6 +15,7 @@ void CCamera::Setup(int nRootParameterIndex)
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dCameraBuffer.GetAddressOf()));
 	m_pd3dCameraBuffer->Map(0, nullptr, (void**)&m_pCameraInfo);
 	m_pCameraInfo->bNormalMapping = ~0;
+	m_pCameraInfo->bReflection = 0;
 
 	XMStoreFloat4x4(&m_xmf4x4Proj, XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fFOV), m_fAspect, m_fNear, m_fFar));
 }

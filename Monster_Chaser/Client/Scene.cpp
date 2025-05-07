@@ -35,7 +35,7 @@ void CScene::CreateOrthoMatrixBuffer()
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_cameraCB.GetAddressOf()));
 
 	XMFLOAT4X4 ortho{};
-	XMStoreFloat4x4(&ortho, XMMatrixTranspose(XMMatrixOrthographicLH(960, 540, -1, 1)));
+	XMStoreFloat4x4(&ortho, XMMatrixTranspose(XMMatrixOrthographicLH(DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT, -1, 1)));
 
 	void* temp{};
 	m_cameraCB->Map(0, nullptr, &temp);
@@ -60,7 +60,7 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\Title\\title.dds"));
 	m_vTitleUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vTitleUIs[m_vTitleUIs.size() - 1]->setPositionInViewport(0, 0);
@@ -71,7 +71,7 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// =======================================================================================
 
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
 	m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(0, 0);
@@ -112,7 +112,7 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// =============================================================================================
 
 	int tempIndex = meshes.size();
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
 	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
@@ -182,9 +182,6 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 		int mx = LOWORD(lParam);
 		int my = HIWORD(lParam);
 
-		wchar_t buffer[100];
-		swprintf_s(buffer, L"(%d, %d)\n", mx, my);
-		OutputDebugString(buffer);
 		switch (m_nState) {
 		case Title:
 			m_nState = RoomSelect;
@@ -416,9 +413,9 @@ void TitleScene::Render()
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	D3D12_VIEWPORT vv{};
-	vv.Width = 960; vv.Height = 540; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
+	vv.Width = DEFINED_UAV_BUFFER_WIDTH; vv.Height = DEFINED_UAV_BUFFER_HEIGHT; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
 	cmdList->RSSetViewports(1, &vv);
-	D3D12_RECT ss{ 0, 0, 960, 540 };
+	D3D12_RECT ss{ 0, 0, DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT };
 	cmdList->RSSetScissorRects(1, &ss);
 	cmdList->OMSetRenderTargets(1, &m_RTV->GetCPUDescriptorHandleForHeapStart(), FALSE, &m_DSV->GetCPUDescriptorHandleForHeapStart());
 	cmdList->SetGraphicsRootSignature(m_pGlobalRootSignature.Get());
@@ -2399,7 +2396,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pAccelerationStructureManager->InitTLAS();
 
 	// UISetup ========================================================================
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 960, 540));
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
 	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
@@ -2410,13 +2407,14 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 	switch (nMessage) {
 	case WM_KEYDOWN:
 		switch (wParam) {
-		case 'n':
 		case 'N':
 			m_pCamera->toggleNormalMapping();
 			break;
-		case 'm':
 		case 'M':
 			m_pCamera->toggleAlbedoColor();
+			break;
+		case 'B':
+			m_pCamera->toggleReflection();
 			break;
 		case '9':
 			m_pCamera->SetThirdPersonMode(false);
@@ -2429,12 +2427,6 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 				startTime = 0.0f;
 				m_nState = IS_FINISH;
 			}
-			break;
-		case '1':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
-			break;
-		case '2':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
 			break;
 		}
 		break;
@@ -2900,9 +2892,9 @@ void CRaytracingWinterLandScene::Render()
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	D3D12_VIEWPORT vv{};
-	vv.Width = 960; vv.Height = 540; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
+	vv.Width = DEFINED_GAME_WINDOW_WIDTH; vv.Height = DEFINED_GAME_WINDOW_HEIGHT; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
 	cmdList->RSSetViewports(1, &vv);
-	D3D12_RECT ss{ 0, 0, 960, 540 };
+	D3D12_RECT ss{ 0, 0, DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT };
 	cmdList->RSSetScissorRects(1, &ss);
 	cmdList->OMSetRenderTargets(1, &m_RTV->GetCPUDescriptorHandleForHeapStart(), FALSE, &m_DSV->GetCPUDescriptorHandleForHeapStart());
 	cmdList->SetGraphicsRootSignature(m_UIRootSignature.Get());

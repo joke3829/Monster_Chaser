@@ -10,6 +10,7 @@ struct CB_CAMERA_INFO {
 	XMFLOAT4X4 xmf4x4InverseViewProj;
 	XMFLOAT3 xmf3Eye;
 	int bNormalMapping;	// �� 2byte normal, �� 2byte albedo
+	int bReflection;
 };
 
 class CCamera {
@@ -48,6 +49,7 @@ public:
 		m_pCameraInfo->bNormalMapping = fByte | bByte;
 		//m_pCameraInfo->bNormalMapping |= 0x0000; 
 	}
+	void toggleReflection() { m_pCameraInfo->bReflection = ~m_pCameraInfo->bReflection; }
 	XMFLOAT3 getDir() const { return m_xmf3Dir; }
 	XMFLOAT3 getUp() const { return m_xmf3Up; }
 protected:

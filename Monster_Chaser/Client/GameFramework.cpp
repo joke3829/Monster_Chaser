@@ -110,6 +110,7 @@ void CGameFramework::InitCommand()
 void CGameFramework::InitSwapChain()
 {
 	DXGI_SWAP_CHAIN_DESC1 desc{};
+	desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	desc.Width = DEFINED_UAV_BUFFER_WIDTH;	// subject to change
 	desc.Height = DEFINED_UAV_BUFFER_HEIGHT;
 	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -192,6 +193,24 @@ void CGameFramework::InitOutputBuffer()
 
 }
 
+void CGameFramework::ChangeFullScreenState()
+{
+	Flush();
+	BOOL bFullScreenState{};
+	m_pdxgiSwapChain->GetFullscreenState(&bFullScreenState, nullptr);
+	m_pdxgiSwapChain->SetFullscreenState(!bFullScreenState, nullptr);
+
+	DXGI_MODE_DESC mdesc{};
+	mdesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	mdesc.Width = DEFINED_UAV_BUFFER_WIDTH;
+	mdesc.Height = DEFINED_UAV_BUFFER_HEIGHT;
+	mdesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	mdesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+	m_pdxgiSwapChain->ResizeTarget(&mdesc);
+
+	m_pdxgiSwapChain->ResizeBuffers(0, DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT, DXGI_FORMAT_UNKNOWN, 0);
+}
+
 void CGameFramework::InitScene()
 {
 	m_pScene = std::make_unique<TitleScene>();
@@ -222,18 +241,21 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 	switch (nMessage) {
 	case WM_KEYDOWN:
 		switch (wParam) {
-		case VK_ESCAPE:
+		case VK_ESCAPE: {
+			BOOL fullScreenState{};
+			m_pdxgiSwapChain->GetFullscreenState(&fullScreenState, nullptr);
+			if (fullScreenState)
+				ChangeFullScreenState();
 			PostQuitMessage(0);
 			break;
-		//case 'p':
-		case 'P':
+		}
+		case VK_F9:
+			ChangeFullScreenState();
+			break;
+		case 'P':	// Not used
 			if (m_bRayTracingSupport) {
 				m_bRaster = !m_bRaster;
 			}
-			break;
-		case 'b':
-		case 'B':
-			m_pCamera->SetThirdPersonMode(false);
 			break;
 		default:
 			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);

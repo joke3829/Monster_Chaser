@@ -31,6 +31,8 @@ public:
 
 	void InitScene();
 
+	void ChangeFullScreenState();
+
 	LRESULT CALLBACK WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
