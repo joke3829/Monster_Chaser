@@ -1321,17 +1321,20 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(7);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
-		case '9':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(8);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case 'n':
 		case 'N':
 			m_pCamera->toggleNormalMapping();
 			break;
-		case 'm':
 		case 'M':
 			m_pCamera->toggleAlbedoColor();
+			break;
+		case 'B':
+			m_pCamera->toggleReflection();
+			break;
+		case '9':
+			m_pCamera->SetThirdPersonMode(false);
+			break;
+		case '0':
+			m_pCamera->SetThirdPersonMode(true);
 			break;
 		}
 		break;
