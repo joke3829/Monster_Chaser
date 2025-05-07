@@ -1204,6 +1204,12 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<CProjectile>>& projectile = m_pResourceManager->getProjectileList();
 	// Create new Objects, Copy SkinningObject here ========================================
 
+	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	skinned[2]->CopyFromOtherObject(skinned[0].get());
+	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
+	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
+	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
+
 
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
@@ -1276,6 +1282,9 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(0.0f, 0.0f, 70.0f));
 	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+
+	skinned[2]->setPreTransform(2.0f, XMFLOAT3(), XMFLOAT3());
+	skinned[2]->SetPosition(XMFLOAT3(0.0, 0.0, 30.0));
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
