@@ -84,6 +84,7 @@ protected:
 
 	POINT oldCursor;
 	bool m_bHold = false;
+	bool mouseIsInitialize{};
 
 	ComPtr<ID3D12Resource>					m_cameraCB{};
 	short m_nNextScene = -1;

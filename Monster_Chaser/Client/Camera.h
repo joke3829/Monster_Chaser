@@ -22,10 +22,11 @@ public:
 	void Rotate(int cxDelta, int cyDelta);
 	void Move(int arrow, float fElapsedTime, bool shift = false);
 
-	void UpdateViewMatrix();
+	void UpdateViewMatrix(float height = 0.0f);
 	void SetShaderVariable();
 
 	XMFLOAT3& getEye() { return m_xmf3Eye; }
+	XMFLOAT3& getEyeCalculateOffset();
 	bool getThirdPersonState() const { return m_bThirdPerson; }
 
 	void SetTarget(CGameObject* target);
