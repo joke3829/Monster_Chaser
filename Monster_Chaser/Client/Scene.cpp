@@ -1284,7 +1284,8 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// Setting Camera ==============================================================
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	m_pCamera->SetCameraLength(10.0f);
+	m_pCamera->SetHOffset(3.5f);
+	m_pCamera->SetCameraLength(15.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
