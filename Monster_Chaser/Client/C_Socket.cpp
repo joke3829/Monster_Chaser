@@ -4,9 +4,9 @@
 extern C_Socket Client;
 extern std::unordered_map<int, Player> Players;
 extern std::unordered_map<int, Monster*> g_monsters;
-extern int RoomList[10];
-
+extern std::array<short, 10>	 userPerRoom;
 extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
+extern bool allready;;
 C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
 
 
@@ -58,7 +58,7 @@ void C_Socket::SendCreateUser(const char* UserID, const char* Userpassword, cons
 {
 }
 
-void C_Socket::SendEnterRoom(const int RoomNum)
+void C_Socket::SendEnterRoom(const short RoomNum)
 {
 	cs_packet_enter_room p;
 	p.size = sizeof(p);
@@ -115,10 +115,11 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_UPDATEROOM: {
 
 		sc_packet_room_info* p = reinterpret_cast<sc_packet_room_info*>(ptr);
-		int room_in_Players[10];
+		short room_in_Players[10];
 		memcpy(room_in_Players, p->room_info, sizeof(room_in_Players));
+		//memcpy(userperroom, p->room_info, sizeof(userperroom));		이것만 해주면 끝
 
-		memcpy(RoomList, room_in_Players, sizeof(RoomList));
+		memcpy(userPerRoom.data(), room_in_Players, sizeof(room_in_Players));
 
 
 
@@ -135,7 +136,7 @@ void C_Socket::process_packet(char* ptr)
 			Players.try_emplace(local_id, local_id);
 			if (Client.get_id() == -1) {
 				Client.set_id(local_id);
-				RoomList[room_num]++;
+				//userPerRoom[room_num]++;
 			}
 			//Players[local_id] = new Player(local_id);
 		}
@@ -155,6 +156,7 @@ void C_Socket::process_packet(char* ptr)
 		int room_num = static_cast<int>(p->room_number);//이미 방 선택할떄 room_num이 Players[id]안에 들어감
 		bool ready = p->is_ready;
 
+		Players[id].setReady(ready);
 		//Players[p->id]->setReady(ready);
 		//Players[p->id]->setRoomNumber(room_num);// 방 선택했을떄 해당 방 유저 수 나타내는 맴버 변수 
 		//p->id = id;
@@ -168,6 +170,8 @@ void C_Socket::process_packet(char* ptr)
 		//Client.set_id(p->Local_id);
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
 
+		/*wOpacity = 0.0f;
+		m_nState = GoLoading;*/		//여기다가 넣어주기 extern해서 
 		break;
 		//4 7 9
 	}

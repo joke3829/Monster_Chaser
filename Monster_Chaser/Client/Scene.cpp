@@ -3,7 +3,7 @@
 #include "protocol.h"
 extern C_Socket Client;
 extern std::unordered_map<int, Player> Players;
-
+extern std::array<short, 10>	 userPerRoom;
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
 void CScene::CreateRTVDSV()
@@ -152,19 +152,27 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 		switch (m_nState) {
 		case Title:
 			m_nState = RoomSelect;
+			Client.SendBroadCastRoom();
 			break;
 		case RoomSelect:
 			switch (wParam) {
 			case 'R':
 				++userPerRoom[1];
+				
 				break;
 			}
 			break;
 		case InRoom: {
 			switch (wParam) {
 			case 'R':
-				userReadyState[local_uid] = !userReadyState[local_uid];
+			{
+				//userReadyState[Client.get_id()] = !userReadyState[Client.get_id()];
+				bool currentReady = Players[Client.get_id()].getReady();
+				Players[Client.get_id()].setReady(!currentReady);
+				Client.SendsetReady(Players[Client.get_id()].getReady(), currentRoom);
+				//준비완료 패킷 보내기 
 				break;
+			}
 			case VK_BACK:
 				--userPerRoom[currentRoom];
 				m_nState = RoomSelect;
@@ -192,8 +200,9 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 		switch (m_nState) {
 		case Title:
 			m_nState = RoomSelect;
+			Client.SendBroadCastRoom();
 			break;
-		case RoomSelect:
+		case RoomSelect:			// 어디클릭했는지 좌표받아서 처리 
 			for (int i = 0; i < 10; ++i) {
 				int j = i % 2;
 				if (j == 0) {
@@ -202,8 +211,10 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
-							currentRoom = i;
+							currentRoom = i;				//어떤 방을 골랐는지 넣어주는 변수
 							m_nState = InRoom;
+							// 여기서 패킷 보내주기? selectroom 패킷  추후에 서버에서 동시에 눌렀을때 등등 예외처리도 해야됨
+							Client.SendEnterRoom(currentRoom);
 							break;
 						}
 					}
@@ -216,13 +227,17 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;
 							m_nState = InRoom;
+							Client.SendEnterRoom(currentRoom);
+							// 여기서 패킷 보내주기? selectroom 패킷 
 							break;
 						}
 					}
 				}
 			}
+			
 			break;
 		case InRoom:
+			//추후에는 직업선택 아마 먀우스로 눌러서 처리하지 않을까싶음 알고는 있자 
 			break;
 		}
 		break;
@@ -231,6 +246,68 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 		break;
 	}
 	case WM_MOUSEMOVE: {
+		break;
+	}
+	}
+}
+void TitleScene::UpdateObject(float fElapsedTime)
+{
+	switch (m_nState) {
+	case Title:
+		if (startTime < 3.0f)
+			startTime += fElapsedTime;
+		else {
+			wOpacity -= 0.3f * fElapsedTime;
+			if (wOpacity < 0.0f)
+				wOpacity = 0.0f;
+			m_vTitleUIs[1]->setColor(1.0, 1.0, 1.0, wOpacity);
+		}
+		break;
+	case RoomSelect: {
+		m_vRoomSelectUIs[0]->Animation(fElapsedTime);
+		for (int i = 0; i < 10; ++i) {
+			for (int j = 0; j < 3; ++j) {
+				if (j < userPerRoom[i]) {
+					m_vRoomSelectUIs[(i * 3) + j + peopleindex]->setRenderState(true);
+				}
+				else
+					m_vRoomSelectUIs[(i*3) + j + peopleindex]->setRenderState(false);
+			}
+		}
+		break;
+	}
+	case InRoom: {
+		m_vInRoomUIs[0]->Animation(fElapsedTime);
+		//들어온 순서대로 정렬이 안되었거나		
+		for (int i = 0; i < 3; ++i) {
+			if (i < userPerRoom[currentRoom]) {				//클라에서 누가 로딩했는지 알아야하니까 
+				m_vInRoomUIs[backUIIndex + i]->setRenderState(true);
+				if(Players[i].getReady())
+					//userReadyState
+					m_vInRoomUIs[readyUIIndex + i]->setRenderState(true);		//레디 글씨 렌더링하는부분
+				else {
+					m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);		//레디 취소하면 다시 렌더링 빼기 
+					Client.Setstart(false);
+				}
+			}
+			else {
+				m_vInRoomUIs[backUIIndex + i]->setRenderState(false);
+				m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
+			}
+		}
+		if (Client.getstart()) {
+			wOpacity = 0.0f;
+			m_nState = GoLoading;
+		}
+		break;
+	}
+	case GoLoading: {
+			wOpacity += 0.35f * fElapsedTime;
+			if (wOpacity > 1.0f) {
+				wOpacity = 1.0f;
+				m_nNextScene = SCENE_WINTERLAND;
+			}
+			m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
 	}
 	}
@@ -341,67 +418,6 @@ void TitleScene::CreatePipelineState()
 		pd3dPBlob->Release();
 }
 
-void TitleScene::UpdateObject(float fElapsedTime)
-{
-	switch (m_nState) {
-	case Title:
-		if (startTime < 3.0f)
-			startTime += fElapsedTime;
-		else {
-			wOpacity -= 0.3f * fElapsedTime;
-			if (wOpacity < 0.0f)
-				wOpacity = 0.0f;
-			m_vTitleUIs[1]->setColor(1.0, 1.0, 1.0, wOpacity);
-		}
-		break;
-	case RoomSelect: {
-		m_vRoomSelectUIs[0]->Animation(fElapsedTime);
-		for (int i = 0; i < 10; ++i) {
-			for (int j = 0; j < 3; ++j) {
-				if (j < userPerRoom[i]) {
-					m_vRoomSelectUIs[(i * 3) + j + peopleindex]->setRenderState(true);
-				}
-				else
-					m_vRoomSelectUIs[(i*3) + j + peopleindex]->setRenderState(false);
-			}
-		}
-		break;
-	}
-	case InRoom: {
-		m_vInRoomUIs[0]->Animation(fElapsedTime);
-		bool allready = true;
-		for (int i = 0; i < 3; ++i) {
-			if (i < userPerRoom[currentRoom]) {
-				m_vInRoomUIs[backUIIndex + i]->setRenderState(true);
-				if(userReadyState[i])
-					m_vInRoomUIs[readyUIIndex + i]->setRenderState(true);
-				else {
-					m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
-					allready = false;
-				}
-			}
-			else {
-				m_vInRoomUIs[backUIIndex + i]->setRenderState(false);
-				m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
-			}
-		}
-		if (allready) {
-			wOpacity = 0.0f;
-			m_nState = GoLoading;
-		}
-		break;
-	}
-	case GoLoading: {
-			wOpacity += 0.35f * fElapsedTime;
-			if (wOpacity > 1.0f) {
-				wOpacity = 1.0f;
-				m_nNextScene = SCENE_WINTERLAND;
-			}
-			m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
-		break;
-	}
-	}
-}
 void TitleScene::Render()
 {
 	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
@@ -484,11 +500,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	}*/
 
 
-	/*cs_packet_move mp;
-	mp.size = sizeof(mp);
-	mp.type = C2S_P_MOVE;
-	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
-	Client.send_packet(&mp);*/
+	
 
 	m_pResourceManager->UpdateWorldMatrix();
 
@@ -1380,18 +1392,18 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	}
 
 
-	if (m_LockAnimation) {
+	if (m_bLockAnimation) {
 		if (m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsInCombo()) {
-			m_LockAnimation = false;
+			m_bLockAnimation = false;
 		}
 		else {
 			return;
 		}
 	}
 
-	if (m_LockAnimation1) {
+	if (m_bLockAnimation1) {
 		if (m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsAnimationFinished()) {
-			m_LockAnimation1 = false;
+			m_bLockAnimation1 = false;
 		}
 		else {
 			return;
@@ -1788,42 +1800,42 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(1, true); //���ϰ� �±�
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(2, true); //���ϰ� �°� �ױ�
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(21, true); //Dodge
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(3, true); //���ϰ� �±�
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(4, true); //���ϰ� �°� �ױ�
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(31, true); //��ų2
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(32, true); //��ų1
-		m_LockAnimation1 = true;
+		m_bLockAnimation1 = true;
 	}
 
 	if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
 		m_pResourceManager->getAnimationManagers()[Client.get_id()]->StartSkill3(); //��ų3
-		m_LockAnimation = true;
+		m_bLockAnimation = true;
 
 	}
 	// ���� Ű ���¸� ���� ���·� ����
@@ -1837,6 +1849,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	mp.type = C2S_P_MOVE;
 	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
 	Client.send_packet(&mp);	//������ ������ ������
+
 	
 }
 

@@ -22,8 +22,8 @@ std::unordered_map<int, Player> Players;               // 모든 플레이어들
 std::unordered_map<int, Monster*> g_monsters;            // 몬스터들
 
 
-int RoomList[10];			// 방 UI대신 쓸거 
-bool ready = false;
+std::array<short, 10>	 userPerRoom{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			// 방 UI대신 쓸거 
+
 C_Socket Client;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다
@@ -42,37 +42,37 @@ void SetCursorPosition(int x, int y) {
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-void DrawRoomList()
-{
-	SetCursorPosition(0, 0);  // 항상 콘솔 맨 위부터 덮어쓰기
-
-	std::cout << "=== [Room Status] ===\n";
-	std::cout << "총 클라이언트 수: " << Players.size() << std::endl;
-	for (int i = 0; i < MAX_ROOM; ++i) {
-		std::cout << i << "번 방: " << RoomList[i] << "/" << MAX_ROOM_MEMBER << std::endl;
-	}
-	std::cout << "=====================" << std::endl;
-	std::cout << "'r' 키: Ready 전송 / 'q' 키: 종료" << std::endl;
-}
-void RoomListThread() {
-	using namespace std::chrono;
-
-	while (!Client.getstart()) {
-		auto start = steady_clock::now();
-
-		{
-			
-			DrawRoomList();
-		}
-
-		// 정확히 1초 간격으로 유지
-		auto end = steady_clock::now();
-		auto elapsed = duration_cast<milliseconds>(end - start);
-
-		if (elapsed < 1000ms)
-			std::this_thread::sleep_for(1000ms - elapsed);
-	}
-}
+//void DrawRoomList()
+//{
+//	SetCursorPosition(0, 0);  // 항상 콘솔 맨 위부터 덮어쓰기
+//
+//	std::cout << "=== [Room Status] ===\n";
+//	std::cout << "총 클라이언트 수: " << Players.size() << std::endl;
+//	for (int i = 0; i < MAX_ROOM; ++i) {
+//		std::cout << i << "번 방: " << userPerRoom[i] << "/" << MAX_ROOM_MEMBER << std::endl;
+//	}
+//	std::cout << "=====================" << std::endl;
+//	std::cout << "'r' 키: Ready 전송 / 'q' 키: 종료" << std::endl;
+//}
+//void RoomListThread() {
+//	using namespace std::chrono;
+//
+//	while (!Client.getstart()) {
+//		auto start = steady_clock::now();
+//
+//		{
+//			
+//			DrawRoomList();
+//		}
+//
+//		// 정확히 1초 간격으로 유지
+//		auto end = steady_clock::now();
+//		auto elapsed = duration_cast<milliseconds>(end - start);
+//
+//		if (elapsed < 1000ms)
+//			std::this_thread::sleep_for(1000ms - elapsed);
+//	}
+//}
 
 
 // 여기는 방 UI들어오면 삭제할 부분
@@ -91,58 +91,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		MessageBoxA(nullptr, "서버 연결 실패. 클라이언트를 종료합니다.", "연결 실패", MB_ICONERROR);
 		return 0;  // 창 생성 없이 종료
 	}
-	AllocConsole();
+	/*AllocConsole();
 	freopen("CONOUT$", "w", stdout);
-	freopen("CONIN$", "r", stdin);
+	freopen("CONIN$", "r", stdin);*/
 	
 	std::thread recvThread(&C_Socket::do_recv, &Client);
-	std::thread drawThread(RoomListThread);
-	{
-		int num;
-		while (true) {
-			std::cout << "입장할 방 번호 입력 (0~9): ";
-			std::cin >> num;
-			if (num < 0 || num >9)
-				continue;
-			break;
-		}
-		
-		int room_num = static_cast<char>(num);
-
-		Client.SendEnterRoom(room_num);
-		
-
-
-		
-		while (!Client.getstart()) {
-			
-			if (_kbhit()) {
-				char key = _getch();
-				switch (key) {
-				case 'r':
-
-					if (!ready) {
-						Client.SendsetReady(true, room_num);
-					
-					}
-					else {
-						Client.SendsetReady(false, room_num);
-					}
-					ready = ready ? 0 : 1;
-					break;
-				case 'k':
-					cs_packet_room_refresh rf;
-					rf.size = sizeof(rf);
-					rf.type = C2S_P_ROOM_UPDATE;
-					Client.send_packet(&rf);
-					break;
-				case 'q':
-					return 0;  // 수동 종료
-				}
-			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
-		}
-	}
+//	std::thread drawThread(RoomListThread);
+	
 
 	//준비 완료되기 전까지 대기
 /*   while (!Client.get_ready_to_start()) {
@@ -151,9 +106,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
    //  콘솔 종료
-	FreeConsole();
+	//FreeConsole();
 
-	//recvThread.join();
 
 
 	// 전역 문자열을 초기화합니다.
@@ -168,6 +122,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CLIENT));
+	
 
 	//MSG msg;
 
@@ -191,7 +146,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		gGameFramework.Render();
 	}
 	recvThread.join();
-	drawThread.join();
+	//drawThread.join();
 	//return (int) msg.wParam;
 }
 

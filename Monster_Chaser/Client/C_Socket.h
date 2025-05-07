@@ -23,9 +23,9 @@ public:
 	//--------------------------------------------------------------//	
 	void SendLogin(const char* UserID, const char* Userpassword);									//Send LoginPacket
 	void SendCreateUser(const char* UserID, const char* Userpassword, const char* userNickName);	//Send CreateUserPacket
-	void SendEnterRoom(const int RoomNum);															//Send EnterroomPacket
+	void SendEnterRoom(const short RoomNum);															//Send EnterroomPacket
 	void SendsetReady(const bool isReady, const int room_num);										//Send Readypakcet if isReday is true->player set ready
-	void SendBroadCastRoom();
+	void SendBroadCastRoom();																		
 	void SendMovePacket(const float& Time, const MoveAnimationState State);							//SendMovePacket	
 
 	//--------------------------------------------------------------//									

@@ -79,13 +79,12 @@ protected:
 	std::vector<std::unique_ptr<UIObject>>	m_vTitleUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vRoomSelectUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vInRoomUIs;
-
 	// Title variables
 	float									wOpacity = 1.0f;
 	float									startTime{};
 	// Room Select variables
 	int										peopleindex{};
-	std::array<short, 10>					userPerRoom{ 1, 0, 0, 3, 2, 2, 3, 0, 2, 1 };
+	
 
 	// InRoom variables
 	short									local_uid{};

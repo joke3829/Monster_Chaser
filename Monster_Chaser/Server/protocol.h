@@ -99,7 +99,7 @@ constexpr char S2C_P_UPDATEROOM = 5;
 struct sc_packet_room_info {			//방 정보 업데이트 
 	unsigned char size;
 	char type;
-	int room_info[10];
+	short room_info[10];
 
 
 };

@@ -17,6 +17,9 @@ CGameObject::CGameObject(const CGameObject& other)
 	//m_xmf4x4LocalMatrix = other.m_xmf4x4LocalMatrix;
 	UpdateLocalMatrix();
 
+	m_bUseBoundingInfo = other.m_bUseBoundingInfo;
+	m_OBB = other.m_OBB;
+	m_BoundingSphere = other.m_BoundingSphere;
 	// ����� SBT�� ��������� �̷�����⶧���� Resource�� �������� �ʴ´�.
 	// index�� Material�� �����´�
 

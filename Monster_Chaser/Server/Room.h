@@ -15,7 +15,7 @@ public:
 	void AddPlayer(const int& enter_id);
 	void SendRoomInfo();
 
-	int GetPlayerCount() { return id.size(); }
+	short GetPlayerCount() { return id.size(); }
 	int GetReadyUser() { return ready_user; }
 	int Getroom_number() { return room_number; }
 

@@ -131,26 +131,38 @@ void SESSION::process_packet(char* p) {
 	case C2S_P_GetREADY: {
 		//lock_guard<mutex> lock(myMutex);
 		cs_packet_getready* pkt = reinterpret_cast<cs_packet_getready*>(p);
-
+		std::vector<int> room_players;
 		int room_num = static_cast<int>(pkt->room_number);		//이미 방에 들어갈 떄 진행하니까 굳이 필요는 x
 		bool ready = pkt->isReady;
 		if (ready == true)
+		{
 			g_server.rooms[room_num].setReadyUser(1);
-
+			
+		}
 		else
 		{
 			g_server.rooms[room_num].setReadyUser(-1);
-			
+
 		}
-		std::vector<int> room_players;
+		
+		sc_packet_set_ready rp;
+		rp.size = sizeof(rp);
+		rp.type = S2C_P_SETREADY;
+		rp.Local_id = g_server.users[m_uniqueNo]->local_id;
+		rp.room_number = static_cast<char>(room_num);
+		rp.is_ready = ready;
+
+		for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)
+			room_players.emplace_back(g_server.rooms[room_num].getID(i));		//room_players에 해당 방에 들어가 있는 ID값 넣기
+
+		for (auto& id : room_players)					//나를 제외한 나머지 방에있는 플레이어들에게 보내기
+			if (id != m_uniqueNo)
+				g_server.users[id]->do_send(&rp);
+
 
 		// 3명 다 준비 완료일 때
 		if (g_server.rooms[room_num].GetReadyUser() >= g_server.rooms[room_num].id.size()) {
-			// 모든 플레이어 ID 수집
-			for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)
-				room_players.emplace_back(g_server.rooms[room_num].getID(i));
-
-
+			
 			sc_packet_Ingame_start sp;
 			sp.size = sizeof(sp);
 			sp.type = S2C_P_ALLREADY;
@@ -168,18 +180,7 @@ void SESSION::process_packet(char* p) {
 
 		else
 		{
-			sc_packet_set_ready rp;
-			rp.size = sizeof(rp);
-			rp.type = S2C_P_SETREADY;
-			rp.Local_id = g_server.users[m_uniqueNo]->local_id;
-			rp.room_number = static_cast<char>(room_num);
-			rp.is_ready = ready;
-
-			for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)
-				room_players.emplace_back(g_server.rooms[room_num].getID(i));
-
-			for (auto& id : room_players)
-				g_server.users[id]->do_send(&rp);
+			
 			if(ready)
 			std::cout << "[클라이언트 " << m_uniqueNo << "]이 " << (int)room_num << "번 방에서 준비완료했습니다." << std::endl;
 			else
@@ -195,6 +196,8 @@ void SESSION::process_packet(char* p) {
 		m_pos = pkt->pos;
 		float time = pkt->time;
 		MoveAnimationState state = pkt->state;
+
+
 		//collision check
 		/*{
 			이동
@@ -212,7 +215,7 @@ void SESSION::process_packet(char* p) {
 		auto end_time = high_resolution_clock::now();
 		auto duration = duration_cast<milliseconds>(end_time - start_time).count();
 		mp.pingTime = static_cast<UINT>(duration); // 서버 핑 시간
-		//mp.pingTime;		//여기다가 서버에서 패킷 처리하면서 걸린 시간을 넣어서 클라에게 넘겨주기
+		//여기다가 서버에서 패킷 처리하면서 걸린 시간을 넣어서 클라에게 넘겨주기
 
 		vector <int> room_players;
 		for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)

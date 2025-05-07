@@ -40,7 +40,7 @@ public:
         }
     }
 
-    bool isReady() const { return readyToStart; }
+    bool getReady() const { return readyToStart; }
     void setReady(const bool& ready) { readyToStart = ready; }
    
    
