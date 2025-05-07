@@ -9,9 +9,13 @@
 
 extern DXResources g_DxResource;
 
-enum MoveAnimationState
+enum MageAnimationState
 {
 	IDLE = 0,
+	HIT = 1,
+	HIT_DEATH = 2,
+	BIGHIT = 3,
+	BIGHIT_DEATH =4,
 	WALK_FORWARD = 5,
 	WALK_LEFT_UP = 6,
 	WALK_RIGHT_UP = 7,
@@ -28,6 +32,18 @@ enum MoveAnimationState
 	RUN_BACKWARD = 18,
 	RUN_LEFT_DOWN = 19,
 	RUN_RIGHT_DOWN = 20,
+	DODGE=21,
+	C_ATTACK1=22,
+	C_ATTACK2 = 23,
+	C_ATTACK3 = 24,
+	C_ATTACK4 = 25,
+	SKILL3_1 = 26,
+	SKILL3_2 = 27,
+	SKILL3_3 = 28,
+	SKILL3_4 = 29,
+	SKILL3_5 = 30,
+	SKILL2 = 31,
+	SKILL1 = 32
 };
 
 class CScene {
@@ -147,6 +163,7 @@ public:
 	void CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2); //세부체크
 
 	void TestCollision(const std::vector<std::unique_ptr<CGameObject>>& mapObjects, const std::vector<std::unique_ptr<CSkinningObject>>& characters);
+	void TestShootCollision(const std::vector<std::unique_ptr<CProjectile>>& Objects, const std::vector<std::unique_ptr<CSkinningObject>>& characters);
 
 	XMFLOAT3 CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //법선 벡터 구하기
 	float CalculateDepth(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //침투 깊이 구하기

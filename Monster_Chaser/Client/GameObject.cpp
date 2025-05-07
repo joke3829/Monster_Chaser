@@ -1009,36 +1009,109 @@ void CSkinningObject::move(float fElapsedTime, short arrow) {
 	UpdateWorldMatrix();
 }
 
-void CSkinningObject::sliding(float depth, const XMFLOAT3& normal)
+void CSkinningObject::sliding(float depth, const XMFLOAT3& normal, float meshHeight)
 {
 	XMVECTOR normalVec = XMLoadFloat3(&normal);
-	XMVECTOR moveDirVec = XMLoadFloat3(&m_xmf3Look);
 
-	float originalLookY = m_xmf3Look.y;
+	// 법선 정규화
+	normalVec = XMVector3Normalize(normalVec);
 
-	// 수평 방향 벡터로 변환 (y = 0)
-	XMVECTOR horizontalMoveDir = moveDirVec;
-	horizontalMoveDir = XMVectorSetY(horizontalMoveDir, 0.0f);
-	XMVECTOR horizontalNormal = normalVec;
-	horizontalNormal = XMVectorSetY(horizontalNormal, 0.0f);
+	// y 성분 제거 (x, z 방향으로만 밀어내기)
+	XMFLOAT3 normalNoY;
+	XMStoreFloat3(&normalNoY, normalVec);
+	normalNoY.y = 0.0f;
+	normalVec = XMLoadFloat3(&normalNoY);
 
-	XMVECTOR normalLength = XMVector3Length(horizontalNormal);
-	if (XMVectorGetX(normalLength) > 0.0001f) { //법선이 수직에 가까우면, 기본 방향으로
-		XMFLOAT3 result;
-		XMStoreFloat3(&result, horizontalMoveDir);
-		m_xmf3Sliding = result;
-		return;
+	// y 성분 제거 후 방향이 0 벡터가 아닌 경우 정규화
+	if (XMVectorGetX(XMVector3Length(normalVec)) > 0.01f) {
+		normalVec = XMVector3Normalize(normalVec);
 	}
-	horizontalNormal = XMVectorScale(horizontalNormal, 1.0f / XMVectorGetX(normalLength));
+	else {
+		// 모서리에서 법선이 부정확할 경우, 이전 슬라이딩 방향 유지 또는 이동 방향 사용
+		if (XMVectorGetX(XMVector3Length(XMLoadFloat3(&m_xmf3Sliding))) > 0.01f) {
+			normalVec = XMVector3Normalize(XMLoadFloat3(&m_xmf3Sliding));
+		}
+		else {
+			normalVec = XMLoadFloat3(&m_xmf3Look); // 이동 방향으로 대체
+			XMFLOAT3 lookNoY = m_xmf3Look;
+			lookNoY.y = 0.0f;
+			normalVec = XMVector3Normalize(XMLoadFloat3(&lookNoY));
+		}
+	}
 
-	float dot = XMVectorGetX(XMVector3Dot(horizontalMoveDir, horizontalNormal));
-	XMVECTOR slideVector = horizontalMoveDir - (horizontalNormal * dot); // 수평 슬라이딩 방향
+	// 침투 깊이로 밀어내기
+	XMVECTOR pushOut = normalVec * depth;
+	XMMATRIX worldMatrix = XMLoadFloat4x4(&m_xmf4x4WorldMatrix);
+	XMVECTOR currentPos = worldMatrix.r[3];
+	currentPos += pushOut;
 
-	slideVector = XMVectorSetY(slideVector, originalLookY); //y값은 원래 값 유지
+	// 슬라이딩 벡터 업데이트
+	XMStoreFloat3(&m_xmf3Sliding, normalVec);
 
-	XMStoreFloat3(&m_xmf3Sliding, slideVector); //저장
+	// 위치 업데이트
+	XMFLOAT3 lastPos;
+	XMStoreFloat3(&lastPos, currentPos);
+	SetPosition(lastPos);
 
 	UpdateWorldMatrix();
+}
+
+void CSkinningObject::SetMoveDirection(int n)
+{
+	switch (n) {
+	case 0: // IDLE
+		m_xmf3MoveDirection = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		break;
+	case 1: // 상 (W)
+		m_xmf3MoveDirection = m_xmf3Look;
+		break;
+	case 2: // 하 (S)
+		m_xmf3MoveDirection = XMFLOAT3(-m_xmf3Look.x, 0.0f, -m_xmf3Look.z);
+		break;
+	case 3: // 좌 (A)
+		m_xmf3MoveDirection = XMFLOAT3(-m_xmf3Right.x, 0.0f, -m_xmf3Right.z);
+		break;
+	case 4: // 우 (D)
+		m_xmf3MoveDirection = m_xmf3Right;
+		break;
+	case 5: // 좌상 (W+A)
+	{
+		XMFLOAT3 moveDir = { m_xmf3Look.x - m_xmf3Right.x, 0.0f, m_xmf3Look.z - m_xmf3Right.z };
+		XMVECTOR moveVec = XMLoadFloat3(&moveDir);
+		moveVec = XMVector3Normalize(moveVec);
+		XMStoreFloat3(&m_xmf3MoveDirection, moveVec);
+		break;
+	}
+	case 6: // 우상 (W+D)
+	{
+		XMFLOAT3 moveDir = { m_xmf3Look.x + m_xmf3Right.x, 0.0f, m_xmf3Look.z + m_xmf3Right.z };
+		XMVECTOR moveVec = XMLoadFloat3(&moveDir);
+		moveVec = XMVector3Normalize(moveVec);
+		XMStoreFloat3(&m_xmf3MoveDirection, moveVec);
+		break;
+	}
+	case 7: // 좌하 (S+A)
+	{
+		XMFLOAT3 moveDir = { -m_xmf3Look.x - m_xmf3Right.x, 0.0f, -m_xmf3Look.z - m_xmf3Right.z };
+		XMVECTOR moveVec = XMLoadFloat3(&moveDir);
+		moveVec = XMVector3Normalize(moveVec);
+		XMStoreFloat3(&m_xmf3MoveDirection, moveVec);
+		break;
+	}
+	case 8: // 우하 (S+D)
+	{
+		XMFLOAT3 moveDir = { -m_xmf3Look.x + m_xmf3Right.x, 0.0f, -m_xmf3Look.z + m_xmf3Right.z };
+		XMVECTOR moveVec = XMLoadFloat3(&moveDir);
+		moveVec = XMVector3Normalize(moveVec);
+		XMStoreFloat3(&m_xmf3MoveDirection, moveVec);
+		break;
+	}
+	}
+
+	// Look 방향을 이동 방향과 동기화 (IDLE 제외)
+	if (n != 0) {
+		SetLookDirection(m_xmf3MoveDirection, m_xmf3Up);
+	}
 }
 
 std::vector<std::unique_ptr<CSkinningInfo>>& CSkinningObject::getSkinningInfo()
@@ -1407,4 +1480,35 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 		m_vUAV.emplace_back(uav);
 		m_vInsertDescriptorHeap.emplace_back(insert);
 	}
+}
+
+/// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+CProjectile::CProjectile()
+{
+	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, XMMatrixIdentity());
+}
+
+void CProjectile::IsMoving(float fElapsedTime)
+{
+	if (!m_bActive) return;
+
+	m_xmf3Position.x += m_xmf3MoveDirection.x * m_fSpeed * fElapsedTime;
+	m_xmf3Position.y += m_xmf3MoveDirection.y * m_fSpeed * fElapsedTime;
+	m_xmf3Position.z += m_xmf3MoveDirection.z * m_fSpeed * fElapsedTime;
+
+	m_Objects->SetPosition(m_xmf3Position);
+
+	m_fElapsedTime += fElapsedTime;
+	if (m_fLifetime > 0.0f && m_fElapsedTime >= m_fLifetime)
+	{
+		m_bActive = false;
+		m_fElapsedTime = 0.0f;
+	}
+}
+
+void CProjectile::UpdateWorldMatrix()
+{
+	XMMATRIX mtxTranslate = XMMatrixTranslation(m_xmf3Position.x, m_xmf3Position.y, m_xmf3Position.z);
+	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, mtxTranslate);
 }

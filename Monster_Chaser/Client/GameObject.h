@@ -308,7 +308,8 @@ public:
 	void Rotate(XMFLOAT3 rot);
 	void Rotation(XMFLOAT3 rot, CGameObject& frame);
 	void move(float fElapsedTime, short arrow);
-	void sliding(float depth, const XMFLOAT3& normal);
+	void sliding(float depth, const XMFLOAT3& normal, float meshHeight);
+	void SetMoveDirection(int n);
 
 	std::string getName() const { return m_strObjectName; }
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
@@ -319,6 +320,7 @@ public:
 	XMFLOAT4X4& getPreWorldMatrix() { return m_xmf4x4PreWorldMatrix; }
 	XMFLOAT3& getPosition() { return m_xmf3Position; }
 	XMFLOAT3& getLook() { return m_xmf3Look; }
+	XMFLOAT3& getMoveDirection() { return m_xmf3MoveDirection; }
 	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Position.x = m_xmf4x4WorldMatrix._41; m_xmf3Position.y = m_xmf4x4WorldMatrix._42; m_xmf3Position.z = m_xmf4x4WorldMatrix._43; return m_xmf3Position; }
 
 	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;
@@ -347,6 +349,7 @@ protected:
 	XMFLOAT3 m_xmf3Look{};
 	XMFLOAT3 m_xmf3Position{};
 	XMFLOAT3 m_xmf3Sliding{};
+	XMFLOAT3 m_xmf3MoveDirection{};
 };
 
 // Rasterizer�� RayTracing������ Skinning Animation�� ����� �ٸ���
@@ -384,4 +387,39 @@ protected:
 	std::vector<ComPtr<ID3D12DescriptorHeap>> m_vUAV{};
 	std::vector<ComPtr<ID3D12DescriptorHeap>> m_vInsertDescriptorHeap{};
 	ComPtr<ID3D12Resource> m_pNullResource{};
+};
+
+class CProjectile
+{
+public:
+	CProjectile();
+
+	void setMoveDirection(XMFLOAT3 direction) { m_xmf3MoveDirection = direction; }
+	void setActive(bool state) { m_bActive = state; }
+	void setPosition(XMFLOAT3 pos) { m_xmf3Position = pos; m_xmf3Position.y = 3.0f; }
+	void setSpeed(float spd) { m_fSpeed = spd; }
+	void setLifetime(float life) { m_fLifetime = life; }
+	void setTime(float time) { m_fElapsedTime = time; }
+	void setGameObject(CGameObject* object) { m_Objects = object; }
+
+	void IsMoving(float fElapsedTime);
+	void UpdateWorldMatrix();
+
+	CGameObject& getObjects() { return *m_Objects; }
+	XMFLOAT4X4& getWorldMatrix() { return m_xmf4x4WorldMatrix; }
+	XMFLOAT3& getPosition() { return m_xmf3Position; }
+	bool getActive() const { return m_bActive; }
+
+protected:
+	CGameObject* m_Objects{};
+	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
+
+	XMFLOAT3 m_xmf3MoveDirection{};
+	XMFLOAT3 m_xmf3Position{};
+
+	float m_fSpeed = 50.0f;
+	float m_fLifetime = 3.0f;
+	float m_fElapsedTime = 0.0f;
+
+	bool m_bActive = false;
 };

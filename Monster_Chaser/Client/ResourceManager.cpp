@@ -398,7 +398,7 @@ void CResourceManager::UpdatePosition(float fElapsedTime)
 {
 	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
 		if (m_vAnimationManager[i]) {
-			CSkinningObject* skinningObject = getSkinningObjectList()[0].get();
+			CSkinningObject* skinningObject = getSkinningObjectList()[i].get();
 			if (skinningObject) {
 				m_vAnimationManager[i]->UpdateAniPosition(fElapsedTime, skinningObject);
 			}
@@ -457,6 +457,11 @@ std::vector<std::unique_ptr<Mesh>>& CResourceManager::getMeshList()
 std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 {
 	return m_vTextureList;
+}
+
+std::vector<std::unique_ptr<CProjectile>>& CResourceManager::getProjectileList()
+{
+	return m_vProjectileList;
 }
 
 void CResourceManager::LightTest()
