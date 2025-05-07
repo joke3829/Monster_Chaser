@@ -658,6 +658,8 @@ void CRaytracingScene::TestShootCollision(const std::vector<std::unique_ptr<CPro
 					boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
 					if (projectileOBB.Intersects(boneSphere)) {
 						m_pResourceManager->getAnimationManagers()[i]->ChangeAnimation(0,false);
+						projectile->setActive(false);
+						projectile->setTime(0.0f);
 					}
 				}
 			}
@@ -867,7 +869,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	m_pResourceManager->PrepareObject();
 	m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
-	m_pResourceManager->getAnimationManagers()[1]->setCurrnetSet(1);
+	m_pResourceManager->getAnimationManagers()[1]->setCurrnetSet(3);
 
 	// Setting Camera ==============================================================
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
