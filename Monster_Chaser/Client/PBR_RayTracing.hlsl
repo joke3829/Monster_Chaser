@@ -36,6 +36,7 @@ struct CameraInfo
     matrix mtxInverseViewProj;
     float3 cameraEye;
     int bNormalMapping;
+    int bReflection;
 };
 
 // 0 == false, 1 == true
@@ -343,7 +344,10 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
     float3 Wpos = GetWorldPosition();
     float3 finalColor = float3(0.0, 0.0, 0.0);
     float F;
+    float metallic;
     bool isShadow = false;
+    float shadowFactor;
+    float s;
     for (uint i = 0; i < g_Lights.numLights; ++i)
     {
         switch (g_Lights.lights[i].Type)
@@ -361,15 +365,18 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                         shadowRay.TMin = 0.0f;
                         shadowRay.TMax = 500.0f;
                         isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
-                        float shadowFactor = isShadow ? 0.25f : 1.0f;
+                        if (0 != g_CameraInfo.bReflection)
+                            shadowFactor = isShadow ? 0.0f : 1.0f;
+                        else
+                            shadowFactor = isShadow ? 0.25f : 1.0f;
                         //float intense = (g_Lights.lights[i].Intensity > 2.5f) ? 2.5f : g_Lights.lights[i].Intensity;
                         float3 lightColor = g_Lights.lights[i].Color.rgb * g_Lights.lights[i].Intensity;
                         float3 rs = float3(0.0, 0.0, 0.0);
                         if (!isShadow)
                             rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
                             //rs = CalculateBlinnPhongSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
-                        float metallic = max(max(R0.r, R0.g), R0.b);
-                        float s = lerp(0.0, 0.95, metallic);
+                        metallic = max(max(R0.r, R0.g), R0.b);
+                        s = lerp(0.0, 0.95, metallic);
                         if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
                             finalColor += NdotL * lightColor * (((1 - s) * AlbedoColor.rgb * shadowFactor) + s * rs);
                         else
@@ -403,13 +410,16 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                             shadowRay.TMin = 0.0f;
                             shadowRay.TMax = dis;
                             isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
-                            float shadowFactor = isShadow ? 0.25f : 1.0f;
+                            if (0 != g_CameraInfo.bReflection)
+                                shadowFactor = isShadow ? 0.0f : 1.0f;
+                            else
+                                shadowFactor = isShadow ? 0.25f : 1.0f;
                             float3 rs = float3(0.0, 0.0, 0.0);
                             if (!isShadow)
                                 rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
                                 //rs = CalculateBlinnPhongSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
-                            float metallic = max(max(R0.r, R0.g), R0.b);
-                            float s = lerp(0.0, 0.95, metallic);        
+                            metallic = max(max(R0.r, R0.g), R0.b);
+                            s = lerp(0.0, 0.95, metallic);        
                             if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
                                 finalColor += (NdotL * lightColor * (((1 - s) * AlbedoColor.rgb * shadowFactor) + (s * rs)));
                             else
@@ -450,13 +460,16 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                             shadowRay.TMin = 0.0f;
                             shadowRay.TMax = dis;
                             isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
-                            float shadowFactor = isShadow ? 0.25f : 1.0f;
+                            if (0 != g_CameraInfo.bReflection)
+                                shadowFactor = isShadow ? 0.0f : 1.0f;
+                            else
+                                shadowFactor = isShadow ? 0.25f : 1.0f;
                             float3 rs = float3(0.0, 0.0, 0.0);
                             if (!isShadow)
                                 rs = CalculateCookTorranceSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
                                 //rs = CalculateBlinnPhongSpecular(F, roughness, R0, NdotV, NdotH, NdotL);
-                            float metallic = max(max(R0.r, R0.g), R0.b);
-                            float s = lerp(0.0, 0.95, metallic);
+                            metallic = max(max(R0.r, R0.g), R0.b);
+                            s = lerp(0.0, 0.95, metallic);
                             if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
                                 finalColor += NdotL * lightColor * fSpotFactor * (((1 - s) * AlbedoColor.rgb * shadowFactor) + (s * rs));
                             else
@@ -468,22 +481,32 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
         }
     }
     
-    /*float4 ReflectColor = float4(0.0, 0.0, 0.0, 0.0);
-    if (payload.RayDepth <= 1)
+    if (g_CameraInfo.bReflection)
     {
-        RayDesc rRay;
-        rRay.Direction = reflect(WorldRayDirection(), N);
-        rRay.Origin = GetWorldPosition();
-        rRay.TMin = 0.001f;
-        rRay.TMax = 600.0f;
+        float4 ReflectColor = float4(0.0, 0.0, 0.0, 0.0);
+        if (payload.RayDepth <= 1)
+        {
+            RayDesc rRay;
+            rRay.Direction = reflect(WorldRayDirection(), N);
+            rRay.Origin = GetWorldPosition();
+            rRay.TMin = 0.001f;
+            rRay.TMax = 600.0f;
     
-        ReflectColor = TraceRadianceRay(rRay, payload.RayDepth);
-    }*/
-
-    if(g_CameraInfo.bNormalMapping & 0x0000FFFF)
-        return finalColor + (AlbedoColor.rgb * 0.2);
+            ReflectColor = TraceRadianceRay(rRay, payload.RayDepth);
+        }
+        
+        if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
+            return finalColor + (ReflectColor.rgb * F);
+        else
+            return (float3(0.6, 0.6, 0.6) * 0.2) + finalColor;
+    }
     else
-        return (float3(0.6, 0.6, 0.6) * 0.2) + finalColor;
+    {
+        if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
+            return finalColor + (AlbedoColor.rgb * 0.2);
+        else
+            return (float3(0.6, 0.6, 0.6) * 0.2) + finalColor;
+    }
 }
 
 float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, in float4 albedoColor, uint ShaderType = 0, float2 uv = float2(0.0, 0.0), float2 uv1 = float2(0.0, 0.0))

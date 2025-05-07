@@ -59,8 +59,8 @@ constexpr short g_ShowBoundingBox = 0;
 
 constexpr unsigned short DEFINED_GAME_WINDOW_WIDTH = 1920;
 constexpr unsigned short DEFINED_GAME_WINDOW_HEIGHT = 1080;
-constexpr unsigned short DEFINED_UAV_BUFFER_WIDTH = 960;
-constexpr unsigned short DEFINED_UAV_BUFFER_HEIGHT = 540;
+constexpr unsigned short DEFINED_UAV_BUFFER_WIDTH = 1280;
+constexpr unsigned short DEFINED_UAV_BUFFER_HEIGHT = 720;
 // 위 네개 정의는 바뀔 수 있다.
 
 // define Scene
