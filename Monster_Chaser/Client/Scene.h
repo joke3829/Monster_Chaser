@@ -72,6 +72,8 @@ protected:
 
 	POINT oldCursor;
 	bool m_bHold = false;
+
+	float m_fElapsedtime = 0.0f;
 };
 
 enum TitleState{Title, RoomSelect, InRoom, GoLoading};
