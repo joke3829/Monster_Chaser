@@ -10,24 +10,29 @@ struct CB_CAMERA_INFO {
 	XMFLOAT4X4 xmf4x4InverseViewProj;
 	XMFLOAT3 xmf3Eye;
 	int bNormalMapping;	// �� 2byte normal, �� 2byte albedo
+	int bReflection;
 };
 
 class CCamera {
 public:
+	~CCamera();
+
 	void Setup(int nRootParameterIndex);
 
 	void Rotate(int cxDelta, int cyDelta);
 	void Move(int arrow, float fElapsedTime, bool shift = false);
 
-	void UpdateViewMatrix();
+	void UpdateViewMatrix(float height = 0.0f);
 	void SetShaderVariable();
 
 	XMFLOAT3& getEye() { return m_xmf3Eye; }
+	XMFLOAT3& getEyeCalculateOffset();
 	bool getThirdPersonState() const { return m_bThirdPerson; }
 
 	void SetTarget(CGameObject* target);
 	void SetThirdPersonMode(bool bThirdPerson);
 	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }
+	void SetHOffset(float height) { m_xmf3hOffset.y = height; }
 
 	void toggleNormalMapping() 
 	{ 
@@ -45,6 +50,7 @@ public:
 		m_pCameraInfo->bNormalMapping = fByte | bByte;
 		//m_pCameraInfo->bNormalMapping |= 0x0000; 
 	}
+	void toggleReflection() { m_pCameraInfo->bReflection = ~m_pCameraInfo->bReflection; }
 	XMFLOAT3 getDir() const { return m_xmf3Dir; }
 	XMFLOAT3 getUp() const { return m_xmf3Up; }
 protected:
@@ -60,7 +66,8 @@ protected:
 	XMFLOAT3 m_xmf3Up{ 0.0f, 1.0f, 0.0f };
 
 	XMFLOAT3 m_xmf3Dir{ 0.0f, 0.0f, 1.0f };
-	XMFLOAT3 m_xmf3Offset{ 0.0f, 0.6f, -1.0f };
+	XMFLOAT3 m_xmf3Offset{ 0.0f, 0.0f, -1.0f };
+	XMFLOAT3 m_xmf3hOffset{ 0.0f, 0.0f, 0.0f };
 
 	XMFLOAT4X4 m_xmf4x4View;
 	XMFLOAT4X4 m_xmf4x4Proj;

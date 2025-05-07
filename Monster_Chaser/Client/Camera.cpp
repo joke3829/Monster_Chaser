@@ -1,5 +1,10 @@
 #include "Camera.h"
 
+CCamera::~CCamera()
+{
+	if (m_pd3dCameraBuffer)
+		m_pd3dCameraBuffer->Unmap(0, nullptr);
+}
 
 void CCamera::Setup(int nRootParameterIndex)
 {
@@ -10,6 +15,7 @@ void CCamera::Setup(int nRootParameterIndex)
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dCameraBuffer.GetAddressOf()));
 	m_pd3dCameraBuffer->Map(0, nullptr, (void**)&m_pCameraInfo);
 	m_pCameraInfo->bNormalMapping = ~0;
+	m_pCameraInfo->bReflection = 0;
 
 	XMStoreFloat4x4(&m_xmf4x4Proj, XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fFOV), m_fAspect, m_fNear, m_fFar));
 }
@@ -20,13 +26,13 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 	float cy = (float)cyDelta / 3.0f;
 
 	m_fLimitcy += cy;
-	if (m_fLimitcy > 20.0f) {
-		cy -= (m_fLimitcy - 20.0f);
-		m_fLimitcy = 20.0f;
+	if (m_fLimitcy > 60.0f) {
+		cy -= (m_fLimitcy - 60.0f);
+		m_fLimitcy = 60.0f;
 	}
-	if (m_fLimitcy < -40.0f) {
-		cy += -(m_fLimitcy + 40.0f);
-		m_fLimitcy = -40.0f;
+	if (m_fLimitcy < -60.0f) {
+		cy += -(m_fLimitcy + 60.0f);
+		m_fLimitcy = -60.0f;
 	}
 
 	XMMATRIX mtxrotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(cx));
@@ -67,11 +73,20 @@ void CCamera::Move(int arrow, float fElapsedTime, bool shift)
 		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -speed * fElapsedTime));
 }
 
-void CCamera::UpdateViewMatrix()
+XMFLOAT3& CCamera::getEyeCalculateOffset()
+{
+	XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_pTarget->getPositionFromWMatrix()) + XMLoadFloat3(&m_xmf3hOffset) + XMLoadFloat3(&m_xmf3Offset) * m_fCameraLength);
+	return m_xmf3Eye;
+}
+
+void CCamera::UpdateViewMatrix(float height)
 {
 	if (m_bThirdPerson) {
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_pTarget->getPositionFromWMatrix()) + XMLoadFloat3(&m_xmf3Offset) * m_fCameraLength);
+		//getEyeCalculateOffset();
 		m_xmf3At = m_pTarget->getPositionFromWMatrix();
+		if (height != 0.0f) {
+			m_xmf3Eye.y = height;
+		}
 	}
 	else {
 		XMStoreFloat3(&m_xmf3At, (XMLoadFloat3(&m_xmf3Eye) + XMLoadFloat3(&m_xmf3Dir)));

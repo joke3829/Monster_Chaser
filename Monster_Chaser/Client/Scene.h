@@ -4,6 +4,7 @@
 #include "ResourceManager.h"
 #include "ShaderBindingTableManager.h"
 #include "AccelerationStructureManager.h"
+#include "UIObject.h"
 #include "stdfxh.h"
 
 extern DXResources g_DxResource;
@@ -47,8 +48,11 @@ enum MageAnimationState
 
 class CScene {
 public:
-	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) {}
+	virtual ~CScene() {}
+	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) { m_pOutputBuffer = outputBuffer; }
 	virtual void SetCamera(std::shared_ptr<CCamera>& pCamera) { m_pCamera = pCamera; }
+	virtual void CreateRTVDSV();
+	virtual void CreateOrthoMatrixBuffer();
 
 	virtual void UpdateObject(float fElapsedTime) {};
 	
@@ -59,8 +63,16 @@ public:
 	virtual void PrepareRender() {};
 	virtual void Render() {};
 
+	short getNextSceneNumber() const { return m_nNextScene; }
+
 	virtual void PrepareTerrainTexture() {}
 protected:
+	ComPtr<ID3D12Resource>				m_pOutputBuffer{};
+	ComPtr<ID3D12DescriptorHeap>		m_RTV{};
+	ComPtr<ID3D12PipelineState>			m_UIPipelineState{};
+	ComPtr<ID3D12Resource>				m_pDepthStencilBuffer{};
+	ComPtr<ID3D12DescriptorHeap>		m_DSV{};
+
 	bool m_bLockAnimation = false;
 	bool m_bLockAnimation1 = false;
 	bool m_bStopAnimaiton = false;
@@ -72,8 +84,11 @@ protected:
 
 	POINT oldCursor;
 	bool m_bHold = false;
-
 	float m_fElapsedtime = 0.0f;
+	bool mouseIsInitialize{};
+
+	ComPtr<ID3D12Resource>					m_cameraCB{};
+	short m_nNextScene = -1;
 };
 
 enum TitleState{Title, RoomSelect, InRoom, GoLoading};
@@ -82,21 +97,36 @@ class TitleScene : public CScene {
 public:
 	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
 
-	//void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	void CreateRootSignature();
-	void CreateRenderTargetView();
+	void CreatePipelineState();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();
 protected:
-	TitleState							m_nState = Title;
+	TitleState								m_nState = Title;
+	std::unique_ptr<CResourceManager>		m_pResourceManager{};
 
-	ComPtr<ID3D12Resource>				m_pOutputBuffer{};
-	ComPtr<ID3D12DescriptorHeap>		m_RederTargetView{};
-	ComPtr<ID3D12PipelineState>			m_UIPipelineState{};
-	std::unique_ptr<CResourceManager>	m_pResourceManager{};
+	std::vector<std::unique_ptr<UIObject>>	m_vTitleUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vRoomSelectUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vInRoomUIs;
+
+	// Title variables
+	float									wOpacity = 1.0f;
+	float									startTime{};
+	// Room Select variables
+	int										peopleindex{};
+	std::array<short, 10>					userPerRoom{ 1, 0, 0, 3, 2, 2, 3, 0, 2, 1 };
+
+	// InRoom variables
+	short									local_uid{};
+	short									currentRoom{};
+	std::array<short, 3>					userJob{ JOB_MAGE, JOB_MAGE, JOB_MAGE };
+	std::array<bool, 3>						userReadyState{};
+	short									readyUIIndex{};
+	short									backUIIndex{};
 };
 
 template<typename T>
@@ -185,6 +215,8 @@ public:
 	void PrepareTerrainTexture();
 };
 
+enum InGameState{IS_LOADING, IS_GAMING, IS_FINISH};
+
 // real use scene
 class CRaytracingWinterLandScene : public CRaytracingScene {
 public:
@@ -193,9 +225,23 @@ public:
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
+	void CreateUIRootSignature();
+	void CreateUIPipelineState();
+
 	void UpdateObject(float fElapsedTime);
 	void Render();
 	void PrepareTerrainTexture();
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+protected:
+	UCHAR m_PrevKeyBuffer[256] = { 0 }; // PrevKey
+
+	unsigned int								m_nSkyboxIndex{};
+
+	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
+	InGameState									m_nState{};
+
+	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
+	float										startTime{};
+	float										wOpacity = 1.0f;
 };

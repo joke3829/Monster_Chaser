@@ -856,10 +856,7 @@ void CSkinningObject::setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 pos
 
 void CSkinningObject::UpdateFrameWorldMatrix()
 {
-	if (m_bUsePreTransform)
-		XMStoreFloat4x4(&m_xmf4x4PreWorldMatrix, XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
-	else
-		m_xmf4x4PreWorldMatrix = m_xmf4x4WorldMatrix;
+	UpdatePreWorldMatrix();
 
 	for (std::unique_ptr<CGameObject>& object : m_vObjects) {
 		if (object->getParentIndex() != -1) {
@@ -898,6 +895,14 @@ void CSkinningObject::UpdateAnimationMatrixes()
 		else
 			object->SetAnimationMatrix(object->getLocalMatrix());
 	}
+}
+
+void CSkinningObject::UpdatePreWorldMatrix()
+{
+	if (m_bUsePreTransform)
+		XMStoreFloat4x4(&m_xmf4x4PreWorldMatrix, XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
+	else
+		m_xmf4x4PreWorldMatrix = m_xmf4x4WorldMatrix;
 }
 
 void CSkinningObject::UpdateWorldMatrix()
@@ -1310,7 +1315,8 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 
 	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo) {
 		int n = info->getRefMeshIndex();
-		m_vMeshes[n]->setSkinning(true);
+		if(!g_ShowBoundingBox)
+			m_vMeshes[n]->setSkinning(true);
 	}
 	for (std::shared_ptr<Mesh>& mesh : m_vMeshes) {
 		ComPtr<ID3D12Resource> constResource{};

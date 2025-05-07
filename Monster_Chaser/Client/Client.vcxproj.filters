@@ -67,6 +67,9 @@
     <Filter Include="Resource\AnimationManager">
       <UniqueIdentifier>{26e56987-728b-4f9b-bb23-ee29f7266adc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{942193e9-5883-4f37-ad45-b44969d80f51}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -135,6 +138,9 @@
     <ClInclude Include="AnimationManager.h">
       <Filter>Resource\AnimationManager</Filter>
     </ClInclude>
+    <ClInclude Include="UIObject.h">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -194,6 +200,9 @@
     <ClCompile Include="AnimationManager.cpp">
       <Filter>Resource\AnimationManager</Filter>
     </ClCompile>
+    <ClCompile Include="UIObject.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Client.rc">
@@ -214,5 +223,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="AnimationComputeShader.hlsl" />
+    <None Include="UIShader.hlsl" />
   </ItemGroup>
 </Project>

@@ -38,6 +38,7 @@ public:
 	Mesh(CHeightMapImage* heightmap, std::string strMeshName);
 	Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName = "noNameMesh");					// boundingOBB ���鶧 ���
 	Mesh(XMFLOAT3& center, float radius, std::string meshName = "noNameMesh");
+	Mesh(XMFLOAT3& center, float width, float height);			// Plane
 
 	//void GetMeshNameFromFile(std::ifstream& inFile);
 	void GetBoundInfoFromFile(std::ifstream& inFile);
@@ -67,6 +68,7 @@ public:
 
 	UINT getVertexCount() const;
 	UINT getIndexCount(int index) const;
+	UINT getTexCoord0Count() const { return m_nTexCoord0Count; }
 
 	bool getHasVertex() const;
 	bool getHasColor() const;

@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <vector>
+#include <array>
 #include <algorithm>
 #include <string>
 #include <fstream>
@@ -58,9 +59,21 @@ constexpr short g_ShowBoundingBox = 0;
 
 constexpr unsigned short DEFINED_GAME_WINDOW_WIDTH = 1920;
 constexpr unsigned short DEFINED_GAME_WINDOW_HEIGHT = 1080;
-constexpr unsigned short DEFINED_UAV_BUFFER_WIDTH = 960;
-constexpr unsigned short DEFINED_UAV_BUFFER_HEIGHT = 540;
+constexpr unsigned short DEFINED_UAV_BUFFER_WIDTH = 1280;
+constexpr unsigned short DEFINED_UAV_BUFFER_HEIGHT = 720;
 // 위 네개 정의는 바뀔 수 있다.
+
+// define Scene
+constexpr unsigned short SCENE_TITLE		= 0;
+constexpr unsigned short SCENE_PLAIN		= 1;
+constexpr unsigned short SCENE_CAVE			= 2;
+constexpr unsigned short SCENE_WINTERLAND	= 3;
+
+// define job
+constexpr unsigned short JOB_NOTHING		= 0;
+constexpr unsigned short JOB_MAGE			= 1;
+constexpr unsigned short JOB_WARRIOR		= 2;
+constexpr unsigned short JOB_HEALER			= 3;
 
 // 조명 관련 정의
 constexpr int MAX_LIGHTS = 64;
