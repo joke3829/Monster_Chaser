@@ -501,7 +501,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 			m_bDoingCombo = false;
 		}
 	}
-
+	//
 	/*auto& Skinned = m_pResourceManager->getSkinningObjectList();
 	for (size_t i = 0; i < Skinned.size(); ++i) {
 		Skinned[i]->SetPosition(Players[i].getRenderingObject()->getPosition());
