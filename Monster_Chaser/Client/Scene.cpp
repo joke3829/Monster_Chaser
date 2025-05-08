@@ -483,16 +483,22 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->ReBuildBLAS();
 
 	bool test = false;
+	auto& animationManagers = m_pResourceManager->getAnimationManagers();
 	for (auto& animationManager : animationManagers) {
 		animationManager->UpdateCombo(fElapsedTime);
-		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
-			animationManager->ChangeAnimation(0, false); // idle State
+		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
+			animationManager->ChangeAnimation(IDLE, false);
 			test = true;
 			m_bLockAnimation1 = false;
+			m_bLockAnimation = false;
+			m_bDoingCombo = false;
 		}
 		if (animationManager->IsComboInterrupted()) {
 			test = true;
-			animationManager->ClearComboInterrupted(); // �÷��� �ʱ�ȭ
+			animationManager->ClearComboInterrupted();
+			m_bLockAnimation1 = false;
+			m_bLockAnimation = false;
+			m_bDoingCombo = false;
 		}
 	}
 
@@ -502,7 +508,10 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	}*/
 
 
-	
+	auto& proj = m_pResourceManager->getProjectileList();
+	for (auto& pr : proj) {
+		pr->IsMoving(fElapsedTime);
+	}
 
 	m_pResourceManager->UpdateWorldMatrix();
 
