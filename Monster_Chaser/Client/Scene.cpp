@@ -512,6 +512,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->UpdateWorldMatrix();
 
 	TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
+	TestShootCollision(m_pResourceManager->getProjectileList(), m_pResourceManager->getSkinningObjectList());
 
 	if (test) {
 		m_pResourceManager->UpdatePosition(fElapsedTime); //��ġ ������Ʈ
