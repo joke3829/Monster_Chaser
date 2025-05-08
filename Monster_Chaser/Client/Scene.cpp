@@ -475,7 +475,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 			m_bDoingCombo = false;
 		}
 	}
-
+	//
 	auto& proj = m_pResourceManager->getProjectileList();
 	for (auto& pr : proj) {
 		pr->IsMoving(fElapsedTime);
