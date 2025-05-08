@@ -1496,10 +1496,6 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_bLockAnimation = false;
 	}
 
-	if (m_bLockAnimation1 && m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsAnimationFinished()) {
-		m_bLockAnimation1 = false;
-	}
-
 	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
 		return;
