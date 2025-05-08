@@ -308,7 +308,7 @@ public:
 	void Rotate(XMFLOAT3 rot);
 	void Rotation(XMFLOAT3 rot, CGameObject& frame);
 	void move(float fElapsedTime, short arrow);
-	void sliding(float depth, const XMFLOAT3& normal);
+	void sliding(float depth, const XMFLOAT3& normal, float meshHeight);
 	void SetMoveDirection(XMFLOAT3& pos);
 
 	std::string getName() const { return m_strObjectName; }
@@ -320,6 +320,7 @@ public:
 	XMFLOAT4X4& getPreWorldMatrix() { return m_xmf4x4PreWorldMatrix; }
 	XMFLOAT3& getPosition() { return m_xmf3Position; }
 	XMFLOAT3& getLook() { return m_xmf3Look; }
+	XMFLOAT3& getMoveDirection() { return m_xmf3MoveDirection; }
 	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Position.x = m_xmf4x4WorldMatrix._41; m_xmf3Position.y = m_xmf4x4WorldMatrix._42; m_xmf3Position.z = m_xmf4x4WorldMatrix._43; return m_xmf3Position; }
 
 	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;

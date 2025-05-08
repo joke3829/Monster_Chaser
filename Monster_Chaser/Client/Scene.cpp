@@ -914,7 +914,7 @@ void CRaytracingScene::CreateComputeRootSignature()
 }
 
 template<typename T, typename U>
-requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
+	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
 inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2)
 {
 	bool collisionDetected = false;
@@ -972,7 +972,7 @@ inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique
 }
 
 template<typename T, typename U>
-requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
+	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
 inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2)
 {
 	auto& meshes = m_pResourceManager->getMeshList();
@@ -1029,32 +1029,75 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 {
 	auto& meshes = m_pResourceManager->getMeshList();
 
-	for (const auto& mapObj : mapObjects) {
-		int meshIndex = mapObj->getMeshIndex();
-		if (meshIndex == -1 || meshIndex >= meshes.size()) continue;
+	struct CollisionInfo {
+		XMFLOAT3 normal;
+		float depth;
+		float meshHeight;
+	};
 
-		auto& mesh = meshes[meshIndex];
-		if (!mesh->getHasVertex() || !mesh->getHasBoundingBox()) continue;
+	for (const auto& character : characters) {
+		std::vector<CollisionInfo> collisions;
 
-		BoundingOrientedBox mapOBB;
-		mesh->getOBB().Transform(mapOBB, XMLoadFloat4x4(&mapObj->getWorldMatrix()));
+		for (const auto& mapObj : mapObjects) {
+			int meshIndex = mapObj->getMeshIndex();
+			if (meshIndex == -1 || meshIndex >= meshes.size()) continue;
 
-		for (const auto& character : characters) {
+			auto& mesh = meshes[meshIndex];
+			if (!mesh->getHasVertex() || !mesh->getHasBoundingBox()) continue;
+
+			BoundingOrientedBox mapOBB;
+			mesh->getOBB().Transform(mapOBB, XMLoadFloat4x4(&mapObj->getWorldMatrix()));
+
+			float meshHeight = mapOBB.Extents.y * 2.0f;
+
 			for (const auto& bone : character->getObjects()) {
 				if (bone->getBoundingInfo() & 0x1100) { // Sphere
 					BoundingSphere boneSphere = bone->getObjectSphere();
 					boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
 					if (mapOBB.Intersects(boneSphere)) {
 						XMFLOAT3 norm = CalculateCollisionNormal(mapOBB, boneSphere);
-						float dept = CalculateDepth(mapOBB, boneSphere);
-						// �̵� ����� �浹 ������ ���Ͽ� �ݴ� �������θ� �����̵� ����
-						XMVECTOR moveDir = XMLoadFloat3(&character->getLook());
-						XMVECTOR normal = XMLoadFloat3(&norm);
-						float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
-						if (dotProduct < 0.0f) { // �̵� ������ �浹 ������ �ݴ��� ���
-							character->sliding(dept, norm);
-							return;
-						}
+						float depth = CalculateDepth(mapOBB, boneSphere);
+						collisions.push_back({ norm, depth, meshHeight });
+					}
+				}
+			}
+		}
+
+		// 다중 충돌 처리: 가장 큰 침투 깊이 선택
+		if (!collisions.empty()) {
+			auto maxCollision = std::max_element(collisions.begin(), collisions.end(), [](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
+
+			XMFLOAT3 norm = maxCollision->normal;
+			float depth = maxCollision->depth;
+			float meshHeight = maxCollision->meshHeight;
+
+			XMVECTOR moveDir = XMLoadFloat3(&character->getMoveDirection());
+			XMVECTOR normal = XMLoadFloat3(&norm);
+			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
+			if (dotProduct < 0.0f) { // 이동 방향이 법선과 반대
+				character->sliding(depth, norm, meshHeight);
+			}
+		}
+	}
+}
+
+void CRaytracingScene::TestShootCollision(const std::vector<std::unique_ptr<CProjectile>>& Objects, const std::vector<std::unique_ptr<CSkinningObject>>& characters)
+{
+	for (const auto& projectile : Objects) {
+		BoundingOrientedBox projectileOBB = projectile->getObjects().getObjectOBB();
+		projectileOBB.Transform(projectileOBB, XMLoadFloat4x4(&projectile->getObjects().getWorldMatrix()));
+
+		for (size_t i = 1; i < characters.size(); ++i) {
+			const auto& character = characters[i];
+			for (const auto& bone : character->getObjects()) {
+				if (bone->getBoundingInfo() & 0x1100) { // Sphere
+					BoundingSphere boneSphere = bone->getObjectSphere();
+					boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
+					if (projectileOBB.Intersects(boneSphere)) {
+						m_pResourceManager->getAnimationManagers()[i]->ChangeAnimation(0, true);
+						m_pResourceManager->getAnimationManagers()[i]->IsCollision();
+						projectile->setActive(false);
+						projectile->setTime(0.0f);
 					}
 				}
 			}
@@ -1067,14 +1110,30 @@ XMFLOAT3 CRaytracingScene::CalculateCollisionNormal(const BoundingOrientedBox& o
 
 	XMVECTOR sphereCenter = XMLoadFloat3(&sphere.Center);
 	XMVECTOR obbCenter = XMLoadFloat3(&obb.Center);
+	XMVECTOR orientation = XMLoadFloat4(&obb.Orientation);
+	XMMATRIX rotation = XMMatrixRotationQuaternion(orientation);
 
-	// ���� ���� ���
-	XMVECTOR direction = XMVector3Normalize(sphereCenter - obbCenter);
+	// OBB의 각 축 추출
+	XMVECTOR axes[3] = {
+		rotation.r[0],
+		rotation.r[1],
+		rotation.r[2]
+	};
 
-	// �ܼ��� �߽� �� ������ ����ȭ�Ͽ� ��ַ� ���
+	// 가장 가까운 점 계산
+	XMVECTOR closestPoint = obbCenter;
+	XMVECTOR d = sphereCenter - obbCenter;
+
+	for (int i = 0; i < 3; ++i) {
+		float distance = XMVectorGetX(XMVector3Dot(d, axes[i]));
+		float extent = (&obb.Extents.x)[i];
+		distance = std::clamp(distance, -extent, extent);
+		closestPoint += axes[i] * distance;
+	}
+
+	XMVECTOR normalVec = XMVector3Normalize(sphereCenter - closestPoint);
 	XMFLOAT3 normal;
-	XMStoreFloat3(&normal, direction);
-
+	XMStoreFloat3(&normal, normalVec);
 	return normal;
 }
 
@@ -1082,29 +1141,26 @@ float CRaytracingScene::CalculateDepth(const BoundingOrientedBox& obb, const Bou
 {
 	XMVECTOR sphereCenter = XMLoadFloat3(&sphere.Center);
 	XMVECTOR obbCenter = XMLoadFloat3(&obb.Center);
-	XMVECTOR direction = sphereCenter - obbCenter;
-
-	// OBB ȸ�� ���
 	XMVECTOR orientation = XMLoadFloat4(&obb.Orientation);
 	XMMATRIX rotation = XMMatrixRotationQuaternion(orientation);
 
-	// OBB �� ����
 	XMVECTOR axes[3] = {
-		rotation.r[0], // X��
-		rotation.r[1], // Y��
-		rotation.r[2]  // Z��
+		rotation.r[0],
+		rotation.r[1],
+		rotation.r[2]
 	};
 
-	XMVECTOR closest = obbCenter;
+	XMVECTOR closestPoint = obbCenter;
+	XMVECTOR d = sphereCenter - obbCenter;
 
 	for (int i = 0; i < 3; ++i) {
-		float distance = XMVectorGetX(XMVector3Dot(direction, axes[i]));
+		float distance = XMVectorGetX(XMVector3Dot(d, axes[i]));
 		float extent = (&obb.Extents.x)[i];
 		distance = std::clamp(distance, -extent, extent);
-		closest += axes[i] * distance;
+		closestPoint += axes[i] * distance;
 	}
 
-	float dist = XMVectorGetX(XMVector3Length(sphereCenter - closest));
+	float dist = XMVectorGetX(XMVector3Length(sphereCenter - closestPoint));
 	return sphere.Radius - dist;
 }
 
@@ -1196,6 +1252,10 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	projectile.emplace_back(std::make_unique<CProjectile>());
 	projectile[0]->setGameObject(normalObjects[finalindex].get());
+	projectile.emplace_back(std::make_unique<CProjectile>());
+	projectile[1]->setGameObject(normalObjects[finalindex].get());
+	projectile.emplace_back(std::make_unique<CProjectile>());
+	projectile[2]->setGameObject(normalObjects[finalindex].get());
 
 	//Players.try_emplace(0, )
 	Players[0].setRenderingObject(skinned[0].get());
