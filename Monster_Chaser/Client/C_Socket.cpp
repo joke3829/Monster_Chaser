@@ -85,7 +85,7 @@ void C_Socket::SendBroadCastRoom()
 	Client.send_packet(&rp);
 }
 
-void C_Socket::SendMovePacket(const float& Time, const MoveAnimationState State)
+void C_Socket::SendMovePacket(const float& Time, const UINT State)
 {
 	cs_packet_move mp;
 	mp.size = sizeof(mp);
