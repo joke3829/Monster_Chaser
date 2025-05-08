@@ -512,6 +512,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->UpdateWorldMatrix();
 
 	TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
+	TestShootCollision(m_pResourceManager->getProjectileList(), m_pResourceManager->getSkinningObjectList());
 
 	if (test) {
 		m_pResourceManager->UpdatePosition(fElapsedTime); //��ġ ������Ʈ
@@ -1321,7 +1322,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// g_user[id].do_send(mp);
 	// 0	1		2
 	for (int i = 0; i < Players.size(); ++i) {
-		skinned[i]->SetPosition(XMFLOAT3(10.0f * i, 0.0f, 50.0f));
+		skinned[i]->SetPosition(XMFLOAT3(0.0f, 0.0f, 40.0f + 10.0f * i));
 		skinned[i]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	}
 
@@ -1440,14 +1441,14 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 		if (deltaX != 0.0f || deltaY != 0.0f) {
 			m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 
-			auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
+			auto* animationManager = m_pResourceManager->getAnimationManagers()[Client.get_id()].get();
 			if (animationManager && !animationManager->getFrame().empty()) {
 				CGameObject* frame = animationManager->getFrame()[0];
 				if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
-					m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
+					m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 					XMFLOAT3 characterDir = cameraDir;
 					characterDir.y = 0.0f; // delete y value
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_pResourceManager->getSkinningObjectList()[Client.get_id()]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 				}
 			}
 
@@ -1493,6 +1494,10 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	if (m_bLockAnimation && !m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsInCombo()) {
 		m_bLockAnimation = false;
+	}
+
+	if (m_bLockAnimation1 && m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsAnimationFinished()) {
+		m_bLockAnimation1 = false;
 	}
 
 	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
@@ -1991,7 +1996,7 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 			m_bLockAnimation = true;
 		}
 	}
-	// ���� Ű ���¸� ���� ���·� ����
+
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 
 	cs_packet_move mp;
