@@ -73,6 +73,7 @@ public:
 	void ClearComboInterrupted() { m_bComboEnd = false; }
 
 	const std::vector<CGameObject*>& getFrame()const { return m_vFrames; }
+	UINT& getCurrentSet() {return m_nCurrentSet;}
 protected:
 	UINT m_nAnimationSets{};
 	UINT m_nCurrentSet{};

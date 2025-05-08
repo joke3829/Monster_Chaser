@@ -1999,7 +1999,8 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	mp.size = sizeof(mp);
 	mp.type = C2S_P_MOVE;
 	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
-	Client.send_packet(&mp);	//                    
+	Client.send_packet(&mp);	//
+	Client.SendMovePacket(m_fElapsedtime, m_pResourceManager->getAnimationManagers()[Client.get_id()]->getCurrentSet());
 }
 
 // ==============================================================================
