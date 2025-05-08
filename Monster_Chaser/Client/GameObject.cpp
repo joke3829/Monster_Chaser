@@ -1052,6 +1052,11 @@ void CSkinningObject::sliding(float depth, const XMFLOAT3& normal)
 	UpdateWorldMatrix();
 }
 
+void CSkinningObject::SetMoveDirection(XMFLOAT3& pos)
+{
+	m_xmf3MoveDirection = pos;
+}
+
 std::vector<std::unique_ptr<CSkinningInfo>>& CSkinningObject::getSkinningInfo()
 {
 	return m_vSkinningInfo;
@@ -1418,4 +1423,33 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 		m_vUAV.emplace_back(uav);
 		m_vInsertDescriptorHeap.emplace_back(insert);
 	}
+}
+
+CProjectile::CProjectile()
+{
+	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, XMMatrixIdentity());
+}
+
+void CProjectile::IsMoving(float fElapsedTime)
+{
+	if (!m_bActive) return;
+
+	m_xmf3Position.x += m_xmf3MoveDirection.x * m_fSpeed * fElapsedTime;
+	m_xmf3Position.y += m_xmf3MoveDirection.y * m_fSpeed * fElapsedTime;
+	m_xmf3Position.z += m_xmf3MoveDirection.z * m_fSpeed * fElapsedTime;
+
+	m_Objects->SetPosition(m_xmf3Position);
+
+	m_fElapsedTime += fElapsedTime;
+	if (m_fLifetime > 0.0f && m_fElapsedTime >= m_fLifetime)
+	{
+		m_bActive = false;
+		m_fElapsedTime = 0.0f;
+	}
+}
+
+void CProjectile::UpdateWorldMatrix()
+{
+	XMMATRIX mtxTranslate = XMMatrixTranslation(m_xmf3Position.x, m_xmf3Position.y, m_xmf3Position.z);
+	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, mtxTranslate);
 }
