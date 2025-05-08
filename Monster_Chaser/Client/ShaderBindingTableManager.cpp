@@ -32,18 +32,18 @@ void CShaderBindingTableManager::Setup(CRayTracingPipeline* pipeline, CResourceM
 	m_pResourceManager = manager;
 
 	// null 버퍼와 nulltexture
-	auto desc = BASIC_BUFFER_DESC;
-	desc.Width = 1;			// 여기 의심
+	//auto desc = BASIC_BUFFER_DESC;
+	//desc.Width = 1;			// 여기 의심
 
-	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dNullBuffer.GetAddressOf()));
+	//g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dNullBuffer.GetAddressOf()));
 
-	desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-	desc.Width = desc.Height = 1;
-	desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+	//desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	//desc.Width = desc.Height = 1;
+	//desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	//desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	//desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
-	g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dNullTexture.GetAddressOf()));
+	//g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dNullTexture.GetAddressOf()));
 
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorDesc{};
 	descriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -58,7 +58,7 @@ void CShaderBindingTableManager::Setup(CRayTracingPipeline* pipeline, CResourceM
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Texture2D.MipLevels = -1;
 
-	g_DxResource.device->CreateShaderResourceView(m_pd3dNullTexture.Get(), &srvDesc, m_pd3dNullBufferView->GetCPUDescriptorHandleForHeapStart());
+	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, m_pd3dNullBufferView->GetCPUDescriptorHandleForHeapStart());
 }
 
 void CShaderBindingTableManager::CreateSBT()
@@ -198,32 +198,32 @@ void CShaderBindingTableManager::CreateSBT()
 									if (vMeshes[n]->getHasColor())
 										args.ColorsBuffer = vMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
 									else
-										args.ColorsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.ColorsBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// Tex0
 									if (vMeshes[n]->getHasTex0())
 										args.TexCoord0Buffer = vMeshes[n]->getTexCoord0Buffer()->GetGPUVirtualAddress();
 									else
-										args.TexCoord0Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.TexCoord0Buffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// Tex1
 									if (vMeshes[n]->getHasTex1())
 										args.TexCoord1Buffer = vMeshes[n]->getTexCoord1Buffer()->GetGPUVirtualAddress();
 									else
-										args.TexCoord1Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.TexCoord1Buffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// Normal
 									if (vMeshes[n]->getHasNormal())
 										args.NormalsBuffer = vMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
 									else
-										args.NormalsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.NormalsBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// Tangent
 									if (vMeshes[n]->getHasTangent())
 										args.TangentBuffer = vMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
 									else
-										args.TangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.TangentBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// BiTangent
 									if (vMeshes[n]->getHasBiTangent())
 										args.BiTangentBuffer = vMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
 									else
-										args.BiTangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.BiTangentBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// Index
 									args.IndexBuffer = vMeshes[n]->getIndexBuffer(i)->GetGPUVirtualAddress();
 
@@ -285,34 +285,34 @@ void CShaderBindingTableManager::CreateSBT()
 								if (vMeshes[n]->getHasColor())
 									args.ColorsBuffer = vMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
 								else
-									args.ColorsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+									args.ColorsBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 								// Tex0
 								if (vMeshes[n]->getHasTex0())
 									args.TexCoord0Buffer = vMeshes[n]->getTexCoord0Buffer()->GetGPUVirtualAddress();
 								else
-									args.TexCoord0Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+									args.TexCoord0Buffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 								// Tex1
 								if (vMeshes[n]->getHasTex1())
 									args.TexCoord1Buffer = vMeshes[n]->getTexCoord1Buffer()->GetGPUVirtualAddress();
 								else
-									args.TexCoord1Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+									args.TexCoord1Buffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 								// Normal
 								if (vMeshes[n]->getHasNormal())
 									args.NormalsBuffer = vMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
 								else
-									args.NormalsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+									args.NormalsBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 								// Tangent
 								if (vMeshes[n]->getHasTangent())
 									args.TangentBuffer = vMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
 								else
-									args.TangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+									args.TangentBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 								// BiTangent
 								if (vMeshes[n]->getHasBiTangent())
 									args.BiTangentBuffer = vMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
 								else
-									args.BiTangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+									args.BiTangentBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 								// Index
-								args.IndexBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+								args.IndexBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 
 								// AlbedoMap
 								if (vMaterials[0].m_bHasAlbedoMap)
@@ -387,17 +387,17 @@ void CShaderBindingTableManager::CreateSBT()
 										if (sMeshes[n]->getHasColor())
 											args.ColorsBuffer = sMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
 										else
-											args.ColorsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+											args.ColorsBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 										// Tex0
 										if (sMeshes[n]->getHasTex0())
 											args.TexCoord0Buffer = sMeshes[n]->getTexCoord0Buffer()->GetGPUVirtualAddress();
 										else
-											args.TexCoord0Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+											args.TexCoord0Buffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 										// Tex1
 										if (sMeshes[n]->getHasTex1())
 											args.TexCoord1Buffer = sMeshes[n]->getTexCoord1Buffer()->GetGPUVirtualAddress();
 										else
-											args.TexCoord1Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+											args.TexCoord1Buffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 										// Normal
 										if (sMeshes[n]->getHasNormal()) {
 											if (SkinningObject->getNormalOutputBuffer(n))
@@ -406,7 +406,7 @@ void CShaderBindingTableManager::CreateSBT()
 												args.NormalsBuffer = sMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
 										}
 										else
-											args.NormalsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+											args.NormalsBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 										// Tangent
 										if (sMeshes[n]->getHasTangent()) {
 											if (SkinningObject->getTangentOutputBuffer(n))
@@ -415,7 +415,7 @@ void CShaderBindingTableManager::CreateSBT()
 												args.TangentBuffer = sMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
 										}
 										else
-											args.TangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+											args.TangentBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 										// BiTangent
 										if (sMeshes[n]->getHasBiTangent()) {
 											if (SkinningObject->getBiTangentOutputBuffer(n))
@@ -424,7 +424,7 @@ void CShaderBindingTableManager::CreateSBT()
 												args.BiTangentBuffer = sMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
 										}
 										else
-											args.BiTangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+											args.BiTangentBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 										// Index
 										args.IndexBuffer = sMeshes[n]->getIndexBuffer(i)->GetGPUVirtualAddress();
 
@@ -489,17 +489,17 @@ void CShaderBindingTableManager::CreateSBT()
 									if (sMeshes[n]->getHasColor())
 										args.ColorsBuffer = sMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
 									else
-										args.ColorsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.ColorsBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// Tex0
 									if (sMeshes[n]->getHasTex0())
 										args.TexCoord0Buffer = sMeshes[n]->getTexCoord0Buffer()->GetGPUVirtualAddress();
 									else
-										args.TexCoord0Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.TexCoord0Buffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// Tex1
 									if (sMeshes[n]->getHasTex1())
 										args.TexCoord1Buffer = sMeshes[n]->getTexCoord1Buffer()->GetGPUVirtualAddress();
 									else
-										args.TexCoord1Buffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.TexCoord1Buffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// Normal
 									if (sMeshes[n]->getHasNormal()) {
 										if (SkinningObject->getNormalOutputBuffer(n))
@@ -508,7 +508,7 @@ void CShaderBindingTableManager::CreateSBT()
 											args.NormalsBuffer = sMeshes[n]->getNormalsBuffer()->GetGPUVirtualAddress();
 									}
 									else
-										args.NormalsBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.NormalsBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// Tangent
 									if (sMeshes[n]->getHasTangent()) {
 										if (SkinningObject->getTangentOutputBuffer(n))
@@ -517,7 +517,7 @@ void CShaderBindingTableManager::CreateSBT()
 											args.TangentBuffer = sMeshes[n]->getTangentsBuffer()->GetGPUVirtualAddress();
 									}
 									else
-										args.TangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.TangentBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// BiTangent
 									if (sMeshes[n]->getHasBiTangent()) {
 										if (SkinningObject->getBiTangentOutputBuffer(n))
@@ -526,9 +526,9 @@ void CShaderBindingTableManager::CreateSBT()
 											args.BiTangentBuffer = sMeshes[n]->getBiTangentsBuffer()->GetGPUVirtualAddress();
 									}
 									else
-										args.BiTangentBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+										args.BiTangentBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 									// Index
-									args.IndexBuffer = m_pd3dNullBuffer->GetGPUVirtualAddress();
+									args.IndexBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
 
 									// AlbedoMap
 									if (vMaterials[0].m_bHasAlbedoMap)

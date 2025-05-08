@@ -15,7 +15,7 @@ public:
 	void Setup(CResourceManager* resourceManager, UINT parameterIndex);
 
 	void SetScene();				// 셰이더에 TLAS를 넘겨준다.
-	void UpdateScene();				// instance 정보를 받아 행렬및 장면을 업데이트 해주자
+	void UpdateScene(XMFLOAT3& cameraEye);				// instance 정보를 받아 행렬및 장면을 업데이트 해주자
 
 	// BLASList에 BLAS를 추가한다.
 	/*void AddBLAS(ID3D12Resource* vertexBuffer, UINT vertexcount, UINT64 vertexStride, DXGI_FORMAT vertexFormat,

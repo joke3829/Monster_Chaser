@@ -84,6 +84,12 @@ struct HasMesh {
 	int bHasSubMeshes = false;
 };
 
+// InstanceID decide Refractive Index
+// 0 -> Air, 1 -> Water, 2 -> Ice
+
+// Specifically, Terrain have the following InstanceID -> 10 : Use SplatTexture - Maximum 4Layer
+
+
 class CGameObject {
 public:
 	CGameObject() {};
@@ -182,16 +188,21 @@ public:
 	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Pos.x = m_xmf4x4WorldMatrix._41; m_xmf3Pos.y = m_xmf4x4WorldMatrix._42; m_xmf3Pos.z = m_xmf4x4WorldMatrix._43; return m_xmf3Pos; }
 	XMFLOAT3& getPositionFromLMatrix() { m_xmf3Pos.x = m_xmf4x4LocalMatrix._41; m_xmf3Pos.y = m_xmf4x4LocalMatrix._42; m_xmf3Pos.z = m_xmf4x4LocalMatrix._43; return m_xmf3Pos; }
 	XMFLOAT3& getPositionFromAMatrix() { m_xmf3Pos.x = m_xmf4x4AnimationMatrix._41; m_xmf3Pos.y = m_xmf4x4AnimationMatrix._42; m_xmf3Pos.z = m_xmf4x4AnimationMatrix._43; return m_xmf3Pos; }
+	unsigned short& getBoundingInfo() { return m_bUseBoundingInfo; }
+	unsigned int getInstanceID() const { return m_nInstanceID; }
 
 	XMFLOAT3 getUp() const { return m_xmf3Up; }
 
-	XMFLOAT4X4 getWorldMatrix();
-	XMFLOAT4X4 getLocalMatrix();
-	XMFLOAT4X4 getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
+	XMFLOAT4X4& getWorldMatrix();
+	XMFLOAT4X4& getLocalMatrix();
+	XMFLOAT4X4& getAnimationMatrix() { return m_xmf4x4AnimationMatrix; }
+	BoundingOrientedBox& getObjectOBB() { return m_OBB; }
+	BoundingSphere& getObjectSphere() { return m_BoundingSphere; }
 
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
 	void SetHitGroupIndex(int index);
+	void SetInstanceID(unsigned int id) { m_nInstanceID = id; }
 	void SetFrameName(std::string& name) { m_strName = name; }
 	void SetBoundingOBB(XMFLOAT3& center, XMFLOAT3& extent) { m_bUseBoundingInfo |= 0x0011; m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0, 0.0, 0.0, 1.0)); }
 	void SetBoundingSphere(XMFLOAT3& center, float rad) { m_bUseBoundingInfo |= 0x1100, m_BoundingSphere = BoundingSphere(center, rad); }
@@ -206,7 +217,7 @@ protected:
 	void UpdateLocalMatrix();
 	std::string m_strName{};
 
-	unsigned short m_bUseBoundingInfo{};	// �ٿ�� ���� ���� ��->Sphere, ��->OBB		
+	unsigned short m_bUseBoundingInfo{};    // 바운딩 정보 유무 앞->Sphere, 뒤->OBB
 	BoundingOrientedBox m_OBB{};
 	BoundingSphere m_BoundingSphere{};
 
@@ -229,10 +240,10 @@ protected:
 	// �ؽ����� ���� local root �ٷ� ������
 	// �� ���� DXR�� ����ϴ� ����̴�.
 
-	int m_nMeshIndex = -1;		// �� ������Ʈ�� �����ϴ� Mesh Index
-	int m_nParentIndex = -1;	// �� ������Ʈ�� �θ� GameObject�ε���
-	int m_nHitGroupIndex = -1;	// � HitGroup�� ���ų�?
-
+	int m_nMeshIndex = -1;			// �� ������Ʈ�� �����ϴ� Mesh Index
+	int m_nParentIndex = -1;		// �� ������Ʈ�� �θ� GameObject�ε���
+	int m_nHitGroupIndex = -1;		// � HitGroup�� ���ų�?
+	unsigned int m_nInstanceID{};	// TLAS instnaceID
 };
 
 // ==================================================================
@@ -289,12 +300,15 @@ public:
 	void InitializeGameObjectCBuffer();
 	void setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 position);
 	void UpdateFrameWorldMatrix();
+	void UpdatePreWorldMatrix();
 	void UpdateWorldMatrix();
 
 	void SetPosition(XMFLOAT3 pos);
+	void SetLookDirection(const XMFLOAT3& look, const XMFLOAT3& up);
 	void Rotate(XMFLOAT3 rot);
 	void Rotation(XMFLOAT3 rot, CGameObject& frame);
 	void move(float fElapsedTime, short arrow);
+	void sliding(float depth, const XMFLOAT3& normal);
 
 	std::string getName() const { return m_strObjectName; }
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
@@ -303,8 +317,8 @@ public:
 	std::vector<std::shared_ptr<CTexture>>& getTextures() { return m_vTextures; }
 	XMFLOAT4X4& getWorldMatrix() { return m_xmf4x4WorldMatrix; }
 	XMFLOAT4X4& getPreWorldMatrix() { return m_xmf4x4PreWorldMatrix; }
-
 	XMFLOAT3& getPosition() { return m_xmf3Position; }
+	XMFLOAT3& getLook() { return m_xmf3Look; }
 	XMFLOAT3& getPositionFromWMatrix() { m_xmf3Position.x = m_xmf4x4WorldMatrix._41; m_xmf3Position.y = m_xmf4x4WorldMatrix._42; m_xmf3Position.z = m_xmf4x4WorldMatrix._43; return m_xmf3Position; }
 
 	virtual std::vector<ComPtr<ID3D12Resource>>& getBLAS() = 0;
@@ -332,6 +346,7 @@ protected:
 	XMFLOAT3 m_xmf3Up{};
 	XMFLOAT3 m_xmf3Look{};
 	XMFLOAT3 m_xmf3Position{};
+	XMFLOAT3 m_xmf3Sliding{};
 };
 
 // Rasterizer�� RayTracing������ Skinning Animation�� ����� �ٸ���

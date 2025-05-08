@@ -1,7 +1,7 @@
 
 struct RadiancePayload
 {
-    float4 RayColor;
+    unorm float4 RayColor;
     uint RayDepth;
 };
 
@@ -38,12 +38,12 @@ struct HasMaterial
     int bHasDetailAlbedoMap;
     int bHasDetailNormalMap;
     
-    float4 AlbedoColor;
-    float4 EmissiveColor;
-    float4 SpecularColor;
-    float Glossiness;
-    float Smoothness;
-    float Metallic;
+    unorm float4 AlbedoColor;
+    unorm float4 EmissiveColor;
+    unorm float4 SpecularColor;
+    unorm float Glossiness;
+    unorm float Smoothness;
+    unorm float Metallic;
     float SpecularHighlight;
     float GlossyReflection;
 };
@@ -284,7 +284,7 @@ bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
     
     return payload.bShadow;
 }
-float3 FresnelReflectanceSchlick(in float3 I, in float3 N, in float3 f0)
+float3 FresnelReflectanceSchlick(in float3 I, in float3 N, in unorm float3 f0)
 {
     float cosi = saturate(dot(-I, N));
     return f0 + (1 - f0) * pow(1 - cosi, 5);
@@ -307,7 +307,7 @@ void RayGenShader()
     ray.TMin = 0.001;
     ray.TMax = 1000;
     
-    float4 color = TraceRadianceRay(ray, 0);
+    unorm float4 color = TraceRadianceRay(ray, 0);
     
     uav[DispatchRaysIndex().xy] = float4(color.xyz, 1.0f);
 }
@@ -318,9 +318,9 @@ void RadianceMiss(inout RadiancePayload payload)
     float slope = normalize(WorldRayDirection()).y;
     float t = saturate(slope * 5 + 0.5);
     
-    float3 skyTop = float3(0.24, 0.44, 0.72);
-    float3 skyBottom = float3(0.75, 0.86, 0.93);
-    float3 skycolor = lerp(skyBottom, skyTop, t);
+    unorm float3 skyTop = float3(0.24, 0.44, 0.72);
+    unorm float3 skyBottom = float3(0.75, 0.86, 0.93);
+    unorm float3 skycolor = lerp(skyBottom, skyTop, t);
         
         
     payload.RayColor.xyz = skycolor;
@@ -335,7 +335,7 @@ void ShadowMiss(inout ShadowPayload payload)
 [shader("anyhit")]
 void RadianceAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectionAttributes attrib)
 {
-    float2 uvs[3] = { float2(0.0, 0.0), float2(0.0, 0.0), float2(0.0, 0.0) };
+    unorm float2 uvs[3] = { float2(0.0, 0.0), float2(0.0, 0.0), float2(0.0, 0.0) };
     uint index[3];
     uint idx;
     idx = PrimitiveIndex() * 3;
@@ -345,7 +345,7 @@ void RadianceAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectio
     float2 bary = float2(attrib.barycentrics.x, attrib.barycentrics.y);
     float2 texCoord = GetInterpolationHitFloat2(uvs, bary);
 
-    float AlphaValue;
+    unorm float AlphaValue;
         
     if (l_Material.bHasAlbedoMap != 0)
     {
@@ -382,9 +382,9 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     float2 bary = float2(attrib.barycentrics.x, attrib.barycentrics.y);
     float2 texCoord = GetInterpolationHitFloat2(uvs, bary);
 
-    float4 albedoMapColor = float4(0.0, 0.0, 0.0, 1.0);
-    float4 albedoColor = float4(1.0, 1.0, 1.0, 1.0);
-    float4 objectColor;
+    unorm float4 albedoMapColor = float4(0.0, 0.0, 0.0, 1.0);
+    unorm float4 albedoColor = float4(1.0, 1.0, 1.0, 1.0);
+    unorm float4 objectColor;
     
     if(0 != l_Material.bHasAlbedoColor)
         albedoColor = l_Material.AlbedoColor;

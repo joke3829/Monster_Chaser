@@ -17,6 +17,9 @@ CGameObject::CGameObject(const CGameObject& other)
 	//m_xmf4x4LocalMatrix = other.m_xmf4x4LocalMatrix;
 	UpdateLocalMatrix();
 
+	m_bUseBoundingInfo = other.m_bUseBoundingInfo;
+	m_OBB = other.m_OBB;
+	m_BoundingSphere = other.m_BoundingSphere;
 	// ����� SBT�� ��������� �̷�����⶧���� Resource�� �������� �ʴ´�.
 	// index�� Material�� �����´�
 
@@ -176,12 +179,12 @@ ID3D12Resource* CGameObject::getMeshCBuffer() const
 	return m_pd3dMeshCBuffer.Get();
 }
 
-XMFLOAT4X4 CGameObject::getWorldMatrix()
+XMFLOAT4X4& CGameObject::getWorldMatrix()
 {
 	return m_xmf4x4WorldMatrix;
 }
 
-XMFLOAT4X4 CGameObject::getLocalMatrix()
+XMFLOAT4X4& CGameObject::getLocalMatrix()
 {
 	return m_xmf4x4LocalMatrix;
 }
@@ -476,6 +479,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 {
 	UINT nCurrentObjectIndex = m_vObjects.size();
 	bool bBoneBound = false;
+	bool bOBB = false;
 	m_vObjects.emplace_back(std::make_unique<CGameObject>());
 	m_vObjects[nCurrentObjectIndex]->InitializeObjectFromFile(inFile);
 
@@ -540,7 +544,10 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			}
 		}
 		else if (strLabel == "<SkinningInfo>:") {
-			m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size()));
+			if(g_ShowBoundingBox)	// Fail -> Frame not has Bound
+				m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size() - 1));
+			else
+				m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size()));
 		}
 		else if (strLabel == "<Materials>:") {
 			inFile.read((char*)&tempData, sizeof(int));
@@ -549,7 +556,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ���� �÷�
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ���� �÷�
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -567,15 +574,16 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			inFile.read((char*)&center, sizeof(XMFLOAT3));
 			inFile.read((char*)&extent, sizeof(XMFLOAT3));
 			m_vObjects[nCurrentObjectIndex]->SetBoundingOBB(center, extent);
-			if (g_ShowBoundingBox) {
+			if (g_ShowBoundingBox && false == bBoneBound) {
 				bBoneBound = true;
+				bOBB = true;
 				m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
 				m_vMeshes.emplace_back(std::make_shared<Mesh>(center, extent));
 
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 1.0);	// ���� �÷�
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ���� �÷�
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -584,6 +592,23 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			inFile.read((char*)&center, sizeof(XMFLOAT3));
 			inFile.read((char*)&rad, sizeof(float));
 			m_vObjects[nCurrentObjectIndex]->SetBoundingSphere(center, rad);
+			if (g_ShowBoundingBox) {
+				bBoneBound = true;
+				if (bOBB) {
+					m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
+					m_vMeshes.emplace_back(std::make_shared<Mesh>(center, rad));
+				}
+				else {
+					m_vObjects[nCurrentObjectIndex]->SetMeshIndex(m_vMeshes.size());
+					m_vMeshes.emplace_back(std::make_shared<Mesh>(center, rad));
+
+					std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
+					tempV.clear();
+					Material tempM;
+					tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ���� �÷�
+					tempV.emplace_back(tempM);
+				}
+			}
 		}
 		else if (strLabel == "</Frame>")
 			break;
@@ -837,10 +862,7 @@ void CSkinningObject::setPreTransform(float scale, XMFLOAT3 rotate, XMFLOAT3 pos
 
 void CSkinningObject::UpdateFrameWorldMatrix()
 {
-	if (m_bUsePreTransform)
-		XMStoreFloat4x4(&m_xmf4x4PreWorldMatrix, XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
-	else
-		m_xmf4x4PreWorldMatrix = m_xmf4x4WorldMatrix;
+	UpdatePreWorldMatrix();
 
 	for (std::unique_ptr<CGameObject>& object : m_vObjects) {
 		if (object->getParentIndex() != -1) {
@@ -881,6 +903,14 @@ void CSkinningObject::UpdateAnimationMatrixes()
 	}
 }
 
+void CSkinningObject::UpdatePreWorldMatrix()
+{
+	if (m_bUsePreTransform)
+		XMStoreFloat4x4(&m_xmf4x4PreWorldMatrix, XMLoadFloat4x4(&m_xmf4x4PreTransformMatrix) * XMLoadFloat4x4(&m_xmf4x4WorldMatrix));
+	else
+		m_xmf4x4PreWorldMatrix = m_xmf4x4WorldMatrix;
+}
+
 void CSkinningObject::UpdateWorldMatrix()
 {
 	m_xmf4x4WorldMatrix._11 = m_xmf3Right.x; m_xmf4x4WorldMatrix._12 = m_xmf3Right.y; m_xmf4x4WorldMatrix._13 = m_xmf3Right.z; m_xmf4x4WorldMatrix._14 = 0;
@@ -895,12 +925,32 @@ void CSkinningObject::SetPosition(XMFLOAT3 pos)
 	
 	UpdateWorldMatrix();
 	
-	cs_packet_move mp;
-	mp.size = sizeof(mp);
-	mp.type = C2S_P_MOVE;
-	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
-	Client.send_packet(&mp);
+	
 
+}
+void CSkinningObject::SetLookDirection(const XMFLOAT3& look, const XMFLOAT3& up)
+{
+	m_xmf3Look = look; // 카메라의 방향 벡터로 캐릭터 Look 설정
+	m_xmf3Up = up;     // 카메라 또는 프레임의 Up 벡터로 설정
+
+	// 방향 벡터 정규화
+	XMVECTOR lookVec = XMLoadFloat3(&m_xmf3Look);
+	XMVECTOR upVec = XMLoadFloat3(&m_xmf3Up);
+	lookVec = XMVector3Normalize(lookVec);
+	XMStoreFloat3(&m_xmf3Look, lookVec);
+
+	// Right 벡터 계산 (Up과 Look의 외적)
+	XMVECTOR right = XMVector3Cross(upVec, lookVec);
+	right = XMVector3Normalize(right);
+	XMStoreFloat3(&m_xmf3Right, right);
+
+	// Up 벡터 재계산 (Look과 Right의 외적)
+	upVec = XMVector3Cross(lookVec, right);
+	upVec = XMVector3Normalize(upVec);
+	XMStoreFloat3(&m_xmf3Up, upVec);
+
+	// 세계 행렬 업데이트
+	UpdateWorldMatrix();
 }
 // ��� ����
 void CSkinningObject::Rotate(XMFLOAT3 rot)
@@ -961,8 +1011,44 @@ void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 void CSkinningObject::move(float fElapsedTime, short arrow) {
 	if (0 == arrow)
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 30.0f * fElapsedTime));
+	else if (2 == arrow)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * 30.0f * fElapsedTime));
+	else if (3 == arrow)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * -30.0f * fElapsedTime));
 	else
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -30.0f * fElapsedTime));
+	UpdateWorldMatrix();
+}
+
+void CSkinningObject::sliding(float depth, const XMFLOAT3& normal)
+{
+	XMVECTOR normalVec = XMLoadFloat3(&normal);
+	XMVECTOR moveDirVec = XMLoadFloat3(&m_xmf3Look);
+
+	float originalLookY = m_xmf3Look.y;
+
+	// 수평 방향 벡터로 변환 (y = 0)
+	XMVECTOR horizontalMoveDir = moveDirVec;
+	horizontalMoveDir = XMVectorSetY(horizontalMoveDir, 0.0f);
+	XMVECTOR horizontalNormal = normalVec;
+	horizontalNormal = XMVectorSetY(horizontalNormal, 0.0f);
+
+	XMVECTOR normalLength = XMVector3Length(horizontalNormal);
+	if (XMVectorGetX(normalLength) > 0.0001f) { //법선이 수직에 가까우면, 기본 방향으로
+		XMFLOAT3 result;
+		XMStoreFloat3(&result, horizontalMoveDir);
+		m_xmf3Sliding = result;
+		return;
+	}
+	horizontalNormal = XMVectorScale(horizontalNormal, 1.0f / XMVectorGetX(normalLength));
+
+	float dot = XMVectorGetX(XMVector3Dot(horizontalMoveDir, horizontalNormal));
+	XMVECTOR slideVector = horizontalMoveDir - (horizontalNormal * dot); // 수평 슬라이딩 방향
+
+	slideVector = XMVectorSetY(slideVector, originalLookY); //y값은 원래 값 유지
+
+	XMStoreFloat3(&m_xmf3Sliding, slideVector); //저장
+
 	UpdateWorldMatrix();
 }
 
@@ -1165,8 +1251,11 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 	g_DxResource.device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(m_pNullResource.GetAddressOf()));
 
 
-	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo)
-		m_vMeshes[info->getRefMeshIndex()]->setSkinning(true);
+	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo) {
+		int n = info->getRefMeshIndex();
+		if(!g_ShowBoundingBox)
+			m_vMeshes[n]->setSkinning(true);
+	}
 	for (std::shared_ptr<Mesh>& mesh : m_vMeshes) {
 		ComPtr<ID3D12Resource> constResource{};
 		ComPtr<ID3D12Resource> vResource{};

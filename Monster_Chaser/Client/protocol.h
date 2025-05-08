@@ -15,6 +15,7 @@ constexpr char MAX_ID_LEN = 20;
 
 
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //CLIENT_TYP
 
@@ -79,7 +80,7 @@ constexpr char S2C_P_UPDATEROOM = 5;
 struct sc_packet_room_info {			//방 정보 업데이트 
 	unsigned char size;
 	char type;
-	int room_info[10];
+	short room_info[10];
 
 
 };
@@ -101,7 +102,9 @@ struct sc_packet_move {
 	char type;
 	int Local_id;
 	XMFLOAT4X4 pos;
-	//float time;
+	float time;
+	MoveAnimationState state;
+	UINT pingTime;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -163,20 +166,21 @@ struct cs_packet_enter_room {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr char C2S_P_READY = 54;
-struct cs_packet_ready {
+constexpr char C2S_P_GetREADY = 54;
+struct cs_packet_getready {
 	unsigned char size;
 	char type;
 	char room_number;
+	bool isReady;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr char C2S_P_READY_Cancel = 55;
-struct cs_packet_cancel_ready {
-	unsigned char size;
-	char type;
-	char room_number;
-};
+//constexpr char C2S_P_READY_Cancel = 55;
+//struct cs_packet_cancel_ready {
+//	unsigned char size;
+//	char type;
+//	char room_number;
+//};
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //여기다가 방 다시 선택하는 패킷 할지말지 고민 중
@@ -195,7 +199,8 @@ struct cs_packet_move {
 	unsigned char  size;
 	char  type;
 	XMFLOAT4X4 pos;
-
+	float time;
+	MoveAnimationState state;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

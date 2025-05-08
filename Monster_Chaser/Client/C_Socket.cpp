@@ -4,9 +4,9 @@
 extern C_Socket Client;
 extern std::unordered_map<int, Player> Players;
 extern std::unordered_map<int, Monster*> g_monsters;
-extern int RoomList[10];
-
+extern std::array<short, 10>	 userPerRoom;
 extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
+extern bool allready;;
 C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
 
 
@@ -50,6 +50,55 @@ void C_Socket::send_packet(void* pkt)
 	}
 }
 
+void C_Socket::SendLogin(const char* UserID, const char* Userpassword)
+{
+}
+
+void C_Socket::SendCreateUser(const char* UserID, const char* Userpassword, const char* userNickName)
+{
+}
+
+void C_Socket::SendEnterRoom(const short RoomNum)
+{
+	cs_packet_enter_room p;
+	p.size = sizeof(p);
+	p.type = C2S_P_ENTER_ROOM;
+	p.room_number = (char)RoomNum;
+	Client.send_packet(&p);
+}
+
+void C_Socket::SendsetReady(const bool isReady, const int room_num)
+{
+	cs_packet_getready rp;
+	rp.size = sizeof(rp);
+	rp.type = C2S_P_GetREADY;
+	rp.room_number = room_num;
+	rp.isReady = isReady;
+	Client.send_packet(&rp);
+}
+
+void C_Socket::SendBroadCastRoom()
+{
+	cs_packet_room_refresh rp;
+	rp.size = sizeof(rp);
+	rp.type = C2S_P_ROOM_UPDATE;
+	Client.send_packet(&rp);
+}
+
+void C_Socket::SendMovePacket(const float& Time, const MoveAnimationState State)
+{
+	cs_packet_move mp;
+	mp.size = sizeof(mp);
+	mp.type = C2S_P_MOVE;
+	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
+	mp.time = Time;
+	mp.state = State;
+	Client.send_packet(&mp);
+
+}
+
+
+
 void C_Socket::process_packet(char* ptr)
 {
 	char type = ptr[1];
@@ -66,10 +115,11 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_UPDATEROOM: {
 
 		sc_packet_room_info* p = reinterpret_cast<sc_packet_room_info*>(ptr);
-		int room_in_Players[10];
+		short room_in_Players[10];
 		memcpy(room_in_Players, p->room_info, sizeof(room_in_Players));
+		//memcpy(userperroom, p->room_info, sizeof(userperroom));		이것만 해주면 끝
 
-		memcpy(RoomList, room_in_Players, sizeof(RoomList));
+		memcpy(userPerRoom.data(), room_in_Players, sizeof(room_in_Players));
 
 
 
@@ -86,7 +136,7 @@ void C_Socket::process_packet(char* ptr)
 			Players.try_emplace(local_id, local_id);
 			if (Client.get_id() == -1) {
 				Client.set_id(local_id);
-				RoomList[room_num]++;
+				//userPerRoom[room_num]++;
 			}
 			//Players[local_id] = new Player(local_id);
 		}
@@ -106,6 +156,7 @@ void C_Socket::process_packet(char* ptr)
 		int room_num = static_cast<int>(p->room_number);//이미 방 선택할떄 room_num이 Players[id]안에 들어감
 		bool ready = p->is_ready;
 
+		Players[id].setReady(ready);
 		//Players[p->id]->setReady(ready);
 		//Players[p->id]->setRoomNumber(room_num);// 방 선택했을떄 해당 방 유저 수 나타내는 맴버 변수 
 		//p->id = id;
@@ -119,6 +170,8 @@ void C_Socket::process_packet(char* ptr)
 		//Client.set_id(p->Local_id);
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
 
+		/*wOpacity = 0.0f;
+		m_nState = GoLoading;*/		//여기다가 넣어주기 extern해서 
 		break;
 		//4 7 9
 	}
@@ -165,8 +218,7 @@ void C_Socket::do_recv()
 		}
 		if (io_byte == SOCKET_ERROR) {
 			int err = WSAGetLastError();
-
-			MessageBoxA(NULL, "서버와의 연결이 끊어졌습니다.", "연결 종료", MB_OK | MB_ICONERROR);
+			MessageBoxW(NULL, L"서버와의 연결이 끊어졌습니다.", L"연결 종료", MB_OK | MB_ICONERROR);
 			PostQuitMessage(0);  // 윈도우 루프 종료
 			return;
 

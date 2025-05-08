@@ -30,7 +30,7 @@ class CResourceManager {
 public:
 	void SetUp(unsigned int nLightRootParameterIndex);		// Light Buffer Ready
 	bool AddResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront);
-	bool AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront);
+	bool AddSkinningResourceFromFile(wchar_t* FilePath, std::string textureFilePathFront, unsigned short job = JOB_NOTHING);
 
 	void AddGameObjectFromFile(std::ifstream& inFile, int nParentIndex = -1);
 	void AddMaterialFromFile(std::ifstream& inFile, int nCurrentIndex);
@@ -44,10 +44,15 @@ public:
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
 
 	void LightTest();
+	void AddLightsFromFile(wchar_t* FilePath);
+	void AddLightsFromFileRecursion(std::ifstream& inFile);
+	void ReadyLightBufferContent();
 	inline void SetLights() { g_DxResource.cmdList->SetComputeRootConstantBufferView(m_nLightRootParameterIndex, m_pLights->GetGPUVirtualAddress()); }
 
 	// getter
 	std::vector<std::unique_ptr<CGameObject>>& getGameObjectList();
+	std::vector<CGameObject*> getGameObjectPtrList();
+	std::vector<Mesh*> getMeshPtrList();
 	std::vector<std::unique_ptr<Mesh>>& getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& getTextureList();
 
@@ -57,7 +62,6 @@ public:
 	ComPtr<ID3D12Resource>& getLightBuffer() { return m_pLights; }
 
 	// ================================================
-	CSkinningObject* GetSkinningObject(int index) {return m_vSkinningObject[index].get();} //?
 private:
 	std::string FilePathFront{};
 
@@ -67,6 +71,7 @@ private:
 
 	// Lights
 	ComPtr<ID3D12Resource> m_pLights;
+	std::vector<Light> m_vLights{};
 	UINT m_nLightRootParameterIndex{};
 
 	// Skinning animation

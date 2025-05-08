@@ -1,5 +1,10 @@
 #include "Camera.h"
 
+CCamera::~CCamera()
+{
+	if (m_pd3dCameraBuffer)
+		m_pd3dCameraBuffer->Unmap(0, nullptr);
+}
 
 void CCamera::Setup(int nRootParameterIndex)
 {
@@ -42,33 +47,35 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 	XMStoreFloat3(&m_xmf3Offset, XMVector3TransformNormal(XMLoadFloat3(&m_xmf3Offset), mtxrotate));
 }
 
-void CCamera::Move(int arrow, float fElapsedTime)
+void CCamera::Move(int arrow, float fElapsedTime, bool shift)
 {
-	if (arrow == 0) {	// front
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * 20 * fElapsedTime));
+	float speed = (shift) ? 40.0f : 20.0f;
+
+	if (arrow == 0) {	// ��
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * speed * fElapsedTime));
 	}
-	else if (arrow == 1) { // up
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * 10 * fElapsedTime));
+	else if (arrow == 1) { // ��
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * speed * fElapsedTime));
 	}
-	else if (arrow == 2) {	// down
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * -10 * fElapsedTime));
+	else if (arrow == 2) {	// �Ʒ�
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Up) * -speed * fElapsedTime));
 	}
 	else if (3 == arrow) {	// right
 		XMVECTOR right = XMVector3Normalize(XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir)));
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * 20 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * speed * fElapsedTime));
 	}
 	else if (4 == arrow) {	// left
 		XMVECTOR right = XMVector3Normalize(XMVector3Cross(XMLoadFloat3(&m_xmf3Up), XMLoadFloat3(&m_xmf3Dir)));
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * -20 * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (right * -speed * fElapsedTime));
 	}
-	else   // back
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -20 * fElapsedTime));
+	else   // ��
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_xmf3Eye) + (XMLoadFloat3(&m_xmf3Dir) * -speed * fElapsedTime));
 }
 
 void CCamera::UpdateViewMatrix()
 {
 	if (m_bThirdPerson) {
-		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_pTarget->getPositionFromWMatrix()) + XMLoadFloat3(&m_xmf3Offset) * m_fCameraLength);
+		XMStoreFloat3(&m_xmf3Eye, XMLoadFloat3(&m_pTarget->getPositionFromWMatrix()) + XMLoadFloat3(&m_xmf3hOffset) + XMLoadFloat3(&m_xmf3Offset) * m_fCameraLength);
 		m_xmf3At = m_pTarget->getPositionFromWMatrix();
 	}
 	else {

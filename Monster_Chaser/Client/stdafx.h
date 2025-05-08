@@ -24,15 +24,21 @@
 #include <iostream>
 #include <WS2tcpip.h>
 #include <vector>
+#include <array>
 #include <algorithm>
 #include <string>
 #include <fstream>
 #include <timeapi.h>
 #include <random>
+
 #include <array>
 
 #include <conio.h>		//room UI 들어오면 없앰
 #include <chrono>		//클라 UI들어오면 없앰
+
+#include <numeric>
+#include <cmath>
+
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -60,6 +66,26 @@ using Microsoft::WRL::ComPtr;
 enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...?
 	ALBEDO_COLOR, EMISSIVE_COLOR, SPECULAR_COLOR, GLOSSINESS
 };
+enum MoveAnimationState
+{
+	IDLE = 0,
+	WALK_FORWARD = 5,
+	WALK_LEFT_UP = 6,
+	WALK_RIGHT_UP = 7,
+	WALK_LEFT = 8,
+	WALK_RIGHT = 9,
+	WALK_BACKWARD = 10,
+	WALK_LEFT_DOWN = 11,
+	WALK_RIGHT_DOWN = 12,
+	RUN_FORWARD = 13,
+	RUN_LEFT_UP = 14,
+	RUN_RIGHT_UP = 15,
+	RUN_LEFT = 16,
+	RUN_RIGHT = 17,
+	RUN_BACKWARD = 18,
+	RUN_LEFT_DOWN = 19,
+	RUN_RIGHT_DOWN = 20,
+};
 //========================================================================================
 
 // 상수 정의 ===========================================================================
@@ -72,6 +98,18 @@ constexpr unsigned short DEFINED_GAME_WINDOW_HEIGHT = 1080;
 constexpr unsigned short DEFINED_UAV_BUFFER_WIDTH = 960;
 constexpr unsigned short DEFINED_UAV_BUFFER_HEIGHT = 540;
 // 위 네개 정의는 바뀔 수 있다.
+
+// define Scene
+constexpr unsigned short SCENE_TITLE		= 0;
+constexpr unsigned short SCENE_PLAIN		= 1;
+constexpr unsigned short SCENE_CAVE			= 2;
+constexpr unsigned short SCENE_WINTERLAND	= 3;
+
+// define job
+constexpr unsigned short JOB_NOTHING		= 0;
+constexpr unsigned short JOB_MAGE			= 1;
+constexpr unsigned short JOB_WARRIOR		= 2;
+constexpr unsigned short JOB_HEALER			= 3;
 
 // 조명 관련 정의
 constexpr int MAX_LIGHTS = 64;
@@ -102,6 +140,9 @@ struct DXResources {
 	ID3D12CommandQueue* cmdQueue{ nullptr };
 	ID3D12Fence* fence{ nullptr };
 	HANDLE* pFenceHandle{ nullptr };
+
+	ComPtr<ID3D12Resource> nullBuffer{};
+	ComPtr<ID3D12Resource> nullTexture{};
 };
 
 // GPU 작업이 끝나기까지 기다린다.
