@@ -25,13 +25,13 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 	float cy = (float)cyDelta / 3.0f;
 
 	m_fLimitcy += cy;
-	if (m_fLimitcy > 60.0f) {
-		cy -= (m_fLimitcy - 60.0f);
-		m_fLimitcy = 60.0f;
+	if (m_fLimitcy > 20.0f) {
+		cy -= (m_fLimitcy - 20.0f);
+		m_fLimitcy = 20.0f;
 	}
-	if (m_fLimitcy < -60.0f) {
-		cy += -(m_fLimitcy + 60.0f);
-		m_fLimitcy = -60.0f;
+	if (m_fLimitcy < -40.0f) {
+		cy += -(m_fLimitcy + 40.0f);
+		m_fLimitcy = -40.0f;
 	}
 
 	XMMATRIX mtxrotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(cx));
