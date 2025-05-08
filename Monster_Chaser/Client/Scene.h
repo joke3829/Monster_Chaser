@@ -77,6 +77,7 @@ protected:
 	bool m_bLockAnimation1 = false;
 	bool m_bStopAnimaiton = false;
 	bool m_bDoingCombo = false;
+	bool m_bMoving = false;
 
 	bool								m_bRayTracing = false;
 	ComPtr<ID3D12RootSignature>			m_pGlobalRootSignature{};

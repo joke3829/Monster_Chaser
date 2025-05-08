@@ -309,7 +309,7 @@ public:
 	void Rotation(XMFLOAT3 rot, CGameObject& frame);
 	void move(float fElapsedTime, short arrow);
 	void sliding(float depth, const XMFLOAT3& normal, float meshHeight);
-	void SetMoveDirection(int n);
+	void SetMoveDirection(XMFLOAT3& pos);
 
 	std::string getName() const { return m_strObjectName; }
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
