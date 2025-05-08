@@ -1422,10 +1422,10 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 				m_pResourceManager->getSkinningObjectList()[Client.get_id()]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 				m_pResourceManager->UpdatePosition(m_fElapsedtime);
 				animationManager->OnAttackInput();
-				m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[Client.get_id()]->getPosition());
-				m_pResourceManager->getProjectileList()[0]->setMoveDirection(characterDir);
-				m_pResourceManager->getProjectileList()[0]->setActive(true);
-				m_pResourceManager->getProjectileList()[0]->setTime(0.0f);
+				m_pResourceManager->getProjectileList()[Client.get_id()]->setPosition(m_pResourceManager->getSkinningObjectList()[Client.get_id()]->getPosition());
+				m_pResourceManager->getProjectileList()[Client.get_id()]->setMoveDirection(characterDir);
+				m_pResourceManager->getProjectileList()[Client.get_id()]->setActive(true);
+				m_pResourceManager->getProjectileList()[Client.get_id()]->setTime(0.0f);
 				m_bDoingCombo = true;
 			}
 		}
