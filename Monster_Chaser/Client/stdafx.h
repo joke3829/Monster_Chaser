@@ -66,7 +66,7 @@ using Microsoft::WRL::ComPtr;
 enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...?
 	ALBEDO_COLOR, EMISSIVE_COLOR, SPECULAR_COLOR, GLOSSINESS
 };
-enum MageAnimationState
+enum MoveAnimationState
 {
 	IDLE = 0,
 	HIT = 1,
