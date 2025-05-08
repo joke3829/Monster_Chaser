@@ -479,23 +479,38 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->ReBuildBLAS();
 
 	bool test = false;
-	auto& animationManagers = m_pResourceManager->getAnimationManagers();
-	for (auto& animationManager : animationManagers) {
-		animationManager->UpdateCombo(fElapsedTime);
-		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
-			animationManager->ChangeAnimation(IDLE, false);
-			test = true;
-			m_bLockAnimation1 = false;
-			m_bLockAnimation = false;
-			m_bDoingCombo = false;
-		}
-		if (animationManager->IsComboInterrupted()) {
-			test = true;
-			animationManager->ClearComboInterrupted();
-			m_bLockAnimation1 = false;
-			m_bLockAnimation = false;
-			m_bDoingCombo = false;
-		}
+	//auto& animationManagers = m_pResourceManager->getAnimationManagers();
+	//for (auto& animationManager : animationManagers) {
+	//	animationManager->UpdateCombo(fElapsedTime);
+	//	if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
+	//		animationManager->ChangeAnimation(IDLE, false);
+	//		test = true;
+	//		m_bLockAnimation1 = false;
+	//		m_bLockAnimation = false;
+	//		m_bDoingCombo = false;
+	//	}
+	//	if (animationManager->IsComboInterrupted()) {
+	//		test = true;
+	//		animationManager->ClearComboInterrupted();
+	//		m_bLockAnimation1 = false;
+	//		m_bLockAnimation = false;
+	//		m_bDoingCombo = false;
+	//	}
+	//}
+	m_pResourceManager->getAnimationManagers()[Client.get_id()]->UpdateCombo(fElapsedTime);
+	if (!m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsInCombo() && m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsAnimationFinished() && !m_pResourceManager->getAnimationManagers()[Client.get_id()]->CheckCollision()) {
+		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false);
+		test = true;
+		m_bLockAnimation1 = false;
+		m_bLockAnimation = false;
+		m_bDoingCombo = false;
+	}
+	if (m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsComboInterrupted()) {
+		test = true;
+		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ClearComboInterrupted();
+		m_bLockAnimation1 = false;
+		m_bLockAnimation = false;
+		m_bDoingCombo = false;
 	}
 	//
 	/*auto& Skinned = m_pResourceManager->getSkinningObjectList();
@@ -1253,8 +1268,18 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	projectile.emplace_back(std::make_unique<CProjectile>());
 	projectile[0]->setGameObject(normalObjects[finalindex].get());
+
+	finalindex = normalObjects.size();
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	normalObjects[finalindex]->getMaterials().emplace_back();
 	projectile.emplace_back(std::make_unique<CProjectile>());
 	projectile[1]->setGameObject(normalObjects[finalindex].get());
+
+	finalindex = normalObjects.size();
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[finalindex]->SetMeshIndex(finalmesh);
+	normalObjects[finalindex]->getMaterials().emplace_back();
 	projectile.emplace_back(std::make_unique<CProjectile>());
 	projectile[2]->setGameObject(normalObjects[finalindex].get());
 
@@ -1264,7 +1289,12 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	for (int i = 1; i < Players.size(); ++i) {
 		skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 		skinned[i]->CopyFromOtherObject(skinned[0].get());
-		aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
+		if (auto* mageManager = dynamic_cast<CMageManager*>(aManagers[0].get())) {
+			aManagers.emplace_back(std::make_unique<CMageManager>(*mageManager));
+		}
+		else {
+			aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
+		}
 		aManagers[i]->SetFramesPointerFromSkinningObject(skinned[i]->getObjects());
 		aManagers[i]->MakeAnimationMatrixIndex(skinned[i].get());
 		Players[i].setRenderingObject(skinned[i].get());
@@ -1397,6 +1427,7 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 
 void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
+	int s{};
 	if (!mouseIsInitialize) {
 		ShowCursor(FALSE);  // hide cursor
 		RECT clientRect;
@@ -1416,19 +1447,16 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 	case WM_LBUTTONDOWN:
 	{
 		if (!m_bLockAnimation && !m_bLockAnimation1) {
-			auto& animationManagers = m_pResourceManager->getAnimationManagers();
-			for (auto& animationManager : animationManagers) {
-				XMFLOAT3 characterDir = cameraDir;
-				characterDir.y = 0.0f; // delete y value
-				m_pResourceManager->getSkinningObjectList()[Client.get_id()]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(m_fElapsedtime);
-				animationManager->OnAttackInput();
-				m_pResourceManager->getProjectileList()[Client.get_id()]->setPosition(m_pResourceManager->getSkinningObjectList()[Client.get_id()]->getPosition());
-				m_pResourceManager->getProjectileList()[Client.get_id()]->setMoveDirection(characterDir);
-				m_pResourceManager->getProjectileList()[Client.get_id()]->setActive(true);
-				m_pResourceManager->getProjectileList()[Client.get_id()]->setTime(0.0f);
-				m_bDoingCombo = true;
-			}
+			XMFLOAT3 characterDir = cameraDir;
+			characterDir.y = 0.0f; // delete y value
+			m_pResourceManager->getSkinningObjectList()[Client.get_id()]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->UpdatePosition(m_fElapsedtime);
+			m_pResourceManager->getAnimationManagers()[Client.get_id()]->OnAttackInput();
+			m_pResourceManager->getProjectileList()[Client.get_id()]->setPosition(m_pResourceManager->getSkinningObjectList()[Client.get_id()]->getPosition());
+			m_pResourceManager->getProjectileList()[Client.get_id()]->setMoveDirection(characterDir);
+			m_pResourceManager->getProjectileList()[Client.get_id()]->setActive(true);
+			m_pResourceManager->getProjectileList()[Client.get_id()]->setTime(0.0f);
+			m_bDoingCombo = true;
 		}
 		break;
 	}
