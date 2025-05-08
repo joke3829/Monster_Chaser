@@ -62,6 +62,8 @@ public:
 	virtual void UpdateCombo(float fElapsedTime) {};
 	virtual void ResetCombo() {};
 	bool IsInCombo() const { return m_bInCombo; } // �޺� ���� �� ����
+	bool CheckCollision() const { return m_bCollision; }
+	void IsCollision() { m_bCollision = true; }
 
 	virtual void StartSkill3() {};
 	virtual void OnKey3Input() {};
@@ -85,7 +87,7 @@ protected:
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// �ִϸ��̼� ����� ������ �迭
 
 	bool m_bPlayOnce = false; // �� ���� ��� ����
-	bool m_isWalk = false; // �ȱ� ����
+	bool m_bCollision = false; // �ȱ� ����
 	// �޺�
 	bool m_bInCombo;                     // �޺� ���� �� ����
 	int m_CurrentComboStep;               // ���� �޺� �ܰ�

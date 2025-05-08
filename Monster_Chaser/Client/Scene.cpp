@@ -460,7 +460,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	auto& animationManagers = m_pResourceManager->getAnimationManagers();
 	for (auto& animationManager : animationManagers) {
 		animationManager->UpdateCombo(fElapsedTime);
-		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
+		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
 			animationManager->ChangeAnimation(IDLE, false);
 			test = true;
 			m_bLockAnimation1 = false;
@@ -1067,7 +1067,8 @@ void CRaytracingScene::TestShootCollision(const std::vector<std::unique_ptr<CPro
 					BoundingSphere boneSphere = bone->getObjectSphere();
 					boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
 					if (projectileOBB.Intersects(boneSphere)) {
-						m_pResourceManager->getAnimationManagers()[i]->ChangeAnimation(0,false);
+						m_pResourceManager->getAnimationManagers()[i]->ChangeAnimation(0, true);
+						m_pResourceManager->getAnimationManagers()[i]->IsCollision();
 						projectile->setActive(false);
 						projectile->setTime(0.0f);
 					}
