@@ -1271,18 +1271,6 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	//aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
 	//aManagers[1]->UpdateAnimation(0.5f);		// Not Need
 
-	UINT finalindex = normalObjects.size();
-	UINT finalmesh = meshes.size();
-
-
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), "box"));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	normalObjects[finalindex]->getMaterials().emplace_back();
-
-	projectile.emplace_back(std::make_unique<CProjectile>());
-	projectile[0]->setGameObject(normalObjects[finalindex].get());
-
 	finalindex = normalObjects.size();
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);

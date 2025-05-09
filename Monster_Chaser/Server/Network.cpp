@@ -59,7 +59,7 @@ void SESSION::process_packet(char* p) {
 
 
 		if (g_server.rooms[room_Num].IsAddPlayer())			//id 값이 맴버 변수에 들어감 
-		{
+		{		//여기서 락을 안해주면 컨텍스트 스위칭 일어나서 local_id값과 Room에 있는 인덱스 번호가 안맞을 수 있다?
 			local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
 
 			g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
@@ -160,8 +160,8 @@ void SESSION::process_packet(char* p) {
 				g_server.users[id]->do_send(&rp);
 
 
-		// 3명 다 준비 완료일 때
-		if (g_server.rooms[room_num].GetReadyUser() >= g_server.rooms[room_num].id.size()) {
+		// 3명 다 준비 완료일 때 인게임 넘어가는 패킷 넘어주기 
+		if (g_server.rooms[room_num].GetReadyUser() == g_server.rooms[room_num].id.size()) {
 			
 			sc_packet_Ingame_start sp;
 			sp.size = sizeof(sp);
