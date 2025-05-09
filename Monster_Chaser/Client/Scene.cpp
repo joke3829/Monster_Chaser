@@ -490,6 +490,20 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 		m_pResourceManager->UpdatePosition(fElapsedTime); //��ġ ������Ʈ
 	}
 
+	for (auto& p : m_pResourceManager->getSkinningObjectList()) {
+		XMFLOAT4X4& playerPreWorld = p->getPreWorldMatrix();
+		XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
+		float fy = objectWorld._42 - (30 * fElapsedTime);
+
+		float terrainHeight = 0.0f;
+		if (fy < terrainHeight) {
+			playerPreWorld._42 = terrainHeight;
+		}
+		else {
+			playerPreWorld._42 -= (30 * fElapsedTime);
+		}
+	}
+
 	m_pCamera->getEyeCalculateOffset();
 	if (m_pCamera->getEye().y < 0.5f)
 		m_pCamera->getEye().y = 0.5f;
@@ -1285,7 +1299,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
 	skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(0.0f, 0.0f, 70.0f));
-	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	//skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
 
 	skinned[2]->setPreTransform(2.0f, XMFLOAT3(), XMFLOAT3());
 	skinned[2]->SetPosition(XMFLOAT3(0.0, 0.0, 30.0));
@@ -1848,26 +1862,6 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 		m_pResourceManager->UpdatePosition(fElapsedTime);
 	}
-
-	//if (keyBuffer['G'] & 0x80) {
-	//	auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
-	//	if (animationManager && !animationManager->getFrame().empty()) {
-	//		CGameObject* frame = animationManager->getFrame()[0];
-	//		m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, -180.0f * fElapsedTime, 0.0f), *frame);
-	//	}
-	//}
-
-	//if (keyBuffer['H'] & 0x80) {
-	//	m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f)); //��ȸ��
-	//}
-
-	//if (keyBuffer['T'] & 0x80) {
-	//	auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
-	//	if (animationManager && !animationManager->getFrame().empty()) {
-	//		CGameObject* frame = animationManager->getFrame()[0];
-	//		m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, 180.0f * fElapsedTime, 0.0f),*frame);
-	//	}
-	//}
 
 	if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo) {
 		if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
@@ -2790,6 +2784,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 			m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 3);
 		}
 	}*/
+	m_fElapsedtime = fElapsedTime;
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
@@ -3612,19 +3607,17 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 
 	for (auto& p : m_pResourceManager->getSkinningObjectList()) {
 		XMFLOAT4X4& playerWorld = p->getWorldMatrix();
+		XMFLOAT4X4& playerPreWorld = p->getPreWorldMatrix();
 		XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
 		float fy = objectWorld._42 - (30 * fElapsedTime);
 
 		float terrainHeight = m_pHeightMap->GetHeightinWorldSpace(objectWorld ._41 + 1024.0f, objectWorld._43 + 1024.0f);
-		if (fy < terrainHeight) {
+		if (fy < terrainHeight) 
 			playerWorld._42 = terrainHeight;
-			p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
-		}
-		else {
+		else 
 			playerWorld._42 -= (30 * fElapsedTime);
-			p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
-		}
-		p->UpdatePreWorldMatrix();
+		p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
+		playerPreWorld._42 = playerWorld._42;
 	}
 	
 	if (m_pCamera->getThirdPersonState()) {
