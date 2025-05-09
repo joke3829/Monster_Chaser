@@ -47,7 +47,6 @@ public:
 	std::shared_ptr<CAnimationSet>& getAnimationSet(int index) { return m_vAnimationSets[index]; }
 
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
-	void setAnimationTime(float fElapsedTime) {m_fElapsedTime = fElapsedTime;}
 	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
 	bool IsAnimationNearEnd(float margin = 0.2f) const
 	{
@@ -71,7 +70,6 @@ public:
 	void ClearComboInterrupted() { m_bComboEnd = false; }
 
 	const std::vector<CGameObject*>& getFrame()const { return m_vFrames; }
-	UINT& getCurrentSet() {return m_nCurrentSet;}
 protected:
 	UINT m_nAnimationSets{};
 	UINT m_nCurrentSet{};
@@ -87,8 +85,7 @@ protected:
 	std::vector<XMFLOAT4X4> m_vMatrixes{};			// �ִϸ��̼� ����� ������ �迭
 
 	bool m_bPlayOnce = false; // �� ���� ��� ����
-    bool m_bCollision = false;
-
+	bool m_bCollision = false; // �ȱ� ����
 	// �޺�
 	bool m_bInCombo;                     // �޺� ���� �� ����
 	int m_CurrentComboStep;               // ���� �޺� �ܰ�

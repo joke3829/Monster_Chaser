@@ -6,11 +6,8 @@
 #include "AccelerationStructureManager.h"
 #include "UIObject.h"
 #include "stdfxh.h"
-#include "ObjectManager.h"
 
 extern DXResources g_DxResource;
-
-
 
 class CScene {
 public:
@@ -79,12 +76,13 @@ protected:
 	std::vector<std::unique_ptr<UIObject>>	m_vTitleUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vRoomSelectUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vInRoomUIs;
+
 	// Title variables
 	float									wOpacity = 1.0f;
 	float									startTime{};
 	// Room Select variables
 	int										peopleindex{};
-	
+	std::array<short, 10>					userPerRoom{ 1, 0, 0, 3, 2, 2, 3, 0, 2, 1 };
 
 	// InRoom variables
 	short									local_uid{};
@@ -123,11 +121,11 @@ public:
 	virtual void Render();
 
 	template<typename T, typename U>
-		requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
+	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
 	bool CheckSphereCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector < std::unique_ptr<U>>& obejct2); //1차체크
 
 	template<typename T, typename U>
-		requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
+	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
 	void CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2); //세부체크
 
 	void TestCollision(const std::vector<std::unique_ptr<CGameObject>>& mapObjects, const std::vector<std::unique_ptr<CSkinningObject>>& characters);
@@ -149,9 +147,7 @@ protected:
 	std::unique_ptr<CShaderBindingTableManager>			m_pShaderBindingTable{};
 	std::unique_ptr<CAccelerationStructureManager>		m_pAccelerationStructureManager{};
 
-
 	// Animation Tool
-
 	ComPtr<ID3D12RootSignature>							m_pComputeRootSignature{};
 	ComPtr<ID3D12PipelineState>							m_pAnimationComputeShader{};
 
@@ -202,6 +198,8 @@ public:
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 protected:
+	short										m_threePlayerIndex{};
+
 	UCHAR m_PrevKeyBuffer[256] = { 0 }; // PrevKey
 
 	unsigned int								m_nSkyboxIndex{};
