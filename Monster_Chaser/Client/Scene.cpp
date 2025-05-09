@@ -460,7 +460,7 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	auto& animationManagers = m_pResourceManager->getAnimationManagers();
 	for (auto& animationManager : animationManagers) {
 		animationManager->UpdateCombo(fElapsedTime);
-		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
+		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
 			animationManager->ChangeAnimation(IDLE, false);
 			test = true;
 			m_bLockAnimation1 = false;
@@ -1044,7 +1044,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 			float depth = maxCollision->depth;
 			float meshHeight = maxCollision->meshHeight;
 
-			XMVECTOR moveDir = XMLoadFloat3(&character->getLook()); //이제 캐릭터 방향을 담는 값을 넘길 예정
+			XMVECTOR moveDir = XMLoadFloat3(&character->getMoveDirection());
 			XMVECTOR normal = XMLoadFloat3(&norm);
 			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
 			if (dotProduct < 0.0f) { // 이동 방향이 법선과 반대
@@ -1067,7 +1067,8 @@ void CRaytracingScene::TestShootCollision(const std::vector<std::unique_ptr<CPro
 					BoundingSphere boneSphere = bone->getObjectSphere();
 					boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
 					if (projectileOBB.Intersects(boneSphere)) {
-						m_pResourceManager->getAnimationManagers()[i]->ChangeAnimation(0,false);
+						m_pResourceManager->getAnimationManagers()[i]->ChangeAnimation(0, true);
+						m_pResourceManager->getAnimationManagers()[i]->IsCollision();
 						projectile->setActive(false);
 						projectile->setTime(0.0f);
 					}
@@ -1293,7 +1294,8 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// Setting Camera ==============================================================
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
-	m_pCamera->SetCameraLength(10.0f);
+	m_pCamera->SetHOffset(3.5f);
+	m_pCamera->SetCameraLength(15.0f);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -1330,17 +1332,20 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(7);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
-		case '9':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(8);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case 'n':
 		case 'N':
 			m_pCamera->toggleNormalMapping();
 			break;
-		case 'm':
 		case 'M':
 			m_pCamera->toggleAlbedoColor();
+			break;
+		case 'B':
+			m_pCamera->toggleReflection();
+			break;
+		case '9':
+			m_pCamera->SetThirdPersonMode(false);
+			break;
+		case '0':
+			m_pCamera->SetThirdPersonMode(true);
 			break;
 		}
 		break;
@@ -1373,6 +1378,7 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 				XMFLOAT3 characterDir = cameraDir;
 				characterDir.y = 0.0f; // delete y value
 				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f,1.0f,0.0f));
+				m_pResourceManager->UpdatePosition(m_fElapsedtime);
 				animationManager->OnAttackInput();
 				m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[0]->getPosition());
 				m_pResourceManager->getProjectileList()[0]->setMoveDirection(characterDir);
@@ -1412,12 +1418,21 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 
 void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 {
+	m_fElapsedtime = fElapsedTime;
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 characterDir = cameraDir;
 	characterDir.y = 0.0f; // delete y value
+	m_bMoving = false;
+	float length = sqrt(characterDir.x * characterDir.x + characterDir.z * characterDir.z);
+	XMFLOAT3 normalizedCharacterDir = characterDir;
+	if (length > 0.0f) {
+		normalizedCharacterDir.x /= length;
+		normalizedCharacterDir.z /= length;
+	}
+	XMFLOAT3 moveDir{};
 
 	if (!m_pCamera->getThirdPersonState()) {
 		if (keyBuffer['W'] & 0x80)
@@ -1441,6 +1456,49 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
 		return;
+	}
+
+	// Handle single and combined key presses
+	if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
+		moveDir = XMFLOAT3(normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z + normalizedCharacterDir.x);
+		m_bMoving = true;
+	}
+	else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
+		moveDir = XMFLOAT3(normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z - normalizedCharacterDir.x);
+		m_bMoving = true;
+	}
+	else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
+		moveDir = XMFLOAT3(-normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z + normalizedCharacterDir.x);
+		m_bMoving = true;
+	}
+	else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
+		moveDir = XMFLOAT3(-normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z - normalizedCharacterDir.x);
+		m_bMoving = true;
+	}
+	else if (keyBuffer['W'] & 0x80) {
+		moveDir = normalizedCharacterDir;
+		m_bMoving = true;
+	}
+	else if (keyBuffer['S'] & 0x80) {
+		moveDir = XMFLOAT3(-normalizedCharacterDir.x, 0.0f, -normalizedCharacterDir.z);
+		m_bMoving = true;
+	}
+	else if (keyBuffer['A'] & 0x80) {
+		moveDir = XMFLOAT3(-normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.x);
+		m_bMoving = true;
+	}
+	else if (keyBuffer['D'] & 0x80) {
+		moveDir = XMFLOAT3(normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.x);
+		m_bMoving = true;
+	}
+
+	if (m_bMoving) {
+		length = sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
+		if (length > 0.0f) {
+			moveDir.x /= length;
+			moveDir.z /= length;
+		}
+		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(moveDir);
 	}
 
 	// W -> IDLE while Shift held
@@ -1812,41 +1870,82 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 		if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(HIT, true);
 			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->UpdatePosition(fElapsedTime);
 			m_bLockAnimation1 = true;
 		}
 		if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(HIT_DEATH, true);
 			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->UpdatePosition(fElapsedTime);
 			m_bLockAnimation1 = true;
 		}
 		if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
+			XMFLOAT3 dodgeDir = characterDir;
+
+			if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
+				dodgeDir = XMFLOAT3(characterDir.x - characterDir.z, 0.0f, characterDir.z + characterDir.x);
+			}
+			else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
+				dodgeDir = XMFLOAT3(characterDir.x + characterDir.z, 0.0f, characterDir.z - characterDir.x);
+			}
+			else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
+				dodgeDir = XMFLOAT3(-characterDir.x - characterDir.z, 0.0f, -characterDir.z + characterDir.x);
+			}
+			else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
+				dodgeDir = XMFLOAT3(-characterDir.x + characterDir.z, 0.0f, -characterDir.z - characterDir.x);
+			}
+			else if (keyBuffer['W'] & 0x80) {
+				dodgeDir = characterDir;
+			}
+			else if (keyBuffer['S'] & 0x80) {
+				dodgeDir = XMFLOAT3(-characterDir.x, 0.0f, -characterDir.z);
+			}
+			else if (keyBuffer['A'] & 0x80) {
+				dodgeDir = XMFLOAT3(-characterDir.z, 0.0f, characterDir.x);
+			}
+			else if (keyBuffer['D'] & 0x80) {
+				dodgeDir = XMFLOAT3(characterDir.z, 0.0f, -characterDir.x);
+			}
+
+			float length = sqrt(dodgeDir.x * dodgeDir.x + dodgeDir.z * dodgeDir.z);
+			if (length > 0.0f) {
+				dodgeDir.x /= length;
+				dodgeDir.z /= length;
+			}
+
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(DODGE, true);
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->UpdatePosition(fElapsedTime);
 			m_bLockAnimation1 = true;
 		}
 		if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(BIGHIT, true);
 			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->UpdatePosition(fElapsedTime);
 			m_bLockAnimation1 = true;
 		}
 		if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(BIGHIT_DEATH, true);
 			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->UpdatePosition(fElapsedTime);
 			m_bLockAnimation1 = true;
 		}
 		if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(SKILL2, true);
 			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->UpdatePosition(fElapsedTime);
 			m_bLockAnimation1 = true;
 		}
 		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(SKILL1, true);
 			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->UpdatePosition(fElapsedTime);
 			m_bLockAnimation1 = true;
 		}
 		if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
 			m_pResourceManager->getAnimationManagers()[0]->OnKey3Input();
 			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->UpdatePosition(fElapsedTime);
 			m_bLockAnimation = true;
 		}
 	}
