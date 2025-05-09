@@ -1223,14 +1223,8 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->SetUp(3);								// LightBufferReady
 	// Read File Here ========================================	! All Files Are Read Once !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
-
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
-
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
 	m_pResourceManager->ReadyLightBufferContent();
 	m_pResourceManager->LightTest();
@@ -1244,13 +1238,6 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<CProjectile>>& projectile = m_pResourceManager->getProjectileList();
 	// Create new Objects, Copy SkinningObject here ========================================
 
-	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	skinned[2]->CopyFromOtherObject(skinned[0].get());
-	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
-	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
-	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
-
-
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
 
@@ -1262,14 +1249,6 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	projectile.emplace_back(std::make_unique<CProjectile>());
 	projectile[0]->setGameObject(normalObjects[finalindex].get());
-
-	// Copy Example
-	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	//skinned[1]->CopyFromOtherObject(skinned[0].get());
-	//aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
-	//aManagers[1]->SetFramesPointerFromSkinningObject(skinned[1]->getObjects());
-	//aManagers[1]->MakeAnimationMatrixIndex(skinned[1].get());
-	//aManagers[1]->UpdateAnimation(0.5f);		// Not Need
 
 	finalindex = normalObjects.size();
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
