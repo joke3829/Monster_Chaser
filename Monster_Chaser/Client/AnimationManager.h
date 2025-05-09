@@ -20,14 +20,12 @@ private:
 	int m_nFramePerSec{};
 	int m_nKeyFrame{};
 
-	// Ű�����Ӻ� ��� ���� Ű ������ ��ȣ�� �����ϸ� ��
-	// �� �� ������ �ΰ��� ������ shared�� ����
-	std::vector<std::vector<XMFLOAT4X4>> m_vTransforms{};		// ���� Ű ������, ���� Ű������ �� ���
-	std::vector<float> m_vKeyTime{};	// Ű ������ �� �ð�(?)
-	// �� �� ���� �̿��� ��� ����
+
+	std::vector<std::vector<XMFLOAT4X4>> m_vTransforms{};	// Row : KeyFrame, Col : AnimationMatrix by Frames
+	std::vector<float> m_vKeyTime{};	// Time by KeyFrame
 };
 
-// ���⼭ ������ �̸� �� �����͸� ���� ����
+
 class CAnimationManager {
 public:
 	CAnimationManager(std::ifstream& inFile);
@@ -35,11 +33,11 @@ public:
 
 	void SetFramesPointerFromSkinningObject(std::vector<std::unique_ptr<CGameObject>>& vObjects);	// ��Ű�� �غ� �Լ�
 
-	// SkinningInfo�� �ް� �� SkinningInfo�� ��� index ����� �ش�.
+	// Use Skinning Info to create indexes
 	void MakeAnimationMatrixIndex(CSkinningObject* pSkinningObject);
 
-	void TimeIncrease(float fElapsedTime);			// �ð� ����
-	void UpdateAnimation(float fElapsedTime);		// �ð� ����
+	void TimeIncrease(float fElapsedTime);			
+	void UpdateAnimation(float fElapsedTime);		
 	void UpdateAnimationMatrix();
 	void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
 	void ChangeAnimation(UINT nSet);
@@ -76,7 +74,7 @@ protected:
 	UINT m_nAnimationSets{};
 	UINT m_nCurrentSet{};
 	float m_fElapsedTime{};
-	std::vector<std::string> m_vFrameNames{};		// �ѹ� ���� ������?
+	std::vector<std::string> m_vFrameNames{};		// Bone Names
 	std::vector<std::shared_ptr<CAnimationSet>> m_vAnimationSets{};
 
 	std::vector<CGameObject*> m_vFrames{};	// ���� �� �� �ش� ��ü�� �°� ������Ʈ �ʿ�

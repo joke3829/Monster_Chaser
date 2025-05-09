@@ -490,6 +490,9 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 		m_pResourceManager->UpdatePosition(fElapsedTime); //��ġ ������Ʈ
 	}
 
+	m_pCamera->getEyeCalculateOffset();
+	if (m_pCamera->getEye().y < 0.5f)
+		m_pCamera->getEye().y = 0.5f;
 	m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 }
@@ -2790,10 +2793,6 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
-	XMFLOAT3 cameraDir = m_pCamera->getDir();
-	XMFLOAT3 characterDir = cameraDir;
-	characterDir.y = 0.0f; // delete y value
-
 	if (m_nState == IS_GAMING) {
 		
 
@@ -2815,6 +2814,13 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
+			XMFLOAT3 cameraDir = m_pCamera->getDir();
+			XMFLOAT3 characterDir = cameraDir;
+			characterDir.y = 0.0f; // delete y value
+			m_bMoving = false;
+			XMFLOAT3 normalizedCharacterDir = characterDir;
+			XMStoreFloat3(&normalizedCharacterDir, XMVector3Normalize(XMLoadFloat3(&normalizedCharacterDir)));
+			XMFLOAT3 moveDir{};
 
 			if (m_bLockAnimation && !m_pResourceManager->getAnimationManagers()[0]->IsInCombo()) {
 				m_bLockAnimation = false;
@@ -2823,6 +2829,45 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 			if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
 				memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
 				return;
+			}
+
+			// Handle single and combined key presses
+			if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
+				moveDir = XMFLOAT3(normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z + normalizedCharacterDir.x);
+				m_bMoving = true;
+			}
+			else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
+				moveDir = XMFLOAT3(normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z - normalizedCharacterDir.x);
+				m_bMoving = true;
+			}
+			else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
+				moveDir = XMFLOAT3(-normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z + normalizedCharacterDir.x);
+				m_bMoving = true;
+			}
+			else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
+				moveDir = XMFLOAT3(-normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z - normalizedCharacterDir.x);
+				m_bMoving = true;
+			}
+			else if (keyBuffer['W'] & 0x80) {
+				moveDir = normalizedCharacterDir;
+				m_bMoving = true;
+			}
+			else if (keyBuffer['S'] & 0x80) {
+				moveDir = XMFLOAT3(-normalizedCharacterDir.x, 0.0f, -normalizedCharacterDir.z);
+				m_bMoving = true;
+			}
+			else if (keyBuffer['A'] & 0x80) {
+				moveDir = XMFLOAT3(-normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.x);
+				m_bMoving = true;
+			}
+			else if (keyBuffer['D'] & 0x80) {
+				moveDir = XMFLOAT3(normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.x);
+				m_bMoving = true;
+			}
+
+			if (m_bMoving) {
+				XMStoreFloat3(&moveDir, XMVector3Normalize(XMLoadFloat3(&moveDir)));
+				m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(moveDir);
 			}
 
 			// W -> IDLE while Shift held
@@ -3169,50 +3214,85 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 				m_pResourceManager->UpdatePosition(fElapsedTime);
 			}
-
 			if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo) {
 				if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(HIT, true);
 					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_pResourceManager->UpdatePosition(fElapsedTime);
 					m_bLockAnimation1 = true;
 				}
 				if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
 					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(HIT_DEATH, true);
 					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_pResourceManager->UpdatePosition(fElapsedTime);
 					m_bLockAnimation1 = true;
 				}
 				if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
+					XMFLOAT3 dodgeDir = characterDir;
+
+					if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
+						dodgeDir = XMFLOAT3(characterDir.x - characterDir.z, 0.0f, characterDir.z + characterDir.x);
+					}
+					else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
+						dodgeDir = XMFLOAT3(characterDir.x + characterDir.z, 0.0f, characterDir.z - characterDir.x);
+					}
+					else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
+						dodgeDir = XMFLOAT3(-characterDir.x - characterDir.z, 0.0f, -characterDir.z + characterDir.x);
+					}
+					else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
+						dodgeDir = XMFLOAT3(-characterDir.x + characterDir.z, 0.0f, -characterDir.z - characterDir.x);
+					}
+					else if (keyBuffer['W'] & 0x80) {
+						dodgeDir = characterDir;
+					}
+					else if (keyBuffer['S'] & 0x80) {
+						dodgeDir = XMFLOAT3(-characterDir.x, 0.0f, -characterDir.z);
+					}
+					else if (keyBuffer['A'] & 0x80) {
+						dodgeDir = XMFLOAT3(-characterDir.z, 0.0f, characterDir.x);
+					}
+					else if (keyBuffer['D'] & 0x80) {
+						dodgeDir = XMFLOAT3(characterDir.z, 0.0f, -characterDir.x);
+					}
+
+					XMStoreFloat3(&dodgeDir, XMVector3Normalize(XMLoadFloat3(&dodgeDir)));
+
 					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(DODGE, true);
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_pResourceManager->UpdatePosition(fElapsedTime);
 					m_bLockAnimation1 = true;
 				}
 				if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
 					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(BIGHIT, true);
 					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_pResourceManager->UpdatePosition(fElapsedTime);
 					m_bLockAnimation1 = true;
 				}
 				if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
 					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(BIGHIT_DEATH, true);
 					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_pResourceManager->UpdatePosition(fElapsedTime);
 					m_bLockAnimation1 = true;
 				}
 				if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
 					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(SKILL2, true);
 					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_pResourceManager->UpdatePosition(fElapsedTime);
 					m_bLockAnimation1 = true;
 				}
 				if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
 					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(SKILL1, true);
 					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_pResourceManager->UpdatePosition(fElapsedTime);
 					m_bLockAnimation1 = true;
 				}
 				if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
 					m_pResourceManager->getAnimationManagers()[0]->OnKey3Input();
 					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_pResourceManager->UpdatePosition(fElapsedTime);
 					m_bLockAnimation = true;
 				}
 			}
-			// prevKeyState
 			memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 		}
 	}
@@ -3502,10 +3582,9 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->ReBuildBLAS();
 
 	bool test = false;
-	auto& animationManagers = m_pResourceManager->getAnimationManagers();
-	for (auto& animationManager : animationManagers) {
+	for (auto& animationManager : m_pResourceManager->getAnimationManagers()) {
 		animationManager->UpdateCombo(fElapsedTime);
-		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished()) {
+		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
 			animationManager->ChangeAnimation(IDLE, false);
 			test = true;
 			m_bLockAnimation1 = false;
@@ -3521,8 +3600,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-	auto& proj = m_pResourceManager->getProjectileList();
-	for (auto& pr : proj) {
+	for (auto& pr : m_pResourceManager->getProjectileList()) {
 		pr->IsMoving(fElapsedTime);
 	}
 
@@ -3552,8 +3630,8 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
 		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
-		if (EYE.y <= cHeight) {
-			m_pCamera->UpdateViewMatrix(cHeight + 0.1f);
+		if (EYE.y < cHeight + 0.5f) {
+			m_pCamera->UpdateViewMatrix(cHeight + 0.5f);
 		}
 		else
 			m_pCamera->UpdateViewMatrix();

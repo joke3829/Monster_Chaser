@@ -26,13 +26,13 @@ void CCamera::Rotate(int cxDelta, int cyDelta)
 	float cy = (float)cyDelta / 3.0f;
 
 	m_fLimitcy += cy;
-	if (m_fLimitcy > 20.0f) {
-		cy -= (m_fLimitcy - 20.0f);
-		m_fLimitcy = 20.0f;
+	if (m_fLimitcy > 80.0f) {
+		cy -= (m_fLimitcy - 80.0f);
+		m_fLimitcy = 80.0f;
 	}
-	if (m_fLimitcy < -40.0f) {
-		cy += -(m_fLimitcy + 40.0f);
-		m_fLimitcy = -40.0f;
+	if (m_fLimitcy < -80.0f) {
+		cy += -(m_fLimitcy + 80.0f);
+		m_fLimitcy = -80.0f;
 	}
 
 	XMMATRIX mtxrotate = XMMatrixRotationAxis(XMLoadFloat3(&m_xmf3Up), XMConvertToRadians(cx));
@@ -84,6 +84,7 @@ void CCamera::UpdateViewMatrix(float height)
 	if (m_bThirdPerson) {
 		//getEyeCalculateOffset();
 		m_xmf3At = m_pTarget->getPositionFromWMatrix();
+		XMStoreFloat3(&m_xmf3At, XMLoadFloat3(&m_pTarget->getPositionFromWMatrix()) + XMLoadFloat3(&m_xmf3hOffset));
 		if (height != 0.0f) {
 			m_xmf3Eye.y = height;
 		}

@@ -9,7 +9,7 @@ struct CB_CAMERA_INFO {
 	XMFLOAT4X4 xmf4x4ViewProj;
 	XMFLOAT4X4 xmf4x4InverseViewProj;
 	XMFLOAT3 xmf3Eye;
-	int bNormalMapping;	// �� 2byte normal, �� 2byte albedo
+	int bNormalMapping;	// front 2byte normal, back 2byte albedo
 	int bReflection;
 };
 
@@ -61,7 +61,7 @@ protected:
 	ComPtr<ID3D12Resource> m_pd3dCameraBuffer{};
 	CB_CAMERA_INFO* m_pCameraInfo{};
 
-	XMFLOAT3 m_xmf3Eye{ 0.0f, 20.0f, 0.0f };
+	XMFLOAT3 m_xmf3Eye{ 0.0f, 0.0f, 0.0f };
 	XMFLOAT3 m_xmf3At;
 	XMFLOAT3 m_xmf3Up{ 0.0f, 1.0f, 0.0f };
 
