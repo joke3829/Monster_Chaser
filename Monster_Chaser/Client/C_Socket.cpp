@@ -180,15 +180,19 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_move* p = reinterpret_cast<sc_packet_move*>(ptr);
 		//·ÎÄÃID
 		int local_id = p->Local_id;
-
+		int time = p->time;
+		MoveAnimationState state = static_cast<MoveAnimationState>(p->state);
 		if (local_id == Client.get_id()) {
 			return;
 		}
 		XMFLOAT4X4 position = p->pos;
 
-		// 3¸í²¨¸¦ ÇÑ²¨¹ø¿¡	
+		// write down to position bogan process~
+	
+		Players[local_id].getRenderingObject()->SetPosition({ position._41, position._42, position._43 });	//setposition
 
-		Players[local_id].getRenderingObject()->SetPosition({ position._41, position._42, position._43 });
+
+		//------------------
 
 
 		break;

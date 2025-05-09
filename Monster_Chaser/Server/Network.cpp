@@ -60,7 +60,7 @@ void SESSION::process_packet(char* p) {
 
 		if (g_server.rooms[room_Num].IsAddPlayer())			//id 값이 맴버 변수에 들어감 
 		{
-			this->local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
+			local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
 
 			g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
 
