@@ -171,6 +171,7 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 				bool currentReady = Players[Client.get_id()].getReady();
 				Players[Client.get_id()].setReady(!currentReady);
 				Client.SendsetReady(Players[Client.get_id()].getReady(), currentRoom);
+				std::cout << "Player " << Client.get_id() << "is getReady" << std::endl;
 				//준비완료 패킷 보내기 
 				break;
 			}

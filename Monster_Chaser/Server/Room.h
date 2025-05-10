@@ -9,8 +9,8 @@ class Network;
 
 class Room {
 public:
-	Room(int num);;
-
+	Room();
+	
 	bool IsAddPlayer();
 	void AddPlayer(const int& enter_id);
 	void SendRoomInfo();
@@ -30,12 +30,16 @@ public:
 	bool IsStarted() const { return is_started; }
 	void StartGame() { is_started = true; }
 	void EndGame() { is_started = false; }
+
+
+
 	std::vector<int>id;        //해당 방에 들어온 id 관리 -> 락이 필요함 
+	mutex RoomMutex;
 private:
 	int room_number;			// 방 번호
 	int ready_user = 0;			// 레드 버튼을 누른 유저 수
 	
-	
+	static int room_num;
 	bool is_ready[3];
 
 

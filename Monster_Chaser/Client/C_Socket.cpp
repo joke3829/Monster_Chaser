@@ -136,6 +136,7 @@ void C_Socket::process_packet(char* ptr)
 
 			Player newPlayer(local_id); // 명시적 생성자 사용
 			Players.emplace(local_id, std::move(newPlayer));
+			Players.try_emplace(local_id, local_id);
 			
 			if (Client.get_id() == -1) {
 				Client.set_id(local_id);

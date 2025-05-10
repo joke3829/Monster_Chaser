@@ -41,10 +41,6 @@ public:
     int local_id;
     int room_num;
 
-
-    mutex RoomMutex;
-
-
     SESSION(int Num,SOCKET s);
     ~SESSION();
 
@@ -65,7 +61,7 @@ public:
     //concurrent_unordered_map <int, std::unique_ptr<SESSION>> users;
     concurrent_unordered_map <int,shared_ptr <SESSION>> users;
     
-    //std::array<SESSION, MAX_USER> users;
+    
 
     std::unordered_map<int, Monster*> monsters;
 
