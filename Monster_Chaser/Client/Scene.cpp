@@ -4,6 +4,7 @@
 extern C_Socket Client;
 extern std::unordered_map<int, Player> Players;
 extern std::array<short, 10>	 userPerRoom;
+extern TitleState g_state;
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
 void CScene::CreateRTVDSV()
@@ -149,9 +150,9 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 {
 	switch (nMessage) {
 	case WM_KEYDOWN: {
-		switch (m_nState) {
+		switch (g_state) {
 		case Title:
-			m_nState = RoomSelect;
+			g_state = RoomSelect;
 			Client.SendBroadCastRoom();
 			break;
 		case RoomSelect:
@@ -175,7 +176,7 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 			}
 			case VK_BACK:
 				--userPerRoom[currentRoom];
-				m_nState = RoomSelect;
+				g_state = RoomSelect;
 				break;
 			}
 			break;
@@ -194,9 +195,9 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 		int mx = LOWORD(lParam);
 		int my = HIWORD(lParam);
 
-		switch (m_nState) {
+		switch (g_state) {
 		case Title:
-			m_nState = RoomSelect;
+			g_state = RoomSelect;
 			Client.SendBroadCastRoom();
 			break;
 		case RoomSelect:			// 어디클릭했는지 좌표받아서 처리 
@@ -209,7 +210,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;				//어떤 방을 골랐는지 넣어주는 변수
-							m_nState = InRoom;
+							g_state = InRoom;
 							// 여기서 패킷 보내주기? selectroom 패킷  추후에 서버에서 동시에 눌렀을때 등등 예외처리도 해야됨
 							Client.SendEnterRoom(currentRoom);
 							break;
@@ -223,7 +224,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;
-							m_nState = InRoom;
+							g_state = InRoom;
 							Client.SendEnterRoom(currentRoom);
 							// 여기서 패킷 보내주기? selectroom 패킷 
 							break;
@@ -249,7 +250,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 }
 void TitleScene::UpdateObject(float fElapsedTime)
 {
-	switch (m_nState) {
+	switch (g_state) {
 	case Title:
 		if (startTime < 3.0f)
 			startTime += fElapsedTime;
@@ -294,7 +295,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		}
 		if (Client.getstart()) {
 			wOpacity = 0.0f;
-			m_nState = GoLoading;
+			g_state = GoLoading;
 		}
 		break;
 	}
@@ -443,7 +444,7 @@ void TitleScene::Render()
 	cmdList->SetGraphicsRootConstantBufferView(0, m_cameraCB->GetGPUVirtualAddress());
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	switch (m_nState) {
+	switch (g_state) {
 	case Title:
 		for (auto& p : m_vTitleUIs)
 			p->Render();
@@ -2018,11 +2019,11 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 
-	cs_packet_move mp;
+	/*cs_packet_move mp;
 	mp.size = sizeof(mp);
 	mp.type = C2S_P_MOVE;
 	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
-	Client.send_packet(&mp);	//
+	Client.send_packet(&mp);*/
 	Client.SendMovePacket(m_fElapsedtime, m_pResourceManager->getAnimationManagers()[Client.get_id()]->getCurrentSet());
 }
 
@@ -2679,19 +2680,16 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// Copy(normalObject) & SetPreMatrix ===============================
 
-	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -998.0f));
+	for (int i = 0; i < Players.size(); ++i) {
+		skinned[i]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
+		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -998.0f));
+	}
 
-	skinned[1]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-	skinned[1]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -988.0f));
-
-	skinned[2]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-	skinned[2]->SetPosition(XMFLOAT3(-77.5f, 0.0f, -998.0f));
 
 	// ==============================================================================
 
 	// Camera Setting ==============================================================
-	m_pCamera->SetTarget(skinned[0]->getObjects()[Client.get_id()].get());
+	m_pCamera->SetTarget(skinned[Client.get_id()]->getObjects()[0].get());
 	m_pCamera->SetHOffset(3.5f);
 	m_pCamera->SetCameraLength(15.0f);
 	// ==========================================================================
@@ -2782,18 +2780,16 @@ void CRaytracingWinterLandScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessa
 	case WM_LBUTTONDOWN:
 	{
 		if (!m_bLockAnimation && !m_bLockAnimation1) {
-			auto& animationManagers = m_pResourceManager->getAnimationManagers();
-			for (auto& animationManager : animationManagers) {
-				XMFLOAT3 characterDir = cameraDir;
-				characterDir.y = 0.0f; // delete y value
-				m_pResourceManager->getSkinningObjectList()[Client.get_id()]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				animationManager->OnAttackInput();
-				m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[Client.get_id()]->getPosition());
-				m_pResourceManager->getProjectileList()[0]->setMoveDirection(characterDir);
-				m_pResourceManager->getProjectileList()[0]->setActive(true);
-				m_pResourceManager->getProjectileList()[0]->setTime(0.0f);
-				m_bDoingCombo = true;
-			}
+			XMFLOAT3 characterDir = cameraDir;
+			characterDir.y = 0.0f; // delete y value
+			m_pResourceManager->getSkinningObjectList()[Client.get_id()]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_pResourceManager->UpdatePosition(m_fElapsedtime);
+			m_pResourceManager->getAnimationManagers()[Client.get_id()]->OnAttackInput();
+			m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[Client.get_id()]->getPosition());
+			m_pResourceManager->getProjectileList()[0]->setMoveDirection(characterDir);
+			m_pResourceManager->getProjectileList()[0]->setActive(true);
+			m_pResourceManager->getProjectileList()[0]->setTime(0.0f);
+			m_bDoingCombo = true;
 		}
 		break;
 	}
@@ -3383,11 +3379,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 			}
 			memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 
-			/*cs_packet_move mp;
-			mp.size = sizeof(mp);
-			mp.type = C2S_P_MOVE;
-			mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
-			Client.send_packet(&mp);*/
+		
 			Client.SendMovePacket(m_fElapsedtime, m_pResourceManager->getAnimationManagers()[Client.get_id()]->getCurrentSet());
 		}
 	}

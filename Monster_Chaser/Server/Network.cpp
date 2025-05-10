@@ -51,7 +51,7 @@ void SESSION::process_packet(char* p) {
 	}
 	case C2S_P_ENTER_ROOM: {
 
-		
+		lock_guard<mutex> lock(RoomMutex);
 		cs_packet_enter_room* pkt = reinterpret_cast<cs_packet_enter_room*>(p);
 
 		int room_Num = static_cast<int>(pkt->room_number);

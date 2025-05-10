@@ -23,7 +23,7 @@ std::unordered_map<int, Monster*> g_monsters;            // 몬스터들
 
 
 std::array<short, 10>	 userPerRoom{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			// 방 UI대신 쓸거 
-
+TitleState g_state = Title;
 C_Socket Client;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다

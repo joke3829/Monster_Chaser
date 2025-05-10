@@ -2,7 +2,7 @@
 #pragma once
 
 
-
+#include "stdafx.h"
 #include "protocol.h"
 #include "Room.h"
 #include "Character.h"
@@ -26,7 +26,7 @@ public:
     SOCKET accept_socket;
 };
 
-class SESSION;
+
 
 
 class SESSION {
@@ -40,6 +40,9 @@ public:
     std::string name;               //유저 닉네임
     int local_id;
     int room_num;
+
+
+    mutex RoomMutex;
 
 
     SESSION(int Num,SOCKET s);

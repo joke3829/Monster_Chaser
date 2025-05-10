@@ -58,7 +58,7 @@ protected:
 	short m_nNextScene = -1;
 };
 
-enum TitleState{Title, RoomSelect, InRoom, GoLoading};
+
 
 class TitleScene : public CScene {
 public:
@@ -73,7 +73,6 @@ public:
 	void UpdateObject(float fElapsedTime);
 	void Render();
 protected:
-	TitleState								m_nState = Title;
 	std::unique_ptr<CResourceManager>		m_pResourceManager{};
 
 	std::vector<std::unique_ptr<UIObject>>	m_vTitleUIs;
