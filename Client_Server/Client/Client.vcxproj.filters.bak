@@ -63,9 +63,7 @@
     <Filter Include="Resource\AnimationManager">
       <UniqueIdentifier>{26e56987-728b-4f9b-bb23-ee29f7266adc}</UniqueIdentifier>
     </Filter>
-    <Filter Include="UI">
-      <UniqueIdentifier>{942193e9-5883-4f37-ad45-b44969d80f51}</UniqueIdentifier>
-    </Filter>
+<<<<<<< HEAD
     <Filter Include="소스 파일\서버관련">
       <UniqueIdentifier>{5d46939a-3862-4eba-9cff-f66088c2ed2e}</UniqueIdentifier>
     </Filter>
@@ -78,6 +76,10 @@
     </Filter>
     <Filter Include="소스 파일\서버관련\플레이어객체\플레이어 정보">
       <UniqueIdentifier>{5a8a0fd5-210e-4d8d-ace9-d690a08eea57}</UniqueIdentifier>
+=======
+    <Filter Include="UI">
+      <UniqueIdentifier>{942193e9-5883-4f37-ad45-b44969d80f51}</UniqueIdentifier>
+>>>>>>> main
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -147,9 +149,7 @@
     <ClInclude Include="AnimationManager.h">
       <Filter>Resource\AnimationManager</Filter>
     </ClInclude>
-    <ClInclude Include="UIObject.h">
-      <Filter>UI</Filter>
-    </ClInclude>
+<<<<<<< HEAD
     <ClInclude Include="protocol.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -161,6 +161,10 @@
     </ClInclude>
     <ClInclude Include="PlayerInfo.h">
       <Filter>소스 파일\서버관련\플레이어객체\플레이어 정보</Filter>
+=======
+    <ClInclude Include="UIObject.h">
+      <Filter>UI</Filter>
+>>>>>>> main
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -221,9 +225,7 @@
     <ClCompile Include="AnimationManager.cpp">
       <Filter>Resource\AnimationManager</Filter>
     </ClCompile>
-    <ClCompile Include="UIObject.cpp">
-      <Filter>UI</Filter>
-    </ClCompile>
+<<<<<<< HEAD
     <ClCompile Include="C_Socket.cpp">
       <Filter>소스 파일\서버관련</Filter>
     </ClCompile>
@@ -232,6 +234,10 @@
     </ClCompile>
     <ClCompile Include="PlayerInfo.cpp">
       <Filter>소스 파일\서버관련\플레이어객체\플레이어 정보</Filter>
+=======
+    <ClCompile Include="UIObject.cpp">
+      <Filter>UI</Filter>
+>>>>>>> main
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

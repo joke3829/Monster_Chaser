@@ -1,6 +1,9 @@
 #include "AnimationManager.h"
 #include "algorithm"
+#include "protocol.h"
+#include "C_Socket.h"
 
+extern C_Socket Client;
 CAnimationSet::CAnimationSet(std::ifstream& inFile, UINT nBones)
 {
 	UINT tempInt{};
@@ -66,7 +69,9 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 		//XMStoreFloat4x4(&xmf, XMMatrixTranspose(XMMatrixAffineTransformation(S, XMVectorZero(), R, T)));
 		XMStoreFloat4x4(&xmf, XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
 		vMatrixes[i]->SetLocalMatrix(xmf);
+		
 	}
+
 }
 
 // ====================================================================================
@@ -149,7 +154,6 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
-	XMFLOAT4X4 targetPosition;
 	m_fElapsedTime += fElapsedTime; // 시간 누적
 	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 
@@ -168,23 +172,10 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 
 void CAnimationManager::UpdateAnimation(float fElapsedTime)
 {
-	/*m_fElapsedTime = fElapsedTime;
-	float length = m_vAnimationSets[m_nCurrnetSet]->getLength();
+	m_fElapsedTime = fElapsedTime;
+	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
-	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
-	m_fElapsedTime += fElapsedTime;
-	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
-	if (m_bPlayOnce) {
-		if (m_fElapsedTime >= length) {
-			m_fElapsedTime = length;
-		}
-	}
-	else {
-		while (m_fElapsedTime > length) {
-			m_fElapsedTime -= length;
-		}
-	}
 	m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
 }
 

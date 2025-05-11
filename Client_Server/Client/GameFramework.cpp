@@ -298,6 +298,7 @@ void CGameFramework::ChangeScene(short definedScene)
 	case SCENE_WINTERLAND:
 		bIngame = true;
 		m_pScene = std::make_unique<CRaytracingWinterLandScene>();
+		//m_pScene = std::make_unique<CRaytracingTestScene>();
 		m_pScene->SetCamera(m_pCamera);
 		m_pScene->SetUp(m_pd3dOutputBuffer);
 		break;

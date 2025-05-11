@@ -7,6 +7,7 @@ extern std::unordered_map<int, Monster*> g_monsters;
 extern std::array<short, 10>	 userPerRoom;
 extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
 extern bool allready;
+extern TitleState g_state;
 C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
 
 
@@ -132,11 +133,16 @@ void C_Socket::process_packet(char* ptr)
 		int room_num = static_cast<int>(p->room_number);
 		int local_id = p->Local_id;
 		if (!Players.contains(local_id)) {
-
+			std::cout << local_id << " 번쨰 플레이어 들어옴" << std::endl;
+			Player newPlayer(local_id); // 명시적 생성자 사용
+			Players.emplace(local_id, std::move(newPlayer));
 			Players.try_emplace(local_id, local_id);
+			
 			if (Client.get_id() == -1) {
 				Client.set_id(local_id);
+				std::cout << local_id << " 번쨰 플레이어 들어옴 2번째 " << std::endl;
 				//userPerRoom[room_num]++;
+				g_state = InRoom;
 			}
 			//Players[local_id] = new Player(local_id);
 		}
@@ -180,15 +186,20 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_move* p = reinterpret_cast<sc_packet_move*>(ptr);
 		//로컬ID
 		int local_id = p->Local_id;
-
+		float time = p->time;
+		unsigned int state = p->state;
 		if (local_id == Client.get_id()) {
 			return;
 		}
 		XMFLOAT4X4 position = p->pos;
 
-		// 3명꺼를 한꺼번에	
+		// write down to position bogan process~
+	
+		Players[local_id].getRenderingObject()->SetWolrdMatrix(position);
+		Players[local_id].getAnimationManager()->ChangeAnimation(state, true);
+		Players[local_id].getAnimationManager()->UpdateAnimation(time);
 
-		Players[local_id].getRenderingObject()->SetPosition({ position._41, position._42, position._43 });
+		//------------------
 
 
 		break;

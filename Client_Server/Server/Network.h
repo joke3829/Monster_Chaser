@@ -2,7 +2,7 @@
 #pragma once
 
 
-
+#include "stdafx.h"
 #include "protocol.h"
 #include "Room.h"
 #include "Character.h"
@@ -26,7 +26,7 @@ public:
     SOCKET accept_socket;
 };
 
-class SESSION;
+
 
 
 class SESSION {
@@ -40,7 +40,6 @@ public:
     std::string name;               //유저 닉네임
     int local_id;
     int room_num;
-
 
     SESSION(int Num,SOCKET s);
     ~SESSION();
@@ -62,7 +61,7 @@ public:
     //concurrent_unordered_map <int, std::unique_ptr<SESSION>> users;
     concurrent_unordered_map <int,shared_ptr <SESSION>> users;
     
-    //std::array<SESSION, MAX_USER> users;
+    
 
     std::unordered_map<int, Monster*> monsters;
 

@@ -51,17 +51,16 @@ void SESSION::process_packet(char* p) {
 	}
 	case C2S_P_ENTER_ROOM: {
 
-		
 		cs_packet_enter_room* pkt = reinterpret_cast<cs_packet_enter_room*>(p);
 
 		int room_Num = static_cast<int>(pkt->room_number);
 		bool is_ready = false;
+		lock_guard<mutex> lock(g_server.rooms[room_Num].RoomMutex);
 
 
 		if (g_server.rooms[room_Num].IsAddPlayer())			//id 값이 맴버 변수에 들어감 
-		{
-			this->local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
-
+		{		//여기서 락을 안해주면 컨텍스트 스위칭 일어나서 local_id값과 Room에 있는 인덱스 번호가 안맞을 수 있다?
+			local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
 			g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
 
 		}
@@ -70,10 +69,6 @@ void SESSION::process_packet(char* p) {
 			cout << "이미 " << room_Num << "번 방에는 사람이 꽉 찼습니다" << endl;
 			break;
 		}
-
-
-
-
 		sc_packet_select_room sp;
 		sp.size = sizeof(sp);
 		sp.type = S2C_P_SELECT_ROOM;
@@ -113,23 +108,8 @@ void SESSION::process_packet(char* p) {
 		std::cout << "[클라이언트 " << m_uniqueNo << "]이 " << (int)room_num << "번 방에 입장했습니다." << std::endl;
 		break;
 	}
-	case C2S_P_ROOM_UPDATE: {
-		// Every rooms state send
-
-		sc_packet_room_info pkt;
-		pkt.size = sizeof(pkt);
-		pkt.type = S2C_P_UPDATEROOM;
-		for (int i = 0; i < g_server.rooms.size(); ++i) {
-			pkt.room_info[i] = g_server.rooms[i].GetPlayerCount();
-		}
-		for (auto& player : g_server.users)
-			player.second->do_send(&pkt);
-
-		break;
-	}
-	
 	case C2S_P_GetREADY: {
-		//lock_guard<mutex> lock(myMutex);
+		
 		cs_packet_getready* pkt = reinterpret_cast<cs_packet_getready*>(p);
 		std::vector<int> room_players;
 		int room_num = static_cast<int>(pkt->room_number);		//이미 방에 들어갈 떄 진행하니까 굳이 필요는 x
@@ -137,32 +117,32 @@ void SESSION::process_packet(char* p) {
 		if (ready == true)
 		{
 			g_server.rooms[room_num].setReadyUser(1);
-			
+
 		}
 		else
 		{
 			g_server.rooms[room_num].setReadyUser(-1);
 
 		}
-		
 		sc_packet_set_ready rp;
 		rp.size = sizeof(rp);
 		rp.type = S2C_P_SETREADY;
 		rp.Local_id = g_server.users[m_uniqueNo]->local_id;
 		rp.room_number = static_cast<char>(room_num);
 		rp.is_ready = ready;
-
-		for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)
-			room_players.emplace_back(g_server.rooms[room_num].getID(i));		//room_players에 해당 방에 들어가 있는 ID값 넣기
-
+		{
+			lock_guard<mutex> lock(g_server.rooms[room_num].RoomMutex);
+			for (int i = 0; i < g_server.rooms[room_num].id.size(); ++i)
+				room_players.emplace_back(g_server.rooms[room_num].getID(i));		//room_players에 해당 방에 들어가 있는 ID값 넣기
+		}
 		for (auto& id : room_players)					//나를 제외한 나머지 방에있는 플레이어들에게 보내기
 			if (id != m_uniqueNo)
 				g_server.users[id]->do_send(&rp);
 
 
-		// 3명 다 준비 완료일 때
-		if (g_server.rooms[room_num].GetReadyUser() >= g_server.rooms[room_num].id.size()) {
-			
+		// 3명 다 준비 완료일 때 인게임 넘어가는 패킷 넘어주기 
+		if (g_server.rooms[room_num].GetReadyUser() == g_server.rooms[room_num].id.size()) {
+
 			sc_packet_Ingame_start sp;
 			sp.size = sizeof(sp);
 			sp.type = S2C_P_ALLREADY;
@@ -180,12 +160,27 @@ void SESSION::process_packet(char* p) {
 
 		else
 		{
-			
-			if(ready)
-			std::cout << "[클라이언트 " << m_uniqueNo << "]이 " << (int)room_num << "번 방에서 준비완료했습니다." << std::endl;
+
+			if (ready)
+				std::cout << "[클라이언트 " << m_uniqueNo << "]이 " << (int)room_num << "번 방에서 준비완료했습니다." << std::endl;
 			else
 				std::cout << "[클라이언트 " << m_uniqueNo << "]이 준비를 취소했습니다." << std::endl;
 		}
+		break;
+	}
+
+	case C2S_P_ROOM_UPDATE: {
+		// Every rooms state send
+
+		sc_packet_room_info pkt;
+		pkt.size = sizeof(pkt);
+		pkt.type = S2C_P_UPDATEROOM;
+		for (int i = 0; i < g_server.rooms.size(); ++i) {
+			pkt.room_info[i] = g_server.rooms[i].GetPlayerCount();
+		}
+		for (auto& player : g_server.users)
+			player.second->do_send(&pkt);
+
 		break;
 	}
 	case C2S_P_MOVE:
@@ -195,7 +190,7 @@ void SESSION::process_packet(char* p) {
 
 		m_pos = pkt->pos;
 		float time = pkt->time;
-		MoveAnimationState state = static_cast<MoveAnimationState>(pkt->state);
+		unsigned int state = pkt->state;
 
 
 		//collision check
@@ -254,11 +249,9 @@ void SESSION::BroadCasting_position(const int& size)
 
 
 
-Network::Network()
+Network::Network() : rooms(10)
 {
-	for (int i = 0; i < 10; ++i) {
-		rooms.emplace_back(i);  // ← 각 Room에 인덱스를 넘김
-	}
+
 }
 
 void Network::Init() {

@@ -1,6 +1,9 @@
 #include "GameObject.h"
-
-
+#include "C_Socket.h"
+#include "ObjectManager.h"
+#include "protocol.h"
+extern C_Socket Client;
+extern std::unordered_map<int, Player> Players;
 CGameObject::CGameObject(const CGameObject& other)
 {
 	m_strName = other.m_strName;	
@@ -15,11 +18,11 @@ CGameObject::CGameObject(const CGameObject& other)
 	UpdateLocalMatrix();
 
 	m_bUseBoundingInfo = other.m_bUseBoundingInfo;
-
 	m_OBB = other.m_OBB;
 	m_BoundingSphere = other.m_BoundingSphere;
 	// SBT may have already registered Resources (in the case of not Skinning)
 	// Share material if index is the same
+
 
 	for (int i = 0; i < other.m_vMaterials.size(); ++i)
 		m_vMaterials.emplace_back(other.m_vMaterials[i]);
@@ -907,8 +910,13 @@ void CSkinningObject::UpdateWorldMatrix()
 }
 void CSkinningObject::SetPosition(XMFLOAT3 pos)
 {
+
 	m_xmf3Position = pos;
+	
 	UpdateWorldMatrix();
+	
+	
+
 }
 void CSkinningObject::SetLookDirection(const XMFLOAT3& look, const XMFLOAT3& up)
 {
@@ -1051,6 +1059,11 @@ void CSkinningObject::sliding(float depth, const XMFLOAT3& normal, float meshHei
 void CSkinningObject::SetMoveDirection(XMFLOAT3& pos)
 {
 	m_xmf3MoveDirection = pos;
+}
+
+void CSkinningObject::SetWolrdMatrix(XMFLOAT4X4& mat)
+{
+	m_xmf4x4WorldMatrix = mat;
 }
 
 std::vector<std::unique_ptr<CSkinningInfo>>& CSkinningObject::getSkinningInfo()
@@ -1421,7 +1434,9 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 	}
 }
 
+
 // ========================================================================================
+
 
 CProjectile::CProjectile()
 {
@@ -1439,11 +1454,11 @@ void CProjectile::IsMoving(float fElapsedTime)
 	m_Objects->SetPosition(m_xmf3Position);
 
 	m_fElapsedTime += fElapsedTime;
-	if (m_fLifetime > 0.0f && m_fElapsedTime >= m_fLifetime)
+	/*if (m_fLifetime > 0.0f && m_fElapsedTime >= m_fLifetime)
 	{
 		m_bActive = false;
 		m_fElapsedTime = 0.0f;
-	}
+	}*/
 }
 
 void CProjectile::UpdateWorldMatrix()
@@ -1451,3 +1466,4 @@ void CProjectile::UpdateWorldMatrix()
 	XMMATRIX mtxTranslate = XMMatrixTranslation(m_xmf3Position.x, m_xmf3Position.y, m_xmf3Position.z);
 	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, mtxTranslate);
 }
+

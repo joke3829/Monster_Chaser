@@ -310,6 +310,7 @@ public:
 	void move(float fElapsedTime, short arrow);
 	void sliding(float depth, const XMFLOAT3& normal, float meshHeight);
 	void SetMoveDirection(XMFLOAT3& pos);
+	void SetWolrdMatrix(XMFLOAT4X4& mat);
 
 	std::string getName() const { return m_strObjectName; }
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
@@ -396,7 +397,9 @@ public:
 
 	void setMoveDirection(XMFLOAT3 direction) { m_xmf3MoveDirection = direction; }
 	void setActive(bool state) { m_bActive = state; }
-	void setPosition(XMFLOAT3 pos) { m_xmf3Position = pos; m_xmf3Position.y = 3.0f; }
+
+	void setPosition(XMFLOAT3 pos) { m_xmf3Position = pos; }
+
 	void setSpeed(float spd) { m_fSpeed = spd; }
 	void setLifetime(float life) { m_fLifetime = life; }
 	void setTime(float time) { m_fElapsedTime = time; }

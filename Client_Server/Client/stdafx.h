@@ -18,9 +18,11 @@
 #include <unordered_map>
 #include <WinSock2.h>
 #include <thread>
-#include <WS2tcpip.h>
+
+
 
 #include <iostream>
+#include <WS2tcpip.h>
 #include <vector>
 #include <array>
 #include <algorithm>
@@ -28,11 +30,15 @@
 #include <fstream>
 #include <timeapi.h>
 #include <random>
-#include <numeric>
-#include <cmath>
+
+#include <array>
 
 #include <conio.h>		//room UI 들어오면 없앰
 #include <chrono>		//클라 UI들어오면 없앰
+
+#include <numeric>
+#include <cmath>
+
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -48,6 +54,7 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "Winmm.lib")
 #pragma comment(lib, "ws2_32.lib")
+
 
 using namespace DirectX;
 using namespace std::chrono;
@@ -95,6 +102,7 @@ enum MoveAnimationState
 	SKILL2 = 31,
 	SKILL1 = 32
 };
+enum TitleState { Title, RoomSelect, InRoom, GoLoading };
 //========================================================================================
 
 // 상수 정의 ===========================================================================
