@@ -3729,6 +3729,11 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		float fy = objectWorld._42 - (30 * fElapsedTime);
 
 		float terrainHeight = m_pHeightMap->GetHeightinWorldSpace(objectWorld ._41 + 1024.0f, objectWorld._43 + 1024.0f);
+		if (objectWorld._43 >= -500.0f) {
+			if (terrainHeight < 10.0f) {
+				terrainHeight = 10.0f;
+			}
+		}
 		if (fy < terrainHeight) 
 			playerWorld._42 = terrainHeight;
 		else 
