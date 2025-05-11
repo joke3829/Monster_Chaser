@@ -190,7 +190,7 @@ void SESSION::process_packet(char* p) {
 
 		m_pos = pkt->pos;
 		float time = pkt->time;
-		MoveAnimationState state = static_cast<MoveAnimationState>(pkt->state);
+		unsigned int state = pkt->state;
 
 
 		//collision check

@@ -2785,12 +2785,12 @@ void CRaytracingWinterLandScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessa
 			XMFLOAT3 characterDir = cameraDir;
 			characterDir.y = 0.0f; // delete y value
 			m_pResourceManager->getSkinningObjectList()[Client.get_id()]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(m_fElapsedtime,Client.get_id());
+			m_pResourceManager->UpdatePosition(m_fElapsedtime, Client.get_id());
 			m_pResourceManager->getAnimationManagers()[Client.get_id()]->OnAttackInput();
-			m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[Client.get_id()]->getPosition());
+			/*m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[Client.get_id()]->getPosition());
 			m_pResourceManager->getProjectileList()[0]->setMoveDirection(characterDir);
 			m_pResourceManager->getProjectileList()[0]->setActive(true);
-			m_pResourceManager->getProjectileList()[0]->setTime(0.0f);
+			m_pResourceManager->getProjectileList()[0]->setTime(0.0f);*/
 			m_bDoingCombo = true;
 		}
 		break;
@@ -2911,6 +2911,8 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 
 			if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
 				memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+				CAnimationManager* myManager = m_pResourceManager->getAnimationManagers()[Client.get_id()].get();
+				Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());
 				return;
 			}
 
@@ -3378,8 +3380,8 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 			}
 			memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 
-		
-			Client.SendMovePacket(fElapsedTime, m_pResourceManager->getAnimationManagers()[Client.get_id()]->getCurrentSet());
+			CAnimationManager* myManager = m_pResourceManager->getAnimationManagers()[Client.get_id()].get();
+			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());
 		}
 	}
 }
@@ -3667,7 +3669,6 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	// Skinning Object BLAS ReBuild
 	m_pResourceManager->ReBuildBLAS();
 
-	bool test = false;
 	//for (auto& animationManager : m_pResourceManager->getAnimationManagers()) {
 	//	animationManager->UpdateCombo(fElapsedTime);
 	//	if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
@@ -3685,34 +3686,41 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	//		m_bDoingCombo = false;
 	//	}
 	//}
-
-	m_pResourceManager->getAnimationManagers()[Client.get_id()]->UpdateCombo(fElapsedTime);
-	if (!m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsInCombo() && m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsAnimationFinished() && !m_pResourceManager->getAnimationManagers()[Client.get_id()]->CheckCollision()) {
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false);
-		test = true;
-		m_bLockAnimation1 = false;
-		m_bLockAnimation = false;
-		m_bDoingCombo = false;
-	}
-	if (m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsComboInterrupted()) {
-		test = true;
-		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ClearComboInterrupted();
-		m_bLockAnimation1 = false;
-		m_bLockAnimation = false;
-		m_bDoingCombo = false;
-	}
-
-	for (auto& pr : m_pResourceManager->getProjectileList()) {
-		pr->IsMoving(fElapsedTime);
-	}
-
 	m_pResourceManager->UpdateWorldMatrix();
 
-	if (test) {
-		m_pResourceManager->UpdatePosition(fElapsedTime,Client.get_id());
+	for (int i = 0; i < Players.size(); ++i) {
+		bool test = false;
+		m_pResourceManager->getAnimationManagers()[Client.get_id()]->UpdateCombo(fElapsedTime);
+		if (!m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsInCombo() && m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsAnimationFinished() && !m_pResourceManager->getAnimationManagers()[Client.get_id()]->CheckCollision()) {
+			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false);
+			test = true;
+			m_bLockAnimation1 = false;
+			m_bLockAnimation = false;
+			m_bDoingCombo = false;
+		}
+		if (m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsComboInterrupted()) {
+			test = true;
+			m_pResourceManager->getAnimationManagers()[Client.get_id()]->ClearComboInterrupted();
+			m_bLockAnimation1 = false;
+			m_bLockAnimation = false;
+			m_bDoingCombo = false;
+		}
+		if (test) {
+			m_pResourceManager->UpdatePosition(fElapsedTime, Client.get_id());
+		}
 	}
+	/*for (auto& pr : m_pResourceManager->getProjectileList()) {
+		pr->IsMoving(fElapsedTime);
+	}*/
 
+
+
+	int ss = 0;
 	for (auto& p : m_pResourceManager->getSkinningObjectList()) {
+		if (ss != Client.get_id()) {
+			++ss;
+			continue;
+		}
 		XMFLOAT4X4& playerWorld = p->getWorldMatrix();
 		XMFLOAT4X4& playerPreWorld = p->getPreWorldMatrix();
 		XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
@@ -3725,6 +3733,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 			playerWorld._42 -= (30 * fElapsedTime);
 		p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
 		playerPreWorld._42 = playerWorld._42;
+		++ss;
 	}
 	
 	if (m_pCamera->getThirdPersonState()) {

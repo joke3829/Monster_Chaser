@@ -72,6 +72,7 @@ public:
 
 	const std::vector<CGameObject*>& getFrame()const { return m_vFrames; }
 	UINT& getCurrentSet() {return m_nCurrentSet;}
+	float getElapsedTime() const { return m_fElapsedTime; }
 protected:
 	UINT m_nAnimationSets{};
 	UINT m_nCurrentSet{};

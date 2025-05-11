@@ -186,8 +186,8 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_move* p = reinterpret_cast<sc_packet_move*>(ptr);
 		//·ÎÄÃID
 		int local_id = p->Local_id;
-		int time = p->time;
-		MoveAnimationState state = static_cast<MoveAnimationState>(p->state);
+		float time = p->time;
+		unsigned int state = p->state;
 		if (local_id == Client.get_id()) {
 			return;
 		}
