@@ -2,7 +2,7 @@
 #include "stdafx.h"
 #include "protocol.h"
 #include "GameObject.h"
-//#include "ObjectManager.h"
+#include "ObjectManager.h"
 #include "Scene.h"
 #include <mutex>
 
