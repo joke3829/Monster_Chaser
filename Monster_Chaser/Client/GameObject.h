@@ -310,6 +310,7 @@ public:
 	void move(float fElapsedTime, short arrow);
 	void sliding(float depth, const XMFLOAT3& normal, float meshHeight);
 	void SetMoveDirection(XMFLOAT3& pos);
+	void SetWolrdMatrix(XMFLOAT4X4& mat);
 
 	std::string getName() const { return m_strObjectName; }
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
