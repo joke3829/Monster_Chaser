@@ -2604,6 +2604,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 			ma.m_bHasEmissiveColor = false;
 	}*/
 	Players[0].setRenderingObject(skinned[0].get());
+	Players[0].setAnimationManager(aManagers[0].get());
+
 	for (int i = 1; i < Players.size(); ++i) {
 		skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 		skinned[i]->CopyFromOtherObject(skinned[0].get());
@@ -2616,6 +2618,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		aManagers[i]->SetFramesPointerFromSkinningObject(skinned[i]->getObjects());
 		aManagers[i]->MakeAnimationMatrixIndex(skinned[i].get());
 		Players[i].setRenderingObject(skinned[i].get());
+		Players[i].setAnimationManager(aManagers[i].get());
 	}
 
 	UINT finalindex = normalObjects.size();
