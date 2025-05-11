@@ -211,7 +211,6 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;				//어떤 방을 골랐는지 넣어주는 변수
-							g_state = InRoom;
 							// 여기서 패킷 보내주기? selectroom 패킷  추후에 서버에서 동시에 눌렀을때 등등 예외처리도 해야됨
 							Client.SendEnterRoom(currentRoom);
 							break;
@@ -225,7 +224,6 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;
-							g_state = InRoom;
 							Client.SendEnterRoom(currentRoom);
 							// 여기서 패킷 보내주기? selectroom 패킷 
 							break;

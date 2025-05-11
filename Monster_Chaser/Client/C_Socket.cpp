@@ -133,13 +133,14 @@ void C_Socket::process_packet(char* ptr)
 		int room_num = static_cast<int>(p->room_number);
 		int local_id = p->Local_id;
 		if (!Players.contains(local_id)) {
-
+			std::cout << local_id << " 번쨰 플레이어 들어옴" << std::endl;
 			Player newPlayer(local_id); // 명시적 생성자 사용
 			Players.emplace(local_id, std::move(newPlayer));
 			Players.try_emplace(local_id, local_id);
 			
 			if (Client.get_id() == -1) {
 				Client.set_id(local_id);
+				std::cout << local_id << " 번쨰 플레이어 들어옴 2번째 " << std::endl;
 				//userPerRoom[room_num]++;
 				g_state = InRoom;
 			}
