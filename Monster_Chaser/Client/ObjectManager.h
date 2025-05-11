@@ -3,6 +3,7 @@
 #include "protocol.h"
 #include "mutex"
 #include "GameObject.h"
+#include "AnimationManager.h"
 
 class ObjectManager {
 public:
@@ -30,7 +31,13 @@ public:
         Client_Object = obj;
     }
 
+    void setAnimationManager(CAnimationManager* ani)
+    {
+        Client_AniManager = ani;
+    }
+
     CSkinningObject* getRenderingObject() { return Client_Object; }
+    CAnimationManager* getAnimationManager() { return Client_AniManager; }
 
     void setPosition(const XMFLOAT4X4& pos) {
         ObjectManager::setMatrix(pos);
@@ -52,6 +59,7 @@ private:
     int hp = 100;
     
     CSkinningObject* Client_Object = nullptr;
+    CAnimationManager* Client_AniManager = nullptr;
     // 더 필요한 상태값들...
 };
 

@@ -394,15 +394,11 @@ void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
 	}
 }
 
-void CResourceManager::UpdatePosition(float fElapsedTime)
+void CResourceManager::UpdatePosition(float fElapsedTime, int id)
 {
-	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
-		if (m_vAnimationManager[i]) {
-			CSkinningObject* skinningObject = getSkinningObjectList()[i].get();
-			if (skinningObject) {
-				m_vAnimationManager[i]->UpdateAniPosition(fElapsedTime, skinningObject);
-			}
-		}
+	CSkinningObject* skinningObject = getSkinningObjectList()[id].get();
+	if (skinningObject) {
+		m_vAnimationManager[id]->UpdateAniPosition(fElapsedTime, skinningObject);
 	}
 }
 

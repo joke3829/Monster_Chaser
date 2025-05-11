@@ -36,7 +36,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: 여기에 코드를 입력합니다.
-    if (!Client.Init("121.142.198.18", PORT_NUM))            //Change IP Address (DY - 220.120.240.160)
+    if (!Client.Init("220.120.240.160", PORT_NUM))            //Change IP Address (DY - 220.120.240.160)
     {
         MessageBoxA(nullptr, "서버 연결 실패. 클라이언트를 종료합니다.", "연결 실패", MB_ICONERROR);
         return 0;  // 창 생성 없이 종료

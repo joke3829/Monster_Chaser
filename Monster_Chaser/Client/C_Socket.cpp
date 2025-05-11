@@ -195,8 +195,9 @@ void C_Socket::process_packet(char* ptr)
 
 		// write down to position bogan process~
 	
-		Players[local_id].getRenderingObject()->SetPosition({ position._41, position._42, position._43 });	//setposition
-
+		Players[local_id].getRenderingObject()->SetWolrdMatrix(position); //이거 떄문에 애니메이션 중 위치가 초기화 됨.
+		Players[local_id].getAnimationManager()->ChangeAnimation(state, true);
+		Players[local_id].getAnimationManager()->UpdateAnimation(time);
 
 		//------------------
 
