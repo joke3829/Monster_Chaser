@@ -154,7 +154,6 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
-	XMFLOAT4X4 targetPosition;
 	m_fElapsedTime += fElapsedTime; // 시간 누적
 	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 
@@ -173,11 +172,12 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 
 void CAnimationManager::UpdateAnimation(float fElapsedTime)
 {
-	/*m_fElapsedTime = fElapsedTime;
-	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
-	while (m_fElapsedTime > length)
-		m_fElapsedTime -= length;
-	m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
+	//m_fElapsedTime = fElapsedTime;
+	//float length = m_vAnimationSets[m_nCurrentSet]->getLength();
+	//while (m_fElapsedTime > length)
+	//	m_fElapsedTime -= length;
+	//m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
+
 	m_fElapsedTime += fElapsedTime;
 	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 	if (m_bPlayOnce) {

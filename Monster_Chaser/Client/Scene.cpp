@@ -2805,15 +2805,12 @@ void CRaytracingWinterLandScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessa
 			if (m_pCamera->getThirdPersonState()) {
 				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 
-				auto* animationManager = m_pResourceManager->getAnimationManagers()[Client.get_id()].get();
-				if (animationManager && !animationManager->getFrame().empty()) {
-					CGameObject* frame = animationManager->getFrame()[0];
-					if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
-						m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
-						XMFLOAT3 characterDir = cameraDir;
-						characterDir.y = 0.0f; // delete y value
-						m_pResourceManager->getSkinningObjectList()[Client.get_id()]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					}
+				CGameObject* frame = m_pResourceManager->getAnimationManagers()[Client.get_id()].get()->getFrame()[0];
+				if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo && !m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsInCombo() && !m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsAnimationFinished()) {
+					m_pResourceManager->getSkinningObjectList()[Client.get_id()]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
+					XMFLOAT3 characterDir = cameraDir;
+					characterDir.y = 0.0f; // delete y value
+					m_pResourceManager->getSkinningObjectList()[Client.get_id()]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 				}
 			}
 			else
@@ -3382,7 +3379,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 			memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 
 		
-			Client.SendMovePacket(m_fElapsedtime, m_pResourceManager->getAnimationManagers()[Client.get_id()]->getCurrentSet());
+			Client.SendMovePacket(fElapsedTime, m_pResourceManager->getAnimationManagers()[Client.get_id()]->getCurrentSet());
 		}
 	}
 }
@@ -3671,22 +3668,38 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->ReBuildBLAS();
 
 	bool test = false;
-	for (auto& animationManager : m_pResourceManager->getAnimationManagers()) {
-		animationManager->UpdateCombo(fElapsedTime);
-		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
-			animationManager->ChangeAnimation(IDLE, false);
-			test = true;
-			m_bLockAnimation1 = false;
-			m_bLockAnimation = false;
-			m_bDoingCombo = false;
-		}
-		if (animationManager->IsComboInterrupted()) {
-			test = true;
-			animationManager->ClearComboInterrupted();
-			m_bLockAnimation1 = false;
-			m_bLockAnimation = false;
-			m_bDoingCombo = false;
-		}
+	//for (auto& animationManager : m_pResourceManager->getAnimationManagers()) {
+	//	animationManager->UpdateCombo(fElapsedTime);
+	//	if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
+	//		animationManager->ChangeAnimation(IDLE, false);
+	//		test = true;
+	//		m_bLockAnimation1 = false;
+	//		m_bLockAnimation = false;
+	//		m_bDoingCombo = false;
+	//	}
+	//	if (animationManager->IsComboInterrupted()) {
+	//		test = true;
+	//		animationManager->ClearComboInterrupted();
+	//		m_bLockAnimation1 = false;
+	//		m_bLockAnimation = false;
+	//		m_bDoingCombo = false;
+	//	}
+	//}
+
+	m_pResourceManager->getAnimationManagers()[Client.get_id()]->UpdateCombo(fElapsedTime);
+	if (!m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsInCombo() && m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsAnimationFinished() && !m_pResourceManager->getAnimationManagers()[Client.get_id()]->CheckCollision()) {
+		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ChangeAnimation(IDLE, false);
+		test = true;
+		m_bLockAnimation1 = false;
+		m_bLockAnimation = false;
+		m_bDoingCombo = false;
+	}
+	if (m_pResourceManager->getAnimationManagers()[Client.get_id()]->IsComboInterrupted()) {
+		test = true;
+		m_pResourceManager->getAnimationManagers()[Client.get_id()]->ClearComboInterrupted();
+		m_bLockAnimation1 = false;
+		m_bLockAnimation = false;
+		m_bDoingCombo = false;
 	}
 
 	for (auto& pr : m_pResourceManager->getProjectileList()) {
