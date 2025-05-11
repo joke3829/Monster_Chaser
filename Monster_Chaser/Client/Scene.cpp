@@ -2590,7 +2590,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// Copy(normalObject) & SetPreMatrix ===============================
 
 	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -998.0f));
+	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -998.0f));
+	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
 	skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
 	skinned[1]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
@@ -3612,6 +3613,11 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		float fy = objectWorld._42 - (30 * fElapsedTime);
 
 		float terrainHeight = m_pHeightMap->GetHeightinWorldSpace(objectWorld ._41 + 1024.0f, objectWorld._43 + 1024.0f);
+		if (objectWorld._43 >= -500.0f) {
+			if (terrainHeight < 10.0f) {
+				terrainHeight = 10.0f;
+			}
+		}
 		if (fy < terrainHeight) 
 			playerWorld._42 = terrainHeight;
 		else 
