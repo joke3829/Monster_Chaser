@@ -15,95 +15,18 @@ void CAccelerationStructureManager::UpdateScene(XMFLOAT3& cameraEye)
 {
 	std::vector<std::unique_ptr<CGameObject>>& objects = m_pResourceManager->getGameObjectList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
-	/*int i = m_nStaticMesh;
-	if (m_bFirst) {
-		for (std::unique_ptr<CGameObject>& object : objects) {
-			int n = object->getMeshIndex();
-			if (n != -1) {
-				if (meshes[n]->getHasVertex()) {
-					m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-					m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-					m_pInstanceData[i].InstanceID = i;
-					m_pInstanceData[i].InstanceMask = 1;
-					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
-					++i;
-				}
-			}
-		}
-		m_nStaticMesh = i;
-		m_bFirst = false;
-	}
-	for (std::unique_ptr<CSkinningObject>& Skinning : m_pResourceManager->getSkinningObjectList()) {
-		std::vector<ComPtr<ID3D12Resource>>& skinningBLASs = Skinning->getBLAS();
-		std::vector<std::shared_ptr<Mesh>>& sMeshes = Skinning->getMeshes();
-		for (std::unique_ptr<CGameObject>& object : Skinning->getObjects()) {
-			int n = object->getMeshIndex();
-			if (n != -1) {
-				if (sMeshes[n]->getHasVertex()) {
-					m_pInstanceData[i].AccelerationStructure = skinningBLASs[n]->GetGPUVirtualAddress();
-					m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-					m_pInstanceData[i].InstanceID = i;
-					m_pInstanceData[i].InstanceMask = 1;
-					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-					if(sMeshes[n]->getbSkinning())
-						XMStoreFloat3x4(ptr, XMLoadFloat4x4(&Skinning->getPreWorldMatrix()));
-					else
-						XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
-					++i;
-				}
-			}
-		}
-	}*/
 	UINT i{};
 	BoundingSphere validSphere = BoundingSphere(cameraEye, 600.0f);
 	for (std::unique_ptr<CGameObject>& object : objects) {
-		int n = object->getMeshIndex();
-		if (n != -1) {
-			if (meshes[n]->getHasVertex()) {
-				BoundingOrientedBox wBox;
-				bool bIntersect = false;
-				if (meshes[n]->getHasBoundingBox()) {
-					meshes[n]->getOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
-					if (wBox.Intersects(validSphere))  bIntersect = true;
-				}
-				else if (object->getBoundingInfo() & 0x0011) {	// box
-					object->getObjectOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
-					if (wBox.Intersects(validSphere)) bIntersect = true;
-				}
-				else if (object->getBoundingInfo() & 0x1100) {	// sphere
-					BoundingSphere wSphere;
-					object->getObjectSphere().Transform(wSphere, XMLoadFloat4x4(&object->getWorldMatrix()));
-					if (wSphere.Intersects(validSphere)) bIntersect = true;
-				}
-				if (bIntersect) {
-					m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
-					m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
-					m_pInstanceData[i].InstanceID = object->getInstanceID();
-					m_pInstanceData[i].InstanceMask = 1;
-					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
-					++i;
-				}
-			}
-		}
-	}
-
-	for (std::unique_ptr<CSkinningObject>& Skinning : m_pResourceManager->getSkinningObjectList()) {
-		std::vector<ComPtr<ID3D12Resource>>& skinningBLASs = Skinning->getBLAS();
-		std::vector<std::shared_ptr<Mesh>>& sMeshes = Skinning->getMeshes();
-		for (std::unique_ptr<CGameObject>& object : Skinning->getObjects()) {
+		if (object->getRenderState()) {
 			int n = object->getMeshIndex();
 			if (n != -1) {
-				if (sMeshes[n]->getHasVertex()) {
+				if (meshes[n]->getHasVertex()) {
 					BoundingOrientedBox wBox;
 					bool bIntersect = false;
-					if (sMeshes[n]->getHasBoundingBox()) {
-						sMeshes[n]->getOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
-						if (wBox.Intersects(validSphere)) bIntersect = true;
+					if (meshes[n]->getHasBoundingBox()) {
+						meshes[n]->getOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
+						if (wBox.Intersects(validSphere))  bIntersect = true;
 					}
 					else if (object->getBoundingInfo() & 0x0011) {	// box
 						object->getObjectOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
@@ -115,17 +38,56 @@ void CAccelerationStructureManager::UpdateScene(XMFLOAT3& cameraEye)
 						if (wSphere.Intersects(validSphere)) bIntersect = true;
 					}
 					if (bIntersect) {
-						m_pInstanceData[i].AccelerationStructure = skinningBLASs[n]->GetGPUVirtualAddress();
+						m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
 						m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
 						m_pInstanceData[i].InstanceID = object->getInstanceID();
 						m_pInstanceData[i].InstanceMask = 1;
 						m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
 						auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
-						if (sMeshes[n]->getbSkinning())
-							XMStoreFloat3x4(ptr, XMLoadFloat4x4(&Skinning->getPreWorldMatrix()));
-						else
-							XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
+						XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
 						++i;
+					}
+				}
+			}
+		}
+	}
+
+	for (std::unique_ptr<CSkinningObject>& Skinning : m_pResourceManager->getSkinningObjectList()) {
+		std::vector<ComPtr<ID3D12Resource>>& skinningBLASs = Skinning->getBLAS();
+		std::vector<std::shared_ptr<Mesh>>& sMeshes = Skinning->getMeshes();
+		for (std::unique_ptr<CGameObject>& object : Skinning->getObjects()) {
+			if (object->getRenderState()) {
+				int n = object->getMeshIndex();
+				if (n != -1) {
+					if (sMeshes[n]->getHasVertex()) {
+						BoundingOrientedBox wBox;
+						bool bIntersect = false;
+						if (sMeshes[n]->getHasBoundingBox()) {
+							sMeshes[n]->getOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
+							if (wBox.Intersects(validSphere)) bIntersect = true;
+						}
+						else if (object->getBoundingInfo() & 0x0011) {	// box
+							object->getObjectOBB().Transform(wBox, XMLoadFloat4x4(&object->getWorldMatrix()));
+							if (wBox.Intersects(validSphere)) bIntersect = true;
+						}
+						else if (object->getBoundingInfo() & 0x1100) {	// sphere
+							BoundingSphere wSphere;
+							object->getObjectSphere().Transform(wSphere, XMLoadFloat4x4(&object->getWorldMatrix()));
+							if (wSphere.Intersects(validSphere)) bIntersect = true;
+						}
+						if (bIntersect) {
+							m_pInstanceData[i].AccelerationStructure = skinningBLASs[n]->GetGPUVirtualAddress();
+							m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+							m_pInstanceData[i].InstanceID = object->getInstanceID();
+							m_pInstanceData[i].InstanceMask = 1;
+							m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+							auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+							if (sMeshes[n]->getbSkinning())
+								XMStoreFloat3x4(ptr, XMLoadFloat4x4(&Skinning->getPreWorldMatrix()));
+							else
+								XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
+							++i;
+						}
 					}
 				}
 			}

@@ -70,6 +70,9 @@
     <Filter Include="UI">
       <UniqueIdentifier>{942193e9-5883-4f37-ad45-b44969d80f51}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Character">
+      <UniqueIdentifier>{48d0a0f6-d308-4778-b115-a3a09c6467ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -141,6 +144,9 @@
     <ClInclude Include="UIObject.h">
       <Filter>UI</Filter>
     </ClInclude>
+    <ClInclude Include="PlayableCharacter.h">
+      <Filter>Resource\Character</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -202,6 +208,9 @@
     </ClCompile>
     <ClCompile Include="UIObject.cpp">
       <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayableCharacter.cpp">
+      <Filter>Resource\Character</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

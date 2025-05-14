@@ -55,7 +55,6 @@ public:
 	std::vector<Mesh*> getMeshPtrList();
 	std::vector<std::unique_ptr<Mesh>>& getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& getTextureList();
-	std::vector <std::unique_ptr<CProjectile>>& getProjectileList();
 
 	std::vector<std::unique_ptr<CSkinningObject>>& getSkinningObjectList() { return m_vSkinningObject; }
 	std::vector<std::unique_ptr<CAnimationManager>>& getAnimationManagers() { return m_vAnimationManager; }
@@ -69,7 +68,6 @@ private:
 	std::vector<std::unique_ptr<CGameObject>> m_vGameObjectList;
 	std::vector<std::unique_ptr<Mesh>> m_vMeshList;
 	std::vector<std::unique_ptr<CTexture>> m_vTextureList;
-	std::vector<std::unique_ptr<CProjectile>> m_vProjectileList;
 
 	// Lights
 	ComPtr<ID3D12Resource> m_pLights;

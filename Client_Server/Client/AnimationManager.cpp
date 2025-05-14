@@ -4,6 +4,7 @@
 #include "C_Socket.h"
 
 extern C_Socket Client;
+
 CAnimationSet::CAnimationSet(std::ifstream& inFile, UINT nBones)
 {
 	UINT tempInt{};
@@ -53,7 +54,7 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 		XMVECTOR S0, R0, T0, S1, R1, T1;
 		XMMatrixDecompose(&S0, &R0, &T0, XMLoadFloat4x4(&m_vTransforms[index][i]));
 		XMMatrixDecompose(&S1, &R1, &T1, XMLoadFloat4x4(&m_vTransforms[index + 1][i]));
-		
+
 		XMVECTOR defaultVec = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 
 		R0 = XMVectorSelect(R0, defaultVec, XMVectorIsNaN(R0));
@@ -62,16 +63,14 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 		T1 = XMVectorSelect(T1, defaultVec, XMVectorIsNaN(T1));
 		S0 = XMVectorSelect(S0, XMVectorReplicate(1.0f), XMVectorIsNaN(S0));
 		S1 = XMVectorSelect(S1, XMVectorReplicate(1.0f), XMVectorIsNaN(S1));
-		
+
 		XMVECTOR S = XMVectorLerp(S0, S1, t);
 		XMVECTOR T = XMVectorLerp(T0, T1, t);
 		XMVECTOR R = XMQuaternionSlerp(R0, R1, t);
 		//XMStoreFloat4x4(&xmf, XMMatrixTranspose(XMMatrixAffineTransformation(S, XMVectorZero(), R, T)));
 		XMStoreFloat4x4(&xmf, XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
 		vMatrixes[i]->SetLocalMatrix(xmf);
-		
 	}
-
 }
 
 // ====================================================================================
@@ -181,7 +180,7 @@ void CAnimationManager::UpdateAnimation(float fElapsedTime)
 
 void CAnimationManager::UpdateAnimationMatrix()
 {
-	for (int i = 0; i < m_vMatrixes.size(); ++i) 
+	for (int i = 0; i < m_vMatrixes.size(); ++i)
 		XMStoreFloat4x4(&m_vMatrixes[i], XMMatrixTranspose(XMLoadFloat4x4(&m_vFrames[i]->getAnimationMatrix())));
 	memcpy(m_pMappedPointer, m_vMatrixes.data(), sizeof(XMFLOAT4X4) * m_vMatrixes.size());
 }

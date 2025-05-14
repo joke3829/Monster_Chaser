@@ -1,7 +1,7 @@
 #pragma once
 #include "Camera.h"
 #include "RayTracingPipeline.h"
-#include "ResourceManager.h"
+#include "PlayableCharacter.h"
 #include "ShaderBindingTableManager.h"
 #include "AccelerationStructureManager.h"
 #include "UIObject.h"
@@ -9,8 +9,6 @@
 #include "ObjectManager.h"
 
 extern DXResources g_DxResource;
-
-
 
 class CScene {
 public:
@@ -39,20 +37,9 @@ protected:
 	ComPtr<ID3D12Resource>				m_pDepthStencilBuffer{};
 	ComPtr<ID3D12DescriptorHeap>		m_DSV{};
 
-	bool m_bLockAnimation = false;
-	bool m_bLockAnimation1 = false;
-	bool m_bStopAnimaiton = false;
-	bool m_bDoingCombo = false;
-	bool m_bMoving = false;
-
 	bool								m_bRayTracing = false;
 	ComPtr<ID3D12RootSignature>			m_pGlobalRootSignature{};
 	std::shared_ptr<CCamera>			m_pCamera{};
-
-	POINT oldCursor;
-	bool m_bHold = false;
-	float m_fElapsedtime = 0.0f;
-	bool mouseIsInitialize{};
 
 	ComPtr<ID3D12Resource>					m_cameraCB{};
 	short m_nNextScene = -1;
@@ -153,10 +140,6 @@ protected:
 
 	ComPtr<ID3D12RootSignature>							m_pComputeRootSignature{};
 	ComPtr<ID3D12PipelineState>							m_pAnimationComputeShader{};
-
-	// terrainDescriptor
-	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
-	ComPtr<ID3D12Resource>								m_pTerrainCB{};
 };
 
 class CRaytracingTestScene : public CRaytracingScene {
@@ -167,8 +150,6 @@ public:
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
-private:
-	UCHAR m_PrevKeyBuffer[256] = { 0 }; // PrevKey
 };
 
 class CRaytracingMaterialTestScene : public CRaytracingScene {
@@ -179,7 +160,6 @@ public:
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
 	void Render();
-	void PrepareTerrainTexture();
 };
 
 enum InGameState{IS_LOADING, IS_GAMING, IS_FINISH};
@@ -195,13 +175,16 @@ public:
 	void CreateUIRootSignature();
 	void CreateUIPipelineState();
 
+	void CreateMageCharacter();
+
 	void UpdateObject(float fElapsedTime);
 	void Render();
 	void PrepareTerrainTexture();
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 protected:
-	UCHAR m_PrevKeyBuffer[256] = { 0 }; // PrevKey
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
+	std::unique_ptr<CPlayer>							m_pPlayer{};
 
 	unsigned int								m_nSkyboxIndex{};
 
@@ -211,4 +194,8 @@ protected:
 	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
 	float										startTime{};
 	float										wOpacity = 1.0f;
+
+	// terrainDescriptor
+	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
+	ComPtr<ID3D12Resource>								m_pTerrainCB{};
 };

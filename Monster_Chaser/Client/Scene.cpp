@@ -456,57 +456,9 @@ void CRaytracingScene::UpdateObject(float fElapsedTime)
 	// BLAS RebBuild
 	m_pResourceManager->ReBuildBLAS();
 
-	bool test = false;
-	auto& animationManagers = m_pResourceManager->getAnimationManagers();
-	for (auto& animationManager : animationManagers) {
-		animationManager->UpdateCombo(fElapsedTime);
-		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
-			animationManager->ChangeAnimation(IDLE, false);
-			test = true;
-			m_bLockAnimation1 = false;
-			m_bLockAnimation = false;
-			m_bDoingCombo = false;
-		}
-		if (animationManager->IsComboInterrupted()) {
-			test = true;
-			animationManager->ClearComboInterrupted();
-			m_bLockAnimation1 = false;
-			m_bLockAnimation = false;
-			m_bDoingCombo = false;
-		}
-	}
-
-	auto& proj = m_pResourceManager->getProjectileList();
-	for (auto& pr : proj) {
-		pr->IsMoving(fElapsedTime);
-	}
-
 	m_pResourceManager->UpdateWorldMatrix();
 
-	TestCollision(m_pResourceManager->getGameObjectList(), m_pResourceManager->getSkinningObjectList());
-	TestShootCollision(m_pResourceManager->getProjectileList(), m_pResourceManager->getSkinningObjectList());
-
-	if (test) {
-		m_pResourceManager->UpdatePosition(fElapsedTime); //��ġ ������Ʈ
-	}
-
-	for (auto& p : m_pResourceManager->getSkinningObjectList()) {
-		XMFLOAT4X4& playerPreWorld = p->getPreWorldMatrix();
-		XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
-		float fy = objectWorld._42 - (30 * fElapsedTime);
-
-		float terrainHeight = 0.0f;
-		if (fy < terrainHeight) {
-			playerPreWorld._42 = terrainHeight;
-		}
-		else {
-			playerPreWorld._42 -= (30 * fElapsedTime);
-		}
-	}
-
 	m_pCamera->getEyeCalculateOffset();
-	if (m_pCamera->getEye().y < 0.5f)
-		m_pCamera->getEye().y = 0.5f;
 	m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 }
@@ -1219,7 +1171,6 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
-	std::vector<std::unique_ptr<CProjectile>>& projectile = m_pResourceManager->getProjectileList();
 	// Create new Objects, Copy SkinningObject here ========================================
 
 	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
@@ -1237,9 +1188,6 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);
 	normalObjects[finalindex]->getMaterials().emplace_back();
-
-	projectile.emplace_back(std::make_unique<CProjectile>());
-	projectile[0]->setGameObject(normalObjects[finalindex].get());
 
 	// Copy Example
 	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
@@ -1371,583 +1319,71 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 
 void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	if (!mouseIsInitialize) {
-		ShowCursor(FALSE);  // hide cursor
-		RECT clientRect;
-		GetClientRect(hWnd, &clientRect);
-		POINT center;
-		center.x = (clientRect.right - clientRect.left) / 2;
-		center.y = (clientRect.bottom - clientRect.top) / 2;
-		oldCursor = center;
-		ClientToScreen(hWnd, &oldCursor);
-		SetCursorPos(oldCursor.x, oldCursor.y);
-		mouseIsInitialize = true;
-	}
-	POINT currentPos;
-	GetCursorPos(&currentPos);
-	XMFLOAT3 cameraDir = m_pCamera->getDir();
-	switch (nMessage) {
-	case WM_LBUTTONDOWN:
-	{
-		if (!m_bLockAnimation && !m_bLockAnimation1) {
-			auto& animationManagers = m_pResourceManager->getAnimationManagers();
-			for (auto& animationManager : animationManagers) {
-				XMFLOAT3 characterDir = cameraDir;
-				characterDir.y = 0.0f; // delete y value
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f,1.0f,0.0f));
-				m_pResourceManager->UpdatePosition(m_fElapsedtime);
-				animationManager->OnAttackInput();
-				m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[0]->getPosition());
-				m_pResourceManager->getProjectileList()[0]->setMoveDirection(characterDir);
-				m_pResourceManager->getProjectileList()[0]->setActive(true);
-				m_pResourceManager->getProjectileList()[0]->setTime(0.0f);
-				m_bDoingCombo = true;
-			}
-		}
-		break;
-	}
-	case WM_MOUSEMOVE:
-	{
-		// mouse moving amount
-		float deltaX = static_cast<float>(currentPos.x - oldCursor.x);
-		float deltaY = static_cast<float>(currentPos.y - oldCursor.y);
+	//if (!mouseIsInitialize) {
+	//	ShowCursor(FALSE);  // hide cursor
+	//	RECT clientRect;
+	//	GetClientRect(hWnd, &clientRect);
+	//	POINT center;
+	//	center.x = (clientRect.right - clientRect.left) / 2;
+	//	center.y = (clientRect.bottom - clientRect.top) / 2;
+	//	oldCursor = center;
+	//	ClientToScreen(hWnd, &oldCursor);
+	//	SetCursorPos(oldCursor.x, oldCursor.y);
+	//	mouseIsInitialize = true;
+	//}
+	//POINT currentPos;
+	//GetCursorPos(&currentPos);
+	//XMFLOAT3 cameraDir = m_pCamera->getDir();
+	//switch (nMessage) {
+	//case WM_LBUTTONDOWN:
+	//{
+	//	if (!m_bLockAnimation && !m_bLockAnimation1) {
+	//		auto& animationManagers = m_pResourceManager->getAnimationManagers();
+	//		for (auto& animationManager : animationManagers) {
+	//			XMFLOAT3 characterDir = cameraDir;
+	//			characterDir.y = 0.0f; // delete y value
+	//			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f,1.0f,0.0f));
+	//			m_pResourceManager->UpdatePosition(m_fElapsedtime); // 수상
+	//			animationManager->OnAttackInput();
+	//			m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[0]->getPosition());
+	//			m_pResourceManager->getProjectileList()[0]->setMoveDirection(characterDir);
+	//			m_pResourceManager->getProjectileList()[0]->setActive(true);
+	//			m_pResourceManager->getProjectileList()[0]->setTime(0.0f);
+	//			m_bDoingCombo = true;
+	//		}
+	//	}
+	//	break;
+	//}
+	//case WM_MOUSEMOVE:
+	//{
+	//	// mouse moving amount
+	//	float deltaX = static_cast<float>(currentPos.x - oldCursor.x);
+	//	float deltaY = static_cast<float>(currentPos.y - oldCursor.y);
 
-		if (deltaX != 0.0f || deltaY != 0.0f) {
-			m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
+	//	if (deltaX != 0.0f || deltaY != 0.0f) {
+	//		m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 
-			auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
-			if (animationManager && !animationManager->getFrame().empty()) {
-				CGameObject* frame = animationManager->getFrame()[0];
-				if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
-					m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
-					XMFLOAT3 characterDir = cameraDir;
-					characterDir.y = 0.0f; // delete y value
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				}
-			}
+	//		auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
+	//		if (animationManager && !animationManager->getFrame().empty()) {
+	//			CGameObject* frame = animationManager->getFrame()[0];
+	//			if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
+	//				m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
+	//				XMFLOAT3 characterDir = cameraDir;
+	//				characterDir.y = 0.0f; // delete y value
+	//				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//			}
+	//		}
 
-			SetCursorPos(oldCursor.x, oldCursor.y);
-		}
-		break;
-	}
-	}
+	//		SetCursorPos(oldCursor.x, oldCursor.y);
+	//	}
+	//	break;
+	//}
+	//}
 }
 
 void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 {
-	m_fElapsedtime = fElapsedTime;
-	UCHAR keyBuffer[256];
-	GetKeyboardState(keyBuffer);
 
-	XMFLOAT3 cameraDir = m_pCamera->getDir();
-	XMFLOAT3 characterDir = cameraDir;
-	characterDir.y = 0.0f; // delete y value
-	m_bMoving = false;
-	float length = sqrt(characterDir.x * characterDir.x + characterDir.z * characterDir.z);
-	XMFLOAT3 normalizedCharacterDir = characterDir;
-	if (length > 0.0f) {
-		normalizedCharacterDir.x /= length;
-		normalizedCharacterDir.z /= length;
-	}
-	XMFLOAT3 moveDir{};
-
-	if (!m_pCamera->getThirdPersonState()) {
-		if (keyBuffer['W'] & 0x80)
-			m_pCamera->Move(0, fElapsedTime);
-		if (keyBuffer['S'] & 0x80)
-			m_pCamera->Move(5, fElapsedTime);
-		if (keyBuffer['D'] & 0x80)
-			m_pCamera->Move(3, fElapsedTime);
-		if (keyBuffer['A'] & 0x80)
-			m_pCamera->Move(4, fElapsedTime);
-		if (keyBuffer[VK_SPACE] & 0x80)
-			m_pCamera->Move(1, fElapsedTime);
-		if (keyBuffer[VK_CONTROL] & 0x80)
-			m_pCamera->Move(2, fElapsedTime);
-	}
-
-	if (m_bLockAnimation && !m_pResourceManager->getAnimationManagers()[0]->IsInCombo()) {
-		m_bLockAnimation = false;
-	}
-
-	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
-		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
-	}
-
-	// Handle single and combined key presses
-	if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z + normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z - normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z + normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z - normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['W'] & 0x80) {
-		moveDir = normalizedCharacterDir;
-		m_bMoving = true;
-	}
-	else if (keyBuffer['S'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x, 0.0f, -normalizedCharacterDir.z);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-
-	if (m_bMoving) {
-		length = sqrt(moveDir.x * moveDir.x + moveDir.z * moveDir.z);
-		if (length > 0.0f) {
-			moveDir.x /= length;
-			moveDir.z /= length;
-		}
-		m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(moveDir);
-	}
-
-	// W -> IDLE while Shift held
-	if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// A -> IDLE while Shift held
-	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S -> IDLE while Shift held
-	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// D -> IDLE while Shift held
-	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + A + Shift -> Run Left Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // Run Left Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // Maintain Run
-		}
-	}
-	// W + A + Shift -> Walk Left Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Walk Left UP
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + A -> Walk Left Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Walk Left Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Maintain Walk
-		}
-	}
-	// W + A + Shift, A -> Run Forward
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + A, A -> Walk Forward
-	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + A, W -> Walk Left
-	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + D + Shift -> Run Right Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // Run Right Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // Maintain Run
-		}
-	}
-	// W + D + Shift -> Walk Right Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Walk Right Up
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + D -> Walk Right Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Walk Right Up
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Maintain Walk
-		}
-	}
-	// W + D + Shift, D -> Run Forward
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + D, D -> Walk Forward
-	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + D, W -> Walk Right
-	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + A + Shift -> Run Left Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // Run Left Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // Maintain Run
-		}
-	}
-	// S + A + Shift -> Walk Left Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Walk Left Down
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + A -> Walk Left Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Walk Left Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Maintain Walk
-		}
-	}
-	// S + A + Shift, A -> Run Backward
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + A, A -> Walk Backward
-	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + A, S -> Walk Left
-	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + D + Shift -> Run Right Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // Run Right Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // Maintain Run
-		}
-	}
-	// S + D + Shift -> Walk Right Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Walk Right Down
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + D -> Walk Right Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Walk Right Down
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Maintain Walk
-		}
-	}
-	// S + D + Shift, D -> Run Backward
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + D, D -> Walk Backward
-	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S + D, S -> Walk Right
-	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W + Shift -> Run Forward
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Maintain Run
-		}
-	}
-	// W + Shift -> Walk Forward
-	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// W -> Walk Forward
-	else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Maintain Walk
-		}
-	}
-	// S + Shift -> Run Backward
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Maintain Run
-		}
-	}
-	// S + Shift -> Walk Backward
-	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S -> Walk Backward
-	else if ((keyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Maintain Walk
-		}
-	}
-	// A + Shift -> Run Left
-	else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // Run Left
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // Maintain Run
-		}
-	}
-	// A + Shift -> Walk Left
-	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// A -> Walk Left
-	else if ((keyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Maintain Walk
-		}
-	}
-	// D + Shift -> Run Right
-	else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // Run Right
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // Maintain Run
-		}
-	}
-	// D + Shift -> Walk Right
-	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// D -> Walk Right
-	else if ((keyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-		}
-		else {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Maintain Walk
-		}
-	}
-	// W -> IDLE
-	else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// S -> IDLE
-	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// A -> IDLE
-	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-	// D -> IDLE
-	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-		m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
-
-	if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo) {
-		if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(HIT, true);
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(HIT_DEATH, true);
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
-			XMFLOAT3 dodgeDir = characterDir;
-
-			if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
-				dodgeDir = XMFLOAT3(characterDir.x - characterDir.z, 0.0f, characterDir.z + characterDir.x);
-			}
-			else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
-				dodgeDir = XMFLOAT3(characterDir.x + characterDir.z, 0.0f, characterDir.z - characterDir.x);
-			}
-			else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
-				dodgeDir = XMFLOAT3(-characterDir.x - characterDir.z, 0.0f, -characterDir.z + characterDir.x);
-			}
-			else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
-				dodgeDir = XMFLOAT3(-characterDir.x + characterDir.z, 0.0f, -characterDir.z - characterDir.x);
-			}
-			else if (keyBuffer['W'] & 0x80) {
-				dodgeDir = characterDir;
-			}
-			else if (keyBuffer['S'] & 0x80) {
-				dodgeDir = XMFLOAT3(-characterDir.x, 0.0f, -characterDir.z);
-			}
-			else if (keyBuffer['A'] & 0x80) {
-				dodgeDir = XMFLOAT3(-characterDir.z, 0.0f, characterDir.x);
-			}
-			else if (keyBuffer['D'] & 0x80) {
-				dodgeDir = XMFLOAT3(characterDir.z, 0.0f, -characterDir.x);
-			}
-
-			float length = sqrt(dodgeDir.x * dodgeDir.x + dodgeDir.z * dodgeDir.z);
-			if (length > 0.0f) {
-				dodgeDir.x /= length;
-				dodgeDir.z /= length;
-			}
-
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(DODGE, true);
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(BIGHIT, true);
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(BIGHIT_DEATH, true);
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(SKILL2, true);
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(SKILL1, true);
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
-			m_pResourceManager->getAnimationManagers()[0]->OnKey3Input();
-			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_pResourceManager->UpdatePosition(fElapsedTime);
-			m_bLockAnimation = true;
-		}
-	}
-	// ���� Ű ���¸� ���� ���·� ����
-	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
 }
 
 // ==============================================================================
@@ -2253,7 +1689,7 @@ void CRaytracingMaterialTestScene::ProcessInput(float fElapsedTime)
 
 void CRaytracingMaterialTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	switch (nMessage) {
+	/*switch (nMessage) {
 	case WM_LBUTTONDOWN:
 		m_bHold = true;
 		GetCursorPos(&oldCursor);
@@ -2271,174 +1707,7 @@ void CRaytracingMaterialTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMes
 		}
 		break;
 	}
-	}
-}
-
-void CRaytracingMaterialTestScene::PrepareTerrainTexture()
-{
-	D3D12_DESCRIPTOR_HEAP_DESC desc{};
-	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	desc.NumDescriptors = 14;
-	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-
-	g_DxResource.device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(m_pTerrainDescriptor.GetAddressOf()));
-
-	struct alignas(16) terrainINFO {
-		int numLayer{};
-		float padding[3]{};
-		int bHasDiffuse[4]{};
-		int bHasNormal[4]{};
-		int bHasMask[4]{};
-	};
-
-	auto rdesc = BASIC_BUFFER_DESC;
-	rdesc.Width = Align(sizeof(terrainINFO), 256);
-
-	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &rdesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-		IID_PPV_ARGS(m_pTerrainCB.GetAddressOf()));
-
-	terrainINFO* pMap{};
-	m_pTerrainCB->Map(0, nullptr, reinterpret_cast<void**>(&pMap));
-	pMap->numLayer = 4;
-	pMap->bHasDiffuse[0] = pMap->bHasDiffuse[1] = pMap->bHasDiffuse[2] = pMap->bHasDiffuse[3] = 1;
-	pMap->bHasNormal[0] = pMap->bHasNormal[1] = pMap->bHasNormal[2] = pMap->bHasNormal[3] = 0;
-	pMap->bHasMask[0] = pMap->bHasMask[2] = pMap->bHasMask[3] = 0;
-	m_pTerrainCB->Unmap(0, nullptr);
-
-	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
-	size_t textureIndex = textures.size();
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Terrain_WinterLands_splatmap.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\RockStalagmites00_terrain2.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\Stonerock03_Metallic.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	D3D12_RESOURCE_DESC d3dRD;
-
-	UINT increment = g_DxResource.device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	D3D12_CPU_DESCRIPTOR_HANDLE  handle = m_pTerrainDescriptor->GetCPUDescriptorHandleForHeapStart();
-
-	D3D12_CONSTANT_BUFFER_VIEW_DESC cdesc{};
-	cdesc.BufferLocation = m_pTerrainCB->GetGPUVirtualAddress();
-	cdesc.SizeInBytes = rdesc.Width;
-
-	g_DxResource.device->CreateConstantBufferView(&cdesc, handle);
-	handle.ptr += increment;
-
-	// splat
-	d3dRD = textures[textureIndex]->getTexture()->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-
-	g_DxResource.device->CreateShaderResourceView(textures[textureIndex]->getTexture(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	// layer 0 ===============================================================
-
-	d3dRD = textures[textureIndex + 1]->getTexture()->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 1]->getTexture(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	d3dRD = g_DxResource.nullTexture->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	d3dRD = g_DxResource.nullTexture->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	// layer 1 ===============================================================
-
-	d3dRD = textures[textureIndex + 2]->getTexture()->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 2]->getTexture(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	d3dRD = g_DxResource.nullTexture->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	d3dRD = g_DxResource.nullTexture->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	// layer 2 ===============================================================
-
-	d3dRD = textures[textureIndex + 3]->getTexture()->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 3]->getTexture(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	d3dRD = g_DxResource.nullTexture->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	d3dRD = g_DxResource.nullTexture->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	// layer 3 ===============================================================
-
-	d3dRD = textures[textureIndex + 4]->getTexture()->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(textures[textureIndex + 4]->getTexture(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	d3dRD = g_DxResource.nullTexture->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
-	handle.ptr += increment;
-
-	d3dRD = g_DxResource.nullTexture->GetDesc();
-	srvDesc.Format = d3dRD.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2D.MipLevels = -1;
-	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
-	handle.ptr += increment;
+	}*/
 }
 
 void CRaytracingMaterialTestScene::Render()
@@ -2505,7 +1774,11 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->SetUp(3);
 	// Object File Read ========================================	! !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
+
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
+	CreateMageCharacter();
+	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
+
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
@@ -2518,7 +1791,6 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
-	std::vector<std::unique_ptr<CProjectile>>& projectile = m_pResourceManager->getProjectileList();
 	// Create Normal Object & skinning Object Copy ========================================
 
 	for (auto& o : skinned[1]->getObjects()) {
@@ -2528,15 +1800,6 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
-
-
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), "box"));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	normalObjects[finalindex]->getMaterials().emplace_back();
-
-	projectile.emplace_back(std::make_unique<CProjectile>());
-	projectile[0]->setGameObject(normalObjects[finalindex].get());
 
 	// terrian
 	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
@@ -2652,146 +1915,15 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 
 void CRaytracingWinterLandScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	/*switch (nMessage) {
-	case WM_LBUTTONDOWN:
-		m_bHold = true;
-		GetCursorPos(&oldCursor);
-		break;
-	case WM_LBUTTONUP:
-		m_bHold = false;
-		break;
-	case WM_MOUSEMOVE:
-	{
-		POINT cursorpos;
-		if (m_bHold) {
-			GetCursorPos(&cursorpos);
-			m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
-			SetCursorPos(oldCursor.x, oldCursor.y);
-		}
-		break;
-	}
-	}*/
-	if (!mouseIsInitialize) {
-		ShowCursor(FALSE);  // hide cursor
-		RECT clientRect;
-		GetClientRect(hWnd, &clientRect);
-		POINT center;
-		center.x = (clientRect.right - clientRect.left) / 2;
-		center.y = (clientRect.bottom - clientRect.top) / 2;
-		oldCursor = center;
-		ClientToScreen(hWnd, &oldCursor);
-		SetCursorPos(oldCursor.x, oldCursor.y);
-		mouseIsInitialize = true;
-	}
-	POINT currentPos;
-	GetCursorPos(&currentPos);
-	XMFLOAT3 cameraDir = m_pCamera->getDir();
-	switch (nMessage) {
-	case WM_LBUTTONDOWN:
-	{
-		if (!m_bLockAnimation && !m_bLockAnimation1) {
-			auto& animationManagers = m_pResourceManager->getAnimationManagers();
-			for (auto& animationManager : animationManagers) {
-				XMFLOAT3 characterDir = cameraDir;
-				characterDir.y = 0.0f; // delete y value
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				animationManager->OnAttackInput();
-				m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[0]->getPosition());
-				m_pResourceManager->getProjectileList()[0]->setMoveDirection(characterDir);
-				m_pResourceManager->getProjectileList()[0]->setActive(true);
-				m_pResourceManager->getProjectileList()[0]->setTime(0.0f);
-				m_bDoingCombo = true;
-			}
-		}
-		break;
-	}
-	case WM_MOUSEMOVE:
-	{
-		// mouse moving amount
-		float deltaX = static_cast<float>(currentPos.x - oldCursor.x);
-		float deltaY = static_cast<float>(currentPos.y - oldCursor.y);
-
-		if (deltaX != 0.0f || deltaY != 0.0f) {
-			if (m_pCamera->getThirdPersonState()) {
-				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
-
-				auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
-				if (animationManager && !animationManager->getFrame().empty()) {
-					CGameObject* frame = animationManager->getFrame()[0];
-					if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
-						m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
-						XMFLOAT3 characterDir = cameraDir;
-						characterDir.y = 0.0f; // delete y value
-						m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					}
-				}
-			}
-			else
-				m_pCamera->Rotate(deltaX * 1.5f, deltaY * 1.5f);
-
-			SetCursorPos(oldCursor.x, oldCursor.y);
-		}
-		break;
-	}
-	}
+	m_pPlayer->MouseProcess(hWnd, nMessage, wParam, lParam);
 }
 
 void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 {
-	/*{
-		UCHAR keyBuffer[256];
-		GetKeyboardState(keyBuffer);
-
-		bool shiftDown = false;
-		if (keyBuffer[VK_SHIFT] & 0x80)
-			shiftDown = true;
-
-		if (m_nState == IS_GAMING) {
-			if (false == m_pCamera->getThirdPersonState()) {
-				if (keyBuffer['W'] & 0x80)
-					m_pCamera->Move(0, fElapsedTime, shiftDown);
-				if (keyBuffer['S'] & 0x80)
-					m_pCamera->Move(5, fElapsedTime, shiftDown);
-				if (keyBuffer['D'] & 0x80)
-					m_pCamera->Move(3, fElapsedTime, shiftDown);
-				if (keyBuffer['A'] & 0x80)
-					m_pCamera->Move(4, fElapsedTime, shiftDown);
-				if (keyBuffer[VK_SPACE] & 0x80)
-					m_pCamera->Move(1, fElapsedTime, shiftDown);
-				if (keyBuffer[VK_CONTROL] & 0x80)
-					m_pCamera->Move(2, fElapsedTime, shiftDown);
-			}
-			else {
-				if (keyBuffer['W'] & 0x80) {
-					m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
-				}
-				if (keyBuffer['S'] & 0x80) {
-					m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
-				}
-				if (keyBuffer['A'] & 0x80) {
-					m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, -90.0f * fElapsedTime, 0.0f));
-				}
-				if (keyBuffer['D'] & 0x80) {
-					m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, 90.0f * fElapsedTime, 0.0f));
-				}
-			}
-		}
-
-		if (keyBuffer['U'] & 0x80) {
-			m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 2);
-		}
-
-		if (keyBuffer['O'] & 0x80) {
-			m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 3);
-		}
-	}*/
-	m_fElapsedtime = fElapsedTime;
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
 	if (m_nState == IS_GAMING) {
-		
-
 		if (!m_pCamera->getThirdPersonState()) {
 			bool shiftDown = false;
 			if (keyBuffer[VK_SHIFT] & 0x80)
@@ -2810,486 +1942,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			XMFLOAT3 cameraDir = m_pCamera->getDir();
-			XMFLOAT3 characterDir = cameraDir;
-			characterDir.y = 0.0f; // delete y value
-			m_bMoving = false;
-			XMFLOAT3 normalizedCharacterDir = characterDir;
-			XMStoreFloat3(&normalizedCharacterDir, XMVector3Normalize(XMLoadFloat3(&normalizedCharacterDir)));
-			XMFLOAT3 moveDir{};
-
-			if (m_bLockAnimation && !m_pResourceManager->getAnimationManagers()[0]->IsInCombo()) {
-				m_bLockAnimation = false;
-			}
-
-			if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
-				memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-				return;
-			}
-
-			// Handle single and combined key presses
-			if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
-				moveDir = XMFLOAT3(normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z + normalizedCharacterDir.x);
-				m_bMoving = true;
-			}
-			else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
-				moveDir = XMFLOAT3(normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z - normalizedCharacterDir.x);
-				m_bMoving = true;
-			}
-			else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
-				moveDir = XMFLOAT3(-normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z + normalizedCharacterDir.x);
-				m_bMoving = true;
-			}
-			else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
-				moveDir = XMFLOAT3(-normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z - normalizedCharacterDir.x);
-				m_bMoving = true;
-			}
-			else if (keyBuffer['W'] & 0x80) {
-				moveDir = normalizedCharacterDir;
-				m_bMoving = true;
-			}
-			else if (keyBuffer['S'] & 0x80) {
-				moveDir = XMFLOAT3(-normalizedCharacterDir.x, 0.0f, -normalizedCharacterDir.z);
-				m_bMoving = true;
-			}
-			else if (keyBuffer['A'] & 0x80) {
-				moveDir = XMFLOAT3(-normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.x);
-				m_bMoving = true;
-			}
-			else if (keyBuffer['D'] & 0x80) {
-				moveDir = XMFLOAT3(normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.x);
-				m_bMoving = true;
-			}
-
-			if (m_bMoving) {
-				XMStoreFloat3(&moveDir, XMVector3Normalize(XMLoadFloat3(&moveDir)));
-				m_pResourceManager->getSkinningObjectList()[0]->SetMoveDirection(moveDir);
-			}
-
-			// W -> IDLE while Shift held
-			if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// A -> IDLE while Shift held
-			else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S -> IDLE while Shift held
-			else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// D -> IDLE while Shift held
-			else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// W + A + Shift -> Run Left Up
-			else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-				if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // Run Left Up
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_UP, true); // Maintain Run
-				}
-			}
-			// W + A + Shift -> Walk Left Up
-			else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Walk Left UP
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// W + A -> Walk Left Up
-			else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Walk Left Up
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_UP, true); // Maintain Walk
-				}
-			}
-			// W + A + Shift, A -> Run Forward
-			else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// W + A, A -> Walk Forward
-			else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// W + A, W -> Walk Left
-			else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// W + D + Shift -> Run Right Up
-			else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-				if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // Run Right Up
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_UP, true); // Maintain Run
-				}
-			}
-			// W + D + Shift -> Walk Right Up
-			else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Walk Right Up
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// W + D -> Walk Right Up
-			else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Walk Right Up
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_UP, true); // Maintain Walk
-				}
-			}
-			// W + D + Shift, D -> Run Forward
-			else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// W + D, D -> Walk Forward
-			else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// W + D, W -> Walk Right
-			else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S + A + Shift -> Run Left Down
-			else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-				if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // Run Left Down
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT_DOWN, true); // Maintain Run
-				}
-			}
-			// S + A + Shift -> Walk Left Down
-			else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Walk Left Down
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S + A -> Walk Left Down
-			else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Walk Left Down
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT_DOWN, true); // Maintain Walk
-				}
-			}
-			// S + A + Shift, A -> Run Backward
-			else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S + A, A -> Walk Backward
-			else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S + A, S -> Walk Left
-			else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S + D + Shift -> Run Right Down
-			else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-				if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // Run Right Down
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT_DOWN, true); // Maintain Run
-				}
-			}
-			// S + D + Shift -> Walk Right Down
-			else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Walk Right Down
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S + D -> Walk Right Down
-			else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Walk Right Down
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT_DOWN, true); // Maintain Walk
-				}
-			}
-			// S + D + Shift, D -> Run Backward
-			else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S + D, D -> Walk Backward
-			else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S + D, S -> Walk Right
-			else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// W + Shift -> Run Forward
-			else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Run Forward
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_FORWARD, true); // Maintain Run
-				}
-			}
-			// W + Shift -> Walk Forward
-			else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// W -> Walk Forward
-			else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['W'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Walk Forward
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_FORWARD, true); // Maintain Walk
-				}
-			}
-			// S + Shift -> Run Backward
-			else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Run Backward
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_BACKWARD, true); // Maintain Run
-				}
-			}
-			// S + Shift -> Walk Backward
-			else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S -> Walk Backward
-			else if ((keyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['S'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Walk Backward
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_BACKWARD, true); // Maintain Walk
-				}
-			}
-			// A + Shift -> Run Left
-			else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // Run Left
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_LEFT, true); // Maintain Run
-				}
-			}
-			// A + Shift -> Walk Left
-			else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// A -> Walk Left
-			else if ((keyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['A'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Walk Left
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_LEFT, true); // Maintain Walk
-				}
-			}
-			// D + Shift -> Run Right
-			else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // Run Right
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(RUN_RIGHT, true); // Maintain Run
-				}
-			}
-			// D + Shift -> Walk Right
-			else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// D -> Walk Right
-			else if ((keyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-				if (!(m_PrevKeyBuffer['D'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Walk Right
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-				}
-				else {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(WALK_RIGHT, true); // Maintain Walk
-				}
-			}
-			// W -> IDLE
-			else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// S -> IDLE
-			else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// A -> IDLE
-			else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			// D -> IDLE
-			else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-				m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(IDLE, false); // IDLE
-				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-				m_pResourceManager->UpdatePosition(fElapsedTime);
-			}
-			if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo) {
-				if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(HIT, true);
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-					m_bLockAnimation1 = true;
-				}
-				if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(HIT_DEATH, true);
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-					m_bLockAnimation1 = true;
-				}
-				if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
-					XMFLOAT3 dodgeDir = characterDir;
-
-					if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
-						dodgeDir = XMFLOAT3(characterDir.x - characterDir.z, 0.0f, characterDir.z + characterDir.x);
-					}
-					else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
-						dodgeDir = XMFLOAT3(characterDir.x + characterDir.z, 0.0f, characterDir.z - characterDir.x);
-					}
-					else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
-						dodgeDir = XMFLOAT3(-characterDir.x - characterDir.z, 0.0f, -characterDir.z + characterDir.x);
-					}
-					else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
-						dodgeDir = XMFLOAT3(-characterDir.x + characterDir.z, 0.0f, -characterDir.z - characterDir.x);
-					}
-					else if (keyBuffer['W'] & 0x80) {
-						dodgeDir = characterDir;
-					}
-					else if (keyBuffer['S'] & 0x80) {
-						dodgeDir = XMFLOAT3(-characterDir.x, 0.0f, -characterDir.z);
-					}
-					else if (keyBuffer['A'] & 0x80) {
-						dodgeDir = XMFLOAT3(-characterDir.z, 0.0f, characterDir.x);
-					}
-					else if (keyBuffer['D'] & 0x80) {
-						dodgeDir = XMFLOAT3(characterDir.z, 0.0f, -characterDir.x);
-					}
-
-					XMStoreFloat3(&dodgeDir, XMVector3Normalize(XMLoadFloat3(&dodgeDir)));
-
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(DODGE, true);
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-					m_bLockAnimation1 = true;
-				}
-				if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(BIGHIT, true);
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-					m_bLockAnimation1 = true;
-				}
-				if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(BIGHIT_DEATH, true);
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-					m_bLockAnimation1 = true;
-				}
-				if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(SKILL2, true);
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-					m_bLockAnimation1 = true;
-				}
-				if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->ChangeAnimation(SKILL1, true);
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-					m_bLockAnimation1 = true;
-				}
-				if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
-					m_pResourceManager->getAnimationManagers()[0]->OnKey3Input();
-					m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-					m_pResourceManager->UpdatePosition(fElapsedTime);
-					m_bLockAnimation = true;
-				}
-			}
-			memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(keyBuffer));
+			m_pPlayer->ProcessInput(keyBuffer);
 		}
 	}
 }
@@ -3397,6 +2050,17 @@ void CRaytracingWinterLandScene::CreateUIPipelineState()
 		pd3dVBlob->Release();
 	if (pd3dPBlob)
 		pd3dPBlob->Release();
+}
+
+void CRaytracingWinterLandScene::CreateMageCharacter()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
+	m_vPlayers.emplace_back(std::make_unique<CPlayerMage>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	// Create Mage's own objects and Set
+	// ex) bullet, particle, barrier  etc...
 }
 
 void CRaytracingWinterLandScene::PrepareTerrainTexture()
@@ -3577,58 +2241,20 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	// Skinning Object BLAS ReBuild
 	m_pResourceManager->ReBuildBLAS();
 
-	bool test = false;
-	for (auto& animationManager : m_pResourceManager->getAnimationManagers()) {
-		animationManager->UpdateCombo(fElapsedTime);
-		if (!animationManager->IsInCombo() && animationManager->IsAnimationFinished() && !animationManager->CheckCollision()) {
-			animationManager->ChangeAnimation(IDLE, false);
-			test = true;
-			m_bLockAnimation1 = false;
-			m_bLockAnimation = false;
-			m_bDoingCombo = false;
-		}
-		if (animationManager->IsComboInterrupted()) {
-			test = true;
-			animationManager->ClearComboInterrupted();
-			m_bLockAnimation1 = false;
-			m_bLockAnimation = false;
-			m_bDoingCombo = false;
-		}
-	}
-
-	for (auto& pr : m_pResourceManager->getProjectileList()) {
-		pr->IsMoving(fElapsedTime);
-	}
-
 	m_pResourceManager->UpdateWorldMatrix();
 
-	if (test) {
-		m_pResourceManager->UpdatePosition(fElapsedTime);
-	}
+	for (auto& p : m_vPlayers)
+		p->UpdateObject(fElapsedTime);
 
-	for (auto& p : m_pResourceManager->getSkinningObjectList()) {
-		XMFLOAT4X4& playerWorld = p->getWorldMatrix();
-		XMFLOAT4X4& playerPreWorld = p->getPreWorldMatrix();
-		XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
-		float fy = objectWorld._42 - (30 * fElapsedTime);
-
-		float terrainHeight = m_pHeightMap->GetHeightinWorldSpace(objectWorld ._41 + 1024.0f, objectWorld._43 + 1024.0f);
-		if (objectWorld._43 >= -500.0f) {
-			if (terrainHeight < 10.0f) {
-				terrainHeight = 10.0f;
-			}
-		}
-		if (fy < terrainHeight) 
-			playerWorld._42 = terrainHeight;
-		else 
-			playerWorld._42 -= (30 * fElapsedTime);
-		p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
-		playerPreWorld._42 = playerWorld._42;
-	}
+	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
 	
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
 		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
+		if (EYE.z >= -500.0f) {
+			if (cHeight < 10.5f)
+				cHeight = 10.5f;
+		}
 		if (EYE.y < cHeight + 0.5f) {
 			m_pCamera->UpdateViewMatrix(cHeight + 0.5f);
 		}

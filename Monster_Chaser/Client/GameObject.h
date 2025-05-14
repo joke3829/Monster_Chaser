@@ -180,6 +180,7 @@ public:
 
 	std::string getFrameName() const;
 	std::vector<Material>& getMaterials();
+	bool getRenderState() const { return m_bRender; }
 	int getMeshIndex() const;
 	int getHitGroupIndex() const;
 	int getParentIndex() const;
@@ -199,6 +200,7 @@ public:
 	BoundingOrientedBox& getObjectOBB() { return m_OBB; }
 	BoundingSphere& getObjectSphere() { return m_BoundingSphere; }
 
+	void SetRenderState(bool state) { m_bRender = state; }
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
 	void SetHitGroupIndex(int index);
@@ -214,6 +216,8 @@ public:
 
 	void InitializeAxis();
 protected:
+	bool m_bRender{ true };
+	
 	void UpdateLocalMatrix();
 	std::string m_strName{};
 

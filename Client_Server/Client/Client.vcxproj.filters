@@ -79,6 +79,9 @@
     <Filter Include="소스 파일\서버관련\플레이어객체\플레이어 정보">
       <UniqueIdentifier>{5a8a0fd5-210e-4d8d-ace9-d690a08eea57}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Character">
+      <UniqueIdentifier>{3ad2a8cc-b065-4e5e-88a1-948d6b8f0a17}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -162,6 +165,9 @@
     <ClInclude Include="PlayerInfo.h">
       <Filter>소스 파일\서버관련\플레이어객체\플레이어 정보</Filter>
     </ClInclude>
+    <ClInclude Include="PlayableCharacter.h">
+      <Filter>Resource\Character</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -232,6 +238,9 @@
     </ClCompile>
     <ClCompile Include="PlayerInfo.cpp">
       <Filter>소스 파일\서버관련\플레이어객체\플레이어 정보</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayableCharacter.cpp">
+      <Filter>Resource\Character</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

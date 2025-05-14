@@ -180,6 +180,7 @@ public:
 
 	std::string getFrameName() const;
 	std::vector<Material>& getMaterials();
+	bool getRenderState() const { return m_bRender; }
 	int getMeshIndex() const;
 	int getHitGroupIndex() const;
 	int getParentIndex() const;
@@ -214,6 +215,8 @@ public:
 
 	void InitializeAxis();
 protected:
+	bool m_bRender{ true };
+
 	void UpdateLocalMatrix();
 	std::string m_strName{};
 

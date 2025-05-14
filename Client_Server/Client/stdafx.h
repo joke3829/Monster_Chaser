@@ -66,42 +66,7 @@ using Microsoft::WRL::ComPtr;
 enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...?
 	ALBEDO_COLOR, EMISSIVE_COLOR, SPECULAR_COLOR, GLOSSINESS
 };
-enum MoveAnimationState
-{
-	IDLE = 0,
-	HIT = 1,
-	HIT_DEATH = 2,
-	BIGHIT = 3,
-	BIGHIT_DEATH = 4,
-	WALK_FORWARD = 5,
-	WALK_LEFT_UP = 6,
-	WALK_RIGHT_UP = 7,
-	WALK_LEFT = 8,
-	WALK_RIGHT = 9,
-	WALK_BACKWARD = 10,
-	WALK_LEFT_DOWN = 11,
-	WALK_RIGHT_DOWN = 12,
-	RUN_FORWARD = 13,
-	RUN_LEFT_UP = 14,
-	RUN_RIGHT_UP = 15,
-	RUN_LEFT = 16,
-	RUN_RIGHT = 17,
-	RUN_BACKWARD = 18,
-	RUN_LEFT_DOWN = 19,
-	RUN_RIGHT_DOWN = 20,
-	DODGE = 21,
-	C_ATTACK1 = 22,
-	C_ATTACK2 = 23,
-	C_ATTACK3 = 24,
-	C_ATTACK4 = 25,
-	SKILL3_1 = 26,
-	SKILL3_2 = 27,
-	SKILL3_3 = 28,
-	SKILL3_4 = 29,
-	SKILL3_5 = 30,
-	SKILL2 = 31,
-	SKILL1 = 32
-};
+
 enum TitleState { Title, RoomSelect, InRoom, GoLoading };
 //========================================================================================
 
@@ -134,6 +99,41 @@ constexpr int MAX_LIGHTS = 64;
 constexpr unsigned int DIRECTIONAL_LIGHT = 0;
 constexpr unsigned int POINT_LIGHT = 1;
 constexpr unsigned int SPOT_LIGHT = 2;
+
+// animation define
+constexpr unsigned int ANI_IDLE = 0;
+constexpr unsigned int ANI_HIT = 1;
+constexpr unsigned int ANI_HIT_DEATH = 2;
+constexpr unsigned int ANI_BIGHIT = 3;
+constexpr unsigned int ANI_BIGHIT_DEATH = 4;
+constexpr unsigned int ANI_WALK_FORWARD = 5;
+constexpr unsigned int ANI_WALK_LEFT_UP = 6;
+constexpr unsigned int ANI_WALK_RIGHT_UP = 7;
+constexpr unsigned int ANI_WALK_LEFT = 8;
+constexpr unsigned int ANI_WALK_RIGHT = 9;
+constexpr unsigned int ANI_WALK_BACKWARD = 10;
+constexpr unsigned int ANI_WALK_LEFT_DOWN = 11;
+constexpr unsigned int ANI_WALK_RIGHT_DOWN = 12;
+constexpr unsigned int ANI_RUN_FORWARD = 13;
+constexpr unsigned int ANI_RUN_LEFT_UP = 14;
+constexpr unsigned int ANI_RUN_RIGHT_UP = 15;
+constexpr unsigned int ANI_RUN_LEFT = 16;
+constexpr unsigned int ANI_RUN_RIGHT = 17;
+constexpr unsigned int ANI_RUN_BACKWARD = 18;
+constexpr unsigned int ANI_RUN_LEFT_DOWN = 19;
+constexpr unsigned int ANI_RUN_RIGHT_DOWN = 20;
+constexpr unsigned int ANI_DODGE = 21;
+constexpr unsigned int ANI_C_ATTACK1 = 22;
+constexpr unsigned int ANI_C_ATTACK2 = 23;
+constexpr unsigned int ANI_C_ATTACK3 = 24;
+constexpr unsigned int ANI_C_ATTACK4 = 25;
+constexpr unsigned int ANI_SKILL3_1 = 26;
+constexpr unsigned int ANI_SKILL3_2 = 27;
+constexpr unsigned int ANI_SKILL3_3 = 28;
+constexpr unsigned int ANI_SKILL3_4 = 29;
+constexpr unsigned int ANI_SKILL3_5 = 30;
+constexpr unsigned int ANI_SKILL2 = 31;
+constexpr unsigned int ANI_SKILL1 = 32;
 
 // 자주 쓰이는 설정들을 미리 지정
 constexpr DXGI_SAMPLE_DESC NO_AA = { .Count = 1, .Quality = 0 };	// no anti_aliasing
