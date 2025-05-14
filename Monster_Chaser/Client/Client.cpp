@@ -33,49 +33,7 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-// 여기는 방 UI들어오면 삭제할 부분
 
-
-
-void SetCursorPosition(int x, int y) {
-	COORD coord = { static_cast<SHORT>(x), static_cast<SHORT>(y) };
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-}
-
-//void DrawRoomList()
-//{
-//	SetCursorPosition(0, 0);  // 항상 콘솔 맨 위부터 덮어쓰기
-//
-//	std::cout << "=== [Room Status] ===\n";
-//	std::cout << "총 클라이언트 수: " << Players.size() << std::endl;
-//	for (int i = 0; i < MAX_ROOM; ++i) {
-//		std::cout << i << "번 방: " << userPerRoom[i] << "/" << MAX_ROOM_MEMBER << std::endl;
-//	}
-//	std::cout << "=====================" << std::endl;
-//	std::cout << "'r' 키: Ready 전송 / 'q' 키: 종료" << std::endl;
-//}
-//void RoomListThread() {
-//	using namespace std::chrono;
-//
-//	while (!Client.getstart()) {
-//		auto start = steady_clock::now();
-//
-//		{
-//			
-//			DrawRoomList();
-//		}
-//
-//		// 정확히 1초 간격으로 유지
-//		auto end = steady_clock::now();
-//		auto elapsed = duration_cast<milliseconds>(end - start);
-//
-//		if (elapsed < 1000ms)
-//			std::this_thread::sleep_for(1000ms - elapsed);
-//	}
-//}
-
-
-// 여기는 방 UI들어오면 삭제할 부분
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	_In_opt_ HINSTANCE hPrevInstance,
 	_In_ LPWSTR    lpCmdLine,
