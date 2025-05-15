@@ -2,11 +2,13 @@
 #pragma once
 
 #include "protocol.h"
+#include "Monster.h"
+
 
 
 class SESSION;
 class Network;
-
+class Monster;
 class Room {
 public:
 	Room();
@@ -32,7 +34,7 @@ public:
 	void EndGame() { is_started = false; }
 
 
-
+	concurrent_unordered_map<int, shared_ptr<Monster>> monsters;
 	std::vector<int>id;        //해당 방에 들어온 id 관리 -> 락이 필요함 
 	mutex RoomMutex;
 private:

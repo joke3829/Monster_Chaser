@@ -63,7 +63,7 @@ public:
     
     
 
-    std::unordered_map<int, Monster*> monsters;
+   
 
 
    SOCKET listen_socket;
