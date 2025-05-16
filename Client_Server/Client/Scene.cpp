@@ -1217,7 +1217,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	projectile[2]->setGameObject(normalObjects[finalindex].get());
 
 	//Players.try_emplace(0, )
-	Players[0].setRenderingObject(skinned[0].get());
+	//Players[0].setRenderingObject(skinned[0].get());
 
 	for (int i = 1; i < Players.size(); ++i) {
 		skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
@@ -1230,7 +1230,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		}
 		aManagers[i]->SetFramesPointerFromSkinningObject(skinned[i]->getObjects());
 		aManagers[i]->MakeAnimationMatrixIndex(skinned[i].get());
-		Players[i].setRenderingObject(skinned[i].get());
+		//Players[i].setRenderingObject(skinned[i].get());
 	}
 
 
@@ -1740,8 +1740,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		case JOB_HEALER:
 			break;
 		}
-		Players[i].setRenderingObject(skinned[skinned.size() - 1].get());
-		Players[i].setAnimationManager(aManagers[aManagers.size() - 1].get());
+		Players[i].setPlayerableCharacter(m_vPlayers[i].get());
 		if (i == Client.get_id()) {
 			m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 		}

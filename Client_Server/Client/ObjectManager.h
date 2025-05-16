@@ -4,6 +4,7 @@
 #include "mutex"
 #include "GameObject.h"
 #include "AnimationManager.h"
+#include "PlayableCharacter.h"
 
 class ObjectManager {
 public:
@@ -26,24 +27,19 @@ public:
     Player() {}
     Player(int id) : ObjectManager(id) {}
 
-    void setRenderingObject(CSkinningObject* obj)
+    void setPlayerableCharacter(CPlayableCharacter* character)
     {
-        Client_Object = obj;
+        Client_Character = character;
     }
 
-    void setAnimationManager(CAnimationManager* ani)
-    {
-        Client_AniManager = ani;
-    }
-
-    CSkinningObject* getRenderingObject() { return Client_Object; }
-    CAnimationManager* getAnimationManager() { return Client_AniManager; }
+    CSkinningObject* getRenderingObject() { return Client_Character->getObject(); }
+    CAnimationManager* getAnimationManager() { return Client_Character->getAniManager(); }
 
     void setPosition(const XMFLOAT4X4& pos) {
         ObjectManager::setMatrix(pos);
-        if (Client_Object) {
+        if (Client_Character->getObject()) {
             XMFLOAT3 pos3 = { pos._41, pos._42 ,pos._43 };
-            Client_Object->SetPosition(pos3);
+            Client_Character->getObject()->SetPosition(pos3);
         }
     }
 
@@ -58,8 +54,7 @@ private:
     bool readyToStart = false;
     int hp = 100;
     
-    CSkinningObject* Client_Object = nullptr;
-    CAnimationManager* Client_AniManager = nullptr;
+    CPlayableCharacter* Client_Character = nullptr;
     // 더 필요한 상태값들...
 };
 
