@@ -1740,7 +1740,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		case JOB_HEALER:
 			break;
 		}
-		Players[i].setPlayerableCharacter(m_vPlayers[i].get());
+		Players[i].setPlayerableCharacter(m_vPlayers[m_vPlayers.size() - 1].get());
 		if (i == Client.get_id()) {
 			m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 		}
