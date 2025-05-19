@@ -24,10 +24,8 @@ protected:
 	float m_HP{};
 	float m_MP{};
 
-
 	CSkinningObject* m_Object{};
 	CPlayableCharacterAnimationManager* m_AManager{};
-
 
 	std::shared_ptr<CCamera> m_pCamera;
 };
