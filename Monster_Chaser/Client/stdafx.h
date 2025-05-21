@@ -121,6 +121,7 @@ constexpr unsigned int ANI_SKILL1 = 32;
 constexpr DXGI_SAMPLE_DESC NO_AA = { .Count = 1, .Quality = 0 };	// no anti_aliasing
 constexpr D3D12_HEAP_PROPERTIES UPLOAD_HEAP = { .Type = D3D12_HEAP_TYPE_UPLOAD };
 constexpr D3D12_HEAP_PROPERTIES DEFAULT_HEAP = { .Type = D3D12_HEAP_TYPE_DEFAULT };
+constexpr D3D12_HEAP_PROPERTIES READBACK_HEAP = { .Type = D3D12_HEAP_TYPE_READBACK };
 constexpr D3D12_RESOURCE_DESC BASIC_BUFFER_DESC = {
 	.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
 	.Width = 0,

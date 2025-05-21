@@ -73,6 +73,9 @@
     <Filter Include="Resource\Character">
       <UniqueIdentifier>{48d0a0f6-d308-4778-b115-a3a09c6467ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Particle">
+      <UniqueIdentifier>{04e562c9-2c52-48f6-945d-9c9c349cc050}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -147,6 +150,9 @@
     <ClInclude Include="PlayableCharacter.h">
       <Filter>Resource\Character</Filter>
     </ClInclude>
+    <ClInclude Include="Particle.h">
+      <Filter>Resource\Particle</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -211,6 +217,9 @@
     </ClCompile>
     <ClCompile Include="PlayableCharacter.cpp">
       <Filter>Resource\Character</Filter>
+    </ClCompile>
+    <ClCompile Include="Particle.cpp">
+      <Filter>Resource\Particle</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
