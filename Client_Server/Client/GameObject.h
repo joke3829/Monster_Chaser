@@ -7,7 +7,7 @@ extern DXResources g_DxResource;
 extern std::default_random_engine g_dre;
 extern std::uniform_real_distribution<float> g_unorm;
 
-struct Material {	// ��������� ����� �̷��� �� ��
+struct Material {
 	Material() = default;
 	bool m_bHasAlbedoColor = false;
 	bool m_bHasEmissiveColor = false;
@@ -94,7 +94,7 @@ class CGameObject {
 public:
 	CGameObject() {};
 	CGameObject(const CGameObject& other);
-	CGameObject& operator=(const CGameObject& other);	// ���� �Ҵ�
+	CGameObject& operator=(const CGameObject& other);
 	bool InitializeObjectFromFile(std::ifstream& inFile);
 
 	template<class T>
@@ -173,10 +173,10 @@ public:
 	}
 
 	void SetPosition(XMFLOAT3 pos);
-	void Rotate(XMFLOAT3 rot);	// ���� right, up, look ������ ȸ��
+	void Rotate(XMFLOAT3 rot);	
 	void SetScale(XMFLOAT3 scale);
 
-	void move(float fElapsedTime);	// test��
+	void move(float fElapsedTime);
 
 	std::string getFrameName() const;
 	std::vector<Material>& getMaterials();
@@ -220,7 +220,7 @@ protected:
 	void UpdateLocalMatrix();
 	std::string m_strName{};
 
-	unsigned short m_bUseBoundingInfo{};    // 바운딩 정보 유무 앞->Sphere, 뒤->OBB
+	unsigned short m_bUseBoundingInfo{};  
 	BoundingOrientedBox m_OBB{};
 	BoundingSphere m_BoundingSphere{};
 
@@ -236,22 +236,17 @@ protected:
 	XMFLOAT3 m_xmf3Look{0.0f, 0.0f, 1.0f};
 
 	std::vector<Material> m_vMaterials;
-	std::vector<ComPtr<ID3D12Resource>> m_vCBuffers;		// ��� ���� ����
+	std::vector<ComPtr<ID3D12Resource>> m_vCBuffers;	
 	ComPtr<ID3D12Resource> m_pd3dMeshCBuffer{};
-	// ������۷� �ѱ� ���ҽ��� �ʿ��Ѱ�? �ϴ� ����
-	// ��� ���۷� �ѱ�Ŵ� ���׸����� AlbedoColor, EmissiveColor, Glossiness, Metalic, SpecularHighlight, 
-	// �ؽ����� ���� local root �ٷ� ������
-	// �� ���� DXR�� ����ϴ� ����̴�.
 
-	int m_nMeshIndex = -1;			// �� ������Ʈ�� �����ϴ� Mesh Index
-	int m_nParentIndex = -1;		// �� ������Ʈ�� �θ� GameObject�ε���
-	int m_nHitGroupIndex = -1;		// � HitGroup�� ���ų�?
+	int m_nMeshIndex = -1;			
+	int m_nParentIndex = -1;		
+	int m_nHitGroupIndex = -1;		
 	unsigned int m_nInstanceID{};	// TLAS instnaceID
 };
 
 // ==================================================================
 
-// �� ģ���� �����ӿ��� �ʿ��� ��ĸ� ��Ƽ� ������۸� ����� set�ϴ� ����
 class CSkinningInfo {
 public:
 	CSkinningInfo(std::ifstream& inFile, UINT nRefMesh);
@@ -264,17 +259,17 @@ public:
 
 	UINT getRefMeshIndex() const { return m_nRefMesh; }
 private:
-	UINT m_nBonesPerVertex{};	// ���� �� ��� �� ����
-	UINT m_nBones{};			// �� ����
-	UINT m_nVertexCount{};		// �ش� �޽��� ���� ����, ����Ȯ, Ȯ�� �ʿ�
+	UINT m_nBonesPerVertex{};	
+	UINT m_nBones{};			
+	UINT m_nVertexCount{};		
 
-	UINT m_nRefMesh{};			// �����ϴ� �޽��� ��ȣ
+	UINT m_nRefMesh{};			
 
-	std::vector<std::string> m_vBoneNames{};	// �� �̸� ����Ʈ
-	std::vector<XMFLOAT4X4> m_vOffsetMatrix{};	// offset ���
-	std::vector<UINT> m_vBoneIndices{};			// �� �ε���
-	std::vector<float> m_vBoneWeight{};			// �� ����ġ
-	std::vector<UINT>m_vAnimationMatrixIndex{};	// ���� �ִϸ��̼� ����� ã�� ���� �ε����� �ϳ� �� ������ش�.
+	std::vector<std::string> m_vBoneNames{};	
+	std::vector<XMFLOAT4X4> m_vOffsetMatrix{};	
+	std::vector<UINT> m_vBoneIndices{};			
+	std::vector<float> m_vBoneWeight{};			
+	std::vector<UINT>m_vAnimationMatrixIndex{};	
 
 	ComPtr<ID3D12DescriptorHeap> m_pd3dDesciptorHeap{};
 
@@ -343,7 +338,7 @@ protected:
 
 	// XMFLOAT4X4
 	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
-	XMFLOAT4X4 m_xmf4x4PreTransformMatrix{};	// �޽��� ������ �����ϱ� ���� ���
+	XMFLOAT4X4 m_xmf4x4PreTransformMatrix{};	
 	XMFLOAT4X4 m_xmf4x4PreWorldMatrix{};		// test
 
 	bool m_bUsePreTransform = false;
@@ -356,8 +351,6 @@ protected:
 	XMFLOAT3 m_xmf3MoveDirection{};
 };
 
-// Rasterizer�� RayTracing������ Skinning Animation�� ����� �ٸ���
-// ����Ʈ���̽� �� ��Ű�� ������Ʈ, BLAS�� ������ ����
 class CRayTracingSkinningObject : public CSkinningObject {
 public:
 	void PrepareObject();

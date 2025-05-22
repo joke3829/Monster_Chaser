@@ -1,14 +1,5 @@
 //-----------------------------------------------------------------------------
 // File: Mesh.h
-// Mesh �����Ϳ� ������ �����ϴ� Ŭ����
-// 
-// 01.22
-// �ϴ��� exporter�� ����Ǵ� ������ ��� ������,
-// �ʿ���� ������ �ִ� �Ǵ��ϸ� ����
-// ������ ���ҽ��� ���ǹ��� ������ ������ �ִ��� m_bHas�� �Ǵ�, �̰��� ��� ���۷�
-// ���̴��� �Ѱ��ٰŴ�. 
-// ���� Ȯ������ ������ ����޽��� ���� ��ŭ ���׸����� �����Ѵ� �Ǵ�
-// 
 //-----------------------------------------------------------------------------
 #pragma once
 
@@ -34,9 +25,9 @@ public:
 
 class Mesh {
 public:
-	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor-�޽� ��� ����	
+	Mesh(std::ifstream& inFile, std::string strMeshName);	
 	Mesh(CHeightMapImage* heightmap, std::string strMeshName);
-	Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName = "noNameMesh");					// boundingOBB ���鶧 ���
+	Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName = "noNameMesh");				
 	Mesh(XMFLOAT3& center, float radius, std::string meshName = "noNameMesh");
 	Mesh(XMFLOAT3& center, float width, float height);			// Plane
 
@@ -87,30 +78,30 @@ public:
 	void setSkinning(bool bSkinning) { m_bSkinningMesh = bSkinning; }
 protected:
 private:
-	std::string m_MeshName{};							// Mesh�� �̸�
+	std::string m_MeshName{};							
 
 	bool m_bHasBoundingBox = false;
 	BoundingOrientedBox m_OBB{};						// Oriented_Bounding_Box
 
-	UINT m_nVertexCount{};								// <Positions> ����
+	UINT m_nVertexCount{};								
 	ComPtr<ID3D12Resource> m_pd3dVertexBuffer{};		// DXGI_FORMAT_R32G32B32_FLOAT
 	bool m_bHasVertex = false;
 
-	UINT m_nColorCount{};								// <Colors> ����
+	UINT m_nColorCount{};							
 	ComPtr<ID3D12Resource> m_pd3dColorsBuffer{};		// ?
 	bool m_bHasColor = false;
 
 	UINT m_nTexCoord0Count{};							// <TextureCoords0>
 	std::vector<XMFLOAT2> m_vTex0{};
-	ComPtr<ID3D12Resource> m_pd3dTexCoord0Buffer{};		// �Ƹ��� DXGI_FORMAT_R32G32B32_UNORM;
+	ComPtr<ID3D12Resource> m_pd3dTexCoord0Buffer{};		
 	bool m_bHasTex0 = false;
 
 	UINT m_nTexCoord1Count{};							// <TextureCoords1>
-	ComPtr<ID3D12Resource> m_pd3dTexCoord1Buffer{};		// �Ƹ��� DXGI_FORMAT_R32G32B32_UNORM;
+	ComPtr<ID3D12Resource> m_pd3dTexCoord1Buffer{};		
 	bool m_bHasTex1 = false;
 
 	UINT m_nNormalsCount{};								// <Normals>
-	ComPtr<ID3D12Resource> m_pd3dNormalsBuffer{};		// ����ȭ����
+	ComPtr<ID3D12Resource> m_pd3dNormalsBuffer{};		
 	bool m_bHasNormals = false;
 
 	UINT m_nTangentsCount{};							// <Tangents>
@@ -121,9 +112,9 @@ private:
 	ComPtr<ID3D12Resource> m_pd3dBiTangentsBuffer{};
 	bool m_bHasBiTangents = false;
 
-	UINT m_nSubMeshesCount{};							// SubMesh���� (vector::size()�� �˾ƿ� �� �ִ�, �ʿ��Ѱ�?, reserve�Ҷ� ��� ����)
-	std::vector<ComPtr<ID3D12Resource>> m_vSubMeshes;	// SubMesh(indexbuffer)�� ����� �迭
-	std::vector<UINT> m_vIndices;						// �� SubMesh�� ���� Index ����, �̰� 0�̸� �������� �ʴ´�.
+	UINT m_nSubMeshesCount{};							
+	std::vector<ComPtr<ID3D12Resource>> m_vSubMeshes;
+	std::vector<UINT> m_vIndices;						
 	bool m_bHasSubMeshes = false;
 
 	bool m_bSkinningMesh = false;

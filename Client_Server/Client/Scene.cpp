@@ -172,7 +172,7 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 				Players[Client.get_id()].setReady(!currentReady);
 				Client.SendsetReady(Players[Client.get_id()].getReady(), currentRoom);
 				std::cout << "Player " << Client.get_id() << "is getReady" << std::endl;
-				//준비완료 패킷 보내기 
+				// send ready Complete Packet
 				break;
 			}
 			case VK_BACK:
@@ -201,7 +201,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 			g_state = RoomSelect;
 			Client.SendBroadCastRoom();
 			break;
-		case RoomSelect:			// 어디클릭했는지 좌표받아서 처리 
+		case RoomSelect:			
 			for (int i = 0; i < 10; ++i) {
 				int j = i % 2;
 				if (j == 0) {
@@ -210,8 +210,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
-							currentRoom = i;				//어떤 방을 골랐는지 넣어주는 변수
-							// 여기서 패킷 보내주기? selectroom 패킷  추후에 서버에서 동시에 눌렀을때 등등 예외처리도 해야됨
+							currentRoom = i;				
 							Client.SendEnterRoom(currentRoom);
 							break;
 						}
@@ -225,7 +224,6 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;
 							Client.SendEnterRoom(currentRoom);
-							// 여기서 패킷 보내주기? selectroom 패킷 
 							break;
 						}
 					}
@@ -234,7 +232,6 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 			
 			break;
 		case InRoom:
-			//추후에는 직업선택 아마 먀우스로 눌러서 처리하지 않을까싶음 알고는 있자 
 			break;
 		}
 		break;
@@ -275,15 +272,14 @@ void TitleScene::UpdateObject(float fElapsedTime)
 	}
 	case InRoom: {
 		m_vInRoomUIs[0]->Animation(fElapsedTime);
-		//들어온 순서대로 정렬이 안되었거나		
 		for (int i = 0; i < 3; ++i) {
-			if (i < userPerRoom[currentRoom]) {				//클라에서 누가 로딩했는지 알아야하니까 
+			if (i < userPerRoom[currentRoom]) {				
 				m_vInRoomUIs[backUIIndex + i]->setRenderState(true);
 				if(Players[i].getReady())
 					//userReadyState
-					m_vInRoomUIs[readyUIIndex + i]->setRenderState(true);		//레디 글씨 렌더링하는부분
+					m_vInRoomUIs[readyUIIndex + i]->setRenderState(true);		
 				else {
-					m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);		//레디 취소하면 다시 렌더링 빼기 
+					m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);		
 					Client.Setstart(false);
 				}
 			}
@@ -882,7 +878,6 @@ inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique
 	auto& meshes = m_pResourceManager->getMeshList();
 
 	for (const std::unique_ptr<T>& obj1 : object1) {
-		// ��-ĳ���� (���Ǿ)
 		if constexpr (HasGameObjectInterface<T>) {
 			int meshIndex = obj1->getMeshIndex();
 			if (meshIndex != -1 && meshIndex < meshes.size() && meshes[meshIndex]->getHasVertex() && meshes[meshIndex]->getHasBoundingBox()) {
@@ -891,12 +886,11 @@ inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique
 
 				for (const auto& character : object2) {
 					for (const auto& bone : character->getObjects()) {
-						if (bone->getBoundingInfo() & 0x1100) { // ĳ���� ���Ǿ�
+						if (bone->getBoundingInfo() & 0x1100) {
 							DirectX::BoundingSphere boneSphere = bone->getObjectSphere();
 							bone->getObjectSphere().Transform(boneSphere, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
 							if (mapOBB.Intersects(boneSphere)) {
 								collisionDetected = true;
-								// �浹 ó��
 							}
 						}
 					}
@@ -904,22 +898,20 @@ inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique
 			}
 		}
 
-		// ĳ����-ĳ���� (���Ǿ�-���Ǿ)
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x1100) { // ĳ���� ���Ǿ�
+				if (bone1->getBoundingInfo() & 0x1100) { 
 					DirectX::BoundingSphere boneSphere1 = bone1->getObjectSphere();
 					bone1->getObjectSphere().Transform(boneSphere1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
-						if (obj1 != character) { // ���� ĳ���� ����
+						if (obj1 != character) { 
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x1100) { // ĳ���� ���Ǿ�
+								if (bone2->getBoundingInfo() & 0x1100) { 
 									DirectX::BoundingSphere boneSphere2 = bone2->getObjectSphere();
 									bone2->getObjectSphere().Transform(boneSphere2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneSphere1.Intersects(boneSphere2)) {
 										collisionDetected = true;
-										// �浹 ó��
 									}
 								}
 							}
@@ -939,7 +931,6 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 	auto& meshes = m_pResourceManager->getMeshList();
 
 	for (const std::unique_ptr<T>& obj1 : object1) {
-		// ��-ĳ���� (OBB��)
 		if constexpr (HasGameObjectInterface<T>) {
 			int meshIndex = obj1->getMeshIndex();
 			if (meshIndex != -1 && meshIndex < meshes.size() && meshes[meshIndex]->getHasVertex() && meshes[meshIndex]->getHasBoundingBox()) {
@@ -948,11 +939,10 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 				for (const auto& character : object2) {
 					for (const auto& bone : character->getObjects()) {
-						if (bone->getBoundingInfo() & 0x0011) { // ĳ���� OBB
+						if (bone->getBoundingInfo() & 0x0011) { 
 							DirectX::BoundingOrientedBox boneOBB;
 							bone->getObjectOBB().Transform(boneOBB, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
 							if (mapOBB.Intersects(boneOBB)) {
-								// �浹 ó��
 							}
 						}
 					}
@@ -960,21 +950,19 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 			}
 		}
 
-		// ĳ����-ĳ���� (OBB-OBB��)
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x0011) { // ĳ���� OBB
+				if (bone1->getBoundingInfo() & 0x0011) { 
 					DirectX::BoundingOrientedBox boneOBB1;
 					bone1->getObjectOBB().Transform(boneOBB1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
-						if (obj1 != character) { // ���� ĳ���� ����
+						if (obj1 != character) {
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x0011) { // ĳ���� OBB
+								if (bone2->getBoundingInfo() & 0x0011) { 
 									DirectX::BoundingOrientedBox boneOBB2;
 									bone2->getObjectOBB().Transform(boneOBB2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneOBB1.Intersects(boneOBB2)) {
-										// �浹 ó��
 									}
 								}
 							}
@@ -1024,7 +1012,6 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 			}
 		}
 
-		// 다중 충돌 처리: 가장 큰 침투 깊이 선택
 		if (!collisions.empty()) {
 
 			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
@@ -1036,7 +1023,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 			XMVECTOR moveDir = XMLoadFloat3(&character->getMoveDirection());
 			XMVECTOR normal = XMLoadFloat3(&norm);
 			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
-			if (dotProduct < 0.0f) { // 이동 방향이 법선과 반대
+			if (dotProduct < 0.0f) { 
 				character->sliding(depth, norm, meshHeight);
 			}
 		}
@@ -1075,14 +1062,12 @@ XMFLOAT3 CRaytracingScene::CalculateCollisionNormal(const BoundingOrientedBox& o
 	XMVECTOR orientation = XMLoadFloat4(&obb.Orientation);
 	XMMATRIX rotation = XMMatrixRotationQuaternion(orientation);
 
-	// OBB의 각 축 추출
 	XMVECTOR axes[3] = {
 		rotation.r[0],
 		rotation.r[1],
 		rotation.r[2]
 	};
 
-	// 가장 가까운 점 계산
 	XMVECTOR closestPoint = obbCenter;
 	XMVECTOR d = sphereCenter - obbCenter;
 
@@ -1282,7 +1267,6 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// Normal Object Copy & Manipulation Matrix Here ================================
 
-	// ����-7 ����2 ��ȣ 9
 	// g_user[id].do_send(mp);
 	// 0	1		2
 	for (int i = 0; i < Players.size(); ++i) {
@@ -1413,7 +1397,6 @@ void CRaytracingMaterialTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
-	// ���� �߰�
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
 	m_pResourceManager->ReadyLightBufferContent();
 	m_pResourceManager->LightTest();

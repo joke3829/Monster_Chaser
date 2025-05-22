@@ -1,6 +1,5 @@
 // ===================================================
 // GameFramework.h
-// 설명 추가
 // ===================================================
 #pragma once
 #include "stdafx.h"
@@ -26,7 +25,6 @@ public:
 	// DXR
 	void InitOutputBuffer();
 
-	// device의 RayTracing 지원 확인
 	void CheckRayTracingSupport();
 
 	void InitScene();
@@ -58,8 +56,8 @@ private:
 	ComPtr<ID3D12Fence> m_pd3dFence{};
 	HANDLE m_hFenceHandle{};
 
-	bool m_bRayTracingSupport{};	// RayTracing 지원 여부
-	bool m_bRaster{};				// Rendering 방식 결정 값
+	bool m_bRayTracingSupport{};	
+	bool m_bRaster{};				
 
 	// Rasterization
 	/*ComPtr<ID3D12Resource> m_pd3dBackBuffer[2]{};

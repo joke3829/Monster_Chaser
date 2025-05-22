@@ -1,13 +1,12 @@
 #include "ShaderBindingTableManager.h"
 
-// 여기에 셰이더 이름을 사용할 개수 만큼 쓴다.
 const wchar_t* RayGenShaderNames[] = { L"RayGenShader" };
 const wchar_t* MissShaderNames[] = { L"RadianceMiss", L"ShadowMiss"};
 
 struct LocalRootArg {
-	D3D12_GPU_VIRTUAL_ADDRESS CBufferGPUVirtualAddress;		// Material상수버퍼
-	D3D12_GPU_VIRTUAL_ADDRESS MeshCBufferGPUVirtualAddress;	// Mesh 상수버퍼	
-	// Mesh 정보
+	D3D12_GPU_VIRTUAL_ADDRESS CBufferGPUVirtualAddress;	
+	D3D12_GPU_VIRTUAL_ADDRESS MeshCBufferGPUVirtualAddress;	
+
 	D3D12_GPU_VIRTUAL_ADDRESS VertexBuffer;
 	D3D12_GPU_VIRTUAL_ADDRESS ColorsBuffer;
 	D3D12_GPU_VIRTUAL_ADDRESS TexCoord0Buffer;
@@ -31,9 +30,8 @@ void CShaderBindingTableManager::Setup(CRayTracingPipeline* pipeline, CResourceM
 	m_pRaytracingPipeline = pipeline;
 	m_pResourceManager = manager;
 
-	// null 버퍼와 nulltexture
 	//auto desc = BASIC_BUFFER_DESC;
-	//desc.Width = 1;			// 여기 의심
+	//desc.Width = 1;			
 
 	//g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dNullBuffer.GetAddressOf()));
 
@@ -66,12 +64,12 @@ void CShaderBindingTableManager::CreateSBT()
 	ID3D12StateObjectProperties* properties{};
 	m_pRaytracingPipeline->getPipelineState()->QueryInterface(&properties);
 
-	std::vector<void*> raygenIDs;		// Raygen은 하나만 쓰는거라 생각하지만 일단은 vector로 사용
+	std::vector<void*> raygenIDs;		
 	std::vector<void*> MissIDs;
 	std::vector<void*> HitGroupIDs;
 
 	std::vector<LPCWSTR>& exports = m_pRaytracingPipeline->getExports();
-	// Identifier 사용 준비
+
 	for (int i = 0; i < std::size(RayGenShaderNames); ++i) {
 		void* raygenID = properties->GetShaderIdentifier(RayGenShaderNames[i]);
 		raygenIDs.emplace_back(raygenID);
@@ -121,7 +119,6 @@ void CShaderBindingTableManager::CreateSBT()
 
 	// HitGroupTable
 	{
-		// 테스트용
 		/*
 		void* tempdata;
 		makeBuffer(m_pHitGroupTable, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT * HitGroupIDs.size());
@@ -184,17 +181,17 @@ void CShaderBindingTableManager::CreateSBT()
 			if (n != -1) {
 				std::vector<Material>& vMaterials = object->getMaterials();
 				if (vMeshes[n]->getHasVertex()) {
-					object->SetHitGroupIndex(nRecords);	// object의 hitgroup index 설정
-					if (vMeshes[n]->getHasSubmesh()) {	// 서브 메시를 가질 때(인덱스를 가질 때)
-						for (int i = 0; i < vMeshes[n]->getSubMeshCount(); ++i) {	// i == object의 mesh 인덱스
-							for (int j = 0; j < HitGroupIDs.size(); ++j) {			// j == IDs 인덱스
+					object->SetHitGroupIndex(nRecords);	
+					if (vMeshes[n]->getHasSubmesh()) {	
+						for (int i = 0; i < vMeshes[n]->getSubMeshCount(); ++i) {	
+							for (int j = 0; j < HitGroupIDs.size(); ++j) {			
 								LocalRootArg args{};
 								{
 									args.CBufferGPUVirtualAddress = object->getCbuffer(i)->GetGPUVirtualAddress();
 									args.MeshCBufferGPUVirtualAddress = object->getMeshCBuffer()->GetGPUVirtualAddress();
-									// 정점
+									
 									args.VertexBuffer = vMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
-									// 컬러
+									
 									if (vMeshes[n]->getHasColor())
 										args.ColorsBuffer = vMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
 									else
@@ -273,15 +270,15 @@ void CShaderBindingTableManager::CreateSBT()
 							}
 						}
 					}
-					else {	// 정점 정보는 있으나 인덱스가 없을 때
+					else {	
 						for (int j = 0; j < HitGroupIDs.size(); ++j) {
 							LocalRootArg args{};
 							{
 								args.CBufferGPUVirtualAddress = object->getCbuffer(0)->GetGPUVirtualAddress();
 								args.MeshCBufferGPUVirtualAddress = object->getMeshCBuffer()->GetGPUVirtualAddress();
-								// 정점
+								
 								args.VertexBuffer = vMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
-								// 컬러
+								
 								if (vMeshes[n]->getHasColor())
 									args.ColorsBuffer = vMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
 								else
@@ -370,20 +367,20 @@ void CShaderBindingTableManager::CreateSBT()
 				if (n != -1) {
 					std::vector<Material>& vMaterials = object->getMaterials();
 					if (sMeshes[n]->getHasVertex()) {
-						object->SetHitGroupIndex(nRecords);	// object의 hitgroup index 설정
-						if (sMeshes[n]->getHasSubmesh()) {	// 서브 메시를 가질 때(인덱스를 가질 때)
-							for (int i = 0; i < sMeshes[n]->getSubMeshCount(); ++i) {	// i == object의 mesh 인덱스
-								for (int j = 0; j < HitGroupIDs.size(); ++j) {			// j == IDs 인덱스
+						object->SetHitGroupIndex(nRecords);
+						if (sMeshes[n]->getHasSubmesh()) {	
+							for (int i = 0; i < sMeshes[n]->getSubMeshCount(); ++i) {	
+								for (int j = 0; j < HitGroupIDs.size(); ++j) {			
 									LocalRootArg args{};
 									{
 										args.CBufferGPUVirtualAddress = object->getCbuffer(i)->GetGPUVirtualAddress();
 										args.MeshCBufferGPUVirtualAddress = object->getMeshCBuffer()->GetGPUVirtualAddress();
-										// 정점
-										if (SkinningObject->getVertexOutputBuffer(n))	// 레이트레이싱 Skinning이 아닐때를 확인 못함
+										
+										if (SkinningObject->getVertexOutputBuffer(n))	
 											args.VertexBuffer = SkinningObject->getVertexOutputBuffer(n)->GetGPUVirtualAddress();
 										else
 											args.VertexBuffer = sMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
-										// 컬러
+										
 										if (sMeshes[n]->getHasColor())
 											args.ColorsBuffer = sMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
 										else
@@ -474,18 +471,18 @@ void CShaderBindingTableManager::CreateSBT()
 								}
 							}
 						}
-						else {	// 정점 정보는 있으나 인덱스가 없을 때
+						else {	
 							for (int j = 0; j < HitGroupIDs.size(); ++j) {
 								LocalRootArg args{};
 								{
 									args.CBufferGPUVirtualAddress = object->getCbuffer(0)->GetGPUVirtualAddress();
 									args.MeshCBufferGPUVirtualAddress = object->getMeshCBuffer()->GetGPUVirtualAddress();
-									// 정점
-									if (SkinningObject->getVertexOutputBuffer(n))	// 레이트레이싱 Skinning이 아닐때를 확인 못함
+									
+									if (SkinningObject->getVertexOutputBuffer(n))	
 										args.VertexBuffer = SkinningObject->getVertexOutputBuffer(n)->GetGPUVirtualAddress();
 									else
 										args.VertexBuffer = sMeshes[n]->getVertexBuffer()->GetGPUVirtualAddress();
-									// 컬러
+									
 									if (sMeshes[n]->getHasColor())
 										args.ColorsBuffer = sMeshes[n]->getColorsBuffer()->GetGPUVirtualAddress();
 									else

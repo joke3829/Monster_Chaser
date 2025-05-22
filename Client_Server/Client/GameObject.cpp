@@ -546,7 +546,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ���� �÷�
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -573,7 +573,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 				tempV.clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ���� �÷�
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);
 				tempV.emplace_back(tempM);
 			}
 		}
@@ -595,7 +595,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 					std::vector<Material>& tempV = m_vObjects[nCurrentObjectIndex]->getMaterials();
 					tempV.clear();
 					Material tempM;
-					tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// ���� �÷�
+					tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);
 					tempV.emplace_back(tempM);
 				}
 			}
@@ -690,7 +690,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 					return txt->getName() == strLabel;
 					});
 				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;
-				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = std::distance(m_vTextures.begin(), p);	// ����
+				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = std::distance(m_vTextures.begin(), p);
 			}
 			else if (strLabel == "null") {	// null is not used Texture
 				continue;
@@ -965,26 +965,25 @@ void CSkinningObject::Rotate(XMFLOAT3 rot)
 
 void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 {
-	XMFLOAT4X4 centerWorldMatrix = frame.getWorldMatrix(); // m_vFrames[0]�� ���� ��� ��������
-	XMMATRIX centerMatrix = XMLoadFloat4x4(&centerWorldMatrix); // ������ �����ϰ� ��ȯ
+	XMFLOAT4X4 centerWorldMatrix = frame.getWorldMatrix();
+	XMMATRIX centerMatrix = XMLoadFloat4x4(&centerWorldMatrix);
 	
-	XMMATRIX centerInverse = XMMatrixInverse(nullptr, centerMatrix); // �߽����� ���� ����� ����� ���
+	XMMATRIX centerInverse = XMMatrixInverse(nullptr, centerMatrix); 
 
-	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position); //���� ��ġ�� XMVECTOR�� �ε�
-	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse); // ���� ��ġ�� ���� ��ǥ��� ��ȯ
+	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position); 
+	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse); 
 
-	XMFLOAT3 centerUp = frame.getUp(); // �߽����� Up ���� ��������
-	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp); //Up���� XMVECTOR�� ��ȯ
-	XMFLOAT3 tempUp; // rotationAxis�� XMFLOAT3 Ÿ������ ����
+	XMFLOAT3 centerUp = frame.getUp();
+	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp); 
+	XMFLOAT3 tempUp; 
 	XMStoreFloat3(&tempUp, rotationAxis);
-	XMMATRIX orbitMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(rot.y)); // Y���� �������� ȸ�� ��� ����
+	XMMATRIX orbitMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(rot.y)); 
 
-	XMVECTOR newLocalPos = XMVector3Transform(localPos, orbitMatrix); // ���� ��ǥ�迡�� ĳ���� ��ġ�� ȸ��
+	XMVECTOR newLocalPos = XMVector3Transform(localPos, orbitMatrix); 
 
-	XMVECTOR newPos = XMVector3Transform(newLocalPos, centerMatrix); // ȸ���� ���� ��ġ�� ���� ��ǥ��� ��ȯ
+	XMVECTOR newPos = XMVector3Transform(newLocalPos, centerMatrix);
 	XMStoreFloat3(&m_xmf3Position, newPos);
 
-	// ���� ���� �������� ���� ȿ��
 	XMVECTOR oldLook = XMLoadFloat3(&m_xmf3Look);
 	XMVECTOR oldRight = XMLoadFloat3(&m_xmf3Right);
 	XMVECTOR newLook = XMVector3TransformNormal(oldLook, orbitMatrix);
@@ -993,7 +992,6 @@ void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 	XMStoreFloat3(&m_xmf3Right, XMVector3Normalize(newRight));
 	m_xmf3Up = tempUp;
 
-	// ���� ��� ������Ʈ
 	UpdateWorldMatrix();
 }
 
@@ -1013,42 +1011,35 @@ void CSkinningObject::sliding(float depth, const XMFLOAT3& normal, float meshHei
 {
 	XMVECTOR normalVec = XMLoadFloat3(&normal);
 
-	// 법선 정규화
 	normalVec = XMVector3Normalize(normalVec);
 
-	// y 성분 제거 (x, z 방향으로만 밀어내기)
 	XMFLOAT3 normalNoY;
 	XMStoreFloat3(&normalNoY, normalVec);
 	normalNoY.y = 0.0f;
 	normalVec = XMLoadFloat3(&normalNoY);
 
-	// y 성분 제거 후 방향이 0 벡터가 아닌 경우 정규화
 	if (XMVectorGetX(XMVector3Length(normalVec)) > 0.01f) {
 		normalVec = XMVector3Normalize(normalVec);
 	}
 	else {
-		// 모서리에서 법선이 부정확할 경우, 이전 슬라이딩 방향 유지 또는 이동 방향 사용
 		if (XMVectorGetX(XMVector3Length(XMLoadFloat3(&m_xmf3Sliding))) > 0.01f) {
 			normalVec = XMVector3Normalize(XMLoadFloat3(&m_xmf3Sliding));
 		}
 		else {
-			normalVec = XMLoadFloat3(&m_xmf3Look); // 이동 방향으로 대체
+			normalVec = XMLoadFloat3(&m_xmf3Look); 
 			XMFLOAT3 lookNoY = m_xmf3Look;
 			lookNoY.y = 0.0f;
 			normalVec = XMVector3Normalize(XMLoadFloat3(&lookNoY));
 		}
 	}
 
-	// 침투 깊이로 밀어내기
 	XMVECTOR pushOut = normalVec * depth;
 	XMMATRIX worldMatrix = XMLoadFloat4x4(&m_xmf4x4WorldMatrix);
 	XMVECTOR currentPos = worldMatrix.r[3];
 	currentPos += pushOut;
 
-	// 슬라이딩 벡터 업데이트
 	XMStoreFloat3(&m_xmf3Sliding, normalVec);
 
-	// 위치 업데이트
 	XMFLOAT3 lastPos;
 	XMStoreFloat3(&lastPos, currentPos);
 	SetPosition(lastPos);
@@ -1280,7 +1271,6 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 		ComPtr<ID3D12DescriptorHeap> uav{};
 		ComPtr<ID3D12DescriptorHeap> insert{};
 		if (mesh->getbSkinning()) {
-			// ��� ����
 			desc.Width = Align(sizeof(XMINT3), 256);
 			desc.Flags = D3D12_RESOURCE_FLAG_NONE;
 			g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(constResource.GetAddressOf()));
@@ -1301,7 +1291,6 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 			D3D12_CPU_DESCRIPTOR_HANDLE insertHandle = insert->GetCPUDescriptorHandleForHeapStart();
 			UINT incrementSize = g_DxResource.device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-			// ������۸� ���� insert�� �տ� ����
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cDesc{};
 			cDesc.BufferLocation = constResource->GetGPUVirtualAddress(); cDesc.SizeInBytes = Align(sizeof(XMINT3), 256);
 			g_DxResource.device->CreateConstantBufferView(&cDesc, insertHandle);

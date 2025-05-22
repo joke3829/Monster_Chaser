@@ -33,11 +33,10 @@ void CRayTracingPipeline::AddLibrarySubObject(const unsigned char* compiledShade
 	++ m_nCurrentIndex;
 }
 
-// 사용할 것만 넣기
 void CRayTracingPipeline::AddHitGroupSubObject(wchar_t* exportName, wchar_t* ClosestHit, wchar_t* AnyHit, wchar_t* Intersect)
 {
 	D3D12_HIT_GROUP_DESC* hitGroup = new D3D12_HIT_GROUP_DESC{};
-	hitGroup->Type = D3D12_HIT_GROUP_TYPE_TRIANGLES;	// 바뀔 수도 있음
+	hitGroup->Type = D3D12_HIT_GROUP_TYPE_TRIANGLES;	
 	hitGroup->ClosestHitShaderImport = ClosestHit;
 	if(AnyHit)
 		hitGroup->AnyHitShaderImport = AnyHit;
@@ -45,7 +44,6 @@ void CRayTracingPipeline::AddHitGroupSubObject(wchar_t* exportName, wchar_t* Clo
 		hitGroup->IntersectionShaderImport = Intersect;
 	hitGroup->HitGroupExport = exportName;
 
-	// export를 저장한다.
 	m_exports.emplace_back(exportName);
 
 	/*D3D12_STATE_SUBOBJECT temp{};
