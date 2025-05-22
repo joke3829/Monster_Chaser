@@ -37,7 +37,7 @@ public:
     XMFLOAT4X4 m_pos;
     unsigned char remained = 0;
 
-    std::string name;               //유저 닉네임
+    std::string name;               //user name
     int local_id;
     int room_num;
 
