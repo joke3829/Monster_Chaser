@@ -1,8 +1,6 @@
 //-----------------------------------------------------------------------------
 // File: Transform.h
-// 오브젝트의 위치, 회전, 스케일과 같은 변환 데이터를 관리하는 클래스
-// 
-// 추가적인 기능은 개발 진행에 따라 확장 예정
+// Not Used
 //-----------------------------------------------------------------------------
 #include "Component.h"
 #include "stdafx.h"
@@ -14,7 +12,7 @@ public:
         : m_Position(0.0f, 0.0f, 0.0f),
         m_Rotation(0.0f, 0.0f, 0.0f),
         m_Scale(1.0f, 1.0f, 1.0f),
-        m_IsDirty(true) //true면 업데이트하고 반환
+        m_IsDirty(true)
     {
         UpdateWorldMatrix();
     }
@@ -36,7 +34,7 @@ public:
     const XMFLOAT3& GetScale() const { return m_Scale; }
     const XMFLOAT4X4& GetWorldMatrix()
     {
-        if (m_IsDirty) //true 라면 업데이트하고 반환
+        if (m_IsDirty)
             UpdateWorldMatrix();
         return m_WorldMatrix;
     }
@@ -105,6 +103,6 @@ private:
         XMMATRIX worldMatrix = scaleMatrix * rotationMatrix * translationMatrix;
 
         XMStoreFloat4x4(&m_WorldMatrix, worldMatrix);
-        m_IsDirty = false; //업데이트하고 false로 바꿔주기
+        m_IsDirty = false; 
     }
 };

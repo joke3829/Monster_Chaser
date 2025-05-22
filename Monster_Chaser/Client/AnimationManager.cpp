@@ -44,7 +44,7 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 	UINT index = std::distance(m_vKeyTime.begin(), p) - 1;
 	// t (0 ~ 1)
 	float t = (fElapsedTime - m_vKeyTime[index]) / (m_vKeyTime[index + 1] - m_vKeyTime[index]);
-	// 행렬 보간
+	// interpolation Matrix
 	for (int i = 0; i < vMatrixes.size(); ++i) {
 		XMFLOAT4X4 xmf{};
 		XMVECTOR S0, R0, T0, S1, R1, T1;
@@ -150,12 +150,12 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
 	XMFLOAT4X4 targetPosition;
-	m_fElapsedTime += fElapsedTime; // 시간 누적
+	m_fElapsedTime += fElapsedTime; // Accumulated time
 	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 
 	if (m_bPlayOnce) {
 		if (m_fElapsedTime >= length) {
-			m_fElapsedTime = length; // 한 번 재생 시 종료
+			m_fElapsedTime = length; // Once play if over
 		}
 	}
 	else {
@@ -240,10 +240,10 @@ void CMageManager::OnAttackInput()
 		return;
 	}
 
-	// 콤보 진행
+	// Progress combo
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
 		if (!m_bWaitingForNextInput) {
-			m_bNextAttack = true; // 다음 공격 대기
+			m_bNextAttack = true; // wait next attack
 		}
 		else {
 			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
@@ -293,7 +293,7 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 
 void CMageManager::ResetCombo()
 {
-	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // 중단 감지
+	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // Stop detection
 	m_bInCombo = false;
 	m_CurrentComboStep = 0;
 	m_fComboTimer = 0.0f;
@@ -302,7 +302,7 @@ void CMageManager::ResetCombo()
 	m_vComboAnimationSets.clear();
 	m_vSkillAnimationSets.clear();
 	setTimeZero();
-	ChangeAnimation(0, false); // idle로 전환
+	ChangeAnimation(0, false); // Change idle
 }
 
 void CMageManager::StartSkill3()

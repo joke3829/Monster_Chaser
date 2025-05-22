@@ -303,8 +303,7 @@ bool CheckTheShadow(in RayDesc ray, uint currentRayDepth)
 {
     if (currentRayDepth + 1 > MAX_RAY_DEPTH)
         return false;
-    
-    // 조명 개수에 따라 검사하도록 코드 예정
+   
     
     ShadowPayload payload = { false };
     TraceRay(g_Scene,
@@ -352,7 +351,7 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
     {
         switch (g_Lights.lights[i].Type)
         {
-            case DIRECTIONAL_LIGHT:{        // 방향성 조명
+            case DIRECTIONAL_LIGHT:{
                     float3 L = normalize(-g_Lights.lights[i].Direction);
                     float3 H = normalize(V + L);
                     float NdotH = saturate(dot(N, H));

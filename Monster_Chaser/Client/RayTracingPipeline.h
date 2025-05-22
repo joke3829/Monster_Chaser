@@ -7,7 +7,7 @@ class CRayTracingPipeline {
 public:
 	~CRayTracingPipeline();
 	void Setup(UINT nSubObject);
-	// 다음과 같은 순서로 만들어라
+	// Make it in the following order
 	void AddLibrarySubObject(const unsigned char* compiledShader, size_t shaderSize);
 	void AddHitGroupSubObject(wchar_t* exportName, wchar_t* ClosestHit = nullptr, wchar_t* AnyHit = nullptr, wchar_t* Intersect = nullptr);			// ClosestHit, AnyHit, Intersect
 	void AddShaderConfigSubObject(UINT nMaxAttributeSize, UINT nMaxPayloadSize);
@@ -28,6 +28,6 @@ private:
 	UINT m_nSubObjects{};
 	UINT m_nCurrentIndex{};
 
-	std::vector<LPCWSTR> m_exports;			// HitGroup 종류? 개수
+	std::vector<LPCWSTR> m_exports;			// Types of hit groups
 };
 

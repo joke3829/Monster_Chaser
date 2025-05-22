@@ -42,7 +42,7 @@ float3x3 InverseFloat3x3(float3x3 m)
 
     float det = a00 * b01 + a01 * b11 + a02 * b21;
 
-    // 너무 작은 행렬이면 그냥 단위행렬 반환
+    // If it's too small, return MatrixIdentity
     if (abs(det) < 1e-5)
         return float3x3(1, 0, 0, 0, 1, 0, 0, 0, 1);
 

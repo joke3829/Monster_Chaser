@@ -78,7 +78,7 @@ protected:
 	float m_fFar = 1000.0f;
 
 	float m_fLimitcy{};
-	float m_fCameraLength{ 30.0f };		// ī�޶� �Ÿ�
+	float m_fCameraLength{ 30.0f };		// distance between target and camera
 
 	int m_nRootParameterIndex{};
 };
