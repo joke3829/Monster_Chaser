@@ -1,5 +1,6 @@
 #pragma once
 #include "stdafx.h"
+#include "GameObject.h"
 
 extern DXResources g_DxResource;
 
@@ -20,6 +21,7 @@ protected:
 	ComPtr<ID3D12Resource> m_WorldBuffer{};
 
 	UINT m_nMaxVertex{};
+	UINT m_nCurrentVertex{};
 	bool m_bStart{ true };
 
 	ComPtr<ID3D12Resource> m_DrawBuffer{};
@@ -31,14 +33,28 @@ protected:
 	UINT64* m_Mappedptr{};
 
 	ComPtr<ID3D12Resource> m_VertexBuffer{};
+
+	Material m_material;
 };
 
 class CRaytracingParticle : public CParticle {
 public:
-protected:
-	virtual void BufferReady();
+	CRaytracingParticle();
+	CRaytracingParticle(UINT maxVertex);
 
+protected:
+	void BufferReady();
+
+	void InitBLAS();
+	void ReBuildBLAS();
+
+	ComPtr<ID3D12Resource> m_MeshCB{};
+	ComPtr<ID3D12Resource> m_MaterialCB{};
+
+	// use 2 slot
 	ComPtr<ID3D12Resource> m_BillboardVertex{};	// 이걸로 만들어진걸
+	ComPtr<ID3D12Resource> m_TexCoord0Buffer{};
 
 	ComPtr<ID3D12Resource> m_BLAS{};			// BLAS로 만든다.
+	ComPtr<ID3D12Resource> m_ScratchBuffer{};
 };
