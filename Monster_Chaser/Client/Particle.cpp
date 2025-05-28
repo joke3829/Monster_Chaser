@@ -14,6 +14,7 @@ struct ParticleVertex {
 CParticle::CParticle()
 {
 	m_nMaxVertex = 150;
+	m_nCurrentVertex = 1;
 	BufferReady();
 }
 
@@ -22,6 +23,7 @@ CParticle::CParticle(UINT maxVertex)
 {
 	if (m_nMaxVertex > 150)
 		m_nMaxVertex = 150;
+	m_nCurrentVertex = 1;
 	BufferReady();
 }
 
@@ -74,6 +76,19 @@ XMFLOAT3 CParticle::getPosition()
 void CParticle::setPosition(XMFLOAT3& pos)
 {
 	m_WorldMatrix._41 = pos.x; m_WorldMatrix._42 = pos.y; m_WorldMatrix._43 = pos.z;
+}
+
+void CParticle::PostProcess()
+{
+	UINT64* pFilledSize{};
+	m_ReadBackBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pFilledSize));
+	m_nCurrentVertex = UINT(*pFilledSize) / sizeof(ParticleVertex);
+	m_ReadBackBuffer->Unmap(0, nullptr);
+
+	if (m_nCurrentVertex == 1)
+		m_bStart = true;
+
+	m_StreamOutputBuffer.Swap(m_DrawBuffer);
 }
 
 // =====================================================================================
@@ -182,7 +197,7 @@ void CRaytracingParticle::ReBuildBLAS()
 		.StartAddress = m_BillboardVertex->GetGPUVirtualAddress(),
 		.StrideInBytes = sizeof(float) * 3
 	};
-	desc.Triangles.VertexCount = m_nCurrentVertex * 6;
+	desc.Triangles.VertexCount = (m_nCurrentVertex - 1) * 6;		// excluding Emitter(0)
 	desc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
 	desc.Triangles.IndexBuffer = 0;
 	desc.Triangles.IndexCount = 0;
@@ -206,3 +221,80 @@ void CRaytracingParticle::ReBuildBLAS()
 	d3dbr.UAV.pResource = m_BLAS.Get();
 	g_DxResource.cmdList->ResourceBarrier(1, &d3dbr);
 }
+
+void CRaytracingParticle::Render()
+{
+	OnePath();
+	TwoPath();
+}
+
+void CRaytracingParticle::OnePath()
+{
+	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
+	// setting geometry shader
+	// 1. particle vertex update
+	D3D12_VERTEX_BUFFER_VIEW vView{};
+	if (m_bStart) {
+		vView.BufferLocation = m_VertexBuffer->GetGPUVirtualAddress();
+		vView.SizeInBytes = sizeof(ParticleVertex);
+		vView.StrideInBytes = sizeof(ParticleVertex);
+		m_bStart = false;
+	}
+	else {
+		vView.BufferLocation = m_DrawBuffer->GetGPUVirtualAddress();
+		vView.SizeInBytes = sizeof(ParticleVertex) * m_nCurrentVertex;
+		vView.StrideInBytes = sizeof(ParticleVertex);
+	}
+	*m_Mappedptr = 0;
+	cmdList->CopyResource(m_FilledSizeBuffer.Get(), m_UploadBuffer.Get());
+
+	D3D12_STREAM_OUTPUT_BUFFER_VIEW soView{};
+	soView.BufferFilledSizeLocation = m_FilledSizeBuffer->GetGPUVirtualAddress();
+	soView.BufferLocation = m_StreamOutputBuffer->GetGPUVirtualAddress();
+	soView.SizeInBytes = sizeof(ParticleVertex) * m_nMaxVertex;
+	
+	cmdList->SetPipelineState(m_OnePathPipeline.Get());
+	cmdList->SOSetTargets(0, 1, &soView);
+
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+	cmdList->IASetVertexBuffers(0, 1, &vView);
+	cmdList->DrawInstanced(m_nCurrentVertex, 1, 0, 0);
+}
+
+void CRaytracingParticle::TwoPath()
+{
+	// setting geometry shader
+	// 2. paritcle vertex -> billboard~~
+	// Need camera Setting -> executed Scene? 
+	// Use VertexBuffer set in OnePath
+
+	auto barrier = [&](ComPtr<ID3D12Resource>& res, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after) {
+		D3D12_RESOURCE_BARRIER dbr{};
+		dbr.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		dbr.Transition.pResource = res.Get();
+		dbr.Transition.StateBefore = before;
+		dbr.Transition.StateAfter = after;
+		dbr.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		g_DxResource.cmdList->ResourceBarrier(1, &dbr);
+		};
+	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
+
+	barrier(m_FilledSizeBuffer, D3D12_RESOURCE_STATE_STREAM_OUT, D3D12_RESOURCE_STATE_COPY_SOURCE);
+	cmdList->CopyResource(m_ReadBackBuffer.Get(), m_FilledSizeBuffer.Get());
+	barrier(m_FilledSizeBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_STREAM_OUT);
+
+
+	D3D12_STREAM_OUTPUT_BUFFER_VIEW soView[2]{};
+	soView[0].BufferLocation = m_BillboardVertex->GetGPUVirtualAddress();
+	soView[0].SizeInBytes = m_nMaxVertex * 6 * sizeof(XMFLOAT3);
+
+	soView[1].BufferLocation = m_TexCoord0Buffer->GetGPUVirtualAddress();
+	soView[1].SizeInBytes = m_nMaxVertex * 6 * sizeof(XMFLOAT2);
+
+	cmdList->SetPipelineState(m_TwoPathPipeline.Get());
+	cmdList->SOSetTargets(0, 2, soView);
+
+	cmdList->DrawInstanced(m_nCurrentVertex, 1, 0, 0);
+
+}
+

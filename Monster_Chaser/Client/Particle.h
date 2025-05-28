@@ -14,8 +14,12 @@ public:
 	void setPosition(XMFLOAT3& pos);
 
 	virtual void Render() {}
+	virtual void PostProcess();
 protected:
 	virtual void BufferReady();
+
+	virtual void OnePath() {}
+	virtual void TwoPath() {}
 
 	XMFLOAT4X4 m_WorldMatrix{};
 	ComPtr<ID3D12Resource> m_WorldBuffer{};
@@ -34,6 +38,8 @@ protected:
 
 	ComPtr<ID3D12Resource> m_VertexBuffer{};
 
+	ComPtr<ID3D12PipelineState> m_OnePathPipeline{};
+	ComPtr<ID3D12PipelineState> m_TwoPathPipeline{};
 	Material m_material;
 };
 
@@ -42,8 +48,12 @@ public:
 	CRaytracingParticle();
 	CRaytracingParticle(UINT maxVertex);
 
+	void Render();
 protected:
 	void BufferReady();
+
+	void OnePath();
+	void TwoPath();
 
 	void InitBLAS();
 	void ReBuildBLAS();

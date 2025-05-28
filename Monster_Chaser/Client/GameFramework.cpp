@@ -328,34 +328,6 @@ void CGameFramework::Render()
 		};
 	//m_Timer.Tick(60.0f);
 	m_Timer.Tick();
-	//if (m_bRaster) {	// Not Used
-	//	m_pd3dCommandAllocator->Reset();
-	//	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
-	//
-	//	UINT nCurrentBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
-	//
-	//	barrier(m_pd3dBackBuffer[nCurrentBufferIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	//	D3D12_CPU_DESCRIPTOR_HANDLE d3dCPUHandle = m_pd3dRenderTargetView->GetCPUDescriptorHandleForHeapStart();
-	//	d3dCPUHandle.ptr += (m_nRTVIncrementSize * nCurrentBufferIndex);
-	//	float colors[] = { 0.5f, 0.5f, 1.0f, 1.0f };
-	//	m_pd3dCommandList->ClearRenderTargetView(d3dCPUHandle, colors, 0, nullptr);
-	//
-	//	d3dCPUHandle = m_pd3dDepthStencilView->GetCPUDescriptorHandleForHeapStart();
-	//	m_pd3dCommandList->ClearDepthStencilView(d3dCPUHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-	//	
-	//	// Render Here(Set & Draw) ===================
-	//
-	//	// ===========================================
-	//
-	//	barrier(m_pd3dBackBuffer[nCurrentBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	//
-	//	m_pd3dCommandList->Close();
-	//	m_pd3dCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(m_pd3dCommandList.GetAddressOf()));
-	//	Flush();
-	//
-	//	m_pdxgiSwapChain->Present(0, 0);
-	//}
-	//else {	// RayTracing
 	m_pd3dCommandAllocator->Reset();
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
 

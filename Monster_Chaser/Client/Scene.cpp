@@ -2237,6 +2237,10 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	g_DxResource.cmdList->SetComputeRootSignature(m_pComputeRootSignature.Get());
 
 	m_pResourceManager->UpdateSkinningMesh(fElapsedTime);
+	// particle update
+	// SetRootSignature
+	// particle update
+
 	Flush();
 	// Skinning Object BLAS ReBuild
 	m_pResourceManager->ReBuildBLAS();
