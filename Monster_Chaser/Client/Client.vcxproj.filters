@@ -238,10 +238,10 @@
   <ItemGroup>
     <FxCompile Include="RaytracingShader.hlsl" />
     <FxCompile Include="PBR_RayTracing.hlsl" />
-    <FxCompile Include="ParticleShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AnimationComputeShader.hlsl" />
     <None Include="UIShader.hlsl" />
+    <None Include="ParticleShader.hlsl" />
   </ItemGroup>
 </Project>

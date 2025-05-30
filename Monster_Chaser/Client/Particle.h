@@ -12,6 +12,14 @@ public:
 	XMFLOAT3 getPosition();
 
 	void setPosition(XMFLOAT3& pos);
+	virtual void setMaterial(Material& material) { m_material = material; }
+
+	virtual ID3D12Resource* getVertexBuffer() {}
+	virtual ID3D12Resource* getTexCoordBuffer() {}
+
+	virtual ID3D12Resource* getBLAS() {}
+
+	virtual void UpdateObject();
 
 	virtual void Render() {}
 	virtual void PostProcess();
@@ -47,6 +55,15 @@ class CRaytracingParticle : public CParticle {
 public:
 	CRaytracingParticle();
 	CRaytracingParticle(UINT maxVertex);
+
+	ID3D12Resource* getVertexBuffer() { return m_BillboardVertex.Get(); }
+	ID3D12Resource* getTexCoordBuffer() { return m_TexCoord0Buffer.Get(); }
+
+	ID3D12Resource* getBLAS() { return m_BLAS.Get(); }
+	ID3D12Resource* getMeshCB() { return m_MeshCB.Get(); }
+	ID3D12Resource* getMaterialCB() { return m_MaterialCB.Get(); }
+
+	void setMaterial(Material& material);
 
 	void Render();
 protected:

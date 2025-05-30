@@ -35,6 +35,7 @@ struct CameraInfo
     matrix mtxViewProj;
     matrix mtxInverseViewProj;
     float3 cameraEye;
+    float fElapsedTime;
     int bNormalMapping;
     int bReflection;
 };
