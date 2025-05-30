@@ -539,24 +539,24 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer)
 			m_bLockAnimation1 = true;
 		}
 		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
-			/*m_AManager->ChangeAnimation(SKILL1, true);
+			m_AManager->ChangeAnimation(ANI_SKILL1, true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation1 = true;*/
+			m_bLockAnimation1 = true;
 			Skill1();
 		}
 		if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
-			/*m_AManager->ChangeAnimation(SKILL2, true);
+			m_AManager->ChangeAnimation(ANI_SKILL2, true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation1 = true;*/
+			m_bLockAnimation1 = true;
 			Skill2();
 		}
 		if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
-			/*m_AManager->OnKey3Input();
+			m_AManager->OnKey3Input();
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation = true;*/
+			m_bLockAnimation = true;
 			Skill3();
 		}
 	}

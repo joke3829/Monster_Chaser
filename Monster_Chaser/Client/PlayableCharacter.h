@@ -34,6 +34,10 @@ protected:
 
 class CPlayerMage : public CPlayableCharacter {
 public:
+	virtual void Skill1();
+	virtual void Skill2();
+	virtual void Skill3();
+
 	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
