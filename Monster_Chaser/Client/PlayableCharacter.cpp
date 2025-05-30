@@ -8,6 +8,39 @@ CPlayableCharacter::CPlayableCharacter(CSkinningObject* object, CAnimationManage
 
 // =======================================================================================
 
+void CPlayerMage::Skill1()
+{
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	XMFLOAT3 characterDir = cameraDir;
+	characterDir.y = 0.0f; // delete y value
+	m_AManager->ChangeAnimation(ANI_SKILL1, true);
+	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	m_bLockAnimation1 = true;
+}
+
+void CPlayerMage::Skill2()
+{
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	XMFLOAT3 characterDir = cameraDir;
+	characterDir.y = 0.0f; // delete y value
+	m_AManager->ChangeAnimation(ANI_SKILL2, true);
+	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	m_bLockAnimation1 = true;
+}
+
+void CPlayerMage::Skill3()
+{
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	XMFLOAT3 characterDir = cameraDir;
+	characterDir.y = 0.0f; // delete y value
+	m_AManager->OnKey3Input();
+	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	m_bLockAnimation = true;
+}
+
 CPlayerMage::CPlayerMage(CSkinningObject* object, CAnimationManager* aManager)
 	: CPlayableCharacter(object, aManager)
 {
@@ -539,24 +572,12 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer)
 			m_bLockAnimation1 = true;
 		}
 		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
-			m_AManager->ChangeAnimation(ANI_SKILL1, true);
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation1 = true;
 			Skill1();
 		}
 		if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
-			m_AManager->ChangeAnimation(ANI_SKILL2, true);
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation1 = true;
 			Skill2();
 		}
 		if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
-			m_AManager->OnKey3Input();
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation = true;
 			Skill3();
 		}
 	}
