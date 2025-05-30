@@ -9,6 +9,7 @@ public:
 	CAnimationSet(std::ifstream& inFile, UINT nBones);
 
 	void UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime);
+	void BlendAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime, std::vector<XMFLOAT4X4>& outMatrices);
 
 	float getLength() const { return m_fLength; }
 	int getNumKeyFrame() const { return m_nKeyFrame; }
@@ -76,6 +77,11 @@ protected:
 
 	bool m_bPlayOnce = false;
 	bool m_bCollision = false;
+
+	bool m_bIsBlending;         
+	float m_fBlendTime;         // blend time
+	float m_fBlendDuration;     // blend during time
+	UINT m_nPrevSet;            // previous animation set
 };
 
 class CPlayableCharacterAnimationManager : public CAnimationManager {
@@ -98,7 +104,7 @@ protected:
 	int m_CurrentComboStep;
 	std::vector<UINT> m_vComboAnimationSets;
 	float m_fComboTimer;
-	const float m_fComboWaitTime = 0.5f;
+	const float m_fComboWaitTime = 1.0f;
 	bool m_bWaitingForNextInput;
 	bool m_bNextAttack = false;
 	bool m_bComboEnd = false;

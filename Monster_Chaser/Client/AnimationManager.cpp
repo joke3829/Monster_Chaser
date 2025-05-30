@@ -69,6 +69,39 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 	}
 }
 
+void CAnimationSet::BlendAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime, std::vector<XMFLOAT4X4>& outMatrices)
+{
+	auto p = std::find_if(m_vKeyTime.begin(), m_vKeyTime.end(), [&](float& time) { return time >= fElapsedTime; });
+	if (p == m_vKeyTime.end())
+		p -= 1;
+	else if (p == m_vKeyTime.begin())
+		p += 1;
+	UINT index = std::distance(m_vKeyTime.begin(), p) - 1;
+	// t (0 ~ 1)
+	float t = (fElapsedTime - m_vKeyTime[index]) / (m_vKeyTime[index + 1] - m_vKeyTime[index]);
+	// 행렬 보간
+	for (int i = 0; i < vMatrixes.size(); ++i) {
+		XMFLOAT4X4 xmf{};
+		XMVECTOR S0, R0, T0, S_forest, S1, R1, T1;
+		XMMatrixDecompose(&S0, &R0, &T0, XMLoadFloat4x4(&m_vTransforms[index][i]));
+		XMMatrixDecompose(&S1, &R1, &T1, XMLoadFloat4x4(&m_vTransforms[index + 1][i]));
+
+		XMVECTOR defaultVec = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+		R0 = XMVectorSelect(R0, defaultVec, XMVectorIsNaN(R0));
+		R1 = XMVectorSelect(R1, defaultVec, XMVectorIsNaN(R1));
+		T0 = XMVectorSelect(T0, defaultVec, XMVectorIsNaN(T0));
+		T1 = XMVectorSelect(T1, defaultVec, XMVectorIsNaN(T1));
+		S0 = XMVectorSelect(S0, XMVectorReplicate(1.0f), XMVectorIsNaN(S0));
+		S1 = XMVectorSelect(S1, XMVectorReplicate(1.0f), XMVectorIsNaN(S1));
+
+		XMVECTOR S = XMVectorLerp(S0, S1, t);
+		XMVECTOR T = XMVectorLerp(T0, T1, t);
+		XMVECTOR R = XMQuaternionSlerp(R0, R1, t);
+		XMStoreFloat4x4(&xmf, XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
+		outMatrices[i] = xmf;
+	}
+}
+
 // ====================================================================================
 
 CAnimationManager::CAnimationManager(std::ifstream& inFile)
@@ -149,9 +182,15 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
-	XMFLOAT4X4 targetPosition;
 	m_fElapsedTime += fElapsedTime; // 시간 누적
 	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
+
+	if (m_bIsBlending) {
+		m_fBlendTime += fElapsedTime;
+		if (m_fBlendTime >= m_fBlendDuration) {
+			m_bIsBlending = false; // end blending
+		}
+	}
 
 	if (m_bPlayOnce) {
 		if (m_fElapsedTime >= length) {
@@ -163,7 +202,43 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 			m_fElapsedTime -= length;
 		}
 	}
-	m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
+
+	if (m_bIsBlending) {
+		// calculate animation matrix
+		std::vector<XMFLOAT4X4> prevMatrices(m_vFrames.size());
+		std::vector<XMFLOAT4X4> currMatrices(m_vFrames.size());
+		m_vAnimationSets[m_nPrevSet]->BlendAnimationMatrix(m_vFrames, m_fElapsedTime, prevMatrices);
+		m_vAnimationSets[m_nCurrentSet]->BlendAnimationMatrix(m_vFrames, m_fElapsedTime, currMatrices);
+
+		// calculate animation blend weight
+		float blendWeight = m_fBlendTime / m_fBlendDuration;
+
+		// 행렬 보간
+		for (size_t i = 0; i < m_vFrames.size(); ++i) {
+			XMFLOAT4X4 blendedMatrix;
+			XMVECTOR S0, R0, T0, S1, R1, T1;
+			XMMatrixDecompose(&S0, &R0, &T0, XMLoadFloat4x4(&prevMatrices[i]));
+			XMMatrixDecompose(&S1, &R1, &T1, XMLoadFloat4x4(&currMatrices[i]));
+
+			XMVECTOR defaultVec = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+			R0 = XMVectorSelect(R0, defaultVec, XMVectorIsNaN(R0));
+			R1 = XMVectorSelect(R1, defaultVec, XMVectorIsNaN(R1));
+			T0 = XMVectorSelect(T0, defaultVec, XMVectorIsNaN(T0));
+			T1 = XMVectorSelect(T1, defaultVec, XMVectorIsNaN(T1));
+			S0 = XMVectorSelect(S0, XMVectorReplicate(1.0f), XMVectorIsNaN(S0));
+			S1 = XMVectorSelect(S1, XMVectorReplicate(1.0f), XMVectorIsNaN(S1));
+
+			XMVECTOR S = XMVectorLerp(S0, S1, blendWeight);
+			XMVECTOR T = XMVectorLerp(T0, T1, blendWeight);
+			XMVECTOR R = XMQuaternionSlerp(R0, R1, blendWeight);
+
+			XMStoreFloat4x4(&blendedMatrix, XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
+			m_vFrames[i]->SetLocalMatrix(blendedMatrix);
+		}
+	}
+	else {
+		m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
+	}
 }
 
 void CAnimationManager::UpdateAnimation(float fElapsedTime)
@@ -214,7 +289,10 @@ void CAnimationManager::ChangeAnimation(UINT nSet)
 void CAnimationManager::ChangeAnimation(UINT nSet, bool playOnce)
 {
 	if (nSet != m_nCurrentSet || m_bPlayOnce != playOnce) { // playOnce 변경도 반영
+		m_nPrevSet = m_nCurrentSet;
 		m_nCurrentSet = nSet;
+		m_bIsBlending = true;
+		m_fBlendTime = 0.0f;
 		m_fElapsedTime = 0.0f;
 		m_bPlayOnce = playOnce;
 	}
@@ -259,35 +337,33 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 {
 	if (!m_bInCombo) return;
 
-	if (IsAnimationNearEnd()) {
-		if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
-			if (m_bNextAttack) {
-				m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
-				ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
-				m_bNextAttack = false;
-				m_fComboTimer = 0.0f;
-			}
-			else {
-				m_bWaitingForNextInput = true;
-				m_fComboTimer += fElapsedTime;
-				if (m_fComboTimer >= m_fComboWaitTime) {
-					ResetCombo();
-				}
-			}
+	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
+		if (m_bNextAttack) {
+			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+			ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+			m_bNextAttack = false;
+			m_fComboTimer = 0.0f;
 		}
-		else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 26) {
-			m_CurrentComboStep++;
-			if (m_CurrentComboStep < m_vSkillAnimationSets.size()) {
-				ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
-			}
-			else {
+		else {
+			m_bWaitingForNextInput = true;
+			m_fComboTimer += fElapsedTime;
+			if (m_fComboTimer >= m_fComboWaitTime) {
 				ResetCombo();
 			}
-			m_fComboTimer = 0.0f;
+		}
+	}
+	else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 26) {
+		m_CurrentComboStep++;
+		if (m_CurrentComboStep < m_vSkillAnimationSets.size()) {
+			ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
 		}
 		else {
 			ResetCombo();
 		}
+		m_fComboTimer = 0.0f;
+	}
+	else {
+		ResetCombo();
 	}
 }
 
