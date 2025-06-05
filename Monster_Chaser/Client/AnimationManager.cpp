@@ -320,16 +320,17 @@ void CMageManager::OnAttackInput()
 
 	// 콤보 진행
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
-		if (!m_bWaitingForNextInput) {
-			m_bNextAttack = true; // 다음 공격 대기
-		}
-		else {
-			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
-			ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
-			m_bWaitingForNextInput = false;
-			m_fComboTimer = 0.0f;
-			m_bNextAttack = false;
-		}
+		m_bNextAttack = true;
+		//if (!m_bWaitingForNextInput) {
+		//	m_bNextAttack = true; // 다음 공격 대기
+		//}
+		//else {
+		//	m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+		//	ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+		//	m_bWaitingForNextInput = false;
+		//	m_fComboTimer = 0.0f;
+		//	m_bNextAttack = false;
+		//}
 	}
 }
 
@@ -337,7 +338,7 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 {
 	if (!m_bInCombo) return;
 
-	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
+	/*if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
 		if (m_bNextAttack) {
 			m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
 			ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
@@ -361,6 +362,42 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 			ResetCombo();
 		}
 		m_fComboTimer = 0.0f;
+	}
+	else {
+		ResetCombo();
+	}*/
+	m_fComboTimer += fElapsedTime; // 타이머 증가
+
+	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
+		if (m_bNextAttack && m_bWaitingForNextInput) {
+			const float fComboCooldown = 0.5f;
+			if (m_fComboTimer >= fComboCooldown) {
+				m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+				ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+				m_bNextAttack = false;
+				m_bWaitingForNextInput = false;
+				m_fComboTimer = 0.0f; // 타이머 초기화
+			}
+		}
+		else {
+			m_bWaitingForNextInput = true;
+			if (m_fComboTimer >= m_fComboWaitTime) {
+				ResetCombo();
+			}
+		}
+	}
+	else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 26) {
+		m_fComboTimer += fElapsedTime; // 스킬 애니메이션에서도 타이머 증가
+		if (m_fComboTimer >= m_fComboWaitTime) {
+			m_CurrentComboStep++;
+			if (m_CurrentComboStep < m_vSkillAnimationSets.size()) {
+				ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
+			}
+			else {
+				ResetCombo();
+			}
+			m_fComboTimer = 0.0f;
+		}
 	}
 	else {
 		ResetCombo();
