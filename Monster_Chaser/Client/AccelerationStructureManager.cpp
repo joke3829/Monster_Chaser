@@ -15,6 +15,7 @@ void CAccelerationStructureManager::UpdateScene(XMFLOAT3& cameraEye)
 {
 	std::vector<std::unique_ptr<CGameObject>>& objects = m_pResourceManager->getGameObjectList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	std::vector<std::unique_ptr<CParticle>>& particles = m_pResourceManager->getParticleList();
 	/*int i = m_nStaticMesh;
 	if (m_bFirst) {
 		for (std::unique_ptr<CGameObject>& object : objects) {
@@ -133,6 +134,25 @@ void CAccelerationStructureManager::UpdateScene(XMFLOAT3& cameraEye)
 					}
 				}
 			}
+		}
+	}
+
+	for (std::unique_ptr<CParticle>& particle : particles) {
+		CRaytracingParticle* p = dynamic_cast<CRaytracingParticle*>(particle.get());
+		BoundingOrientedBox wBox;
+		bool bIntersect = false;
+			BoundingSphere wSphere;
+			p->getBoundingSphere().Transform(wSphere, XMLoadFloat4x4(&p->getWorldMatrix()));
+			if (wSphere.Intersects(validSphere)) bIntersect = true;
+		if (bIntersect) {
+			m_pInstanceData[i].AccelerationStructure = p->getBLAS()->GetGPUVirtualAddress();
+			m_pInstanceData[i].InstanceContributionToHitGroupIndex = p->getHitGroupIndex();
+			m_pInstanceData[i].InstanceID = p->getInstanceID();
+			m_pInstanceData[i].InstanceMask = 1;
+			m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+			auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+			XMStoreFloat3x4(ptr, XMLoadFloat4x4(&p->getWorldMatrix()));
+			++i;
 		}
 	}
 
@@ -277,6 +297,7 @@ void CAccelerationStructureManager::InitTLAS()
 			}
 		}
 	}
+	m_nValidObject += m_pResourceManager->getParticleList().size();
 
 	auto instanceDesc = BASIC_BUFFER_DESC;
 	instanceDesc.Width = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_nValidObject;

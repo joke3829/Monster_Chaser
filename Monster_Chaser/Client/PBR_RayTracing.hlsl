@@ -719,7 +719,7 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
 
     uint idx = PrimitiveIndex() * 3;
     float2 uvs[3];
-    float3 normals[3];
+    float3 normals[3] = { float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0) };
     
     float2 texCoord0;
     float2 texCoord1;

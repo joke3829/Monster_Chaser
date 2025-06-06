@@ -4,6 +4,14 @@
 
 extern DXResources g_DxResource;
 
+struct ParticleVertex {
+	XMFLOAT3 position;
+	XMFLOAT3 direction;
+	float size;
+	float lifeTime;
+	UINT particleType;
+};
+
 class CParticle {
 public:
 	CParticle();
@@ -11,15 +19,19 @@ public:
 
 	XMFLOAT3 getPosition();
 
+	virtual UINT getInstanceID() { return 0; }
+	virtual Material& getMaterial() { return m_material; }
+	BoundingSphere& getBoundingSphere() { return m_Sphere; }
+	XMFLOAT4X4& getWorldMatrix() { return m_WorldMatrix; }
+
+	
 	void setPosition(XMFLOAT3& pos);
 	virtual void setMaterial(Material& material) { m_material = material; }
+	virtual void setNotUseLightCalurate() {}
+	virtual void setOnePathPipeline(ComPtr<ID3D12PipelineState>& ps) { m_OnePathPipeline = ps; }
+	virtual void setTwoPathPipeline(ComPtr<ID3D12PipelineState>& ps) { m_TwoPathPipeline = ps; }
 
-	virtual ID3D12Resource* getVertexBuffer() {}
-	virtual ID3D12Resource* getTexCoordBuffer() {}
-
-	virtual ID3D12Resource* getBLAS() {}
-
-	virtual void UpdateObject();
+	virtual void UpdateObject(float fElapsedTime);
 
 	virtual void Render() {}
 	virtual void PostProcess();
@@ -49,7 +61,14 @@ protected:
 	ComPtr<ID3D12PipelineState> m_OnePathPipeline{};
 	ComPtr<ID3D12PipelineState> m_TwoPathPipeline{};
 	Material m_material;
+
+	BoundingSphere m_Sphere{};
+
 };
+
+
+// No Light Particle's InstanceID -> 100
+// Default is 0
 
 class CRaytracingParticle : public CParticle {
 public:
@@ -63,7 +82,15 @@ public:
 	ID3D12Resource* getMeshCB() { return m_MeshCB.Get(); }
 	ID3D12Resource* getMaterialCB() { return m_MaterialCB.Get(); }
 
+	UINT getInstanceID() { return m_nInstanceID; }
+	UINT getHitGroupIndex() { return m_nHitGroupIndex; }
+
 	void setMaterial(Material& material);
+	void setNotUseLightCalurate() { m_nInstanceID = 100; }
+	void setInstanceID(UINT id) { m_nInstanceID = id; }
+	void setHitGroupIndex(UINT index) { m_nHitGroupIndex = index; }
+
+	void UpdateObject(float fElapsedTime);
 
 	void Render();
 protected:
@@ -79,9 +106,15 @@ protected:
 	ComPtr<ID3D12Resource> m_MaterialCB{};
 
 	// use 2 slot
-	ComPtr<ID3D12Resource> m_BillboardVertex{};	// 이걸로 만들어진걸
+	ComPtr<ID3D12Resource> m_BillboardVertex{};
 	ComPtr<ID3D12Resource> m_TexCoord0Buffer{};
 
-	ComPtr<ID3D12Resource> m_BLAS{};			// BLAS로 만든다.
+	// if you need Color Buffer, use 3 slot
+	//ComPtr<ID3D12Resource> m_ColorBuffer{};
+
+	ComPtr<ID3D12Resource> m_BLAS{};
 	ComPtr<ID3D12Resource> m_ScratchBuffer{};
+
+	UINT m_nInstanceID{};
+	UINT m_nHitGroupIndex{};
 };

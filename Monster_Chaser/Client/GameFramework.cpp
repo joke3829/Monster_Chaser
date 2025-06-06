@@ -213,9 +213,10 @@ void CGameFramework::ChangeFullScreenState()
 
 void CGameFramework::InitScene()
 {
-	m_pScene = std::make_unique<TitleScene>();
+	m_pScene = std::make_unique<CRaytracingParticleTestScene>();
 	m_pScene->SetCamera(m_pCamera);
 	m_pScene->SetUp(m_pd3dOutputBuffer);
+	bIngame = true;
 }
 
 LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -364,6 +365,8 @@ void CGameFramework::Render()
 	Flush();
 
 	m_pdxgiSwapChain->Present(0, 0);
+
+	m_pScene->PostProcess();
 
 	m_Timer.GetFrameRate(m_pszFrameRate + 8, 37);
 	SetWindowText(m_hWnd, m_pszFrameRate);

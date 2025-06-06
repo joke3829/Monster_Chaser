@@ -3,32 +3,28 @@
 constexpr unsigned int PARTICLE_EMITTER = 0;
 constexpr unsigned int PARTICLE_FLAME = 1;
 
-struct ParticleVertex {
-	XMFLOAT3 position;
-	XMFLOAT3 direction;
-	float size;
-	float lifeTime;
-	UINT particleType;
-};
-
 CParticle::CParticle()
 {
-	m_nMaxVertex = 150;
+	m_nMaxVertex = 34;
 	m_nCurrentVertex = 1;
+	XMStoreFloat4x4(&m_WorldMatrix, XMMatrixIdentity());
 	BufferReady();
 }
 
 CParticle::CParticle(UINT maxVertex)
 	: m_nMaxVertex(maxVertex)
 {
-	if (m_nMaxVertex > 150)
-		m_nMaxVertex = 150;
+	if (m_nMaxVertex > 34)
+		m_nMaxVertex = 34;
 	m_nCurrentVertex = 1;
+	XMStoreFloat4x4(&m_WorldMatrix, XMMatrixIdentity());
 	BufferReady();
 }
 
 void CParticle::BufferReady()
 {
+	m_Sphere = BoundingSphere(XMFLOAT3(0.0, 0.0, 0.0), 10.0f);
+
 	XMStoreFloat4x4(&m_WorldMatrix, XMMatrixIdentity());
 	auto desc = BASIC_BUFFER_DESC;
 	desc.Width = Align(sizeof(XMFLOAT4X4), 256);
@@ -78,6 +74,11 @@ void CParticle::setPosition(XMFLOAT3& pos)
 	m_WorldMatrix._41 = pos.x; m_WorldMatrix._42 = pos.y; m_WorldMatrix._43 = pos.z;
 }
 
+void CParticle::UpdateObject(float fElapsedTime)
+{
+	// Not Used
+}
+
 void CParticle::PostProcess()
 {
 	UINT64* pFilledSize{};
@@ -113,6 +114,13 @@ void CRaytracingParticle::BufferReady()
 	desc.Width = Align(sizeof(HasMesh), 256);
 	device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr, IID_PPV_ARGS(m_MeshCB.GetAddressOf()));
+
+	HasMesh meshInfo{};
+	meshInfo.bHasVertex = meshInfo.bHasTex0 = true;
+	void* tempData{};
+	m_MeshCB->Map(0, nullptr, &tempData);
+	memcpy(tempData, &meshInfo, sizeof(HasMesh));
+	m_MeshCB->Unmap(0, nullptr);
 
 	desc.Width = Align(sizeof(HasMaterial), 256);
 	device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
@@ -220,6 +228,30 @@ void CRaytracingParticle::ReBuildBLAS()
 	d3dbr.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	d3dbr.UAV.pResource = m_BLAS.Get();
 	g_DxResource.cmdList->ResourceBarrier(1, &d3dbr);
+}
+
+void CRaytracingParticle::setMaterial(Material& material)
+{
+	m_material = material;
+	HasMaterial matInfo{};
+	// temporary
+	if (m_material.m_bHasAlbedoColor) {
+		matInfo.bHasAlbedoColor = 1; matInfo.AlbedoColor = m_material.m_xmf4AlbedoColor;
+	}
+	if (m_material.m_bHasAlbedoMap) {
+		matInfo.bHasAlbedoMap = 1;
+	}
+
+	void* tempData{};
+	m_MaterialCB->Map(0, nullptr, &tempData);
+	memcpy(tempData, &matInfo, sizeof(HasMaterial));
+	m_MaterialCB->Unmap(0, nullptr);
+}
+
+void CRaytracingParticle::UpdateObject(float fElapsedTime)
+{
+	Render();
+	ReBuildBLAS();
 }
 
 void CRaytracingParticle::Render()

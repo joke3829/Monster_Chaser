@@ -2,6 +2,7 @@
 
 //#include "GameObject.h"
 #include "AnimationManager.h"
+#include "Particle.h"
 
 struct Light
 {
@@ -42,6 +43,7 @@ public:
 	void UpdatePosition(float fElapsedTime);
 	void ReBuildBLAS();
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
+	void UpdateParticles(float fElapsedTime);
 
 	void LightTest();
 	void AddLightsFromFile(wchar_t* FilePath);
@@ -49,12 +51,15 @@ public:
 	void ReadyLightBufferContent();
 	inline void SetLights() { g_DxResource.cmdList->SetComputeRootConstantBufferView(m_nLightRootParameterIndex, m_pLights->GetGPUVirtualAddress()); }
 
+	void PostProcess();
+
 	// getter
 	std::vector<std::unique_ptr<CGameObject>>& getGameObjectList();
 	std::vector<CGameObject*> getGameObjectPtrList();
 	std::vector<Mesh*> getMeshPtrList();
 	std::vector<std::unique_ptr<Mesh>>& getMeshList();
 	std::vector<std::unique_ptr<CTexture>>& getTextureList();
+	std::vector<std::unique_ptr<CParticle>>& getParticleList() { return m_vParticleList; }
 
 	std::vector<std::unique_ptr<CSkinningObject>>& getSkinningObjectList() { return m_vSkinningObject; }
 	std::vector<std::unique_ptr<CAnimationManager>>& getAnimationManagers() { return m_vAnimationManager; }
@@ -68,6 +73,7 @@ private:
 	std::vector<std::unique_ptr<CGameObject>> m_vGameObjectList;
 	std::vector<std::unique_ptr<Mesh>> m_vMeshList;
 	std::vector<std::unique_ptr<CTexture>> m_vTextureList;
+	std::vector<std::unique_ptr<CParticle>> m_vParticleList;
 
 	// Lights
 	ComPtr<ID3D12Resource> m_pLights;

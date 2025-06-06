@@ -118,3 +118,8 @@ void CCamera::SetThirdPersonMode(bool bThirdPerson)
 	m_bThirdPerson = bThirdPerson;
 }
 
+void CCamera::SetElapsedTimeAndShader(float fElapsedTime, UINT rootParameter)
+{
+	m_pCameraInfo->fElapsedTime = fElapsedTime;
+	g_DxResource.cmdList->SetGraphicsRootConstantBufferView(rootParameter, m_pd3dCameraBuffer->GetGPUVirtualAddress());
+}

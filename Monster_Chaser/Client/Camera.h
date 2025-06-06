@@ -34,6 +34,7 @@ public:
 	void SetThirdPersonMode(bool bThirdPerson);
 	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }
 	void SetHOffset(float height) { m_xmf3hOffset.y = height; }
+	void SetElapsedTimeAndShader(float fElapsedTime, UINT rootParameter);
 
 	void toggleNormalMapping() 
 	{ 

@@ -2355,3 +2355,404 @@ void CRaytracingWinterLandScene::Render()
 
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
+
+// ==========================================================================
+
+void CRaytracingParticleTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
+{
+	m_pOutputBuffer = outputBuffer;
+	// CreateUISetup
+	CreateOrthoMatrixBuffer();
+	CreateRTVDSV();
+
+	CreateParticleRS();
+	CreateOnePath();
+	CreateTwoPath();
+
+	// Create Global & Local Root Signature
+	CreateRootSignature();
+
+	// animation Pipeline Ready
+	CreateComputeRootSignature();
+	CreateComputeShader();
+
+	// Create And Set up PipelineState
+	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
+	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
+	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit", L"ShadowAnyHit");
+	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
+	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
+	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
+	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
+	m_pRaytracingPipeline->MakePipelineState();
+
+	// Resource Ready
+	m_pResourceManager = std::make_unique<CResourceManager>();
+	m_pResourceManager->SetUp(3);
+	// Object File Read ========================================	! !
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	// Light Read
+	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
+	m_pResourceManager->ReadyLightBufferContent();
+	m_pResourceManager->LightTest();
+	// =========================================================
+
+	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
+	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<CParticle>>& particles = m_pResourceManager->getParticleList();
+	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
+	// Create Normal Object & skinning Object Copy ========================================
+
+
+	particles.emplace_back(std::make_unique<CRaytracingParticle>());
+	particles[0]->setOnePathPipeline(m_OnePathPS);
+	particles[0]->setTwoPathPipeline(m_TwoPathPS);
+	Material pmaterial{};
+	pmaterial.m_bHasAlbedoColor = pmaterial.m_bHasAlbedoMap = true;
+	pmaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	pmaterial.m_nAlbedoMapIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\people.dds"));
+	particles[0]->setNotUseLightCalurate();
+	particles[0]->setMaterial(pmaterial);
+	particles[0]->setPosition(XMFLOAT3(0.0, 0.0, 0.0));
+
+
+	// cubeMap Ready
+	m_nSkyboxIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky2.dds", true));
+	// ===========================================================================================
+	m_pResourceManager->InitializeGameObjectCBuffer();
+	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
+
+
+	// ShaderBindingTable
+	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
+	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
+	m_pShaderBindingTable->CreateSBT();
+
+	// Copy(normalObject) & SetPreMatrix ===============================
+
+
+	// ==============================================================================
+
+	// Camera Setting ==============================================================
+	
+	// ==========================================================================
+
+	// AccelerationStructure
+	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
+	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
+	m_pAccelerationStructureManager->InitBLAS();
+	m_pAccelerationStructureManager->InitTLAS();
+
+}
+
+void CRaytracingParticleTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN:
+		switch (wParam) {
+		case 'N':
+			m_pCamera->toggleNormalMapping();
+			break;
+		case 'M':
+			m_pCamera->toggleAlbedoColor();
+			break;
+		case 'B':
+			m_pCamera->toggleReflection();
+			break;
+		case '9':
+			m_pCamera->SetThirdPersonMode(false);
+			break;
+		case '0':
+			m_pCamera->SetThirdPersonMode(true);
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		break;
+	}
+}
+
+void CRaytracingParticleTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_LBUTTONDOWN:
+		m_bHold = true;
+		GetCursorPos(&oldCursor);
+		break;
+	case WM_LBUTTONUP:
+		m_bHold = false;
+		break;
+	case WM_MOUSEMOVE:
+	{
+		POINT cursorpos;
+		if (m_bHold) {
+			GetCursorPos(&cursorpos);
+			m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
+			SetCursorPos(oldCursor.x, oldCursor.y);
+		}
+		break;
+	}
+	}
+}
+
+void CRaytracingParticleTestScene::ProcessInput(float fElapsedTime)
+{
+	UCHAR keyBuffer[256];
+	GetKeyboardState(keyBuffer);
+
+	bool shiftDown = false;
+	if (keyBuffer[VK_SHIFT] & 0x80)
+		shiftDown = true;
+	if (keyBuffer['W'] & 0x80)
+		m_pCamera->Move(0, fElapsedTime, shiftDown);
+	if (keyBuffer['S'] & 0x80)
+		m_pCamera->Move(5, fElapsedTime, shiftDown);
+	if (keyBuffer['D'] & 0x80)
+		m_pCamera->Move(3, fElapsedTime, shiftDown);
+	if (keyBuffer['A'] & 0x80)
+		m_pCamera->Move(4, fElapsedTime, shiftDown);
+	if (keyBuffer[VK_SPACE] & 0x80)
+		m_pCamera->Move(1, fElapsedTime, shiftDown);
+	if (keyBuffer[VK_CONTROL] & 0x80)
+		m_pCamera->Move(2, fElapsedTime, shiftDown);
+}
+
+void CRaytracingParticleTestScene::UpdateObject(float fElapsedTime)
+{
+	// compute shader & rootSignature set
+	g_DxResource.cmdList->SetPipelineState(m_pAnimationComputeShader.Get());
+	g_DxResource.cmdList->SetComputeRootSignature(m_pComputeRootSignature.Get());
+
+	m_pResourceManager->UpdateSkinningMesh(fElapsedTime);
+	// particle update
+	// SetRootSignature
+	// particle update
+
+	g_DxResource.cmdList->SetGraphicsRootSignature(m_ParticleRS.Get());
+	m_pCamera->SetElapsedTimeAndShader(fElapsedTime, 0);
+
+	m_pResourceManager->UpdateParticles(fElapsedTime);
+
+	//Flush();
+	// Skinning Object BLAS ReBuild
+	m_pResourceManager->ReBuildBLAS();
+
+	m_pResourceManager->UpdateWorldMatrix();
+
+
+	m_pCamera->UpdateViewMatrix();
+	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
+}
+
+void CRaytracingParticleTestScene::Render()
+{
+	m_pCamera->SetShaderVariable();
+	m_pAccelerationStructureManager->SetScene();
+	m_pResourceManager->SetLights();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[m_nSkyboxIndex]->getView()->GetGPUDescriptorHandleForHeapStart());
+
+	D3D12_DISPATCH_RAYS_DESC raydesc{};
+	raydesc.Depth = 1;
+	raydesc.Width = DEFINED_UAV_BUFFER_WIDTH;
+	raydesc.Height = DEFINED_UAV_BUFFER_HEIGHT;
+
+	raydesc.RayGenerationShaderRecord.StartAddress = m_pShaderBindingTable->getRayGenTable()->GetGPUVirtualAddress();
+	raydesc.RayGenerationShaderRecord.SizeInBytes = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+
+	raydesc.MissShaderTable.StartAddress = m_pShaderBindingTable->getMissTable()->GetGPUVirtualAddress();
+	raydesc.MissShaderTable.SizeInBytes = m_pShaderBindingTable->getMissSize();
+	raydesc.MissShaderTable.StrideInBytes = D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT;
+
+	raydesc.HitGroupTable.StartAddress = m_pShaderBindingTable->getHitGroupTable()->GetGPUVirtualAddress();
+	raydesc.HitGroupTable.SizeInBytes = m_pShaderBindingTable->getHitGroupSize();
+	raydesc.HitGroupTable.StrideInBytes = m_pShaderBindingTable->getHitGroupStride();
+
+	g_DxResource.cmdList->DispatchRays(&raydesc);
+}
+
+void CRaytracingParticleTestScene::CreateParticleRS()
+{
+	D3D12_ROOT_PARAMETER rp{};
+	rp.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rp.Descriptor.ShaderRegister = 0;
+	rp.Descriptor.RegisterSpace = 0;
+
+	D3D12_ROOT_SIGNATURE_DESC desc{};
+	desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
+	desc.NumParameters = 1;
+	desc.NumStaticSamplers = 0;
+	desc.pParameters = &rp;
+	desc.pStaticSamplers = nullptr;
+
+	ID3DBlob* pBlob{};
+	D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_ParticleRS.GetAddressOf()));
+	pBlob->Release();
+}
+
+void CRaytracingParticleTestScene::CreateOnePath()
+{
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dGBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_ParticleRS.Get();
+
+	D3D12_INPUT_ELEMENT_DESC ldesc[5]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "DIRECTION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "SIZE", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[3] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[4] = { "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 5;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 0;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GSOnePath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
+	///OutputDebugStringA((char*)errorb->GetBufferPointer());
+	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
+	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
+
+	D3D12_SO_DECLARATION_ENTRY soEntry[5]{};
+	soEntry[0] = { 0, "POSITION", 0, 0, 3, 0 };
+	soEntry[1] = { 0, "DIRECTION", 0, 0, 3, 0 };
+	soEntry[2] = { 0, "SIZE", 0, 0, 1, 0 };
+	soEntry[3] = { 0, "LIFETIME", 0, 0, 1, 0 };
+	soEntry[4] = { 0, "TYPE", 0, 0, 1, 0 };
+
+	UINT stride[1] = { sizeof(ParticleVertex) };
+
+	d3dPipelineState.StreamOutput.NumEntries = 5;
+	d3dPipelineState.StreamOutput.pSODeclaration = soEntry;
+	d3dPipelineState.StreamOutput.NumStrides = 1;
+	d3dPipelineState.StreamOutput.pBufferStrides = stride;
+	d3dPipelineState.StreamOutput.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
+
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(m_OnePathPS.GetAddressOf()));
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dGBlob)
+		pd3dGBlob->Release();
+}
+
+void CRaytracingParticleTestScene::CreateTwoPath()
+{
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dGBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_ParticleRS.Get();
+
+	D3D12_INPUT_ELEMENT_DESC ldesc[5]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "DIRECTION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "SIZE", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[3] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[4] = { "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 5;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 0;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GSTwoPath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
+	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
+	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
+
+	D3D12_SO_DECLARATION_ENTRY soEntry[2]{};
+	soEntry[0] = { 0, "POSITION", 0, 0, 3, 0 };
+	soEntry[1] = { 1, "TEXCOORD", 0, 0, 2, 1 };
+
+	UINT stride[2] = { sizeof(XMFLOAT3), sizeof(XMFLOAT2)};
+
+	d3dPipelineState.StreamOutput.NumEntries = 2;
+	d3dPipelineState.StreamOutput.pSODeclaration = soEntry;
+	d3dPipelineState.StreamOutput.NumStrides = 2;
+	d3dPipelineState.StreamOutput.pBufferStrides = stride;
+	d3dPipelineState.StreamOutput.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
+
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(m_TwoPathPS.GetAddressOf()));
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dGBlob)
+		pd3dGBlob->Release();
+}
+
+void CRaytracingParticleTestScene::PostProcess()
+{
+	m_pResourceManager->PostProcess();
+}

@@ -430,6 +430,12 @@ void CResourceManager::UpdateWorldMatrix()
 	}
 }
 
+void CResourceManager::UpdateParticles(float fElapsedTime)
+{
+	for (std::unique_ptr<CParticle>& particle : m_vParticleList)
+		particle->UpdateObject(fElapsedTime);
+}
+
 std::vector<std::unique_ptr<CGameObject>>& CResourceManager::getGameObjectList()
 {
 	return m_vGameObjectList;
@@ -676,4 +682,10 @@ void CResourceManager::ReadyLightBufferContent()
 	mapptr->numLights = m_vLights.size();
 	memcpy(mapptr->lights, m_vLights.data(), sizeof(Light) * m_vLights.size());
 	m_pLights->Unmap(0, nullptr);
+}
+
+void CResourceManager::PostProcess()
+{
+	for (std::unique_ptr<CParticle>& particle : m_vParticleList)
+		particle->PostProcess();
 }

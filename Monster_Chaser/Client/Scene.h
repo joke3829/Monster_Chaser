@@ -25,6 +25,7 @@ public:
 
 	virtual void PrepareRender() {};
 	virtual void Render() {};
+	virtual void PostProcess() {};
 
 	short getNextSceneNumber() const { return m_nNextScene; }
 
@@ -108,20 +109,21 @@ public:
 
 	void PrepareRender();
 	virtual void Render();
+	virtual void PostProcess() {};
 
 	template<typename T, typename U>
 	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
-	bool CheckSphereCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector < std::unique_ptr<U>>& obejct2); //1차체크
+	bool CheckSphereCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector < std::unique_ptr<U>>& obejct2); //1차체??
 
 	template<typename T, typename U>
 	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
-	void CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2); //세부체크
+	void CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2); //?��?체크
 
 	void TestCollision(const std::vector<std::unique_ptr<CGameObject>>& mapObjects, const std::vector<std::unique_ptr<CSkinningObject>>& characters);
 	void TestShootCollision(const std::vector<std::unique_ptr<CProjectile>>& Objects, const std::vector<std::unique_ptr<CSkinningObject>>& characters);
 
-	XMFLOAT3 CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //법선 벡터 구하기
-	float CalculateDepth(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //침투 깊이 구하기
+	XMFLOAT3 CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //법선 벡터 구하�?
+	float CalculateDepth(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //침투 깊이 구하�?
 
 	void CreateRootSignature();
 	void CreateComputeRootSignature();
@@ -197,4 +199,30 @@ protected:
 	// terrainDescriptor
 	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
 	ComPtr<ID3D12Resource>								m_pTerrainCB{};
+};
+
+
+class CRaytracingParticleTestScene : public CRaytracingScene {
+public:
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
+	void ProcessInput(float fElapsedTime);
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void UpdateObject(float fElapsedTime);
+	void Render();
+	void PostProcess();
+
+	void CreateParticleRS();
+	void CreateOnePath();
+	void CreateTwoPath();
+
+	ComPtr<ID3D12PipelineState> m_OnePathPS{};
+	ComPtr<ID3D12PipelineState> m_TwoPathPS{};
+	ComPtr<ID3D12RootSignature> m_ParticleRS{};
+
+	UINT m_nSkyboxIndex{};
+
+	bool m_bHold = false;
+	POINT oldCursor;
 };
