@@ -370,7 +370,7 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
 		if (m_bNextAttack && m_bWaitingForNextInput) {
-			const float fComboCooldown = 0.5f;
+			const float fComboCooldown = 0.4f;
 			if (m_fComboTimer >= fComboCooldown) {
 				m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
 				ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
@@ -387,7 +387,6 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 		}
 	}
 	else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 26) {
-		m_fComboTimer += fElapsedTime; // 스킬 애니메이션에서도 타이머 증가
 		if (m_fComboTimer >= m_fComboWaitTime) {
 			m_CurrentComboStep++;
 			if (m_CurrentComboStep < m_vSkillAnimationSets.size()) {
