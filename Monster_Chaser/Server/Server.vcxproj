@@ -143,6 +143,7 @@
     <ClInclude Include="Monster.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="protocol.h" />
+    <ClInclude Include="QuadTree.h" />
     <ClInclude Include="Room.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
@@ -156,7 +157,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MainServer.cpp" />
-    <ClCompile Include="Quard_Tree.cpp" />
+    <ClCompile Include="QuadTree.cpp" />
     <ClCompile Include="Room.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
