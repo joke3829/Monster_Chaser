@@ -8,7 +8,7 @@ enum character {
     supplier
 };
 
-// Base: Job
+// 부모 클래스: Job
 class Job {
 protected:
     character name;
@@ -21,7 +21,7 @@ protected:
 
 public:
   
-    // setter
+    // 세터 함수
     void set_attack(short& a);
     void set_hp(short& h);
     void set_damage_ratio(short& dr);

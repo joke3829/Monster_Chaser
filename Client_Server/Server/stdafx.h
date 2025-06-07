@@ -47,7 +47,11 @@ enum MoveAnimationState
 	RUN_LEFT_DOWN = 19,
 	RUN_RIGHT_DOWN = 20,
 };
-
+//enum 직업 {
+//	전사 = 0,
+//	마법사,
+//	성직자
+//};
 
 struct vec3 {
 	float x;

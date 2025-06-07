@@ -37,7 +37,7 @@ public:
     XMFLOAT4X4 m_pos;
     unsigned char remained = 0;
 
-    std::string name;               //user name
+    std::string name;               //유저 닉네임
     int local_id;
     int room_num;
 
@@ -63,7 +63,7 @@ public:
     
     
 
-    std::unordered_map<int, Monster*> monsters;
+   
 
 
    SOCKET listen_socket;

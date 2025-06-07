@@ -227,22 +227,16 @@ void SESSION::process_packet(char* p) {
 	}
 }
 
-void MoveCursorTo(int x, int y) {
-	COORD pos = { (SHORT)x, (SHORT)y };
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
-}
-
 void SESSION::BroadCasting_position(const int& size)
 {
 
-	MoveCursorTo(0, 0);
-	system("cls");
 	for (int i = 0; i < size; ++i) {
 		int num = g_server.rooms[room_num].getID(i);
 		cout << "=== [°´Ã¼" << num << "postion]" "== ";
 
-		cout << "x: " << g_server.users[num]->m_pos._41 << "y: " << g_server.users[num]->m_pos._42 << "z: " << g_server.users[num]->m_pos._43 << endl;
-
+		cout << "x: " << g_server.users[num]->m_pos._41 << "y: " 
+			<< g_server.users[num]->m_pos._42 << "z: " 
+			<< g_server.users[num]->m_pos._43 << endl;
 	}
 
 }
