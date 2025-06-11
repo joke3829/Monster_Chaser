@@ -501,12 +501,9 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 	}
 	// W -> IDLE
 	else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!m_bFirst) {
-			m_AManager->ChangeAnimation(ANI_WALK_FORWARD_STOP, false);
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bFirst = true;
-		}
+		m_AManager->ChangeAnimation(ANI_WALK_FORWARD_STOP, false);
+		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
 	}
 	else if (!(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
 		if (m_AManager->IsAnimationNearEnd()) {
