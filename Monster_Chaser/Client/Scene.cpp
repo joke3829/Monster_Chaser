@@ -1942,7 +1942,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			m_pPlayer->ProcessInput(keyBuffer);
+			m_pPlayer->ProcessInput(keyBuffer,fElapsedTime);
 		}
 	}
 }
@@ -2054,7 +2054,7 @@ void CRaytracingWinterLandScene::CreateUIPipelineState()
 
 void CRaytracingWinterLandScene::CreateMageCharacter()
 {
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_331.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	m_vPlayers.emplace_back(std::make_unique<CPlayerMage>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));

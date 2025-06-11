@@ -12,7 +12,7 @@ public:
 	virtual void Skill3() {}
 
 	virtual void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
-	virtual void ProcessInput(UCHAR* keyBuffer) {}
+	virtual void ProcessInput(UCHAR* keyBuffer,float fElapsedTime) {}
 	virtual void UpdateObject(float fElapsedTime) {}
 
 	CSkinningObject* getObject() { return m_Object; }
@@ -41,7 +41,7 @@ public:
 	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void ProcessInput(UCHAR* keyBuffer);
+	void ProcessInput(UCHAR* keyBuffer,float fElapsedTime);
 
 	void UpdateObject(float fElapsedTime);
 protected:
@@ -50,6 +50,7 @@ protected:
 	bool m_bStopAnimaiton = false;
 	bool m_bDoingCombo = false;
 	bool m_bMoving = false;
+	bool m_bFirst = false;
 
 	bool mouseIsInitialize = false;
 	POINT oldCursor{};
@@ -77,7 +78,7 @@ public:
 	CAnimationManager* getAniManager() { return m_pPlayerObject->getAniManager(); }
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void ProcessInput(UCHAR* keyBuffer);
+	void ProcessInput(UCHAR* keyBuffer,float fElapsedTime);
 
 	void HeightCheck(CHeightMapImage* heightmap, float fElapsedTime);
 protected:

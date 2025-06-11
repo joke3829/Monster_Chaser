@@ -109,7 +109,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 	}
 }
 
-void CPlayerMage::ProcessInput(UCHAR* keyBuffer)
+void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 characterDir = cameraDir;
@@ -124,6 +124,7 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer)
 	}
 
 	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
+		m_bFirst = false;
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
 		return;
 	}
@@ -395,12 +396,23 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer)
 	// W -> Walk Forward
 	else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
 		if (!(m_PrevKeyBuffer['W'] & 0x80)) {
-			m_AManager->ChangeAnimation(ANI_WALK_FORWARD, true); // Walk Forward
+			m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true); // Walk Forward
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bFirst = true;
 		}
 		else {
-			m_AManager->ChangeAnimation(ANI_WALK_FORWARD, true); // Maintain Walk
+			if (m_bFirst) {
+				if (m_AManager->IsAnimationNearEnd()) {
+					m_AManager->ChangeAnimation(ANI_WALK_FORWARD, true); // Maintain Walk
+					m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+					m_AManager->UpdateAniPosition(0.0f, m_Object);
+					m_bFirst = false;
+				}
+			}
+			else {
+				m_AManager->ChangeAnimation(ANI_WALK_FORWARD, true); // Maintain Walk
+			}
 		}
 	}
 	// S + Shift -> Run Backward
@@ -489,9 +501,20 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer)
 	}
 	// W -> IDLE
 	else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_AManager->ChangeAnimation(ANI_IDLE, false); // IDLE
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		if (!m_bFirst) {
+			m_AManager->ChangeAnimation(ANI_WALK_FORWARD_STOP, false);
+			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bFirst = true;
+		}
+	}
+	else if (!(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+		if (m_AManager->IsAnimationNearEnd()) {
+			m_AManager->ChangeAnimation(ANI_IDLE, false);
+			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bFirst = false;
+		}
 	}
 	// S -> IDLE
 	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
@@ -583,6 +606,7 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer)
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
 }
+
 void CPlayerMage::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
@@ -620,9 +644,9 @@ void CPlayer::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lPara
 	m_pPlayerObject->MouseProcess(hWnd, nMessage, wParam, lParam);
 }
 
-void CPlayer::ProcessInput(UCHAR* keyBuffer)
+void CPlayer::ProcessInput(UCHAR* keyBuffer,float fElapsedTime)
 {
-	m_pPlayerObject->ProcessInput(keyBuffer);
+	m_pPlayerObject->ProcessInput(keyBuffer, fElapsedTime);
 }
 
 void CPlayer::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime)

@@ -116,6 +116,8 @@ constexpr unsigned int ANI_SKILL3_4 = 29;
 constexpr unsigned int ANI_SKILL3_5 = 30;
 constexpr unsigned int ANI_SKILL2 = 31;
 constexpr unsigned int ANI_SKILL1 = 32;
+constexpr unsigned int ANI_WALK_FORWARD_START = 33;
+constexpr unsigned int ANI_WALK_FORWARD_STOP = 34;
 
 // 자주 쓰이는 설정들을 미리 지정
 constexpr DXGI_SAMPLE_DESC NO_AA = { .Count = 1, .Quality = 0 };	// no anti_aliasing
