@@ -52,7 +52,7 @@ public:
 
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
 	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
-	bool IsAnimationNearEnd(float margin = 0.2f) const
+	bool IsAnimationNearEnd(float margin = 0.05f) const
 	{
 		float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 		float remainingTime = length - m_fElapsedTime;
