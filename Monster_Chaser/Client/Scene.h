@@ -45,7 +45,7 @@ protected:
 	short m_nNextScene = -1;
 };
 
-enum TitleState{Title, RoomSelect, InRoom, GoLoading};
+enum TitleState{Title, RoomSelect, InRoom, SelectC, GoLoading};
 
 class TitleScene : public CScene {
 public:
@@ -66,6 +66,7 @@ protected:
 	std::vector<std::unique_ptr<UIObject>>	m_vTitleUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vRoomSelectUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vInRoomUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vSelectCUIs;
 
 	// Title variables
 	float									wOpacity = 1.0f;
@@ -81,6 +82,9 @@ protected:
 	std::array<bool, 3>						userReadyState{};
 	short									readyUIIndex{};
 	short									backUIIndex{};
+
+	short prevJob{};
+	short CUIindex{};
 };
 
 template<typename T>

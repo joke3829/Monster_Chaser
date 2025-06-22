@@ -113,6 +113,7 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	int tempIndex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
+	int temptxt = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
 	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
@@ -120,9 +121,12 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	backUIIndex = m_vInRoomUIs.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 296, 484));
 	for (int i = 0; i < 3; ++i) {
-		m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
-		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport((i * 296) + (18 * (i + 1)), 18);
-		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+		for (int j = 0; j < 3; ++j) {
+			textures.emplace_back(std::make_unique<CTexture>(std::format(L"src\\texture\\UI\\SelectC\\CharacterInfo{}.dds", j + 1).data()));
+			m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+			m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport((i * 296) + (18 * (i + 1)), 18);
+			//m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+		}
 	}
 
 	readyUIIndex = m_vInRoomUIs.size();
@@ -133,12 +137,55 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport((i * 296) + (18 * (i + 1)) + 130, 437);
 	}
 
+	// select button
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 300, 90));
+	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(18, 610);
+	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+
+	// curtain
 	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[tempIndex].get()));
 	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.0);
 
+	// ==========================================================================
 
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[tempIndex].get(), textures[temptxt].get()));
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(0, 0);
 
+	// arrow
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 100, 100));
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setColor(0.5, 1.0, 1.0, 0.5);
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(20, 310);
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setColor(0.5, 1.0, 1.0, 0.5);
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(1150, 310);
+
+	// back
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 300, 90));
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(18, 610);
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+
+	// ok
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(962, 610);
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+
+	CUIindex = m_vSelectCUIs.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 500, 500));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\CharacterInfo1.dds"));
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(390, 110);
+
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\CharacterInfo2.dds"));
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(390, 110);
+
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\CharacterInfo3.dds"));
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(390, 110);
 }
 
 void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -216,6 +263,32 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 			}
 			break;
 		case InRoom:
+			if (mx >= 0 && mx < 960) {
+				m_nState = SelectC;
+				prevJob = userJob[local_uid];
+			}
+			break;
+		case SelectC:
+			if (mx >= 0 && mx < 960) {
+				if (my >= 400) {
+					userJob[local_uid] = prevJob;
+					m_nState = InRoom;
+				}
+				else {
+					--userJob[local_uid];
+					if (userJob[local_uid] < 1)
+						userJob[local_uid] = 3;
+				}
+			}
+			else {
+				if (my >= 400)
+					m_nState = InRoom;
+				else {
+					++userJob[local_uid];
+					if (userJob[local_uid] > 3)
+						userJob[local_uid] = 1;
+				}
+			}
 			break;
 		}
 		break;
@@ -365,7 +438,12 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		bool allready = true;
 		for (int i = 0; i < 3; ++i) {
 			if (i < userPerRoom[currentRoom]) {
-				m_vInRoomUIs[backUIIndex + i]->setRenderState(true);
+				for (int j = 0; j < 3; ++j) {
+					if(userJob[i] == j + 1)
+						m_vInRoomUIs[backUIIndex + (i * 3) + j]->setRenderState(true);
+					else
+						m_vInRoomUIs[backUIIndex + (i * 3) + j]->setRenderState(false);
+				}
 				if(userReadyState[i])
 					m_vInRoomUIs[readyUIIndex + i]->setRenderState(true);
 				else {
@@ -374,7 +452,8 @@ void TitleScene::UpdateObject(float fElapsedTime)
 				}
 			}
 			else {
-				m_vInRoomUIs[backUIIndex + i]->setRenderState(false);
+				for(int j = 0 ; j < 3; ++j)
+					m_vInRoomUIs[backUIIndex + (i * 3) + j]->setRenderState(false);
 				m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
 			}
 		}
@@ -391,6 +470,16 @@ void TitleScene::UpdateObject(float fElapsedTime)
 				m_nNextScene = SCENE_WINTERLAND;
 			}
 			m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
+		break;
+	}
+	case SelectC: {
+		m_vSelectCUIs[0]->Animation(fElapsedTime);
+		for (int i = CUIindex; i < CUIindex + 3; ++i) {
+			if (userJob[local_uid] == i - CUIindex + 1)
+				m_vSelectCUIs[i]->setRenderState(true);
+			else
+				m_vSelectCUIs[i]->setRenderState(false);
+		}
 		break;
 	}
 	}
@@ -435,6 +524,10 @@ void TitleScene::Render()
 	case InRoom:
 	case GoLoading:
 		for (auto& p : m_vInRoomUIs)
+			p->Render();
+		break;
+	case SelectC:
+		for (auto& p : m_vSelectCUIs)
 			p->Render();
 		break;
 	}
