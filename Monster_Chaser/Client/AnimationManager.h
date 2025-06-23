@@ -125,3 +125,11 @@ public:
 	virtual void StartSkill3();
 	virtual void OnKey3Input();
 };
+
+class CWarriorManager : public CPlayableCharacterAnimationManager {
+
+};
+
+class CPriestManager : public CPlayableCharacterAnimationManager {
+
+};

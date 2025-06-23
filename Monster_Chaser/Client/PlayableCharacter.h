@@ -46,6 +46,41 @@ protected:
 
 class CPlayerMage : public CPlayableCharacter {
 public:
+	enum class MageAni {
+		ANI_IDLE,
+		ANI_HIT,
+		ANI_HIT_DEATH,
+		ANI_BIGHIT,
+		ANI_BIGHIT_DEATH,
+		ANI_WALK_FORWARD,
+		ANI_WALK_LEFT_UP,
+		ANI_WALK_RIGHT_UP,
+		ANI_WALK_LEFT,
+		ANI_WALK_RIGHT,
+		ANI_WALK_BACKWARD,
+		ANI_WALK_LEFT_DOWN,
+		ANI_WALK_RIGHT_DOWN,
+		ANI_RUN_FORWARD,
+		ANI_RUN_LEFT_UP,
+		ANI_RUN_RIGHT_UP,
+		ANI_RUN_LEFT,
+		ANI_RUN_RIGHT,
+		ANI_RUN_BACKWARD,
+		ANI_RUN_LEFT_DOWN,
+		ANI_RUN_RIGHT_DOWN,
+		ANI_DODGE,
+		ANI_C_ATTACK1,
+		ANI_C_ATTACK2,
+		ANI_C_ATTACK3,
+		ANI_C_ATTACK4,
+		ANI_SKILL3_1,
+		ANI_SKILL3_2,
+		ANI_SKILL3_3,
+		ANI_SKILL3_4,
+		ANI_SKILL3_5,
+		ANI_SKILL2,
+		ANI_SKILL1
+	};
 	virtual void Skill1();
 	virtual void Skill2();
 	virtual void Skill3();
@@ -63,6 +98,29 @@ protected:
 
 class CPlayerWarrior : public CPlayableCharacter {
 public:
+	enum class WarriorAni {
+		ANI_IDLE,
+		ANI_HIT,
+		ANI_BIGHIT,
+		ANI_DEATH,
+		ANI_WALK_FORWARD,
+		ANI_WALK_LEFT_UP,
+		ANI_WALK_RIGHT_UP,
+		ANI_WALK_LEFT,
+		ANI_WALK_RIGHT,
+		ANI_WALK_BACKWARD,
+		ANI_WALK_LEFT_DOWN,
+		ANI_WALK_RIGHT_DOWN,
+		ANI_RUN,
+		ANI_DODGE,
+		ANI_SKILL2,
+		ANI_SKILL1,
+		ANI_C_ATTACK1,
+		ANI_C_ATTACK2,
+		ANI_C_ATTACK3,
+		ANI_SKILL3_1,
+		ANI_SKILL3_2
+	};
 	virtual void Skill1();
 	virtual void Skill2();
 	virtual void Skill3();
@@ -77,6 +135,41 @@ public:
 
 class CPlayerPriest : public CPlayableCharacter {
 public:
+	enum class PriestAni {
+		ANI_IDLE,
+		ANI_HIT,
+		ANI_HIT_DEATH,
+		ANI_BIGHIT,
+		ANI_BIGHIT_DEATH,
+		ANI_WALK_FORWARD,
+		ANI_WALK_LEFT_UP,
+		ANI_WALK_RIGHT_UP,
+		ANI_WALK_LEFT,
+		ANI_WALK_RIGHT,
+		ANI_WALK_BACKWARD,
+		ANI_WALK_LEFT_DOWN,
+		ANI_WALK_RIGHT_DOWN,
+		ANI_RUN_FORWARD,
+		ANI_RUN_LEFT_UP,
+		ANI_RUN_RIGHT_UP,
+		ANI_RUN_LEFT,
+		ANI_RUN_RIGHT,
+		ANI_RUN_BACKWARD,
+		ANI_RUN_LEFT_DOWN,
+		ANI_RUN_RIGHT_DOWN,
+		ANI_DODGE,
+		ANI_C_ATTACK1,
+		ANI_C_ATTACK2,
+		ANI_C_ATTACK3,
+		ANI_C_ATTACK4,
+		ANI_SKILL3_1,
+		ANI_SKILL3_2,
+		ANI_SKILL3_3,
+		ANI_SKILL3_4,
+		ANI_SKILL3_5,
+		ANI_SKILL2,
+		ANI_SKILL1
+	};
 	virtual void Skill1();
 	virtual void Skill2();
 	virtual void Skill3();

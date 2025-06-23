@@ -13,7 +13,7 @@ void CPlayerMage::Skill1()
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 characterDir = cameraDir;
 	characterDir.y = 0.0f; // delete y value
-	m_AManager->ChangeAnimation(ANI_SKILL1, true);
+	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_SKILL1), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bLockAnimation1 = true;
@@ -24,7 +24,7 @@ void CPlayerMage::Skill2()
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 characterDir = cameraDir;
 	characterDir.y = 0.0f; // delete y value
-	m_AManager->ChangeAnimation(ANI_SKILL2, true);
+	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_SKILL2), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bLockAnimation1 = true;
@@ -111,546 +111,478 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 
 void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
-	XMFLOAT3 cameraDir = m_pCamera->getDir();
-	XMFLOAT3 characterDir = cameraDir;
-	characterDir.y = 0.0f; // delete y value
-	m_bMoving = false;
-	XMFLOAT3 normalizedCharacterDir = characterDir;
-	XMStoreFloat3(&normalizedCharacterDir, XMVector3Normalize(XMLoadFloat3(&normalizedCharacterDir)));
-	XMFLOAT3 moveDir{};
+    XMFLOAT3 cameraDir = m_pCamera->getDir();
+    XMFLOAT3 characterDir = cameraDir;
+    characterDir.y = 0.0f; // delete y value
+    m_bMoving = false;
+    XMFLOAT3 normalizedCharacterDir = characterDir;
+    XMStoreFloat3(&normalizedCharacterDir, XMVector3Normalize(XMLoadFloat3(&normalizedCharacterDir)));
+    XMFLOAT3 moveDir{};
 
-	if (m_bLockAnimation && !m_AManager->IsInCombo()) {
-		m_bLockAnimation = false;
-	}
+    if (m_bLockAnimation && !m_AManager->IsInCombo()) {
+        m_bLockAnimation = false;
+    }
 
-	if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
-		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
-	}
+    if (m_bLockAnimation || m_bLockAnimation1 || m_bDoingCombo) {
+        memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+        return;
+    }
 
-	// Handle single and combined key presses
-	if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z + normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z - normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z + normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z - normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['W'] & 0x80) {
-		moveDir = normalizedCharacterDir;
-		m_bMoving = true;
-	}
-	else if (keyBuffer['S'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x, 0.0f, -normalizedCharacterDir.z);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
-	else if (keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.x);
-		m_bMoving = true;
-	}
+    // Handle single and combined key presses
+    if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
+        moveDir = XMFLOAT3(normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z + normalizedCharacterDir.x);
+        m_bMoving = true;
+    }
+    else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
+        moveDir = XMFLOAT3(normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z - normalizedCharacterDir.x);
+        m_bMoving = true;
+    }
+    else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
+        moveDir = XMFLOAT3(-normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z + normalizedCharacterDir.x);
+        m_bMoving = true;
+    }
+    else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
+        moveDir = XMFLOAT3(-normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z - normalizedCharacterDir.x);
+        m_bMoving = true;
+    }
+    else if (keyBuffer['W'] & 0x80) {
+        moveDir = normalizedCharacterDir;
+        m_bMoving = true;
+    }
+    else if (keyBuffer['S'] & 0x80) {
+        moveDir = XMFLOAT3(-normalizedCharacterDir.x, 0.0f, -normalizedCharacterDir.z);
+        m_bMoving = true;
+    }
+    else if (keyBuffer['A'] & 0x80) {
+        moveDir = XMFLOAT3(-normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.x);
+        m_bMoving = true;
+    }
+    else if (keyBuffer['D'] & 0x80) {
+        moveDir = XMFLOAT3(normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.x);
+        m_bMoving = true;
+    }
 
-	if (m_bMoving) {
-		XMStoreFloat3(&moveDir, XMVector3Normalize(XMLoadFloat3(&moveDir)));
-		m_Object->SetMoveDirection(moveDir);
-	}
+    if (m_bMoving) {
+        XMStoreFloat3(&moveDir, XMVector3Normalize(XMLoadFloat3(&moveDir)));
+        m_Object->SetMoveDirection(moveDir);
+    }
 
+    // W -> IDLE while Shift held
     if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // A -> IDLE while Shift held
     else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S -> IDLE while Shift held
     else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // D -> IDLE while Shift held
     else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // W + A + Shift -> Run Left Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_UP), true); // Run Left Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_UP), true); // Maintain Run
         }
     }
+    // W + A + Shift -> Walk Left Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_UP, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_UP), true); // Walk Left UP
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // W + A -> Walk Left Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_UP), true); // Walk Left Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_UP), true); // Maintain Walk
         }
     }
+    // W + A + Shift, A -> Run Forward
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Run Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + A, A -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + A, W -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + D + Shift -> Run Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_UP), true); // Run Right Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_UP), true); // Maintain Run
         }
     }
+    // W + D + Shift -> Walk Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_UP, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // W + D -> Walk Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_UP), true); // Maintain Walk
         }
     }
+    // W + D + Shift, D -> Run Forward
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Run Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + D, D -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + D, W -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + A + Shift -> Run Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_DOWN), true); // Run Left Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_DOWN), true); // Maintain Run
         }
     }
+    // S + A + Shift -> Walk Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_DOWN, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S + A -> Walk Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_DOWN), true); // Maintain Walk
         }
     }
+    // S + A + Shift, A -> Run Backward
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Run Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + A, A -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + A, S -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + D + Shift -> Run Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_DOWN), true); // Run Right Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_DOWN), true); // Maintain Run
         }
     }
+    // S + D + Shift -> Walk Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_DOWN, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S + D -> Walk Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_DOWN), true); // Maintain Walk
         }
     }
+    // S + D + Shift, D -> Run Backward
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Run Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + D, D -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + D, S -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + Shift -> Run Forward
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_FORWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Run Forward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_FORWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_FORWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Maintain Run
         }
-        }
+    }
+    // W + Shift -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Maintain Walk
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_FORWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_FORWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Maintain Walk
         }
     }
+    // S + Shift -> Run Backward
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_BACKWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Run Backward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_BACKWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_BACKWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Maintain Run
         }
     }
+    // S + Shift -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_BACKWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_BACKWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Maintain Walk
         }
     }
+    // A + Shift -> Run Left
     else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT), true); // Run Left
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_LEFT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_LEFT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT), true); // Maintain Run
         }
     }
+    // A + Shift -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // A -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['A'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_LEFT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_LEFT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Maintain Walk
         }
     }
+    // D + Shift -> Run Right
     else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
         if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT), true); // Run Right
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_RIGHT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_RIGHT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT), true); // Maintain Run
         }
     }
+    // D + Shift -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // D -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
         if (!(m_PrevKeyBuffer['D'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_RIGHT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_RIGHT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Maintain Walk
         }
     }
+    // W -> IDLE
     else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false);
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S -> IDLE
     else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // A -> IDLE
     else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // D -> IDLE
     else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
-    else if (!(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        if (m_AManager->IsAnimationNearEnd()) {
-            m_AManager->ChangeAnimation(ANI_IDLE, false);
+
+    if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo) {
+        if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = false;
+            m_bLockAnimation1 = true;
+        }
+        if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
+            m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_bLockAnimation1 = true;
+        }
+        if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
+            XMFLOAT3 dodgeDir = characterDir;
+
+            if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
+                dodgeDir = XMFLOAT3(characterDir.x - characterDir.z, 0.0f, characterDir.z + characterDir.x);
+            }
+            else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
+                dodgeDir = XMFLOAT3(characterDir.x + characterDir.z, 0.0f, characterDir.z - characterDir.x);
+            }
+            else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
+                dodgeDir = XMFLOAT3(-characterDir.x - characterDir.z, 0.0f, -characterDir.z + characterDir.x);
+            }
+            else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
+                dodgeDir = XMFLOAT3(-characterDir.x + characterDir.z, 0.0f, -characterDir.z - characterDir.x);
+            }
+            else if (keyBuffer['W'] & 0x80) {
+                dodgeDir = characterDir;
+            }
+            else if (keyBuffer['S'] & 0x80) {
+                dodgeDir = XMFLOAT3(-characterDir.x, 0.0f, -characterDir.z);
+            }
+            else if (keyBuffer['A'] & 0x80) {
+                dodgeDir = XMFLOAT3(-characterDir.z, 0.0f, characterDir.x);
+            }
+            else if (keyBuffer['D'] & 0x80) {
+                dodgeDir = XMFLOAT3(characterDir.z, 0.0f, -characterDir.x);
+            }
+
+            XMStoreFloat3(&dodgeDir, XMVector3Normalize(XMLoadFloat3(&dodgeDir)));
+
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_DODGE), true);
+            m_Object->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_bLockAnimation1 = true;
+        }
+        if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_BIGHIT), true);
+            m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_bLockAnimation1 = true;
+        }
+        if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
+            m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_BIGHIT_DEATH), true);
+            m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_bLockAnimation1 = true;
+        }
+        if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
+            Skill1();
+        }
+        if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
+            Skill2();
+        }
+        if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
+            Skill3();
         }
     }
-
-	if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo) {
-		if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
-			m_AManager->ChangeAnimation(ANI_HIT, true);
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
-			m_AManager->ChangeAnimation(ANI_HIT_DEATH, true);
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
-			XMFLOAT3 dodgeDir = characterDir;
-
-			if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
-				dodgeDir = XMFLOAT3(characterDir.x - characterDir.z, 0.0f, characterDir.z + characterDir.x);
-			}
-			else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
-				dodgeDir = XMFLOAT3(characterDir.x + characterDir.z, 0.0f, characterDir.z - characterDir.x);
-			}
-			else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
-				dodgeDir = XMFLOAT3(-characterDir.x - characterDir.z, 0.0f, -characterDir.z + characterDir.x);
-			}
-			else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
-				dodgeDir = XMFLOAT3(-characterDir.x + characterDir.z, 0.0f, -characterDir.z - characterDir.x);
-			}
-			else if (keyBuffer['W'] & 0x80) {
-				dodgeDir = characterDir;
-			}
-			else if (keyBuffer['S'] & 0x80) {
-				dodgeDir = XMFLOAT3(-characterDir.x, 0.0f, -characterDir.z);
-			}
-			else if (keyBuffer['A'] & 0x80) {
-				dodgeDir = XMFLOAT3(-characterDir.z, 0.0f, characterDir.x);
-			}
-			else if (keyBuffer['D'] & 0x80) {
-				dodgeDir = XMFLOAT3(characterDir.z, 0.0f, -characterDir.x);
-			}
-
-			XMStoreFloat3(&dodgeDir, XMVector3Normalize(XMLoadFloat3(&dodgeDir)));
-
-			m_AManager->ChangeAnimation(ANI_DODGE, true);
-			m_Object->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
-			m_AManager->ChangeAnimation(ANI_BIGHIT, true);
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
-			m_AManager->ChangeAnimation(ANI_BIGHIT_DEATH, true);
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bLockAnimation1 = true;
-		}
-		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
-			Skill1();
-		}
-		if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
-			Skill2();
-		}
-		if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
-			Skill3();
-		}
-	}
-	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+    memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
 }
 
 void CPlayerMage::UpdateObject(float fElapsedTime)
@@ -658,7 +590,7 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 	bool test = false;
 	m_AManager->UpdateCombo(fElapsedTime);
 	if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
-		m_AManager->ChangeAnimation(ANI_IDLE, false);
+		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false);
 		test = true;
 		m_bLockAnimation1 = false;
 		m_bLockAnimation = false;
@@ -813,228 +745,235 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
         m_Object->SetMoveDirection(moveDir);
     }
 
+    // W -> IDLE while Shift held
     if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // A -> IDLE while Shift held
     else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S -> IDLE while Shift held
     else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // D -> IDLE while Shift held
     else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // W + A + Shift -> Run Left Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_LEFT_UP), true); // Run Left Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_LEFT_UP), true); // Maintain Run
         }
     }
+    // W + A + Shift -> Walk Left Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_UP, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_UP), true); // Walk Left UP
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // W + A -> Walk Left Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_UP), true); // Walk Left Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_UP), true); // Maintain Walk
         }
     }
+    // W + A + Shift, A -> Run Forward
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_FORWARD), true); // Run Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + A, A -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + A, W -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + D + Shift -> Run Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_RIGHT_UP), true); // Run Right Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_RIGHT_UP), true); // Maintain Run
         }
     }
+    // W + D + Shift -> Walk Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_UP, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // W + D -> Walk Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_UP), true); // Maintain Walk
         }
     }
+    // W + D + Shift, D -> Run Forward
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_FORWARD), true); // Run Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + D, D -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + D, W -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + A + Shift -> Run Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_LEFT_DOWN), true); // Run Left Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_LEFT_DOWN), true); // Maintain Run
         }
     }
+    // S + A + Shift -> Walk Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_DOWN, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S + A -> Walk Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_DOWN), true); // Maintain Walk
         }
     }
+    // S + A + Shift, A -> Run Backward
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_BACKWARD), true); // Run Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + A, A -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + A, S -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + D + Shift -> Run Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_RIGHT_DOWN), true); // Run Right Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_RIGHT_DOWN), true); // Maintain Run
         }
     }
+    // S + D + Shift -> Walk Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_DOWN, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S + D -> Walk Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_DOWN), true); // Maintain Walk
         }
     }
+    // S + D + Shift, D -> Run Backward
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_BACKWARD), true); // Run Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + D, D -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + D, S -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + Shift -> Run Forward
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_FORWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_FORWARD), true); // Run Forward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_FORWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_FORWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_FORWARD), true); // Maintain Run
         }
     }
+    // W + Shift -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD_START), true); // Walk Forward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bFirst = true;
@@ -1042,199 +981,135 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
         else {
             if (m_bFirst) {
                 if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_FORWARD, true);
+                    m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD), true); // Maintain Walk
                     m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
                     m_AManager->UpdateAniPosition(0.0f, m_Object);
                     m_bFirst = false;
                 }
             }
             else {
-                m_AManager->ChangeAnimation(ANI_WALK_FORWARD, true);
+                m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD), true); // Maintain Walk
             }
         }
     }
+    // S + Shift -> Run Backward
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_BACKWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_BACKWARD), true); // Run Backward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_BACKWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_BACKWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_BACKWARD), true); // Maintain Run
         }
     }
+    // S + Shift -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_BACKWARD), true); // Walk Backward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_BACKWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_BACKWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_BACKWARD), true); // Maintain Walk
         }
     }
+    // A + Shift -> Run Left
     else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_LEFT), true); // Run Left
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_LEFT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_LEFT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_LEFT), true); // Maintain Run
         }
     }
+    // A + Shift -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // A -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['A'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT), true); // Walk Left
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_LEFT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_LEFT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT), true); // Maintain Walk
         }
     }
+    // D + Shift -> Run Right
     else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
         if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_RIGHT), true); // Run Right
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_RIGHT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_RIGHT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_RIGHT), true); // Maintain Run
         }
     }
+    // D + Shift -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // D -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
         if (!(m_PrevKeyBuffer['D'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT), true); // Walk Right
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_RIGHT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_RIGHT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT), true); // Maintain Walk
         }
     }
+    // W -> IDLE
     else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false);
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S -> IDLE
     else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // A -> IDLE
     else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // D -> IDLE
     else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-    }
-    else if (!(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        if (m_AManager->IsAnimationNearEnd()) {
-            m_AManager->ChangeAnimation(ANI_IDLE, false);
-            m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-            m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = false;
-        }
     }
 
     if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo) {
         if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_HIT, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bLockAnimation1 = true;
         }
         if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_HIT_DEATH, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bLockAnimation1 = true;
@@ -1269,19 +1144,19 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 
             XMStoreFloat3(&dodgeDir, XMVector3Normalize(XMLoadFloat3(&dodgeDir)));
 
-            m_AManager->ChangeAnimation(ANI_DODGE, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_DODGE), true);
             m_Object->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bLockAnimation1 = true;
         }
         if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_BIGHIT, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_BIGHIT), true);
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bLockAnimation1 = true;
         }
         if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_BIGHIT_DEATH, true);
+            m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_DEATH), true);
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bLockAnimation1 = true;
@@ -1304,7 +1179,7 @@ void CPlayerWarrior::UpdateObject(float fElapsedTime)
     bool test = false;
     m_AManager->UpdateCombo(fElapsedTime);
     if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
-        m_AManager->ChangeAnimation(ANI_IDLE, false);
+        m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false);
         test = true;
         m_bLockAnimation1 = false;
         m_bLockAnimation = false;
@@ -1459,428 +1334,360 @@ void CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
         m_Object->SetMoveDirection(moveDir);
     }
 
+    // W -> IDLE while Shift held
     if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // A -> IDLE while Shift held
     else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S -> IDLE while Shift held
     else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // D -> IDLE while Shift held
     else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // W + A + Shift -> Run Left Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_LEFT_UP), true); // Run Left Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_LEFT_UP), true); // Maintain Run
         }
     }
+    // W + A + Shift -> Walk Left Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_UP, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT_UP), true); // Walk Left UP
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // W + A -> Walk Left Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT_UP), true); // Walk Left Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT_UP), true); // Maintain Walk
         }
     }
+    // W + A + Shift, A -> Run Forward
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_FORWARD), true); // Run Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + A, A -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + A, W -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + D + Shift -> Run Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_RIGHT_UP), true); // Run Right Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_RIGHT_UP), true); // Maintain Run
         }
     }
+    // W + D + Shift -> Walk Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_UP, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // W + D -> Walk Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_UP, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT_UP), true); // Maintain Walk
         }
     }
+    // W + D + Shift, D -> Run Forward
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_FORWARD), true); // Run Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + D, D -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + D, W -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + A + Shift -> Run Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_LEFT_DOWN), true); // Run Left Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_LEFT_DOWN), true); // Maintain Run
         }
     }
+    // S + A + Shift -> Walk Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_DOWN, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S + A -> Walk Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT_DOWN), true); // Maintain Walk
         }
     }
+    // S + A + Shift, A -> Run Backward
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_BACKWARD), true); // Run Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + A, A -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + A, S -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + D + Shift -> Run Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_RIGHT_DOWN), true); // Run Right Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_RIGHT_DOWN), true); // Maintain Run
         }
     }
+    // S + D + Shift -> Walk Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_DOWN, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S + D -> Walk Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
         }
         else {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_DOWN, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT_DOWN), true); // Maintain Walk
         }
     }
+    // S + D + Shift, D -> Run Backward
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_RUN_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_BACKWARD), true); // Run Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + D, D -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S + D, S -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W + Shift -> Run Forward
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_FORWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_FORWARD), true); // Run Forward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_FORWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_FORWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_FORWARD), true); // Maintain Run
         }
     }
+    // W + Shift -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // W -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_FORWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_FORWARD), true); // Maintain Walk
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_FORWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_FORWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_FORWARD), true); // Maintain Walk
         }
     }
+    // S + Shift -> Run Backward
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_BACKWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_BACKWARD), true); // Run Backward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_BACKWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_BACKWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_BACKWARD), true); // Maintain Run
         }
     }
+    // S + Shift -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // S -> Walk Backward
     else if ((keyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_BACKWARD), true); // Walk Backward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_BACKWARD, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_BACKWARD, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_BACKWARD), true); // Maintain Walk
         }
     }
+    // A + Shift -> Run Left
     else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_LEFT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_LEFT), true); // Run Left
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_LEFT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_LEFT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_LEFT), true); // Maintain Run
         }
     }
+    // A + Shift -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // A -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['A'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_LEFT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT), true); // Walk Left
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_LEFT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_LEFT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_LEFT), true); // Maintain Walk
         }
     }
+    // D + Shift -> Run Right
     else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
         if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_RUN_RIGHT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_RIGHT), true); // Run Right
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_RUN_RIGHT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_RUN_RIGHT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_RIGHT), true); // Maintain Run
         }
     }
+    // D + Shift -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-        m_bFirst = true;
     }
+    // D -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
         if (!(m_PrevKeyBuffer['D'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_WALK_RIGHT_START, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT), true); // Walk Right
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = true;
         }
         else {
-            if (m_bFirst) {
-                if (m_AManager->IsAnimationNearEnd()) {
-                    m_AManager->ChangeAnimation(ANI_WALK_RIGHT, true);
-                    m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-                    m_AManager->UpdateAniPosition(0.0f, m_Object);
-                    m_bFirst = false;
-                }
-            }
-            else {
-                m_AManager->ChangeAnimation(ANI_WALK_RIGHT, true);
-            }
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_RIGHT), true); // Maintain Walk
         }
     }
+    // W -> IDLE
     else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_FORWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false);
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // S -> IDLE
     else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_BACKWARD_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // A -> IDLE
     else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_LEFT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
+    // D -> IDLE
     else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-        m_AManager->ChangeAnimation(ANI_WALK_RIGHT_STOP, false);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
         m_AManager->UpdateAniPosition(0.0f, m_Object);
-    }
-    else if (!(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-        if (m_AManager->IsAnimationNearEnd()) {
-            m_AManager->ChangeAnimation(ANI_IDLE, false);
-            m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-            m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_bFirst = false;
-        }
     }
 
     if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo) {
         if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_HIT, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bLockAnimation1 = true;
         }
         if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_HIT_DEATH, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bLockAnimation1 = true;
@@ -1915,19 +1722,19 @@ void CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 
             XMStoreFloat3(&dodgeDir, XMVector3Normalize(XMLoadFloat3(&dodgeDir)));
 
-            m_AManager->ChangeAnimation(ANI_DODGE, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_DODGE), true);
             m_Object->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bLockAnimation1 = true;
         }
         if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_BIGHIT, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_BIGHIT), true);
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bLockAnimation1 = true;
         }
         if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
-            m_AManager->ChangeAnimation(ANI_BIGHIT_DEATH, true);
+            m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_BIGHIT_DEATH), true);
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
             m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_bLockAnimation1 = true;
@@ -1950,7 +1757,7 @@ void CPlayerPriest::UpdateObject(float fElapsedTime)
     bool test = false;
     m_AManager->UpdateCombo(fElapsedTime);
     if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
-        m_AManager->ChangeAnimation(ANI_IDLE, false);
+        m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false);
         test = true;
         m_bLockAnimation1 = false;
         m_bLockAnimation = false;
