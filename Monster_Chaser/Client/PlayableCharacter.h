@@ -62,7 +62,30 @@ protected:
 };
 
 class CPlayerWarrior : public CPlayableCharacter {
+public:
+	virtual void Skill1();
+	virtual void Skill2();
+	virtual void Skill3();
 
+	CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager);
+
+	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+
+	void UpdateObject(float fElapsedTime);
+
+protected:
+	bool m_bLockAnimation = false;
+	bool m_bLockAnimation1 = false;
+	bool m_bStopAnimaiton = false;
+	bool m_bDoingCombo = false;
+	bool m_bMoving = false;
+	bool m_bFirst = false;
+
+	bool mouseIsInitialize = false;
+	POINT oldCursor{};
+
+	UCHAR m_PrevKeyBuffer[256]{};
 };
 
 class CPlayerPriest : public CPlayableCharacter {
