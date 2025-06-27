@@ -1854,6 +1854,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// Copy(normalObject) & SetPreMatrix ===============================
 
 	skinned[0]->setPreTransform(2.5f, XMFLOAT3(90.0f,0.0f,0.0f), XMFLOAT3());
+	//skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
 	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -998.0f));
 	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
 	skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());

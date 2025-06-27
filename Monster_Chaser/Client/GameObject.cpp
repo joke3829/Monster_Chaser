@@ -991,21 +991,21 @@ void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 
 void CSkinningObject::move(float fElapsedTime, short arrow) {
 	if (0 == arrow) // Forward
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 10.0f * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 5.0f * fElapsedTime));
 	else if (1 == arrow) // Forward-Right (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 10.0f * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
 	else if (2 == arrow) // Right
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * 10.0f * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * 5.0f * fElapsedTime));
 	else if (3 == arrow) // Backward-Right (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 10.0f * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
 	else if (4 == arrow) // Backward
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -10.0f * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -5.0f * fElapsedTime));
 	else if (5 == arrow) // Backward-Left (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 10.0f * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
 	else if (6 == arrow) // Left
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * -10.0f * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * -5.0f * fElapsedTime));
 	else if (7 == arrow) // Forward-Left (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 10.0f * fElapsedTime));
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
 	UpdateWorldMatrix();
 }
 

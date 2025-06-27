@@ -784,17 +784,20 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_UP), true); // Walk Left UP
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 7);
     }
     // W + A -> Walk Left Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_UP), true); // Walk Left Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            //m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_Object->move(fElapsedTime, 7);
         }
         else {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_UP), true); // Maintain Walk
+            m_Object->move(fElapsedTime, 7);
         }
     }
     // W + A + Shift, A -> Run Forward
@@ -807,13 +810,15 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 0);
     }
     // W + A, W -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 6);
     }
     // W + D + Shift -> Run Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
@@ -830,17 +835,20 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 1);
     }
     // W + D -> Walk Right Up
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            //m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_Object->move(fElapsedTime, 1);
         }
         else {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_UP), true); // Maintain Walk
+            m_Object->move(fElapsedTime, 1);
         }
     }
     // W + D + Shift, D -> Run Forward
@@ -853,13 +861,15 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 0);
     }
     // W + D, W -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 2);
     }
     // S + A + Shift -> Run Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
@@ -876,17 +886,20 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 5);
     }
     // S + A -> Walk Left Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            //m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_Object->move(fElapsedTime, 5);
         }
         else {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT_DOWN), true); // Maintain Walk
+            m_Object->move(fElapsedTime, 5);
         }
     }
     // S + A + Shift, A -> Run Backward
@@ -899,13 +912,15 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 4);
     }
     // S + A, S -> Walk Left
     else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT), true); // Walk Left
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 6);
     }
     // S + D + Shift -> Run Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
@@ -922,17 +937,20 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 3);
     }
     // S + D -> Walk Right Down
     else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            //m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_Object->move(fElapsedTime, 3);
         }
         else {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT_DOWN), true); // Maintain Walk
+            m_Object->move(fElapsedTime, 3);
         }
     }
     // S + D + Shift, D -> Run Backward
@@ -945,13 +963,15 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
     else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_BACKWARD), true); // Walk Backward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 4);
     }
     // S + D, S -> Walk Right
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 6);
     }
     // W + Shift -> Run Forward
     else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
@@ -968,14 +988,15 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
     else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD), true); // Walk Forward
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
+        m_Object->move(fElapsedTime, 0);
     }
     // W -> Walk Forward
     else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
         if (!(m_PrevKeyBuffer['W'] & 0x80)) {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD), true); // Maintain Walk
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            //m_AManager->UpdateAniPosition(0.0f, m_Object);
             m_Object->move(fElapsedTime, 0);
         }
         else {
@@ -1005,10 +1026,12 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
         if (!(m_PrevKeyBuffer['S'] & 0x80)) {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_BACKWARD), true); // Walk Backward
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            //m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_Object->move(fElapsedTime, 4);
         }
         else {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_BACKWARD), true); // Maintain Walk
+            m_Object->move(fElapsedTime, 4);
         }
     }
     // A + Shift -> Run Left
@@ -1033,10 +1056,12 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
         if (!(m_PrevKeyBuffer['A'] & 0x80)) {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT), true); // Walk Left
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-            m_AManager->UpdateAniPosition(0.0f, m_Object);
+            //m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_Object->move(fElapsedTime, 6);
         }
         else {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_LEFT), true); // Maintain Walk
+            m_Object->move(fElapsedTime, 6);
         }
     }
     // D + Shift -> Run Right
@@ -1054,7 +1079,7 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
     else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT), true); // Walk Right
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
         m_Object->move(fElapsedTime, 2);
     }
     // D -> Walk Right
@@ -1062,37 +1087,37 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
         if (!(m_PrevKeyBuffer['D'] & 0x80)) {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT), true); // Walk Right
             m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-            m_AManager->UpdateAniPosition(0.0f, m_Object);
-            m_Object->move(fElapsedTime, 3);
+            //m_AManager->UpdateAniPosition(0.0f, m_Object);
+            m_Object->move(fElapsedTime, 2);
         }
         else {
             m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_RIGHT), true); // Maintain Walk
-            m_Object->move(fElapsedTime, 3);
+            m_Object->move(fElapsedTime, 2);
         }
     }
     // W -> IDLE
     else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false);
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
     // S -> IDLE
     else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
     // A -> IDLE
     else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
     // D -> IDLE
     else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false); // IDLE
         m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-        m_AManager->UpdateAniPosition(0.0f, m_Object);
+        //m_AManager->UpdateAniPosition(0.0f, m_Object);
     }
 
     if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo) {
@@ -1187,9 +1212,9 @@ void CPlayerWarrior::UpdateObject(float fElapsedTime)
         m_bDoingCombo = false;
     }
 
-    if (test) {
-        m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
-    }
+    //if (test) {
+    //    m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+    //}
 }
 
 // =======================================================================================
