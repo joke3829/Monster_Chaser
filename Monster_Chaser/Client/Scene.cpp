@@ -1864,6 +1864,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// ==============================================================================
 
 	// Camera Setting ==============================================================
+	//m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
 	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
 	m_pCamera->SetHOffset(3.5f);
 	m_pCamera->SetCameraLength(15.0f);

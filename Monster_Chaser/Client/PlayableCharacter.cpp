@@ -1198,8 +1198,10 @@ void CPlayerWarrior::UpdateObject(float fElapsedTime)
     bool test = false;
     m_AManager->UpdateCombo(fElapsedTime);
     if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
+        if (12 <= m_AManager->getCurrentSet() && m_AManager->getCurrentSet() <= 19) {
+            test = true;
+        }
         m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false);
-        test = true;
         m_bLockAnimation1 = false;
         m_bLockAnimation = false;
         m_bDoingCombo = false;
@@ -1212,9 +1214,9 @@ void CPlayerWarrior::UpdateObject(float fElapsedTime)
         m_bDoingCombo = false;
     }
 
-    //if (test) {
-    //    m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
-    //}
+	if (test) {
+		m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+	}
 }
 
 // =======================================================================================
