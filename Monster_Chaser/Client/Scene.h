@@ -250,11 +250,23 @@ protected:
 	std::unique_ptr<CResourceManager>		m_pResourceManager{};
 
 	std::array<std::vector<std::unique_ptr<UIObject>>, 3>	m_vStatusUIs{};
-	std::vector<std::unique_ptr<UIObject>>	m_vUIs{};
+	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
+	std::unique_ptr<UIObject>				m_background;
+	std::unique_ptr<UIObject>				m_pShopUI;
 
 	short m_numUser = 3;
 	std::array<size_t, 3>				m_buffpixelHeight{};
 	std::array<std::array<bool, 3>, 3>	m_BuffState{};
 	std::array<float, 3> maxHPs;
 	std::array<float, 3> cHPs;
+
+	short cItem = 0;
+	bool itemUse{};
+
+	std::array<float, 3> coolTime{};
+	std::array<float, 3> curCTime{};
+
+	float maxMP = 100;
+	float cMP = 100;
 };

@@ -2873,11 +2873,10 @@ void UITestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 
-	mindex = meshes.size(); tindex = textures.size(); uindex = m_vUIs.size();
+	mindex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\CharacterInfo1.dds"));
-	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex].get()));
-	m_vUIs[uindex]->setPositionInViewport(0, 0);
+	m_background = std::make_unique<UIObject>(1, 2, meshes[mindex].get());
+	m_background->setColor(1.0, 1.0, 1.0, 1.0); m_background->setPositionInViewport(0, 0);
 
 	// status UI ===================================================================
 	maxHPs[0] = 1200; maxHPs[1] = 1000; maxHPs[2] = 800;
@@ -2953,7 +2952,53 @@ void UITestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	}
 	// =============================================================================
 
+	// item ========================================================================
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 140, 175));
 
+	for (int i = 0; i < 4; ++i) {
+		uindex = m_vItemUIs.size();
+		m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vItemUIs[uindex]->setColor(0.2 * (i + 1), 0.3, 0.2 * (i + 1), 1.0);
+		m_vItemUIs[uindex]->setPositionInViewport(20, 525);
+		m_vItemUIs[uindex]->setRenderState(false);
+	}
+	m_vItemUIs[0]->setRenderState(true);
+
+	uindex = m_vItemUIs.size();
+	m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+	m_vItemUIs[uindex]->setColor(0.0, 0.0, 0.0, 0.0);
+	m_vItemUIs[uindex]->setPositionInViewport(20, 525);
+	// =============================================================================
+
+	// skills ======================================================================
+
+	coolTime[0] = 5.0f; coolTime[1] = 10.0f; coolTime[2] = 20.0f;
+
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 100, 100));
+	for (int i = 0; i < 3; ++i) {
+		uindex = m_vSkillUIs.size();
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vSkillUIs[uindex]->setColor(1.0, 0.5, 0.5, 1.0);
+		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		uindex = m_vSkillUIs.size();
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vSkillUIs[uindex]->setColor(0.0, 0.0, 0.0, 0.5);
+		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		uindex = m_vSkillUIs.size();
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vSkillUIs[uindex]->setColor(0.0, 1.0, 1.0, 0.5);
+		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
+	}
+
+	// =============================================================================
 }
 
 void UITestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -2979,6 +3024,42 @@ void UITestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM w
 			break;
 		case '3':
 			m_BuffState[0][2] = !m_BuffState[0][2];
+			break;
+		case '0':
+			cMP = 100;
+			break;
+		case 'Z':
+			m_vItemUIs[cItem]->setRenderState(false);
+			--cItem;
+			if (cItem < 0) cItem = 3;
+			m_vItemUIs[cItem]->setRenderState(true);
+			break;
+		case 'C':
+			m_vItemUIs[cItem]->setRenderState(false);
+			++cItem;
+			if (cItem > 3) cItem = 0;
+			m_vItemUIs[cItem]->setRenderState(true);
+			break;
+		case 'X':
+			itemUse = !itemUse;
+			break;
+		case 'Q':
+			if (cMP >= 30 && curCTime[0] <= 0) {
+				cMP -= 30;
+				curCTime[0] = coolTime[0];
+			}
+			break;
+		case 'E':
+			if (cMP >= 40 && curCTime[1] <= 0) {
+				cMP -= 40;
+				curCTime[1] = coolTime[1];
+			}
+			break;
+		case 'R':
+			if (cMP >= 60 && curCTime[2] <= 0) {
+				cMP -= 60;
+				curCTime[2] = coolTime[2];
+			}
 			break;
 		}
 		break;
@@ -3117,6 +3198,9 @@ void UITestScene::UpdateObject(float fElapsedTime)
 		int t{};
 		// hp/mp
 		m_vStatusUIs[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
+		if (i == 0) {
+			m_vStatusUIs[i][2]->setScaleX(cMP / maxMP);
+		}
 		if (i > 0) {
 			buffstart = 15; bstride = 30;
 		}
@@ -3131,6 +3215,34 @@ void UITestScene::UpdateObject(float fElapsedTime)
 			}
 		}
 	}
+
+	if (itemUse)
+		m_vItemUIs[4]->setColor(0.0, 0.0, 0.0, 0.0);
+	else
+		m_vItemUIs[4]->setColor(0.0, 0.0, 0.0, 0.5);
+	{
+		if (cMP < 30)
+			m_vSkillUIs[6]->setRenderState(true);
+		else
+			m_vSkillUIs[6]->setRenderState(false);
+
+		if (cMP < 40)
+			m_vSkillUIs[7]->setRenderState(true);
+		else
+			m_vSkillUIs[7]->setRenderState(false);
+
+		if (cMP < 60)
+			m_vSkillUIs[8]->setRenderState(true);
+		else
+			m_vSkillUIs[8]->setRenderState(false);
+
+		for (int i = 0; i < 3; ++i) {
+			curCTime[i] -= fElapsedTime;
+			if (curCTime[i] < 0) curCTime[i] = 0.0f;
+			m_vSkillUIs[i + 3]->setScaleY(curCTime[i] / coolTime[i]);
+		}
+	}
+
 }
 void UITestScene::Render()
 {
@@ -3160,13 +3272,18 @@ void UITestScene::Render()
 	cmdList->SetGraphicsRootConstantBufferView(0, m_cameraCB->GetGPUVirtualAddress());
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	for (auto& p : m_vUIs)
-		p->Render();
+	m_background->Render();
 
 	for (short i = 0; i < m_numUser; ++i) {
 		for (auto& p : m_vStatusUIs[i])
 			p->Render();
 	}
+
+	for (auto& p : m_vItemUIs)
+		p->Render();
+
+	for (auto& p : m_vSkillUIs)
+		p->Render();
 
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
