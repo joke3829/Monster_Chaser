@@ -230,3 +230,31 @@ public:
 	bool m_bHold = false;
 	POINT oldCursor;
 };
+
+
+
+
+class UITestScene : public CScene {
+public:
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
+
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void CreateRootSignature();
+	void CreatePipelineState();
+
+	void UpdateObject(float fElapsedTime);
+	void Render();
+protected:
+	std::unique_ptr<CResourceManager>		m_pResourceManager{};
+
+	std::array<std::vector<std::unique_ptr<UIObject>>, 3>	m_vStatusUIs{};
+	std::vector<std::unique_ptr<UIObject>>	m_vUIs{};
+
+	short m_numUser = 3;
+	std::array<size_t, 3>				m_buffpixelHeight{};
+	std::array<std::array<bool, 3>, 3>	m_BuffState{};
+	std::array<float, 3> maxHPs;
+	std::array<float, 3> cHPs;
+};

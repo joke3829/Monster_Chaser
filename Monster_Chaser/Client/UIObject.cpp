@@ -42,6 +42,30 @@ void UIObject::setPositionInWorld(float x, float y)
 	XMStoreFloat4x4(&m_pMap->worldmatrix, XMMatrixTranspose(XMLoadFloat4x4(&m_WorldMatrix)));
 }
 
+void UIObject::setScale(XMFLOAT3& scale)
+{
+	m_WorldMatrix._11 = scale.x; m_WorldMatrix._22 = scale.y; m_WorldMatrix._33 = scale.z;
+	XMStoreFloat4x4(&m_pMap->worldmatrix, XMMatrixTranspose(XMLoadFloat4x4(&m_WorldMatrix)));
+}
+
+void UIObject::setScale(float scale)
+{
+	m_WorldMatrix._11 = scale; m_WorldMatrix._22 = scale; m_WorldMatrix._33 = scale;
+	XMStoreFloat4x4(&m_pMap->worldmatrix, XMMatrixTranspose(XMLoadFloat4x4(&m_WorldMatrix)));
+}
+
+void UIObject::setScaleX(float xScale)
+{
+	m_WorldMatrix._11 = xScale;
+	XMStoreFloat4x4(&m_pMap->worldmatrix, XMMatrixTranspose(XMLoadFloat4x4(&m_WorldMatrix)));
+}
+
+void UIObject::setScaleY(float yScale)
+{
+	m_WorldMatrix._22 = yScale;
+	XMStoreFloat4x4(&m_pMap->worldmatrix, XMMatrixTranspose(XMLoadFloat4x4(&m_WorldMatrix)));
+}
+
 void UIObject::setColor(float r, float g, float b, float a)
 {
 	for (XMFLOAT4& cor : m_vColor) {

@@ -16,6 +16,10 @@ public:
 	void setRenderState(bool b) { m_bRenderState = b; }
 	void setPositionInViewport(int x, int y);
 	void setPositionInWorld(float x, float y);
+	void setScale(XMFLOAT3& scale);
+	void setScale(float scale);
+	void setScaleX(float xScale);
+	void setScaleY(float yScale);
 
 	void setColor(float r, float g, float b, float a);
 

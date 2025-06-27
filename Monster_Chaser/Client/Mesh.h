@@ -32,13 +32,18 @@ public:
 
 // =============================================================================
 
+constexpr short MESH_PLANE_1QUADRANT = 0;
+constexpr short MESH_PLANE_2QUADRANT = 1;
+constexpr short MESH_PLANE_3QUADRANT = 2;
+constexpr short MESH_PLANE_4QUADRANT = 3;
+
 class Mesh {
 public:
 	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor-�޽� ��� ����	
 	Mesh(CHeightMapImage* heightmap, std::string strMeshName);
 	Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName = "noNameMesh");					// boundingOBB ���鶧 ���
 	Mesh(XMFLOAT3& center, float radius, std::string meshName = "noNameMesh");
-	Mesh(XMFLOAT3& center, float width, float height);			// Plane
+	Mesh(XMFLOAT3& center, float width, float height, short arrow = MESH_PLANE_4QUADRANT);			// Plane
 
 	//void GetMeshNameFromFile(std::ifstream& inFile);
 	void GetBoundInfoFromFile(std::ifstream& inFile);

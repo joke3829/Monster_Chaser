@@ -2849,3 +2849,324 @@ void CRaytracingParticleTestScene::PostProcess()
 {
 	m_pResourceManager->PostProcess();
 }
+
+
+// =====================================================
+
+
+void UITestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
+{
+	m_pOutputBuffer = outputBuffer;
+
+	CreateRTVDSV();
+	CreateRootSignature();
+	CreatePipelineState();
+
+	CreateOrthoMatrixBuffer();
+
+	size_t mindex{};
+	size_t tindex{};
+	size_t uindex{};
+
+	m_pResourceManager = std::make_unique<CResourceManager>();
+
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+
+	mindex = meshes.size(); tindex = textures.size(); uindex = m_vUIs.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\CharacterInfo1.dds"));
+	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex].get()));
+	m_vUIs[uindex]->setPositionInViewport(0, 0);
+
+	// status UI ===================================================================
+	maxHPs[0] = 1200; maxHPs[1] = 1000; maxHPs[2] = 800;
+	cHPs[0] = 1200; cHPs[1] = 800; cHPs[2] = 730;
+
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 380, 140));		// stat background
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 30, 30));		// buff icon
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 340, 30));		// hp/mp line
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 255, 22));		// coop hp/mp
+
+	{
+		uindex = m_vStatusUIs[0].size();			// 0 - back
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(0, 0);
+		m_vStatusUIs[0][uindex]->setColor(0.0, 1.0, 0.5, 1.0);
+
+		uindex = m_vStatusUIs[0].size();			// 1 - hp
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 20);
+		m_vStatusUIs[0][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
+
+		uindex = m_vStatusUIs[0].size();			// 2 - mp
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 60);
+		m_vStatusUIs[0][uindex]->setColor(0.0, 0.0, 1.0, 1.0);
+
+		m_buffpixelHeight[0] = 100;
+		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
+		m_vStatusUIs[0][uindex]->setColor(0.0, 1.0, 1.0, 1.0);
+		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
+		m_vStatusUIs[0][uindex]->setColor(1.0, 0.5, 1.0, 1.0);
+		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
+		m_vStatusUIs[0][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
+	}
+
+	for (int i = 0; i < 2; ++i) {
+		uindex = m_vStatusUIs[i + 1].size();			// 0 - back
+		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+		m_vStatusUIs[i + 1][uindex]->setPositionInViewport(0, (i * 115) + 150);
+		m_vStatusUIs[i + 1][uindex]->setColor(0.0, 1.0, 0.5, 1.0);
+
+		uindex = m_vStatusUIs[i + 1].size();			// 1 - hp
+		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 3].get()));
+		m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15);
+		m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
+
+		uindex = m_vStatusUIs[i + 1].size();			// 2 - mp
+		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 3].get()));
+		m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15 + 30);
+		m_vStatusUIs[i + 1][uindex]->setColor(0.0, 0.0, 1.0, 1.0);
+
+		m_buffpixelHeight[i + 1] = (i * 115) + 150 + 15 + 30 + 30;
+		uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+		m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+		m_vStatusUIs[i + 1][uindex]->setColor(0.0, 1.0, 1.0, 1.0);
+		uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+		m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+		m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.5, 1.0, 1.0);
+		uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+		m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+		m_vStatusUIs[i + 1][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
+	}
+	// =============================================================================
+
+
+}
+
+void UITestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_KEYDOWN: {
+		switch (wParam) {
+		case 'U':
+			cHPs[0] += 10;
+			if (maxHPs[0] < cHPs[0])
+				cHPs[0] = maxHPs[0];
+			break;
+		case 'J':
+			cHPs[0] -= 10;
+			if (0 > cHPs[0])
+				cHPs[0] = 0;
+			break;
+		case '1':
+			m_BuffState[0][0] = !m_BuffState[0][0];
+			break;
+		case '2':
+			m_BuffState[0][1] = !m_BuffState[0][1];
+			break;
+		case '3':
+			m_BuffState[0][2] = !m_BuffState[0][2];
+			break;
+		}
+		break;
+	}
+	case WM_KEYUP:
+		break;
+	}
+}
+void UITestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+{
+	switch (nMessage) {
+	case WM_LBUTTONDOWN: {
+		int mx = LOWORD(lParam);
+		int my = HIWORD(lParam);
+
+		break;
+	}
+	case WM_LBUTTONUP: {
+		break;
+	}
+	case WM_MOUSEMOVE: {
+		break;
+	}
+	}
+}
+
+void UITestScene::CreateRootSignature()
+{
+	D3D12_DESCRIPTOR_RANGE tRange{};
+	tRange.BaseShaderRegister = 0;
+	tRange.NumDescriptors = 1;
+	tRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+
+	D3D12_ROOT_PARAMETER params[3]{};
+	params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	params[0].Descriptor.RegisterSpace = 0;
+	params[0].Descriptor.ShaderRegister = 0;
+
+	params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	params[1].Descriptor.RegisterSpace = 0;
+	params[1].Descriptor.ShaderRegister = 1;
+
+	params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	params[2].DescriptorTable.NumDescriptorRanges = 1;
+	params[2].DescriptorTable.pDescriptorRanges = &tRange;
+
+	D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
+	samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+	samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+	samplerDesc.RegisterSpace = 0;
+	samplerDesc.ShaderRegister = 0;
+	samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	D3D12_ROOT_SIGNATURE_DESC rtDesc{};
+	rtDesc.NumParameters = 3;
+	rtDesc.NumStaticSamplers = 1;
+	rtDesc.pParameters = params;
+	rtDesc.pStaticSamplers = &samplerDesc;
+	rtDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	ID3DBlob* pBlob{};
+	D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pGlobalRootSignature.GetAddressOf()));
+	pBlob->Release();
+}
+void UITestScene::CreatePipelineState()
+{
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dPBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_pGlobalRootSignature.Get();
+
+	D3D12_INPUT_ELEMENT_DESC ldesc[3]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 3;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 1;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "PSMain", "ps_5_1", 0, 0, &pd3dPBlob, nullptr);
+	d3dPipelineState.PS.BytecodeLength = pd3dPBlob->GetBufferSize();
+	d3dPipelineState.PS.pShaderBytecode = pd3dPBlob->GetBufferPointer();
+
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(m_UIPipelineState.GetAddressOf()));
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dPBlob)
+		pd3dPBlob->Release();
+}
+
+void UITestScene::UpdateObject(float fElapsedTime)
+{
+	int buffstart = 20; int bstride = 40;
+	for (int i = 0; i < 3; ++i) {
+		int t{};
+		// hp/mp
+		m_vStatusUIs[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
+		if (i > 0) {
+			buffstart = 15; bstride = 30;
+		}
+		for (int j = 0; j < 3; ++j) {
+			if (m_BuffState[i][j]) {
+				m_vStatusUIs[i][j + 3]->setRenderState(true);
+				m_vStatusUIs[i][j + 3]->setPositionInViewport(buffstart + (t * bstride), m_buffpixelHeight[i]);
+				++t;
+			}
+			else {
+				m_vStatusUIs[i][j + 3]->setRenderState(false);
+			}
+		}
+	}
+}
+void UITestScene::Render()
+{
+	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
+	auto barrier = [&](ID3D12Resource* pResource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)
+		{
+			D3D12_RESOURCE_BARRIER resBarrier{};
+			resBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			resBarrier.Transition.pResource = pResource;
+			resBarrier.Transition.StateBefore = before;
+			resBarrier.Transition.StateAfter = after;
+			resBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+			cmdList->ResourceBarrier(1, &resBarrier);
+		};
+
+	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+	D3D12_VIEWPORT vv{};
+	vv.Width = DEFINED_UAV_BUFFER_WIDTH; vv.Height = DEFINED_UAV_BUFFER_HEIGHT; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
+	cmdList->RSSetViewports(1, &vv);
+	D3D12_RECT ss{ 0, 0, DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT };
+	cmdList->RSSetScissorRects(1, &ss);
+	cmdList->OMSetRenderTargets(1, &m_RTV->GetCPUDescriptorHandleForHeapStart(), FALSE, &m_DSV->GetCPUDescriptorHandleForHeapStart());
+	cmdList->SetGraphicsRootSignature(m_pGlobalRootSignature.Get());
+	cmdList->SetPipelineState(m_UIPipelineState.Get());
+	cmdList->SetGraphicsRootConstantBufferView(0, m_cameraCB->GetGPUVirtualAddress());
+	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	for (auto& p : m_vUIs)
+		p->Render();
+
+	for (short i = 0; i < m_numUser; ++i) {
+		for (auto& p : m_vStatusUIs[i])
+			p->Render();
+	}
+
+	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+}
