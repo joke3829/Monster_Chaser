@@ -129,7 +129,12 @@ public:
 class CWarriorManager : public CPlayableCharacterAnimationManager {
 public:
 	CWarriorManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile)
-	{m_vComboAnimationSets = {  }; m_vSkillAnimationSets = {  };}
+	{m_vComboAnimationSets = { 23,24,25}; m_vSkillAnimationSets = {  };}
+
+	virtual void StartCombo();
+	virtual void OnAttackInput();
+	virtual void UpdateCombo(float fElapsedTime);
+	virtual void ResetCombo();
 };
 
 class CPriestManager : public CPlayableCharacterAnimationManager {

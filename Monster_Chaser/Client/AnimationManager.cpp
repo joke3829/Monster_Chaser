@@ -298,6 +298,8 @@ void CAnimationManager::ChangeAnimation(UINT nSet, bool playOnce)
 	}
 }
 
+// =====================================================================================
+
 void CMageManager::StartCombo()
 {
 	m_bInCombo = true;
@@ -435,4 +437,83 @@ void CMageManager::OnKey3Input()
 	if (!m_bInCombo) {
 		StartSkill3();
 	}
+}
+
+// ===============================================================================================
+
+void CWarriorManager::StartCombo()
+{
+	m_bInCombo = true;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+
+	m_vComboAnimationSets = { 23,24,25 };
+	ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+}
+
+void CWarriorManager::OnAttackInput()
+{
+	if (!m_bInCombo) {
+		StartCombo();
+		return;
+	}
+
+	// 콤보 진행
+	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 23) {
+		m_bNextAttack = true;
+		//if (!m_bWaitingForNextInput) {
+		//	m_bNextAttack = true; // 다음 공격 대기
+		//}
+		//else {
+		//	m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+		//	ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+		//	m_bWaitingForNextInput = false;
+		//	m_fComboTimer = 0.0f;
+		//	m_bNextAttack = false;
+		//}
+	}
+}
+
+void CWarriorManager::UpdateCombo(float fElapsedTime)
+{
+	if (!m_bInCombo) return;
+
+	m_fComboTimer += fElapsedTime; // 타이머 증가
+
+	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 23) {
+		if (m_bNextAttack && m_bWaitingForNextInput) {
+			const float fComboCooldown = 0.4f;
+			if (m_fComboTimer >= fComboCooldown) {
+				m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+				ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+				m_bNextAttack = false;
+				m_bWaitingForNextInput = false;
+				m_fComboTimer = 0.0f; // 타이머 초기화
+			}
+		}
+		else {
+			m_bWaitingForNextInput = true;
+			if (m_fComboTimer >= m_fComboWaitTime) {
+				ResetCombo();
+			}
+		}
+	}
+	else {
+		ResetCombo();
+	}
+}
+
+void CWarriorManager::ResetCombo()
+{
+	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // 중단 감지
+	m_bInCombo = false;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+	m_vComboAnimationSets.clear();
+	setTimeZero();
+	ChangeAnimation(0, false); // idle로 전환
 }
