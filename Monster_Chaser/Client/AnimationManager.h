@@ -127,7 +127,9 @@ public:
 };
 
 class CWarriorManager : public CPlayableCharacterAnimationManager {
-
+public:
+	CWarriorManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile)
+	{m_vComboAnimationSets = {  }; m_vSkillAnimationSets = {  };}
 };
 
 class CPriestManager : public CPlayableCharacterAnimationManager {

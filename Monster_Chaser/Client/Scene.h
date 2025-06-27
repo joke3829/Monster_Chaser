@@ -175,6 +175,7 @@ public:
 	void CreateUIPipelineState();
 
 	void CreateMageCharacter();
+	void CreateWarriorCharacter();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();

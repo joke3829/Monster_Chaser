@@ -312,6 +312,7 @@ public:
 	void Rotate(XMFLOAT3 rot);
 	void Rotation(XMFLOAT3 rot, CGameObject& frame);
 	void move(float fElapsedTime, short arrow);
+	void run(float fElapsedTime, short arrow);
 	void sliding(float depth, const XMFLOAT3& normal, float meshHeight);
 	void SetMoveDirection(XMFLOAT3& pos);
 

@@ -1776,7 +1776,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
-	CreateMageCharacter();
+	//CreateMageCharacter();
+	CreateWarriorCharacter();
 	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
@@ -1852,7 +1853,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// Copy(normalObject) & SetPreMatrix ===============================
 
-	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
+	skinned[0]->setPreTransform(2.5f, XMFLOAT3(90.0f,0.0f,0.0f), XMFLOAT3());
 	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -998.0f));
 	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
 	skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
@@ -2054,13 +2055,21 @@ void CRaytracingWinterLandScene::CreateUIPipelineState()
 
 void CRaytracingWinterLandScene::CreateMageCharacter()
 {
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_331.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	m_vPlayers.emplace_back(std::make_unique<CPlayerMage>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
+}
+
+void CRaytracingWinterLandScene::CreateWarriorCharacter()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\swordman.bin", "src\\texture\\Swordman\\", JOB_WARRIOR);
+	m_vPlayers.emplace_back(std::make_unique<CPlayerWarrior>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 }
 
 void CRaytracingWinterLandScene::PrepareTerrainTexture()
