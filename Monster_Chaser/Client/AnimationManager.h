@@ -41,7 +41,7 @@ public:
 	void TimeIncrease(float fElapsedTime);			
 	void UpdateAnimation(float fElapsedTime);		
 	void UpdateAnimationMatrix();
-	void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player) {}
 	void ChangeAnimation(UINT nSet);
 	void ChangeAnimation(UINT nSet, bool playOnce = false); // playOnce 
 	void setCurrnetSet(UINT n) { m_nCurrentSet = n; }
@@ -92,6 +92,7 @@ public:
 	virtual void OnAttackInput() {}
 	virtual void UpdateCombo(float fElapsedTime) {}
 	virtual void ResetCombo() {}
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player) {}
 
 	virtual void StartSkill3() {};
 	virtual void OnKey3Input() {};
@@ -124,6 +125,7 @@ public:
 
 	virtual void StartSkill3();
 	virtual void OnKey3Input();
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
 };
 
 class CWarriorManager : public CPlayableCharacterAnimationManager {
@@ -135,6 +137,7 @@ public:
 	virtual void OnAttackInput();
 	virtual void UpdateCombo(float fElapsedTime);
 	virtual void ResetCombo();
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
 };
 
 class CPriestManager : public CPlayableCharacterAnimationManager {

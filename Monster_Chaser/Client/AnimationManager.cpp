@@ -270,14 +270,6 @@ void CAnimationManager::UpdateAnimationMatrix()
 	memcpy(m_pMappedPointer, m_vMatrixes.data(), sizeof(XMFLOAT4X4) * m_vMatrixes.size());
 }
 
-void CAnimationManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
-{
-	if (m_vFrames[0]) {
-		XMFLOAT3 targetPosition = m_vFrames[0]->getPositionFromWMatrix();
-		player->SetPosition(targetPosition);
-	}
-}
-
 void CAnimationManager::ChangeAnimation(UINT nSet)
 {
 	if (nSet != m_nCurrentSet) {
@@ -439,6 +431,14 @@ void CMageManager::OnKey3Input()
 	}
 }
 
+void CMageManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
+{
+	if (m_vFrames[0]) {
+		XMFLOAT3 targetPosition = m_vFrames[0]->getPositionFromWMatrix();
+		player->SetPosition(targetPosition);
+	}
+}
+
 // ===============================================================================================
 
 void CWarriorManager::StartCombo()
@@ -516,4 +516,12 @@ void CWarriorManager::ResetCombo()
 	m_vComboAnimationSets.clear();
 	setTimeZero();
 	ChangeAnimation(0, false); // idle·Î ÀüÈ¯
+}
+
+void CWarriorManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
+{
+	if (m_vFrames[0]) {
+		XMFLOAT3 targetPosition = m_vFrames[0]->getPositionFromWMatrix();
+		player->SetPosition(targetPosition);
+	}
 }

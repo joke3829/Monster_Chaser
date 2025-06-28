@@ -1497,7 +1497,7 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			//m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_bLockAnimation1 = true;
 		}
 		if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
