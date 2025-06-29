@@ -325,7 +325,7 @@ void TitleScene::CreatePipelineState()
 	D3DCompileFromFile(L"UIShader.hlsl", nullptr, nullptr, "PSMain", "ps_5_1", 0, 0, &pd3dPBlob, nullptr);
 	d3dPipelineState.PS.BytecodeLength = pd3dPBlob->GetBufferSize();
 	d3dPipelineState.PS.pShaderBytecode = pd3dPBlob->GetBufferPointer();
-	
+
 	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(m_UIPipelineState.GetAddressOf()));
 
 	if (pd3dVBlob)
@@ -355,7 +355,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 					m_vRoomSelectUIs[(i * 3) + j + peopleindex]->setRenderState(true);
 				}
 				else
-					m_vRoomSelectUIs[(i*3) + j + peopleindex]->setRenderState(false);
+					m_vRoomSelectUIs[(i * 3) + j + peopleindex]->setRenderState(false);
 			}
 		}
 		break;
@@ -366,7 +366,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		for (int i = 0; i < 3; ++i) {
 			if (i < userPerRoom[currentRoom]) {
 				m_vInRoomUIs[backUIIndex + i]->setRenderState(true);
-				if(userReadyState[i])
+				if (userReadyState[i])
 					m_vInRoomUIs[readyUIIndex + i]->setRenderState(true);
 				else {
 					m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
@@ -385,12 +385,12 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		break;
 	}
 	case GoLoading: {
-			wOpacity += 0.35f * fElapsedTime;
-			if (wOpacity > 1.0f) {
-				wOpacity = 1.0f;
-				m_nNextScene = SCENE_WINTERLAND;
-			}
-			m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
+		wOpacity += 0.35f * fElapsedTime;
+		if (wOpacity > 1.0f) {
+			wOpacity = 1.0f;
+			m_nNextScene = SCENE_WINTERLAND;
+		}
+		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
 	}
 	}
@@ -409,7 +409,7 @@ void TitleScene::Render()
 
 			cmdList->ResourceBarrier(1, &resBarrier);
 		};
-	
+
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	D3D12_VIEWPORT vv{};
@@ -1007,7 +1007,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 
 		// 다중 충돌 처리: 가장 큰 침투 깊이 선택
 		if (!collisions.empty()) {
-			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
+			auto maxCollision = std::max_element(collisions.begin(), collisions.end(), [](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
 
 			XMFLOAT3 norm = maxCollision->normal;
 			float depth = maxCollision->depth;
@@ -1773,7 +1773,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);
 	// Object File Read ========================================	! !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	//CreateMageCharacter();
@@ -1803,7 +1803,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	UINT finalmesh = meshes.size();
 
 	// terrian
-	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
@@ -1836,7 +1836,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
 	}
 
-	PrepareTerrainTexture();
+	PrepareTerrainTexture();*/
 
 	// cubeMap Ready
 	m_nSkyboxIndex = textures.size();
@@ -1853,10 +1853,10 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// Copy(normalObject) & SetPreMatrix ===============================
 
-	skinned[0]->setPreTransform(2.5f, XMFLOAT3(90.0f,0.0f,0.0f), XMFLOAT3());
-	//skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
+	//skinned[0]->setPreTransform(2.5f, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
 	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -998.0f));
-	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
+	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
 	skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
 	skinned[1]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
@@ -1945,7 +1945,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			m_pPlayer->ProcessInput(keyBuffer,fElapsedTime);
+			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
 		}
 	}
 }
@@ -2068,7 +2068,7 @@ void CRaytracingWinterLandScene::CreateMageCharacter()
 
 void CRaytracingWinterLandScene::CreateWarriorCharacter()
 {
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\swordman.bin", "src\\texture\\Swordman\\", JOB_WARRIOR);
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\swordman_lv1.bin", "src\\texture\\Swordman\\", JOB_WARRIOR);
 	m_vPlayers.emplace_back(std::make_unique<CPlayerWarrior>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
@@ -2257,11 +2257,11 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
-	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
-	
+	//m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
+
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
-		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
+		/*float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
 		if (EYE.z >= -500.0f) {
 			if (cHeight < 10.5f)
 				cHeight = 10.5f;
@@ -2269,8 +2269,8 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		if (EYE.y < cHeight + 0.5f) {
 			m_pCamera->UpdateViewMatrix(cHeight + 0.5f);
 		}
-		else
-			m_pCamera->UpdateViewMatrix();
+		else*/
+		m_pCamera->UpdateViewMatrix();
 	}
 	else
 		m_pCamera->UpdateViewMatrix();
@@ -2278,25 +2278,25 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 
 	switch (m_nState) {
 	case IS_LOADING: {
-			wOpacity -= 0.5 * fElapsedTime;
-			if (wOpacity < 0.0f) {
-				m_nState = IS_GAMING;
-				wOpacity = 0.0f;
-			}
-			m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
+		wOpacity -= 0.5 * fElapsedTime;
+		if (wOpacity < 0.0f) {
+			m_nState = IS_GAMING;
+			wOpacity = 0.0f;
+		}
+		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
 	}
 	case IS_GAMING: {
 		break;
 	}
 	case IS_FINISH: {
-			wOpacity += 0.2 * fElapsedTime;
-			if (wOpacity > 1.0f) {
-				ShowCursor(TRUE);
-				m_nNextScene = SCENE_TITLE;
-				wOpacity = 1.0f;
-			}
-			m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
+		wOpacity += 0.2 * fElapsedTime;
+		if (wOpacity > 1.0f) {
+			ShowCursor(TRUE);
+			m_nNextScene = SCENE_TITLE;
+			wOpacity = 1.0f;
+		}
+		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
 	}
 	}
@@ -2309,7 +2309,7 @@ void CRaytracingWinterLandScene::Render()
 	m_pResourceManager->SetLights();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[m_nSkyboxIndex]->getView()->GetGPUDescriptorHandleForHeapStart());
-	g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
+	//g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
 	raydesc.Depth = 1;
