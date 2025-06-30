@@ -986,8 +986,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 
 	for (const auto& character : characters) {
 		std::vector<CollisionInfo> collisions;
-
-		for (const auto& mapObj : mapObjects) {
+		for (const auto& mapObj : mapObjects) {	
 			int meshIndex = mapObj->getMeshIndex();
 			if (meshIndex == -1 || meshIndex >= meshes.size()) continue;
 

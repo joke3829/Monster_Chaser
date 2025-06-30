@@ -16,6 +16,9 @@
     <Filter Include="소스 파일\객체">
       <UniqueIdentifier>{1f38f330-df32-4b07-97b2-562cab24fe8d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\QuadTree">
+      <UniqueIdentifier>{ac0f242b-f4bd-4844-b138-79c5108c39d3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -36,6 +39,12 @@
     <ClInclude Include="Monster.h">
       <Filter>소스 파일\객체</Filter>
     </ClInclude>
+    <ClInclude Include="QuadTree.h">
+      <Filter>소스 파일\QuadTree</Filter>
+    </ClInclude>
+    <ClInclude Include="qt.h">
+      <Filter>소스 파일\QuadTree</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MainServer.cpp">
@@ -55,6 +64,12 @@
     </ClCompile>
     <ClCompile Include="Monster.cpp">
       <Filter>소스 파일\객체</Filter>
+    </ClCompile>
+    <ClCompile Include="QuadTree.cpp">
+      <Filter>소스 파일\QuadTree</Filter>
+    </ClCompile>
+    <ClCompile Include="qt.cpp">
+      <Filter>소스 파일\QuadTree</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -2,6 +2,7 @@
 #include "stdafx.h"
 
 // 쿼드 트리 노드 구조체
+
 namespace DreamWorld {
     namespace NavMesh {
         class TriangleNavMesh;
