@@ -2883,82 +2883,90 @@ void UITestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	cHPs[0] = 1200; cHPs[1] = 800; cHPs[2] = 730;
 
 	mindex = meshes.size();
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 380, 140));		// stat background
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 30, 30));		// buff icon
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 340, 30));		// hp/mp line
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 255, 22));		// coop hp/mp
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 340, 28));		// hp/mp bar
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 330, 18));		// hp/mp
 
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 255, 12));		// coop hp/mp
+
+	tindex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_HPbar.dds"));	// HPbar
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MPbar.dds"));	// MPbar
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MP.dds"));	// MP
 	{
-		uindex = m_vStatusUIs[0].size();			// 0 - back
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
-		m_vStatusUIs[0][uindex]->setPositionInViewport(0, 0);
-		m_vStatusUIs[0][uindex]->setColor(0.0, 1.0, 0.5, 1.0);
+		uindex = m_vStatusUIs[0].size();			// 0 - hpbar
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 20);
 
 		uindex = m_vStatusUIs[0].size();			// 1 - hp
 		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get()));
-		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 20);
 		m_vStatusUIs[0][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
+		m_vStatusUIs[0][uindex]->setPositionInViewport(25, 25);
+
+		uindex = m_vStatusUIs[0].size();			// 2 - mp bar
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex + 1].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 60);
 
 		uindex = m_vStatusUIs[0].size();			// 2 - mp
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get()));
-		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 60);
-		m_vStatusUIs[0][uindex]->setColor(0.0, 0.0, 1.0, 1.0);
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get(), textures[tindex + 2].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(25, 65);
 
 		m_buffpixelHeight[0] = 100;
 		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
 		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
 		m_vStatusUIs[0][uindex]->setColor(0.0, 1.0, 1.0, 1.0);
 		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
 		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
 		m_vStatusUIs[0][uindex]->setColor(1.0, 0.5, 1.0, 1.0);
 		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
 		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
 		m_vStatusUIs[0][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
 	}
 
-	for (int i = 0; i < 2; ++i) {
-		uindex = m_vStatusUIs[i + 1].size();			// 0 - back
-		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
-		m_vStatusUIs[i + 1][uindex]->setScale(0.75);
-		m_vStatusUIs[i + 1][uindex]->setPositionInViewport(0, (i * 115) + 150);
-		m_vStatusUIs[i + 1][uindex]->setColor(0.0, 1.0, 0.5, 1.0);
+	//for (int i = 0; i < 2; ++i) {
+	//	uindex = m_vStatusUIs[i + 1].size();			// 1 - hp
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
 
-		uindex = m_vStatusUIs[i + 1].size();			// 1 - hp
-		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 3].get()));
-		m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15);
-		m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
+	//	uindex = m_vStatusUIs[i + 1].size();			// 2 - mp
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15 + 30);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(0.0, 0.0, 1.0, 1.0);
 
-		uindex = m_vStatusUIs[i + 1].size();			// 2 - mp
-		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 3].get()));
-		m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15 + 30);
-		m_vStatusUIs[i + 1][uindex]->setColor(0.0, 0.0, 1.0, 1.0);
-
-		m_buffpixelHeight[i + 1] = (i * 115) + 150 + 15 + 30 + 30;
-		uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
-		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
-		m_vStatusUIs[i + 1][uindex]->setScale(0.75);
-		m_vStatusUIs[i + 1][uindex]->setColor(0.0, 1.0, 1.0, 1.0);
-		uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
-		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
-		m_vStatusUIs[i + 1][uindex]->setScale(0.75);
-		m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.5, 1.0, 1.0);
-		uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
-		m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
-		m_vStatusUIs[i + 1][uindex]->setScale(0.75);
-		m_vStatusUIs[i + 1][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
-	}
+	//	m_buffpixelHeight[i + 1] = (i * 115) + 150 + 15 + 30 + 30;
+	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(0.0, 1.0, 1.0, 1.0);
+	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.5, 1.0, 1.0);
+	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
+	//}
 	// =============================================================================
 
 	// item ========================================================================
 	mindex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 140, 175));
 
+	tindex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item0.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item1.dds"));
+
 	for (int i = 0; i < 4; ++i) {
 		uindex = m_vItemUIs.size();
-		m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		if( i < 2)
+		m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
+		else
+			m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
 		m_vItemUIs[uindex]->setColor(0.2 * (i + 1), 0.3, 0.2 * (i + 1), 1.0);
 		m_vItemUIs[uindex]->setPositionInViewport(20, 525);
 		m_vItemUIs[uindex]->setRenderState(false);
@@ -3194,24 +3202,24 @@ void UITestScene::CreatePipelineState()
 void UITestScene::UpdateObject(float fElapsedTime)
 {
 	int buffstart = 20; int bstride = 40;
-	for (int i = 0; i < 3; ++i) {
+	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
 		m_vStatusUIs[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
 		if (i == 0) {
-			m_vStatusUIs[i][2]->setScaleX(cMP / maxMP);
+			m_vStatusUIs[i][3]->setScaleXWithUV(cMP / maxMP);
 		}
 		if (i > 0) {
 			buffstart = 15; bstride = 30;
 		}
 		for (int j = 0; j < 3; ++j) {
 			if (m_BuffState[i][j]) {
-				m_vStatusUIs[i][j + 3]->setRenderState(true);
-				m_vStatusUIs[i][j + 3]->setPositionInViewport(buffstart + (t * bstride), m_buffpixelHeight[i]);
+				m_vStatusUIs[i][j + 4]->setRenderState(true);
+				m_vStatusUIs[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), m_buffpixelHeight[i]);
 				++t;
 			}
 			else {
-				m_vStatusUIs[i][j + 3]->setRenderState(false);
+				m_vStatusUIs[i][j + 4]->setRenderState(false);
 			}
 		}
 	}

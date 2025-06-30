@@ -255,7 +255,7 @@ protected:
 	std::unique_ptr<UIObject>				m_background;
 	std::unique_ptr<UIObject>				m_pShopUI;
 
-	short m_numUser = 3;
+	short m_numUser = 1;
 	std::array<size_t, 3>				m_buffpixelHeight{};
 	std::array<std::array<bool, 3>, 3>	m_BuffState{};
 	std::array<float, 3> maxHPs;

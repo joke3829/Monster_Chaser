@@ -60,6 +60,13 @@ void UIObject::setScaleX(float xScale)
 	XMStoreFloat4x4(&m_pMap->worldmatrix, XMMatrixTranspose(XMLoadFloat4x4(&m_WorldMatrix)));
 }
 
+void UIObject:: setScaleXWithUV(float xScale)
+{
+	m_WorldMatrix._11 = m_uvTransform._11 = xScale;
+	XMStoreFloat4x4(&m_pMap->worldmatrix, XMMatrixTranspose(XMLoadFloat4x4(&m_WorldMatrix)));
+	XMStoreFloat4x4(&m_pMap->uvTransform, XMMatrixTranspose(XMLoadFloat4x4(&m_uvTransform)));
+}
+
 void UIObject::setScaleY(float yScale)
 {
 	m_WorldMatrix._22 = yScale;

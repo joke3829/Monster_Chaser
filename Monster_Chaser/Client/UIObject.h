@@ -19,6 +19,7 @@ public:
 	void setScale(XMFLOAT3& scale);
 	void setScale(float scale);
 	void setScaleX(float xScale);
+	void setScaleXWithUV(float xScale);
 	void setScaleY(float yScale);
 
 	void setColor(float r, float g, float b, float a);
