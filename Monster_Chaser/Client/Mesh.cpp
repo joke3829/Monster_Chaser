@@ -818,4 +818,38 @@ UINT Mesh::getSubMeshCount() const
 	return m_nSubMeshesCount;
 }
 
+std::vector<XMFLOAT3>& Mesh::getVertices() const
+{
+	std::vector<XMFLOAT3> vertices(m_nVertexCount);
+	if (m_bHasVertex)
+	{
+		D3D12_RANGE readRange{ 0, 0 };
+		XMFLOAT3* mappedData = nullptr;
+		HRESULT hr = m_pd3dVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
+		if (SUCCEEDED(hr))
+		{
+			memcpy(vertices.data(), mappedData, m_nVertexCount * sizeof(XMFLOAT3));
+			m_pd3dVertexBuffer->Unmap(0, nullptr);
+		}
+	}
+	return vertices;
+}
+
+std::vector<UINT> Mesh::getIndices(UINT subMeshIndex) const
+{
+	std::vector<UINT> indices(m_vIndices[subMeshIndex]);
+	if (m_bHasSubMeshes)
+	{
+		D3D12_RANGE readRange{ 0, 0 };
+		UINT* mappedData = nullptr;
+		HRESULT hr = m_vSubMeshes[subMeshIndex]->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
+		if (SUCCEEDED(hr))
+		{
+			memcpy(indices.data(), mappedData, m_vIndices[subMeshIndex] * sizeof(UINT));
+			m_vSubMeshes[subMeshIndex]->Unmap(0, nullptr);
+		}
+	}
+	return indices;
+}
+
 // ==========================================================================
