@@ -967,6 +967,86 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 	}
 }
 
+bool CRaytracingScene::CheckTriangleSphereCollision(const XMFLOAT3* tri, const BoundingSphere& sphere, XMFLOAT3& outNormal, float& outDepth)
+{
+	XMVECTOR v0 = XMLoadFloat3(&tri[0]);
+	XMVECTOR v1 = XMLoadFloat3(&tri[1]);
+	XMVECTOR v2 = XMLoadFloat3(&tri[2]);
+	XMVECTOR sphereCenter = XMLoadFloat3(&sphere.Center);
+	float sphereRadius = sphere.Radius;
+
+	// 삼각형 평면 계산
+	XMVECTOR edge1 = v1 - v0;
+	XMVECTOR edge2 = v2 - v0;
+	XMVECTOR normal = XMVector3Normalize(XMVector3Cross(edge1, edge2));
+
+	// 구와 삼각형 평면 간 거리 계산
+	XMVECTOR planePoint = v0;
+	float distance = XMVectorGetX(XMVector3Dot(sphereCenter - planePoint, normal));
+
+	// 구가 삼각형 평면에 충분히 가까운 경우
+	if (fabs(distance) <= sphereRadius)
+	{
+		// 구 중심의 평면 투영 지점
+		XMVECTOR projectedPoint = sphereCenter - normal * distance;
+
+		// 투영 지점이 삼각형 내부에 있는지 확인
+		XMVECTOR u = v1 - v0;
+		XMVECTOR v = v2 - v0;
+		XMVECTOR w = projectedPoint - v0;
+
+		float uu = XMVectorGetX(XMVector3Dot(u, u));
+		float uv = XMVectorGetX(XMVector3Dot(u, v));
+		float vv = XMVectorGetX(XMVector3Dot(v, v));
+		float wu = XMVectorGetX(XMVector3Dot(w, u));
+		float wv = XMVectorGetX(XMVector3Dot(w, v));
+		float d = uv * uv - uu * vv;
+
+		float s = (uv * wv - vv * wu) / d;
+		float t = (uv * wu - uu * wv) / d;
+
+		// 투영 지점이 삼각형 내부에 있는지 확인 (바리센트릭 좌표)
+		if (s >= 0.0f && t >= 0.0f && (s + t) <= 1.0f)
+		{
+			XMStoreFloat3(&outNormal, normal);
+			outDepth = sphereRadius - fabs(distance);
+			return true;
+		}
+
+		// 삼각형 변과의 충돌 확인
+		XMVECTOR closestPoint;
+		float minDistance = FLT_MAX;
+		XMFLOAT3 closestNormal = XMFLOAT3(0, 0, 0);
+
+		// 삼각형의 각 변에 대해 가장 가까운 점 계산
+		XMVECTOR edges[3] = { v0, v1, v2 };
+		XMVECTOR nextEdges[3] = { v1, v2, v0 };
+		for (int i = 0; i < 3; ++i)
+		{
+			XMVECTOR edge = nextEdges[i] - edges[i];
+			float t = XMVectorGetX(XMVector3Dot(sphereCenter - edges[i], edge)) / XMVectorGetX(XMVector3Dot(edge, edge));
+			t = std::max<float>(0.0f, std::min<float>(1.0f, t));
+			XMVECTOR point = edges[i] + t * edge;
+			float dist = XMVectorGetX(XMVector3Length(sphereCenter - point));
+			if (dist < minDistance)
+			{
+				minDistance = dist;
+				closestPoint = point;
+				XMStoreFloat3(&closestNormal, XMVector3Normalize(sphereCenter - point));
+			}
+		}
+
+		if (minDistance <= sphereRadius)
+		{
+			outNormal = closestNormal;
+			outDepth = sphereRadius - minDistance;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObject>>& mapObjects, const std::vector<std::unique_ptr<CSkinningObject>>& characters)
 {
 	auto& meshes = m_pResourceManager->getMeshList();
@@ -980,26 +1060,55 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 	for (const auto& character : characters) {
 		std::vector<CollisionInfo> collisions;
 
-		for (const auto& mapObj : mapObjects) {
+		for (const auto& mapObj : mapObjects)
+		{
 			int meshIndex = mapObj->getMeshIndex();
 			if (meshIndex == -1 || meshIndex >= meshes.size()) continue;
 
 			auto& mesh = meshes[meshIndex];
-			if (!mesh->getHasVertex() || !mesh->getHasBoundingBox()) continue;
+			if (!mesh->getHasVertex() || !mesh->getHasBoundingBox() || !mesh->getHasSubmesh()) continue;
 
 			BoundingOrientedBox mapOBB;
 			mesh->getOBB().Transform(mapOBB, XMLoadFloat4x4(&mapObj->getWorldMatrix()));
 
 			float meshHeight = mapOBB.Extents.y * 2.0f;
 
-			for (const auto& bone : character->getObjects()) {
-				if (bone->getBoundingInfo() & 0x1100) { // Sphere
+			for (const auto& bone : character->getObjects())
+			{
+				if (bone->getBoundingInfo() & 0x1100) // Sphere
+				{
 					BoundingSphere boneSphere = bone->getObjectSphere();
 					boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
-					if (mapOBB.Intersects(boneSphere)) {
-						XMFLOAT3 norm = CalculateCollisionNormal(mapOBB, boneSphere);
-						float depth = CalculateDepth(mapOBB, boneSphere);
-						collisions.push_back({ norm, depth, meshHeight });
+
+					if (mapOBB.Intersects(boneSphere))
+					{
+						// OBB 충돌이 감지된 경우, 삼각형-구 충돌 테스트 수행
+						auto vertices = mesh->getVertices();
+						auto indices = mesh->getIndices(0); // 단일 서브메시 가정
+
+						for (size_t i = 0; i < indices.size(); i += 3)
+						{
+							XMFLOAT3 tri[3] = {
+								vertices[indices[i]],
+								vertices[indices[i + 1]],
+								vertices[indices[i + 2]]
+							};
+							// 월드 변환 적용
+							XMMATRIX worldMatrix = XMLoadFloat4x4(&mapObj->getWorldMatrix());
+							for (int j = 0; j < 3; ++j)
+							{
+								XMVECTOR vertex = XMLoadFloat3(&tri[j]);
+								vertex = XMVector3Transform(vertex, worldMatrix);
+								XMStoreFloat3(&tri[j], vertex);
+							}
+
+							XMFLOAT3 normal;
+							float depth;
+							if (CheckTriangleSphereCollision(tri, boneSphere, normal, depth))
+							{
+								collisions.push_back({ normal, depth, meshHeight });
+							}
+						}
 					}
 				}
 			}

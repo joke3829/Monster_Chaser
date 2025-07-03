@@ -123,6 +123,8 @@ public:
 	XMFLOAT3 CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //법선 벡터 구하기
 	float CalculateDepth(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //침투 깊이 구하기
 
+	bool CheckTriangleSphereCollision(const XMFLOAT3* tri, const BoundingSphere& sphere, XMFLOAT3& outNormal, float& outDepth);
+
 	void CreateRootSignature();
 	void CreateComputeRootSignature();
 	void CreateComputeShader();
