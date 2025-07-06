@@ -59,12 +59,12 @@ void C_Socket::SendCreateUser(const char* UserID, const char* Userpassword, cons
 {
 }
 
-void C_Socket::SendEnterRoom(const short RoomNum)
+void C_Socket::SendEnterRoom(char RoomNum)
 {
 	cs_packet_enter_room p;
 	p.size = sizeof(p);
 	p.type = C2S_P_ENTER_ROOM;
-	p.room_number = (char)RoomNum;
+	p.room_number = RoomNum;
 	Client.send_packet(&p);
 }
 
@@ -97,6 +97,8 @@ void C_Socket::SendMovePacket(const float& Time, const UINT State)
 	Client.send_packet(&mp);
 
 }
+
+
 
 
 
