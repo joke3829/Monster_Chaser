@@ -189,6 +189,61 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 		break;
 	}
 }
+//void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
+//{
+//	switch (nMessage) {
+//	case WM_LBUTTONDOWN: {
+//		int mx = LOWORD(lParam);
+//		int my = HIWORD(lParam);
+//
+//		switch (g_state) {
+//		case Title:
+//			g_state = RoomSelect;
+//			Client.SendBroadCastRoom();
+//			break;
+//		case RoomSelect:			
+//			for (int i = 0; i < 10; ++i) {
+//				int j = i % 2;
+//				if (j == 0) {
+//					int x1 = 20, x2 = 460;
+//					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
+//					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
+//						if (userPerRoom[i] < 3) {
+//							local_uid = userPerRoom[i]++;
+//							currentRoom = i;				
+//							Client.SendEnterRoom(currentRoom);
+//							break;
+//						}
+//					}
+//				}
+//				else {
+//					int x1 = 500, x2 = 940;
+//					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
+//					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
+//						if (userPerRoom[i] < 3) {
+//							local_uid = userPerRoom[i]++;
+//							currentRoom = i;
+//							Client.SendEnterRoom(currentRoom);
+//							break;
+//						}
+//					}
+//				}
+//			}
+//			
+//			break;
+//		case InRoom:
+//			break;
+//		}
+//		break;
+//	}
+//	case WM_LBUTTONUP: {
+//		break;
+//	}
+//	case WM_MOUSEMOVE: {
+//		break;
+//	}
+//	}
+//}
 void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessage) {
@@ -199,9 +254,8 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 		switch (g_state) {
 		case Title:
 			g_state = RoomSelect;
-			Client.SendBroadCastRoom();
 			break;
-		case RoomSelect:			
+		case RoomSelect:
 			for (int i = 0; i < 10; ++i) {
 				int j = i % 2;
 				if (j == 0) {
@@ -210,8 +264,8 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
-							currentRoom = i;				
-							Client.SendEnterRoom(currentRoom);
+							currentRoom = i;
+							g_state = InRoom;
 							break;
 						}
 					}
@@ -223,15 +277,40 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;
-							Client.SendEnterRoom(currentRoom);
+							g_state = InRoom;
 							break;
 						}
 					}
 				}
 			}
-			
 			break;
 		case InRoom:
+			if (mx >= 0 && mx < 960) {
+				g_state = SelectC;
+				prevJob = userJob[local_uid];
+			}
+			break;
+		case SelectC:
+			if (mx >= 0 && mx < 960) {
+				if (my >= 400) {
+					userJob[local_uid] = prevJob;
+					g_state = InRoom;
+				}
+				else {
+					--userJob[local_uid];
+					if (userJob[local_uid] < 1)
+						userJob[local_uid] = 3;
+				}
+			}
+			else {
+				if (my >= 400)
+					g_state = InRoom;
+				else {
+					++userJob[local_uid];
+					if (userJob[local_uid] > 3)
+						userJob[local_uid] = 1;
+				}
+			}
 			break;
 		}
 		break;

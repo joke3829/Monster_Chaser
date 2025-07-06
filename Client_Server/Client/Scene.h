@@ -79,6 +79,9 @@ protected:
 	std::array<bool, 3>						userReadyState{};
 	short									readyUIIndex{};
 	short									backUIIndex{};
+
+	short prevJob{};
+	short CUIindex{};
 };
 
 template<typename T>

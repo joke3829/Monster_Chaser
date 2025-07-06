@@ -71,7 +71,7 @@ enum Character :char {
 	Wizard,
 	Priest
 };
-enum TitleState { Title, RoomSelect, InRoom, GoLoading };
+enum TitleState { Title, RoomSelect, InRoom, GoLoading, SelectC};
 //========================================================================================
 
 // 상수 정의 ===========================================================================
