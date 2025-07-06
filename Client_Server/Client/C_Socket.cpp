@@ -59,12 +59,22 @@ void C_Socket::SendCreateUser(const char* UserID, const char* Userpassword, cons
 {
 }
 
-void C_Socket::SendEnterRoom(char RoomNum)
+void C_Socket::SendEnterRoom(const short RoomNum)
 {
 	cs_packet_enter_room p;
 	p.size = sizeof(p);
 	p.type = C2S_P_ENTER_ROOM;
-	p.room_number = RoomNum;
+	p.room_number = static_cast<char>(RoomNum);
+	Client.send_packet(&p);
+}
+
+void C_Socket::SendPickCharacter(const short RoomNum,const short Job)
+{
+	cs_packet_pickcharacter p;
+	p.size = sizeof(p);
+	p.type = C2S_P_PICKCHARACTER;
+	p.room_number = static_cast<char>(RoomNum);
+	p.C_type = static_cast<Character>(Job);
 	Client.send_packet(&p);
 }
 
