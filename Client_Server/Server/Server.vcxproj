@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Character.h" />
+    <ClInclude Include="ITEM.h" />
     <ClInclude Include="Monster.h" />
     <ClInclude Include="Network.h" />
     <ClInclude Include="protocol.h" />
@@ -160,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Character.cpp" />
+    <ClCompile Include="ITEM.cpp" />
     <ClCompile Include="Monster.cpp" />
     <ClCompile Include="Network.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>

@@ -59,7 +59,7 @@ void SESSION::process_packet(char* p) {
 
 
 		if (g_server.rooms[room_Num].IsAddPlayer())			//id 값이 맴버 변수에 들어감 
-		{		//여기서 락을 안해주면 컨텍스트 스위칭 일어나서 local_id값과 Room에 있는 인덱스 번호가 안맞을 수 있다?
+		{		
 			local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
 			g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
 
@@ -80,10 +80,10 @@ void SESSION::process_packet(char* p) {
 			g_server.users[id]->do_send(&sp);
 
 
-		// 2. 신규 클라에게 기존 유저들의 존재 알림
+		
+		// 기존 유저들의 room 입장 정보 전달
 		for (int existing_id : g_server.rooms[room_num].id) {
-			if (existing_id == g_server.rooms[room_num].id.back())
-				continue;
+			if (existing_id == m_uniqueNo) continue;  // 나 자신은 제외
 
 			sc_packet_select_room sp;
 			sp.size = sizeof(sp);
@@ -91,8 +91,19 @@ void SESSION::process_packet(char* p) {
 			sp.Local_id = g_server.users[existing_id]->local_id;
 			sp.room_number = (char)room_num;
 
-			g_server.users[g_server.rooms[room_num].id.back()]->do_send(&sp);
+			g_server.users[m_uniqueNo]->do_send(&sp);  // 나에게 전송 (기존 유저 정보를)
 		}
+
+		// 기존 유저들의 캐릭터 선택 정보 전달
+		for (const auto& [existing_id, char_type] : g_server.rooms[room_num].selected_characters) {
+			sc_packet_pickcharacter cp;
+			cp.size = sizeof(cp);
+			cp.type = S2C_P_PICKCHARACTER;
+			cp.C_type = char_type;
+
+			g_server.users[m_uniqueNo]->do_send(&cp);  // 나에게 전송
+		}
+
 
 
 		sc_packet_room_info rp;
@@ -106,6 +117,26 @@ void SESSION::process_packet(char* p) {
 
 
 		std::cout << "[클라이언트 " << m_uniqueNo << "]이 " << (int)room_num << "번 방에 입장했습니다." << std::endl;
+		break;
+	}
+	case C2S_P_PICKCHARACTER:
+	{
+		cs_packet_pickcharacter* pkt = reinterpret_cast<cs_packet_pickcharacter*>(p);
+
+		Character Character_type = pkt->C_type;
+		int room_num = static_cast<int>(pkt->room_number);
+		g_server.rooms[room_num].selected_characters[m_uniqueNo] = Character_type;
+
+		lock_guard<mutex> lock(g_server.rooms[room_num].RoomMutex);
+
+		cs_packet_pickcharacter cp;
+		cp.size = sizeof(cp);
+		cp.type = S2C_P_PICKCHARACTER;
+		cp.C_type = Character_type;
+
+		for (auto& id : g_server.rooms[room_num].id)
+			g_server.users[id]->do_send(&cp);
+		
 		break;
 	}
 	case C2S_P_GetREADY: {
@@ -203,7 +234,7 @@ void SESSION::process_packet(char* p) {
 		sc_packet_move mp;
 		mp.size = sizeof(mp);
 		mp.type = S2C_P_MOVE;
-		mp.Local_id = this->local_id;
+		mp.Local_id =g_server.users[m_uniqueNo]->local_id;
 		mp.pos = m_pos;
 		mp.time = time;
 		mp.state = state;
