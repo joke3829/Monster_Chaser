@@ -419,7 +419,7 @@ Mesh::Mesh(XMFLOAT3& center, float radius, std::string meshName)
 	m_vSubMeshes.emplace_back(tempBuffer);
 }
 
-Mesh::Mesh(XMFLOAT3& center, float width, float height)
+Mesh::Mesh(XMFLOAT3& center, float width, float height, short arrow)
 {
 	//float hw = width / 2;
 	//float hh = height / 2;
@@ -429,10 +429,33 @@ Mesh::Mesh(XMFLOAT3& center, float width, float height)
 	pos[2] = XMFLOAT3(center.x + hw, center.y + hh, 0.0f);
 	pos[3] = XMFLOAT3(center.x - hw, center.y + hh, 0.0f);*/
 
-	pos[0] = XMFLOAT3(0.0f, -height, 0.0f);
-	pos[1] = XMFLOAT3(width, -height, 0.0f);
-	pos[2] = XMFLOAT3(width, 0.0f, 0.0f);
-	pos[3] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	switch (arrow) {
+	case MESH_PLANE_1QUADRANT:
+		pos[0] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		pos[1] = XMFLOAT3(width, 0.0f, 0.0f);
+		pos[2] = XMFLOAT3(width, height, 0.0f);
+		pos[3] = XMFLOAT3(0.0f, height, 0.0f);
+		break;
+	case MESH_PLANE_2QUADRANT:
+		pos[0] = XMFLOAT3(-width, 0.0f, 0.0f);
+		pos[1] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		pos[2] = XMFLOAT3(0.0f, height, 0.0f);
+		pos[3] = XMFLOAT3(-width, height, 0.0f);
+		break;
+	case MESH_PLANE_3QUADRANT:
+		pos[0] = XMFLOAT3(-width, -height, 0.0f);
+		pos[1] = XMFLOAT3(0.0f, -height, 0.0f);
+		pos[2] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		pos[3] = XMFLOAT3(-width, 0.0f, 0.0f);
+		break;
+	case MESH_PLANE_4QUADRANT:
+	default:
+		pos[0] = XMFLOAT3(0.0f, -height, 0.0f);
+		pos[1] = XMFLOAT3(width, -height, 0.0f);
+		pos[2] = XMFLOAT3(width, 0.0f, 0.0f);
+		pos[3] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		break;
+	}
 
 	m_bHasVertex = true;
 	m_nVertexCount = 4;
