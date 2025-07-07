@@ -84,8 +84,8 @@ public:
 	UINT getSubMeshCount() const;
 	
 	std::vector<XMFLOAT2>& getTex0() { return m_vTex0; }
-	std::vector<XMFLOAT3>& getVertices() const;
-	std::vector<UINT> getIndices(UINT subMeshIndex) const;
+	std::vector<XMFLOAT3> getPositions() const { return m_vPositions; }
+	std::vector<UINT> getIndices() const { return m_vIndices; }
 	void setSkinning(bool bSkinning) { m_bSkinningMesh = bSkinning; }
 protected:
 private:
@@ -129,4 +129,42 @@ private:
 	bool m_bHasSubMeshes = false;
 
 	bool m_bSkinningMesh = false;
+
+	std::vector<XMFLOAT3> m_vPositions;
+	std::vector<UINT> m_vIndexs;
+};
+
+// ===============================================================================================
+
+struct BVHNode {
+	BoundingBox aabb;
+	std::vector<size_t> triangleIndices;
+	std::unique_ptr<BVHNode> left;
+	std::unique_ptr<BVHNode> right;
+
+	bool IsLeaf() const { return !left && !right; }
+};
+
+class MeshCollider {
+public:
+	MeshCollider(Mesh& mesh);
+
+	bool CheckCollision(const MeshCollider& other) const;
+
+	void BuildBVH();
+	std::unique_ptr<BVHNode> BuildBVHNode(const std::vector<size_t>& triangleIndices, size_t start, size_t end);
+	void GetTriangleCentroid(size_t triangleIdx, XMFLOAT3& centroid) const;
+	bool BVHCollisionTest(const BVHNode* node1, const BVHNode* node2) const;
+	bool TriangleIntersects(const XMFLOAT3& v0, const XMFLOAT3& v1, const XMFLOAT3& v2, const XMFLOAT3& u0, const XMFLOAT3& u1, const XMFLOAT3& u2) const;
+
+	const std::vector<XMFLOAT3>& getPositions() const { return m_vPositions; }
+	const std::vector<UINT>& getIndices() const { return m_vIndices; }
+	const BoundingOrientedBox& getOBB() const { return m_OBB; }
+	const std::string& getName() const { return m_MeshName; }
+private:
+	std::string m_MeshName;
+	std::vector<XMFLOAT3> m_vPositions;
+	std::vector<UINT> m_vIndices;
+	BoundingOrientedBox m_OBB;
+	std::unique_ptr<BVHNode> m_bvhRoot; //root node
 };

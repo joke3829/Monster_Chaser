@@ -522,6 +522,9 @@ void Mesh::GetPositionFromFile(std::ifstream& inFile)
 	if (m_nVertexCount > 0) {
 		m_bHasVertex = true;
 
+		m_vPositions.resize(m_nVertexCount);
+		inFile.read((char*)m_vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
+
 		std::vector<XMFLOAT3> vPositions;
 		vPositions.assign(m_nVertexCount, XMFLOAT3(0.0, 0.0, 0.0));
 		inFile.read((char*)vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
@@ -709,6 +712,7 @@ void Mesh::MakeSubMesh(std::ifstream& inFile)
 
 	inFile.read((char*)&indices, sizeof(int));
 	m_vIndices.emplace_back(indices);
+	m_vIndexs.emplace_back(indices);
 
 	if (indices > 0) {
 		std::vector<UINT> index{};
@@ -818,38 +822,138 @@ UINT Mesh::getSubMeshCount() const
 	return m_nSubMeshesCount;
 }
 
-std::vector<XMFLOAT3>& Mesh::getVertices() const
-{
-	std::vector<XMFLOAT3> vertices(m_nVertexCount);
-	if (m_bHasVertex)
-	{
-		D3D12_RANGE readRange{ 0, 0 };
-		XMFLOAT3* mappedData = nullptr;
-		HRESULT hr = m_pd3dVertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
-		if (SUCCEEDED(hr))
-		{
-			memcpy(vertices.data(), mappedData, m_nVertexCount * sizeof(XMFLOAT3));
-			m_pd3dVertexBuffer->Unmap(0, nullptr);
-		}
-	}
-	return vertices;
-}
-
-std::vector<UINT> Mesh::getIndices(UINT subMeshIndex) const
-{
-	std::vector<UINT> indices(m_vIndices[subMeshIndex]);
-	if (m_bHasSubMeshes)
-	{
-		D3D12_RANGE readRange{ 0, 0 };
-		UINT* mappedData = nullptr;
-		HRESULT hr = m_vSubMeshes[subMeshIndex]->Map(0, &readRange, reinterpret_cast<void**>(&mappedData));
-		if (SUCCEEDED(hr))
-		{
-			memcpy(indices.data(), mappedData, m_vIndices[subMeshIndex] * sizeof(UINT));
-			m_vSubMeshes[subMeshIndex]->Unmap(0, nullptr);
-		}
-	}
-	return indices;
-}
-
 // ==========================================================================
+
+MeshCollider::MeshCollider(Mesh& mesh)
+{
+	m_vPositions = mesh.getPositions();
+	m_vIndices = mesh.getIndices();
+	m_OBB = mesh.getOBB();
+	m_MeshName = mesh.getName();
+	BuildBVH();
+}
+
+bool MeshCollider::CheckCollision(const MeshCollider& other) const
+{
+	// first, obb check
+	if (!m_OBB.Intersects(other.m_OBB)) {
+		return false;
+	}
+
+	// second bvh check
+	return BVHCollisionTest(m_bvhRoot.get(), other.m_bvhRoot.get());
+}
+
+void MeshCollider::BuildBVH()
+{
+	std::vector<size_t> triangleIndices(m_vIndices.size() / 3);
+	for (size_t i = 0; i < triangleIndices.size(); ++i) {
+		triangleIndices[i] = i * 3;
+	}
+
+	m_bvhRoot = BuildBVHNode(triangleIndices, 0, triangleIndices.size());
+}
+
+std::unique_ptr<BVHNode> MeshCollider::BuildBVHNode(const std::vector<size_t>& triangleIndices, size_t start, size_t end)
+{
+	auto node = std::make_unique<BVHNode>();
+
+	XMFLOAT3 minCorner(FLT_MAX, FLT_MAX, FLT_MAX);
+	XMFLOAT3 maxCorner(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	for (size_t i = start; i < end; ++i) {
+		size_t idx = triangleIndices[i];
+		for (int j = 0; j < 3; ++j) {
+			XMFLOAT3 v = m_vPositions[m_vIndices[idx + j]];
+			minCorner.x = std::min<float>(minCorner.x, v.x);
+			minCorner.y = std::min<float>(minCorner.y, v.y);
+			minCorner.z = std::min<float>(minCorner.z, v.z);
+			maxCorner.x = std::max<float>(maxCorner.x, v.x);
+			maxCorner.y = std::max<float>(maxCorner.y, v.y);
+			maxCorner.z = std::max<float>(maxCorner.z, v.z);
+		}
+	}
+	node->aabb.Center = XMFLOAT3(
+		(minCorner.x + maxCorner.x) * 0.5f,
+		(minCorner.y + maxCorner.y) * 0.5f,
+		(minCorner.z + maxCorner.z) * 0.5f
+	);
+	node->aabb.Extents = XMFLOAT3(
+		(maxCorner.x - minCorner.x) * 0.5f,
+		(maxCorner.y - minCorner.y) * 0.5f,
+		(maxCorner.z - minCorner.z) * 0.5f
+	);
+
+	const size_t maxTrianglesPerLeaf = 4;
+	if (end - start <= maxTrianglesPerLeaf) {
+		node->triangleIndices.assign(triangleIndices.begin() + start, triangleIndices.begin() + end);
+		return node;
+	}
+
+	float xRange = maxCorner.x - minCorner.x;
+	float yRange = maxCorner.y - minCorner.y;
+	float zRange = maxCorner.z - minCorner.z;
+	int splitAxis = (xRange >= yRange && xRange >= zRange) ? 0 : (yRange >= zRange) ? 1 : 2;
+
+	std::vector<size_t> sortedIndices(triangleIndices.begin() + start, triangleIndices.begin() + end);
+	std::sort(sortedIndices.begin(), sortedIndices.end(), [&](size_t a, size_t b) {
+		XMFLOAT3 centroidA, centroidB;
+		GetTriangleCentroid(a, centroidA);
+		GetTriangleCentroid(b, centroidB);
+		return splitAxis == 0 ? centroidA.x < centroidB.x :
+			splitAxis == 1 ? centroidA.y < centroidB.y :
+			centroidA.z < centroidB.z;
+		});
+
+	size_t mid = start + (end - start) / 2;
+	node->left = BuildBVHNode(sortedIndices, start, mid);
+	node->right = BuildBVHNode(sortedIndices, mid, end);
+
+	return node;
+}
+
+void MeshCollider::GetTriangleCentroid(size_t triangleIdx, XMFLOAT3& centroid) const
+{
+	XMFLOAT3 v0 = m_vPositions[m_vIndices[triangleIdx]];
+	XMFLOAT3 v1 = m_vPositions[m_vIndices[triangleIdx + 1]];
+	XMFLOAT3 v2 = m_vPositions[m_vIndices[triangleIdx + 2]];
+	centroid.x = (v0.x + v1.x + v2.x) / 3.0f;
+	centroid.y = (v0.y + v1.y + v2.y) / 3.0f;
+	centroid.z = (v0.z + v1.z + v2.z) / 3.0f;
+}
+
+bool MeshCollider::BVHCollisionTest(const BVHNode* node1, const BVHNode* node2) const
+{
+	if (!node1->aabb.Intersects(node2->aabb)) {
+		return false;
+	}
+
+	if (node1->IsLeaf() && node2->IsLeaf()) {
+		for (size_t i : node1->triangleIndices) {
+			XMFLOAT3 v0 = m_vPositions[m_vIndices[i]];
+			XMFLOAT3 v1 = m_vPositions[m_vIndices[i + 1]];
+			XMFLOAT3 v2 = m_vPositions[m_vIndices[i + 2]];
+			for (size_t j : node2->triangleIndices) {
+				XMFLOAT3 u0 = m_vPositions[m_vIndices[j]];
+				XMFLOAT3 u1 = m_vPositions[m_vIndices[j + 1]];
+				XMFLOAT3 u2 = m_vPositions[m_vIndices[j + 2]];
+				if (TriangleIntersects(v0, v1, v2, u0, u1, u2)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	if (!node1->IsLeaf()) {
+		return BVHCollisionTest(node1->left.get(), node2) || BVHCollisionTest(node1->right.get(), node2);
+	}
+	if (!node2->IsLeaf()) {
+		return BVHCollisionTest(node1, node2->left.get()) || BVHCollisionTest(node1, node2->right.get());
+	}
+	return false;
+}
+
+bool MeshCollider::TriangleIntersects(const XMFLOAT3& v0, const XMFLOAT3& v1, const XMFLOAT3& v2, const XMFLOAT3& u0, const XMFLOAT3& u1, const XMFLOAT3& u2) const
+{
+	return DirectX::TriangleTests::Intersects(XMLoadFloat3(&v0), XMLoadFloat3(&v1), XMLoadFloat3(&v2), XMLoadFloat3(&u0), XMLoadFloat3(&u1), XMLoadFloat3(&u2));
+}
