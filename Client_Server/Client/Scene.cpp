@@ -360,7 +360,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 		case InRoom:
 			if (mx >= 0 && mx < 960) {
 
-				m_nState = SelectC;			// change g_state
+				g_state = SelectC;			// change g_state
 				prevJob = userJob[local_uid];
 			}
 			break;
@@ -368,7 +368,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 			if (mx >= 0 && mx < 960) {
 				if (my >= 400) {
 					userJob[local_uid] = prevJob;
-					m_nState = InRoom;		// change g_state
+					g_state = InRoom;		// change g_state
 				}
 				else {
 					--userJob[local_uid];
@@ -379,7 +379,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 			else {
 				if (my >= 400)
 
-					m_nState = InRoom;		// change g_state
+					g_state = InRoom;		// change g_state
 
 				else {
 					++userJob[local_uid];
@@ -460,7 +460,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 	}
 	case SelectC: {		
 		m_vSelectCUIs[0]->Animation(fElapsedTime);
-		for (int i = CUIindex; i < CUIindex + 3; ++i) {
+		for (int i = CUIindex; i < CUIindex + Players.size(); ++i) {
 			if (userJob[local_uid] == i - CUIindex + 1)			// check
 				m_vSelectCUIs[i]->setRenderState(true);
 			else
