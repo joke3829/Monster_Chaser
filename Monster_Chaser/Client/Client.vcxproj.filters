@@ -76,6 +76,9 @@
     <Filter Include="Resource\Particle">
       <UniqueIdentifier>{04e562c9-2c52-48f6-945d-9c9c349cc050}</UniqueIdentifier>
     </Filter>
+    <Filter Include="TextManager">
+      <UniqueIdentifier>{5be32bef-f2a9-4b77-bc04-d66b009bbee7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -153,6 +156,9 @@
     <ClInclude Include="Particle.h">
       <Filter>Resource\Particle</Filter>
     </ClInclude>
+    <ClInclude Include="TextManager.h">
+      <Filter>TextManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -172,9 +178,6 @@
     </ClCompile>
     <ClCompile Include="AccelerationStructureManager.cpp">
       <Filter>AccelerationStructureManager</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene.cpp">
-      <Filter>Scene</Filter>
     </ClCompile>
     <ClCompile Include="ShaderBindingTableManager.cpp">
       <Filter>ShaderBindingTable</Filter>
@@ -220,6 +223,12 @@
     </ClCompile>
     <ClCompile Include="Particle.cpp">
       <Filter>Resource\Particle</Filter>
+    </ClCompile>
+    <ClCompile Include="TextManager.cpp">
+      <Filter>TextManager</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

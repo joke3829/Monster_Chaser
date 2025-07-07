@@ -5,6 +5,7 @@
 #include "ShaderBindingTableManager.h"
 #include "AccelerationStructureManager.h"
 #include "UIObject.h"
+#include "TextManager.h"
 #include "stdfxh.h"
 
 extern DXResources g_DxResource;
@@ -23,9 +24,11 @@ public:
 	virtual void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void ProcessInput(float fElapsedTime) {};
 
-	virtual void PrepareRender() {};
-	virtual void Render() {};
-	virtual void PostProcess() {};
+	virtual void PrepareRender() {}
+	virtual void Render() {}
+	virtual void PostProcess() {}
+
+	virtual void TextRender() {}
 
 	short getNextSceneNumber() const { return m_nNextScene; }
 
@@ -42,6 +45,7 @@ protected:
 	std::shared_ptr<CCamera>			m_pCamera{};
 
 	ComPtr<ID3D12Resource>					m_cameraCB{};
+	std::shared_ptr<CTextManager>			m_pTextManager{};
 	short m_nNextScene = -1;
 };
 
@@ -216,6 +220,7 @@ public:
 	void UpdateObject(float fElapsedTime);
 	void Render();
 	void PostProcess();
+	void TextRender();
 
 	void CreateParticleRS();
 	void CreateOnePath();

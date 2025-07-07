@@ -167,6 +167,7 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="TextManager.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Transform.h">
@@ -211,6 +212,7 @@
     </ClCompile>
     <ClCompile Include="ShaderBindingTableManager.cpp" />
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="TextManager.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Transform.cpp">

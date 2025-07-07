@@ -1,4 +1,4 @@
-#include "Scene.h"
+﻿#include "Scene.h"
 
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
@@ -2542,6 +2542,14 @@ void CRaytracingParticleTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pAccelerationStructureManager->InitBLAS();
 	m_pAccelerationStructureManager->InitTLAS();
 
+	// Text Setting ============================
+	m_pTextManager = std::make_shared<CTextManager>();
+	m_pTextManager->InitManager(m_pOutputBuffer);
+	m_pTextManager->AddText(L"던파 연단된 칼날", 25, D2D1::ColorF::Azure, L"언더테일 아시는구나! 혹시 모르시는분들에 대해 설명해드립니다 샌즈랑 언더테일의 세 가지 엔딩루트중 몰살엔딩의 최종보스로 진.짜.겁.나.어.렵.습.니.다 공격은 전부다 회피하고 만피가 92인데 샌즈의 공격의 1초당 60이 다는데다가 독뎀까지 추가로 붙어있습니다.. 하지만 이러면 절대로 게임을 깰 수 가없으니 제작진이 치명적인 약점을 만들었죠. 생즈의 치명적인 약점이 바로 지친다는 것입니다. 패턴들을 다 견디고나면 지쳐서 자신의 턴을 유지한채로 잠에듭니다. 하지만 잠이들었을때 창을옮겨서 공격을 시도하고 샌즈는 1차공격은 피하지만 그 후에 바로날아오는 2차 공격을 맞고 죽습니다.", 0, 0);
+	m_pTextManager->AddText(L"던파 연단된 칼날", 25, D2D1::ColorF::Blue, L"주거주거마", 0, 50);
+	m_pTextManager->AddText(L"던파 연단된 칼날", 25, D2D1::ColorF::Red, L"김도영은 2000원을 내놔라", 0, 500);
+
+	// ==========================================
 }
 
 void CRaytracingParticleTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -2850,6 +2858,11 @@ void CRaytracingParticleTestScene::PostProcess()
 	m_pResourceManager->PostProcess();
 }
 
+void CRaytracingParticleTestScene::TextRender()
+{
+	m_pTextManager->Render();
+}
+
 
 // =====================================================
 
@@ -2893,6 +2906,9 @@ void UITestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_HPbar.dds"));	// HPbar
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MPbar.dds"));	// MPbar
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MP.dds"));	// MP
+
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff0.dds"));	// buff0
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff1.dds"));	// buff1
 	{
 		uindex = m_vStatusUIs[0].size();			// 0 - hpbar
 		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex].get()));
@@ -2913,13 +2929,11 @@ void UITestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 		m_buffpixelHeight[0] = 100;
 		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
 		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
-		m_vStatusUIs[0][uindex]->setColor(0.0, 1.0, 1.0, 1.0);
 		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 4].get()));
 		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
-		m_vStatusUIs[0][uindex]->setColor(1.0, 0.5, 1.0, 1.0);
 		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
 		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
 		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
@@ -2960,13 +2974,12 @@ void UITestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	tindex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item0.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item1.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item2.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item3.dds"));
 
 	for (int i = 0; i < 4; ++i) {
 		uindex = m_vItemUIs.size();
-		if( i < 2)
 		m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
-		else
-			m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
 		m_vItemUIs[uindex]->setColor(0.2 * (i + 1), 0.3, 0.2 * (i + 1), 1.0);
 		m_vItemUIs[uindex]->setPositionInViewport(20, 525);
 		m_vItemUIs[uindex]->setRenderState(false);
@@ -2985,10 +2998,16 @@ void UITestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	mindex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 100, 100));
+
+	tindex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician0.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician1.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician2.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_MP_Less.dds"));
 	for (int i = 0; i < 3; ++i) {
 		uindex = m_vSkillUIs.size();
-		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
-		m_vSkillUIs[uindex]->setColor(1.0, 0.5, 0.5, 1.0);
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
+		//m_vSkillUIs[uindex]->setColor(1.0, 0.5, 0.5, 1.0);
 		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
 	}
 
@@ -3001,8 +3020,7 @@ void UITestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	for (int i = 0; i < 3; ++i) {
 		uindex = m_vSkillUIs.size();
-		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
-		m_vSkillUIs[uindex]->setColor(0.0, 1.0, 1.0, 0.5);
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
 		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
 	}
 

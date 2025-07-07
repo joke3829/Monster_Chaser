@@ -37,10 +37,18 @@
 #include <DirectXMath.h>
 #include <DirectXCollision.h>
 
+#include <d2d1_3.h>
+#include <d3d11on12.h>
+#include <dwrite.h>
+
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "Winmm.lib")
+
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "dwrite.lib")
+#pragma comment(lib, "d3d11.lib")
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
