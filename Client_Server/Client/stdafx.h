@@ -38,6 +38,7 @@
 
 #include <numeric>
 #include <cmath>
+#include <format>
 
 
 #include <d3d12.h>
@@ -49,12 +50,19 @@
 #include <DirectXMath.h>
 #include <DirectXCollision.h>
 
+#include <d2d1_3.h>
+#include <d3d11on12.h>
+#include <dwrite.h>
+
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "Winmm.lib")
 #pragma comment(lib, "ws2_32.lib")
 
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "dwrite.lib")
+#pragma comment(lib, "d3d11.lib")
 
 using namespace DirectX;
 using namespace std::chrono;
@@ -67,7 +75,7 @@ enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...
 	ALBEDO_COLOR, EMISSIVE_COLOR, SPECULAR_COLOR, GLOSSINESS
 };
 
-enum TitleState { Title, RoomSelect, InRoom, GoLoading };
+enum TitleState { Title, RoomSelect, InRoom, SelectC, GoLoading };
 //========================================================================================
 
 // 상수 정의 ===========================================================================

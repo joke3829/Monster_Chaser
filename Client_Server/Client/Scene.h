@@ -65,6 +65,7 @@ protected:
 	std::vector<std::unique_ptr<UIObject>>	m_vTitleUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vRoomSelectUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vInRoomUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vSelectCUIs;
 	// Title variables
 	float									wOpacity = 1.0f;
 	float									startTime{};
@@ -79,6 +80,9 @@ protected:
 	std::array<bool, 3>						userReadyState{};
 	short									readyUIIndex{};
 	short									backUIIndex{};
+
+	short prevJob{};
+	short CUIindex{};
 };
 
 template<typename T>
