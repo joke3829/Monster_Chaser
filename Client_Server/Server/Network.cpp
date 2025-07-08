@@ -100,7 +100,7 @@ void SESSION::process_packet(char* p) {
 			cp.size = sizeof(cp);
 			cp.type = S2C_P_PICKCHARACTER;
 			cp.C_type = char_type;
-
+			cp.Local_id = g_server.users[existing_id]->local_id;
 			g_server.users[m_uniqueNo]->do_send(&cp);  // 나에게 전송
 		}
 

@@ -369,6 +369,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 				if (my >= 400) {
 					userJob[local_uid] = prevJob;
 					g_state = InRoom;		// change g_state
+					Client.SendPickCharacter(currentRoom, userJob[local_uid]);
 				}
 				else {
 					--userJob[local_uid];
@@ -378,9 +379,10 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 			}
 			else {
 				if (my >= 400)
-
+				{
+					Client.SendPickCharacter(currentRoom, userJob[local_uid]);
 					g_state = InRoom;		// change g_state
-
+				}
 				else {
 					++userJob[local_uid];
 					if (userJob[local_uid] > 3)

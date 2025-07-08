@@ -26,15 +26,9 @@ public:
     Player() {}
     Player(int id) : ObjectManager(id) {}
 
-    void setRenderingObject(CSkinningObject* obj)
-    {
-        Client_Object = obj;
-    }
+    void setRenderingObject(CSkinningObject* obj){Client_Object = obj;}
 
-    void setAnimationManager(CAnimationManager* ani)
-    {
-        Client_AniManager = ani;
-    }
+    void setAnimationManager(CAnimationManager* ani){Client_AniManager = ani;}
 
     CSkinningObject* getRenderingObject() { return Client_Object; }
     CAnimationManager* getAnimationManager() { return Client_AniManager; }
@@ -50,7 +44,7 @@ public:
     bool getReady() const { return readyToStart; }
     void setReady(const bool& ready) { readyToStart = ready; }
    
-   
+    void setCharacterType(const Character t) { type = t; }
    
    
 private:
@@ -61,6 +55,7 @@ private:
     CSkinningObject* Client_Object = nullptr;
     CAnimationManager* Client_AniManager = nullptr;
     // 더 필요한 상태값들...
+    Character type;
 };
 
 class Monster : public ObjectManager {

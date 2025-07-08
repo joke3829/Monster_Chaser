@@ -68,7 +68,7 @@ void C_Socket::SendEnterRoom(const short RoomNum)
 	Client.send_packet(&p);
 }
 
-void C_Socket::SendPickCharacter(const short RoomNum,const short Job)
+void C_Socket::SendPickCharacter(const short RoomNum, const short Job)
 {
 	cs_packet_pickcharacter p;
 	p.size = sizeof(p);
@@ -149,7 +149,7 @@ void C_Socket::process_packet(char* ptr)
 			Player newPlayer(local_id); // 명시적 생성자 사용
 			Players.emplace(local_id, std::move(newPlayer));
 			Players.try_emplace(local_id, local_id);
-			
+
 			if (Client.get_id() == -1) {
 				Client.set_id(local_id);
 				std::cout << local_id << " 번쨰 플레이어 들어옴 2번째 " << std::endl;
@@ -163,6 +163,14 @@ void C_Socket::process_packet(char* ptr)
 		//Players[id]->room_players[room_num] = playersInRoom;	//현재 그 방에 몇명있는지 알려주기
 
 
+		break;
+	}
+	case S2C_P_PICKCHARACTER:
+	{
+		sc_packet_pickcharacter* p = reinterpret_cast<sc_packet_pickcharacter*>(ptr);
+		Character CT = p->C_type;
+		int loacl_id = p->Local_id;
+		Players[loacl_id].setCharacterType(CT);
 		break;
 	}
 	case S2C_P_SETREADY:
@@ -206,7 +214,7 @@ void C_Socket::process_packet(char* ptr)
 		XMFLOAT4X4 position = p->pos;
 
 		// write down to position bogan process~
-	
+
 		Players[local_id].getRenderingObject()->SetWolrdMatrix(position);
 		Players[local_id].getAnimationManager()->ChangeAnimation(state, true);
 		Players[local_id].getAnimationManager()->UpdateAnimation(time);
