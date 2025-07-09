@@ -1903,6 +1903,24 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// Create Normal Object & skinning Object Copy ========================================
 
+	for (auto& obj : normalObjects) {
+		int meshIndex = obj->getMeshIndex();
+		if (meshIndex != -1 && meshIndex < meshes.size()) {
+			m_colliders.emplace_back(std::make_unique<MeshCollider>(*meshes[meshIndex]));
+			m_colliders.back()->BuildBVH();
+		}
+	}
+
+	for (auto& character : skinned) {
+		for (auto& bone : character->getObjects()) {
+			int meshIndex = bone->getMeshIndex();
+			if (meshIndex != -1 && meshIndex < meshes.size()) {
+				m_colliders.emplace_back(std::make_unique<MeshCollider>(*meshes[meshIndex]));
+				m_colliders.back()->BuildBVH();
+			}
+		}
+	}
+
 	for (auto& o : skinned[1]->getObjects()) {
 		for (auto& ma : o->getMaterials())
 			ma.m_bHasEmissiveColor = false;
@@ -2348,6 +2366,34 @@ void CRaytracingWinterLandScene::PrepareTerrainTexture()
 	srvDesc.Texture2D.MipLevels = -1;
 	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
 	handle.ptr += increment;
+}
+
+void CRaytracingWinterLandScene::TestCollisions()
+{
+	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
+
+	for (size_t i = 0; i < skinned.size(); ++i) {
+		auto characterColliderIt = std::find_if(m_colliders.begin(), m_colliders.end(),
+			[&](const std::unique_ptr<MeshCollider>& collider) {
+				return collider->getName() == m_pResourceManager->getMeshList()[skinned[i]->getObjects()[0]->getMeshIndex()]->getName();
+			});
+
+		if (characterColliderIt == m_colliders.end()) continue;
+
+		MeshCollider* characterCollider = characterColliderIt->get();
+
+		characterCollider->BuildBVH();
+
+		for (size_t j = 0; j < m_colliders.size(); ++j) {
+			if (m_colliders[j].get() == characterCollider) continue;
+
+			if (characterCollider->CheckCollision(*m_colliders[j])) {
+				XMFLOAT3 characterPos = skinned[i]->getPosition();
+				characterPos.y += 0.1f;
+				skinned[i]->SetPosition(characterPos);
+			}
+		}
+	}
 }
 
 void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
