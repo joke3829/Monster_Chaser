@@ -1083,8 +1083,8 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 					if (mapOBB.Intersects(boneSphere))
 					{
 						// OBB 충돌이 감지된 경우, 삼각형-구 충돌 테스트 수행
-						auto vertices = mesh->getVertices();
-						auto indices = mesh->getIndices(0); // 단일 서브메시 가정
+						auto vertices = mesh->getPositions();
+						auto indices = mesh->getIndices();
 
 						for (size_t i = 0; i < indices.size(); i += 3)
 						{
@@ -1113,10 +1113,10 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 				}
 			}
 		}
-
 		// 다중 충돌 처리: 가장 큰 침투 깊이 선택
 		if (!collisions.empty()) {
-			auto maxCollision = std::max_element(collisions.begin(), collisions.end(), [](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
+			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),
+				[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
 
 			XMFLOAT3 norm = maxCollision->normal;
 			float depth = maxCollision->depth;
