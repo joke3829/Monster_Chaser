@@ -7,7 +7,6 @@ extern DXResources g_DxResource;
 struct ParticleVertex {
 	XMFLOAT3 position;
 	XMFLOAT3 direction;
-	float size;
 	float lifeTime;
 	UINT particleType;
 };
@@ -77,6 +76,7 @@ public:
 
 	ID3D12Resource* getVertexBuffer() { return m_BillboardVertex.Get(); }
 	ID3D12Resource* getTexCoordBuffer() { return m_TexCoord0Buffer.Get(); }
+	ID3D12Resource* getColorBuffer() { return m_ColorBuffer.Get(); }
 
 	ID3D12Resource* getBLAS() { return m_BLAS.Get(); }
 	ID3D12Resource* getMeshCB() { return m_MeshCB.Get(); }
@@ -108,9 +108,7 @@ protected:
 	// use 2 slot
 	ComPtr<ID3D12Resource> m_BillboardVertex{};
 	ComPtr<ID3D12Resource> m_TexCoord0Buffer{};
-
-	// if you need Color Buffer, use 3 slot
-	//ComPtr<ID3D12Resource> m_ColorBuffer{};
+	ComPtr<ID3D12Resource> m_ColorBuffer{};
 
 	ComPtr<ID3D12Resource> m_BLAS{};
 	ComPtr<ID3D12Resource> m_ScratchBuffer{};

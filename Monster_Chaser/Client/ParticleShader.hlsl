@@ -6,7 +6,6 @@ struct ParticleVertex
 {
     float3 position : POSITION;
     float3 direction : DIRECTION;
-    float size : SIZE;
     float lifeTime : LIFETIME;
     uint particleType : TYPE;
 };
@@ -19,6 +18,11 @@ struct BillBoardOutput1
 struct BillBoardOutput2
 {
     float2 uv : TEXCOORD;
+};
+
+struct BillBoardOutput3
+{
+    float4 color : COLOR;
 };
 
 struct CameraInfo
@@ -41,7 +45,7 @@ ParticleVertex VSMain(ParticleVertex input)
     return input;
 }
 
-[maxvertexcount(113)]
+[maxvertexcount(42)]
 void GSOnePath(point ParticleVertex input[1], inout PointStream<ParticleVertex> outStream)
 {
     ParticleVertex particle = input[0];
@@ -59,7 +63,6 @@ void GSOnePath(point ParticleVertex input[1], inout PointStream<ParticleVertex> 
                     output.lifeTime = 4.0f;
                     output.particleType = PARTICLE_FLAME;
                     output.position = particle.position;
-                    output.size = 0.0f;
                     outStream.Append(output);
                 }
                 else
@@ -72,7 +75,6 @@ void GSOnePath(point ParticleVertex input[1], inout PointStream<ParticleVertex> 
                 if (particle.lifeTime > 0.0f)
                 {
                     particle.position += (particle.direction * g_camera.fElapsedTime);
-                    particle.size += 2.0f * g_camera.fElapsedTime;
                     outStream.Append(particle);
                 }
             }
@@ -80,12 +82,26 @@ void GSOnePath(point ParticleVertex input[1], inout PointStream<ParticleVertex> 
     }
 }
 
-[maxvertexcount(204)]
-void GSTwoPath(point ParticleVertex input[1], inout PointStream<BillBoardOutput1> outStream1, inout PointStream<BillBoardOutput2> outStream2)
+[maxvertexcount(252)]
+void GSTwoPath(point ParticleVertex input[1], inout PointStream<BillBoardOutput1> outStream1, 
+inout PointStream<BillBoardOutput2> outStream2, inout PointStream<BillBoardOutput3> outStream3)
 {
     switch (input[0].particleType)
     {
-        case PARTICLE_EMITTER:
+        case PARTICLE_EMITTER:{
+                BillBoardOutput1 output1;
+                BillBoardOutput2 output2;
+                BillBoardOutput3 output3;
+                output1.position = float3(0.0, 0.0, 0.0);
+                output2.uv = float2(0.0, 0.0);
+                output3.color = float4(0.0, 0.0, 0.0, 1.0);
+                for (int i = 0; i < 6; ++i)
+                {
+                    outStream1.Append(output1);
+                    outStream2.Append(output2);
+                    outStream3.Append(output3);
+                }
+            }
             break;
         case PARTICLE_FLAME:{
                 float3 vUp = float3(0.0, 1.0, 0.0);
@@ -94,15 +110,19 @@ void GSTwoPath(point ParticleVertex input[1], inout PointStream<BillBoardOutput1
                 vLook = normalize(vLook);
                 float3 vRight = cross(vUp, vLook);
                 vUp = cross(vLook, vRight);
-                float4 Vertices[4];
-                float fHalf = input[0].size / 2;
-                Vertices[0] = float4(input[0].position + fHalf * vRight - fHalf * vUp, 1.0f);
-                Vertices[1] = float4(input[0].position + fHalf * vRight + fHalf * vUp, 1.0f);
-                Vertices[2] = float4(input[0].position - fHalf * vRight - fHalf * vUp, 1.0f);
-                Vertices[3] = float4(input[0].position - fHalf * vRight + fHalf * vUp, 1.0f);
+                float3 Vertices[4];
+                float fHalf = 8.0f - (input[0].lifeTime * 2.0f);
+                Vertices[0] = input[0].position + fHalf * vRight - fHalf * vUp;
+                Vertices[1] = input[0].position + fHalf * vRight + fHalf * vUp;
+                Vertices[2] = input[0].position - fHalf * vRight - fHalf * vUp;
+                Vertices[3] = input[0].position - fHalf * vRight + fHalf * vUp;
                 float2 UVs[4] = { float2(0.0, 1.0), float2(0.0, 0.0), float2(1.0, 1.0), float2(1.0, 0.0) };
                 BillBoardOutput1 output1;
                 BillBoardOutput2 output2;
+                BillBoardOutput3 output3; 
+                output3.color = float4(0.0, 0.0, 0.0, 1.0);
+                for (int i = 0; i < 6; ++i)
+                    outStream3.Append(output3);
             
                 output1.position = Vertices[0];
                 output2.uv = UVs[0];

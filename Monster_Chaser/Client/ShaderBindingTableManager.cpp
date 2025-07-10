@@ -595,7 +595,7 @@ void CShaderBindingTableManager::CreateSBT()
 					// 정점
 					args.VertexBuffer = p->getVertexBuffer()->GetGPUVirtualAddress();
 					// 컬러
-					args.ColorsBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
+					args.ColorsBuffer = p->getColorBuffer()->GetGPUVirtualAddress();
 					// Tex0
 					args.TexCoord0Buffer = p->getTexCoordBuffer()->GetGPUVirtualAddress();
 					// Tex1

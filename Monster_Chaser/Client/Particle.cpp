@@ -5,7 +5,7 @@ constexpr unsigned int PARTICLE_FLAME = 1;
 
 CParticle::CParticle()
 {
-	m_nMaxVertex = 34;
+	m_nMaxVertex = 42;
 	m_nCurrentVertex = 1;
 	XMStoreFloat4x4(&m_WorldMatrix, XMMatrixIdentity());
 	BufferReady();
@@ -14,8 +14,8 @@ CParticle::CParticle()
 CParticle::CParticle(UINT maxVertex)
 	: m_nMaxVertex(maxVertex)
 {
-	if (m_nMaxVertex > 34)
-		m_nMaxVertex = 34;
+	if (m_nMaxVertex > 42)
+		m_nMaxVertex = 42;
 	m_nCurrentVertex = 1;
 	XMStoreFloat4x4(&m_WorldMatrix, XMMatrixIdentity());
 	BufferReady();
@@ -42,7 +42,7 @@ void CParticle::BufferReady()
 	void* tempData{};
 
 	m_VertexBuffer->Map(0, nullptr, &tempData);
-	ParticleVertex tempV = { XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(0.0, 1.0, 0.0), 0.0, 0.0, PARTICLE_EMITTER };
+	ParticleVertex tempV = { XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(0.0, 1.0, 0.0), 0.0, PARTICLE_EMITTER };
 	memcpy(tempData, &tempV, sizeof(tempV));
 	m_VertexBuffer->Unmap(0, nullptr);
 
@@ -116,7 +116,7 @@ void CRaytracingParticle::BufferReady()
 		nullptr, IID_PPV_ARGS(m_MeshCB.GetAddressOf()));
 
 	HasMesh meshInfo{};
-	meshInfo.bHasVertex = meshInfo.bHasTex0 = true;
+	meshInfo.bHasVertex = meshInfo.bHasTex0 = meshInfo.bHasColor = true; 
 	void* tempData{};
 	m_MeshCB->Map(0, nullptr, &tempData);
 	memcpy(tempData, &meshInfo, sizeof(HasMesh));
@@ -133,6 +133,10 @@ void CRaytracingParticle::BufferReady()
 	desc.Width = m_nMaxVertex * 6 * sizeof(XMFLOAT2);
 	device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_STREAM_OUT,
 		nullptr, IID_PPV_ARGS(m_TexCoord0Buffer.GetAddressOf()));
+
+	desc.Width = m_nMaxVertex * 6 * sizeof(XMFLOAT4);
+	device->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_STREAM_OUT,
+		nullptr, IID_PPV_ARGS(m_ColorBuffer.GetAddressOf()));
 
 	InitBLAS();
 }
@@ -205,7 +209,7 @@ void CRaytracingParticle::ReBuildBLAS()
 		.StartAddress = m_BillboardVertex->GetGPUVirtualAddress(),
 		.StrideInBytes = sizeof(float) * 3
 	};
-	desc.Triangles.VertexCount = (m_nCurrentVertex - 1) * 6;		// excluding Emitter(0)
+	desc.Triangles.VertexCount = m_nCurrentVertex * 6;
 	desc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
 	desc.Triangles.IndexBuffer = 0;
 	desc.Triangles.IndexCount = 0;
@@ -316,15 +320,18 @@ void CRaytracingParticle::TwoPath()
 	barrier(m_FilledSizeBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_STREAM_OUT);
 
 
-	D3D12_STREAM_OUTPUT_BUFFER_VIEW soView[2]{};
+	D3D12_STREAM_OUTPUT_BUFFER_VIEW soView[3]{};
 	soView[0].BufferLocation = m_BillboardVertex->GetGPUVirtualAddress();
 	soView[0].SizeInBytes = m_nMaxVertex * 6 * sizeof(XMFLOAT3);
 
 	soView[1].BufferLocation = m_TexCoord0Buffer->GetGPUVirtualAddress();
 	soView[1].SizeInBytes = m_nMaxVertex * 6 * sizeof(XMFLOAT2);
 
+	soView[2].BufferLocation = m_ColorBuffer->GetGPUVirtualAddress();
+	soView[2].SizeInBytes = m_nMaxVertex * 6 * sizeof(XMFLOAT4);
+
 	cmdList->SetPipelineState(m_TwoPathPipeline.Get());
-	cmdList->SOSetTargets(0, 2, soView);
+	cmdList->SOSetTargets(0, 3, soView);
 
 	cmdList->DrawInstanced(m_nCurrentVertex, 1, 0, 0);
 

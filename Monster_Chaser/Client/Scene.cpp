@@ -2706,14 +2706,13 @@ void CRaytracingParticleTestScene::CreateOnePath()
 	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 	d3dPipelineState.pRootSignature = m_ParticleRS.Get();
 
-	D3D12_INPUT_ELEMENT_DESC ldesc[5]{};
+	D3D12_INPUT_ELEMENT_DESC ldesc[4]{};
 	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	ldesc[1] = { "DIRECTION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-	ldesc[2] = { "SIZE", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-	ldesc[3] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-	ldesc[4] = { "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[3] = { "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
-	d3dPipelineState.InputLayout.NumElements = 5;
+	d3dPipelineState.InputLayout.NumElements = 4;
 
 	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
 	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
@@ -2746,25 +2745,25 @@ void CRaytracingParticleTestScene::CreateOnePath()
 	d3dPipelineState.SampleDesc.Count = 1;
 	d3dPipelineState.SampleMask = UINT_MAX;
 
+	//ID3DBlob* errorb;
 	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	//OutputDebugStringA((char*)errorb->GetBufferPointer());
 	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
 	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
 
 	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GSOnePath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
-	///OutputDebugStringA((char*)errorb->GetBufferPointer());
 	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
 	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
 
-	D3D12_SO_DECLARATION_ENTRY soEntry[5]{};
+	D3D12_SO_DECLARATION_ENTRY soEntry[4]{};
 	soEntry[0] = { 0, "POSITION", 0, 0, 3, 0 };
 	soEntry[1] = { 0, "DIRECTION", 0, 0, 3, 0 };
-	soEntry[2] = { 0, "SIZE", 0, 0, 1, 0 };
-	soEntry[3] = { 0, "LIFETIME", 0, 0, 1, 0 };
-	soEntry[4] = { 0, "TYPE", 0, 0, 1, 0 };
+	soEntry[2] = { 0, "LIFETIME", 0, 0, 1, 0 };
+	soEntry[3] = { 0, "TYPE", 0, 0, 1, 0 };
 
 	UINT stride[1] = { sizeof(ParticleVertex) };
 
-	d3dPipelineState.StreamOutput.NumEntries = 5;
+	d3dPipelineState.StreamOutput.NumEntries = 4;
 	d3dPipelineState.StreamOutput.pSODeclaration = soEntry;
 	d3dPipelineState.StreamOutput.NumStrides = 1;
 	d3dPipelineState.StreamOutput.pBufferStrides = stride;
@@ -2786,14 +2785,13 @@ void CRaytracingParticleTestScene::CreateTwoPath()
 	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 	d3dPipelineState.pRootSignature = m_ParticleRS.Get();
 
-	D3D12_INPUT_ELEMENT_DESC ldesc[5]{};
+	D3D12_INPUT_ELEMENT_DESC ldesc[4]{};
 	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	ldesc[1] = { "DIRECTION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-	ldesc[2] = { "SIZE", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-	ldesc[3] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-	ldesc[4] = { "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[3] = { "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
-	d3dPipelineState.InputLayout.NumElements = 5;
+	d3dPipelineState.InputLayout.NumElements = 4;
 
 	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
 	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
@@ -2833,15 +2831,16 @@ void CRaytracingParticleTestScene::CreateTwoPath()
 	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
 	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
 
-	D3D12_SO_DECLARATION_ENTRY soEntry[2]{};
+	D3D12_SO_DECLARATION_ENTRY soEntry[3]{};
 	soEntry[0] = { 0, "POSITION", 0, 0, 3, 0 };
 	soEntry[1] = { 1, "TEXCOORD", 0, 0, 2, 1 };
+	soEntry[2] = { 2, "COLOR", 0, 0, 4, 2 };
 
-	UINT stride[2] = { sizeof(XMFLOAT3), sizeof(XMFLOAT2)};
+	UINT stride[3] = { sizeof(XMFLOAT3), sizeof(XMFLOAT2), sizeof(XMFLOAT4)};
 
-	d3dPipelineState.StreamOutput.NumEntries = 2;
+	d3dPipelineState.StreamOutput.NumEntries = 3;
 	d3dPipelineState.StreamOutput.pSODeclaration = soEntry;
-	d3dPipelineState.StreamOutput.NumStrides = 2;
+	d3dPipelineState.StreamOutput.NumStrides = 3;
 	d3dPipelineState.StreamOutput.pBufferStrides = stride;
 	d3dPipelineState.StreamOutput.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
 
