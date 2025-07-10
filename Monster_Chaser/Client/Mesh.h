@@ -85,7 +85,7 @@ public:
 	
 	std::vector<XMFLOAT2>& getTex0() { return m_vTex0; }
 	std::vector<XMFLOAT3> getPositions() const { return m_vPositions; }
-	std::vector<UINT> getIndices() const { return m_vIndices; }
+	std::vector<UINT> getIndices() const { return m_vIndexs; }
 	void setSkinning(bool bSkinning) { m_bSkinningMesh = bSkinning; }
 protected:
 private:
@@ -145,6 +145,29 @@ struct BVHNode {
 	bool IsLeaf() const { return !left && !right; }
 };
 
+class BVHTree {
+public:
+	std::unique_ptr<BVHNode> root;
+
+	BVHTree() : root(nullptr) {}
+	void query(const DirectX::BoundingSphere& sphere, std::vector<size_t>& candidateTriangles) const {
+		queryNode(root.get(), sphere, candidateTriangles);
+	}
+
+private:
+	void queryNode(BVHNode* node, const DirectX::BoundingSphere& sphere, std::vector<size_t>& candidateTriangles) const {
+		if (!node || !node->aabb.Intersects(sphere)) return;
+
+		if (node->IsLeaf()) {
+			candidateTriangles.insert(candidateTriangles.end(), node->triangleIndices.begin(), node->triangleIndices.end());
+		}
+		else {
+			queryNode(node->left.get(), sphere, candidateTriangles);
+			queryNode(node->right.get(), sphere, candidateTriangles);
+		}
+	}
+};
+
 class MeshCollider {
 public:
 	MeshCollider(Mesh& mesh);
@@ -155,16 +178,32 @@ public:
 	std::unique_ptr<BVHNode> BuildBVHNode(const std::vector<size_t>& triangleIndices, size_t start, size_t end);
 	void GetTriangleCentroid(size_t triangleIdx, XMFLOAT3& centroid) const;
 	bool BVHCollisionTest(const BVHNode* node1, const BVHNode* node2) const;
-	bool TriangleIntersects(const XMFLOAT3& v0, const XMFLOAT3& v1, const XMFLOAT3& v2, const XMFLOAT3& u0, const XMFLOAT3& u1, const XMFLOAT3& u2) const;
+	bool TriangleIntersects(const XMFLOAT3& v0, const XMFLOAT3& v1, const XMFLOAT3& v2,
+		const XMFLOAT3& u0, const XMFLOAT3& u1, const XMFLOAT3& u2) const;
+	void collectTriangleIndices(const BVHNode* node, std::vector<size_t>& indices) const;
 
-	const std::vector<XMFLOAT3>& getPositions() const { return m_vPositions; }
+	std::vector<size_t> getTriangleIndices() const {
+		std::vector<size_t> indices;
+		if (m_bvhRoot) {
+			collectTriangleIndices(m_bvhRoot.get(), indices);
+		}
+		return indices;
+	}
+
+	const std::vector<DirectX::XMFLOAT3>& getPositions() const { return m_vPositions; }
 	const std::vector<UINT>& getIndices() const { return m_vIndices; }
-	const BoundingOrientedBox& getOBB() const { return m_OBB; }
+	const DirectX::BoundingOrientedBox& getOBB() const { return m_OBB; }
 	const std::string& getName() const { return m_MeshName; }
+
+	const BVHTree& getBVHTree() const {
+		return m_bvhTree;
+	}
+
 private:
 	std::string m_MeshName;
-	std::vector<XMFLOAT3> m_vPositions;
+	std::vector<DirectX::XMFLOAT3> m_vPositions;
 	std::vector<UINT> m_vIndices;
-	BoundingOrientedBox m_OBB;
-	std::unique_ptr<BVHNode> m_bvhRoot; //root node
+	DirectX::BoundingOrientedBox m_OBB;
+	std::unique_ptr<BVHNode> m_bvhRoot;
+	BVHTree m_bvhTree;
 };

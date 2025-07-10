@@ -55,7 +55,7 @@ enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...
 // 상수 정의 ===========================================================================
 
 // 바운딩 박스를 렌더링 여부-> 0 = false , 1 = true
-constexpr short g_ShowBoundingBox = 0;
+constexpr short g_ShowBoundingBox = 1;
 
 constexpr unsigned short DEFINED_GAME_WINDOW_WIDTH = 1920;
 constexpr unsigned short DEFINED_GAME_WINDOW_HEIGHT = 1080;

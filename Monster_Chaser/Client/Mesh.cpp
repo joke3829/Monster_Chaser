@@ -525,9 +525,9 @@ void Mesh::GetPositionFromFile(std::ifstream& inFile)
 		m_vPositions.resize(m_nVertexCount);
 		inFile.read((char*)m_vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
 
-		std::vector<XMFLOAT3> vPositions;
-		vPositions.assign(m_nVertexCount, XMFLOAT3(0.0, 0.0, 0.0));
-		inFile.read((char*)vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
+		//std::vector<XMFLOAT3> vPositions;
+		//vPositions.assign(m_nVertexCount, XMFLOAT3(0.0, 0.0, 0.0));
+		//inFile.read((char*)vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
 
 		// vertex buffer ����
 		auto desc = BASIC_BUFFER_DESC;
@@ -538,7 +538,7 @@ void Mesh::GetPositionFromFile(std::ifstream& inFile)
 
 		void* ptr;
 		m_pd3dVertexBuffer->Map(0, nullptr, &ptr);
-		memcpy(ptr, vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
+		memcpy(ptr, m_vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
 		m_pd3dVertexBuffer->Unmap(0, nullptr);
 	}
 }
@@ -956,4 +956,16 @@ bool MeshCollider::BVHCollisionTest(const BVHNode* node1, const BVHNode* node2) 
 bool MeshCollider::TriangleIntersects(const XMFLOAT3& v0, const XMFLOAT3& v1, const XMFLOAT3& v2, const XMFLOAT3& u0, const XMFLOAT3& u1, const XMFLOAT3& u2) const
 {
 	return DirectX::TriangleTests::Intersects(XMLoadFloat3(&v0), XMLoadFloat3(&v1), XMLoadFloat3(&v2), XMLoadFloat3(&u0), XMLoadFloat3(&u1), XMLoadFloat3(&u2));
+}
+
+void MeshCollider::collectTriangleIndices(const BVHNode* node, std::vector<size_t>& indices) const
+{
+	if (!node) return;
+	if (node->IsLeaf()) {
+		indices.insert(indices.end(), node->triangleIndices.begin(), node->triangleIndices.end());
+	}
+	else {
+		collectTriangleIndices(node->left.get(), indices);
+		collectTriangleIndices(node->right.get(), indices);
+	}
 }

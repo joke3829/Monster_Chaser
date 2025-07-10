@@ -1882,7 +1882,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);
 	// Object File Read ========================================	! !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	//CreateMageCharacter();
@@ -1908,16 +1909,6 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		if (meshIndex != -1 && meshIndex < meshes.size()) {
 			m_colliders.emplace_back(std::make_unique<MeshCollider>(*meshes[meshIndex]));
 			m_colliders.back()->BuildBVH();
-		}
-	}
-
-	for (auto& character : skinned) {
-		for (auto& bone : character->getObjects()) {
-			int meshIndex = bone->getMeshIndex();
-			if (meshIndex != -1 && meshIndex < meshes.size()) {
-				m_colliders.emplace_back(std::make_unique<MeshCollider>(*meshes[meshIndex]));
-				m_colliders.back()->BuildBVH();
-			}
 		}
 	}
 
@@ -1982,7 +1973,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	//skinned[0]->setPreTransform(2.5f, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -998.0f));
+	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 30.0f, -998.0f));
 	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
 	skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	skinned[1]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
@@ -2370,27 +2361,79 @@ void CRaytracingWinterLandScene::PrepareTerrainTexture()
 
 void CRaytracingWinterLandScene::TestCollisions()
 {
-	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
+	auto& skinned = m_pResourceManager->getSkinningObjectList();
+	auto& meshes = m_pResourceManager->getMeshList();
 
-	for (size_t i = 0; i < skinned.size(); ++i) {
-		auto characterColliderIt = std::find_if(m_colliders.begin(), m_colliders.end(),
-			[&](const std::unique_ptr<MeshCollider>& collider) {
-				return collider->getName() == m_pResourceManager->getMeshList()[skinned[i]->getObjects()[0]->getMeshIndex()]->getName();
-			});
+	struct CollisionInfo {
+		XMFLOAT3 normal;
+		float depth;
+		float meshHeight;
+	};
 
-		if (characterColliderIt == m_colliders.end()) continue;
+	for (const auto& character : skinned) {
+		std::vector<CollisionInfo> collisions;
+		for (const auto& bone : character->getObjects()) {
+			if (bone->getBoundingInfo() & 0x1100) {
+				BoundingSphere boneSphere = bone->getObjectSphere();
+				boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
 
-		MeshCollider* characterCollider = characterColliderIt->get();
+				for (const auto& collider : m_colliders) {
+					BoundingOrientedBox mapOBB = collider->getOBB();
+					float meshHeight = mapOBB.Extents.y * 2.0f;
 
-		characterCollider->BuildBVH();
+					// Check if bone sphere intersects with collider's OBB
+					if (mapOBB.Intersects(boneSphere)) {
+						// Get the BVH tree for the collider
+						const auto& bvhTree = collider->getBVHTree();
+						std::vector<size_t> candidateTriangles;
 
-		for (size_t j = 0; j < m_colliders.size(); ++j) {
-			if (m_colliders[j].get() == characterCollider) continue;
+						// Query BVH tree for potential triangle intersections
+						bvhTree.query(boneSphere, candidateTriangles);
 
-			if (characterCollider->CheckCollision(*m_colliders[j])) {
-				XMFLOAT3 characterPos = skinned[i]->getPosition();
-				characterPos.y += 0.1f;
-				skinned[i]->SetPosition(characterPos);
+						const auto& positions = collider->getPositions();
+						const auto& indices = collider->getIndices();
+
+						// Check collision with each candidate triangle from BVH
+						for (size_t i : candidateTriangles) {
+							if (i + 2 >= indices.size()) continue;
+
+							XMFLOAT3 tri[3] = {
+								positions[indices[i]],
+								positions[indices[i + 1]],
+								positions[indices[i + 2]]
+							};
+
+							XMMATRIX worldMatrix = XMLoadFloat4x4(&bone->getWorldMatrix());
+							for (int j = 0; j < 3; ++j) {
+								XMVECTOR vertex = XMLoadFloat3(&tri[j]);
+								vertex = XMVector3Transform(vertex, worldMatrix);
+								XMStoreFloat3(&tri[j], vertex);
+							}
+
+							XMFLOAT3 normal;
+							float depth;
+							if (CheckTriangleSphereCollision(tri, boneSphere, normal, depth)) {
+								collisions.push_back({ normal, depth, meshHeight });
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (!collisions.empty()) {
+			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),
+				[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
+
+			XMFLOAT3 norm = maxCollision->normal;
+			float depth = maxCollision->depth;
+			float meshHeight = maxCollision->meshHeight;
+
+			XMVECTOR moveDir = XMLoadFloat3(&character->getMoveDirection());
+			XMVECTOR normal = XMLoadFloat3(&norm);
+			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
+			if (dotProduct < 0.0f) {
+				character->sliding(depth, norm, meshHeight);
 			}
 		}
 	}
