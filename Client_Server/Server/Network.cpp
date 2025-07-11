@@ -123,15 +123,15 @@ void SESSION::process_packet(char* p) {
 	{
 		cs_packet_pickcharacter* pkt = reinterpret_cast<cs_packet_pickcharacter*>(p);
 
-		Character Character_type = pkt->C_type;
+		short Character_type = pkt->C_type;
 		int room_num = static_cast<int>(pkt->room_number);
 		g_server.rooms[room_num].selected_characters[m_uniqueNo] = Character_type;
 
-		lock_guard<mutex> lock(g_server.rooms[room_num].RoomMutex);
 
-		cs_packet_pickcharacter cp;
+		sc_packet_pickcharacter cp;
 		cp.size = sizeof(cp);
 		cp.type = S2C_P_PICKCHARACTER;
+		cp.Local_id = local_id;
 		cp.C_type = Character_type;
 
 		for (auto& id : g_server.rooms[room_num].id)

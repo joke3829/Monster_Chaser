@@ -48,8 +48,8 @@ enum MoveAnimationState
 	RUN_RIGHT_DOWN = 20,
 };
 enum Character:char {
-	Warrior = 0,
-	Wizard,
+	Wizard=0,
+	Warrior,
 	Priest
 };
 

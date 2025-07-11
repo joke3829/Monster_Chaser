@@ -44,7 +44,8 @@ public:
     bool getReady() const { return readyToStart; }
     void setReady(const bool& ready) { readyToStart = ready; }
    
-    void setCharacterType(const Character t) { type = t; }
+    void setCharacterType(const short t) { type = t; }
+    short getCharacterType() { return type; }
    
    
 private:
@@ -55,7 +56,7 @@ private:
     CSkinningObject* Client_Object = nullptr;
     CAnimationManager* Client_AniManager = nullptr;
     // 더 필요한 상태값들...
-    Character type;
+    short type{}; //캐릭터 직업 타입
 };
 
 class Monster : public ObjectManager {

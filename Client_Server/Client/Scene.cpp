@@ -317,6 +317,7 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 //	}
 //	}
 //}
+
 void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	switch (nMessage) {
@@ -337,6 +338,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
+							Client.SendEnterRoom(currentRoom);
 							currentRoom = i;
 							g_state = InRoom;
 							break;
@@ -349,44 +351,55 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
+							Client.SendEnterRoom(currentRoom);
 							currentRoom = i;
 							g_state = InRoom;
+
 							break;
 						}
 					}
 				}
 			}
+			
 			break;
 		case InRoom:
 			if (mx >= 0 && mx < 960) {
 
 				g_state = SelectC;			// change g_state
-				prevJob = userJob[local_uid];
+				//prevJob = userJob[local_uid];
+				prevJob = Players[local_uid].getCharacterType();
+				//	Players[local_uid].getCharacterType()
+				//	Players[local_uid].setCharacterType(prevJob);
 			}
 			break;
 		case SelectC:
+			short currentJob = Players[local_uid].getCharacterType();
+
 			if (mx >= 0 && mx < 960) {
 				if (my >= 400) {
-					userJob[local_uid] = prevJob;
+					Players[local_uid].setCharacterType(prevJob);
 					g_state = InRoom;		// change g_state
-					Client.SendPickCharacter(currentRoom, userJob[local_uid]);
+					Client.SendPickCharacter(currentRoom, (int)Players[local_uid].getCharacterType());
 				}
 				else {
-					--userJob[local_uid];
-					if (userJob[local_uid] < 1)
-						userJob[local_uid] = 3;
+					int newJob = (int)currentJob - 1;
+					if (newJob < 1) 
+						newJob = 3;
+					Players[local_uid].setCharacterType(newJob);
+					
 				}
 			}
 			else {
 				if (my >= 400)
 				{
-					Client.SendPickCharacter(currentRoom, userJob[local_uid]);
+					Client.SendPickCharacter(currentRoom, (int)Players[local_uid].getCharacterType());
 					g_state = InRoom;		// change g_state
 				}
 				else {
-					++userJob[local_uid];
-					if (userJob[local_uid] > 3)
-						userJob[local_uid] = 1;
+					int newJob = (int)currentJob + 1;
+					if (newJob > 3) 
+						newJob = 1;
+					Players[local_uid].setCharacterType(newJob);
 				}
 			}
 			break;
@@ -430,8 +443,13 @@ void TitleScene::UpdateObject(float fElapsedTime)
 	case InRoom: {
 		m_vInRoomUIs[0]->Animation(fElapsedTime);
 		for (int i = 0; i < 3; ++i) {
-			if (i < userPerRoom[currentRoom]) {				
-				m_vInRoomUIs[backUIIndex + i]->setRenderState(true);
+			if (i < userPerRoom[currentRoom]) {	
+				for (int j = 0; j < 3; ++j) {
+					if(j == (int)Players[i].getCharacterType() - 1)
+						m_vInRoomUIs[backUIIndex + (i * 3) + j]->setRenderState(true);
+					else
+						m_vInRoomUIs[backUIIndex + (i * 3) + j]->setRenderState(false);
+				}
 				if(Players[i].getReady())
 					//userReadyState
 					m_vInRoomUIs[readyUIIndex + i]->setRenderState(true);		
@@ -441,7 +459,8 @@ void TitleScene::UpdateObject(float fElapsedTime)
 				}
 			}
 			else {
-				m_vInRoomUIs[backUIIndex + i]->setRenderState(false);
+				for (int j = 0; j < 3; ++j) 
+						m_vInRoomUIs[backUIIndex + (i * 3) + j]->setRenderState(false);
 				m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
 			}
 		}
@@ -462,8 +481,9 @@ void TitleScene::UpdateObject(float fElapsedTime)
 	}
 	case SelectC: {		
 		m_vSelectCUIs[0]->Animation(fElapsedTime);
-		for (int i = CUIindex; i < CUIindex + Players.size(); ++i) {
-			if (userJob[local_uid] == i - CUIindex + 1)			// check
+		int currentJob = (int)Players[local_uid].getCharacterType();
+		for (int i = CUIindex; i < CUIindex + 3; ++i) {
+			if (currentJob == i - CUIindex + 1)		//check
 				m_vSelectCUIs[i]->setRenderState(true);
 			else
 				m_vSelectCUIs[i]->setRenderState(false);
@@ -472,7 +492,6 @@ void TitleScene::UpdateObject(float fElapsedTime)
 	}
 	}
 }
-
 void TitleScene::CreateRootSignature()
 {
 	D3D12_DESCRIPTOR_RANGE tRange{};

@@ -75,11 +75,7 @@ enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...
 	ALBEDO_COLOR, EMISSIVE_COLOR, SPECULAR_COLOR, GLOSSINESS
 };
 
-enum Character :char {
-	Warrior = 0,
-	Wizard,
-	Priest
-};
+
 enum TitleState { Title, RoomSelect, InRoom, SelectC, GoLoading };
 
 //========================================================================================

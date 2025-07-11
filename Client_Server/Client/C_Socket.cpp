@@ -74,7 +74,7 @@ void C_Socket::SendPickCharacter(const short RoomNum, const short Job)
 	p.size = sizeof(p);
 	p.type = C2S_P_PICKCHARACTER;
 	p.room_number = static_cast<char>(RoomNum);
-	p.C_type = static_cast<Character>(Job);
+	p.C_type = Job;
 	Client.send_packet(&p);
 }
 
@@ -168,7 +168,7 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_PICKCHARACTER:
 	{
 		sc_packet_pickcharacter* p = reinterpret_cast<sc_packet_pickcharacter*>(ptr);
-		Character CT = p->C_type;
+		short CT = p->C_type;
 		int loacl_id = p->Local_id;
 		Players[loacl_id].setCharacterType(CT);
 		break;

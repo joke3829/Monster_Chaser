@@ -76,7 +76,7 @@ protected:
 	// InRoom variables
 	short									local_uid{};
 	short									currentRoom{};
-	std::array<short, 3>					userJob{ JOB_MAGE, JOB_MAGE, JOB_MAGE };
+	std::array<short, 3>				userJob{ JOB_MAGE, JOB_MAGE, JOB_MAGE };
 	std::array<bool, 3>						userReadyState{};
 	short									readyUIIndex{};
 	short									backUIIndex{};
