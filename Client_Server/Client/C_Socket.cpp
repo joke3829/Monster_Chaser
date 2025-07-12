@@ -139,25 +139,37 @@ void C_Socket::process_packet(char* ptr)
 		break;
 	}
 	case S2C_P_SELECT_ROOM: {
-
+		/*static bool aaa = false;
+		static bool ddd = false;
+		static std::vector<std::string> dbgStr;
+		assert((Players.size() == 0 || (aaa || ddd)) && "Players already exist");*/
 		sc_packet_select_room* p = reinterpret_cast<sc_packet_select_room*>(ptr);
 
 		int room_num = static_cast<int>(p->room_number);
 		int local_id = p->Local_id;
-		   if (!Players.contains(local_id)) {
-        Player newPlayer(local_id); // 명시적 생성자 사용
-        Players.emplace(local_id, std::move(newPlayer));
-        Players.try_emplace(local_id, local_id);
-    }
+		if (!Players.contains(local_id)) {
+			Player newPlayer(local_id); // 명시적 생성자 사용
+			Players.emplace(local_id, std::move(newPlayer));
 
-    //  is_self가 true일 때만 내 로컬 ID 설정
-    if (p->is_self && Client.get_id() == -1) {
-        Client.set_id(local_id);
-        g_state = InRoom;
-    }
+			//  is_self가 true일 때만 내 로컬 ID 설정
+			if (Client.get_id() == -1) {
+				//if (p->is_self) {
+				Client.set_id(local_id);
+				g_state = InRoom;
+				//}
+				/*	char bb[256] = { 0 };
+					sprintf(bb, "Local_id: %d, isSelf: %d", local_id, p->is_self);
+					dbgStr.emplace_back(bb);*/
+			}
+			/*	aaa = true;*/
+		}
+		/*else {
+				char bb[256] = { 0 };
+				sprintf(bb, "non scoped Local_id: %d, isSelf: %d", local_id, p->is_self);
+				dbgStr.emplace_back(bb);
+				ddd = true;
+		}*/
 
-		//Players[id]->setRoomNumber(room_num);
-		//Players[id]->room_players[room_num] = playersInRoom;	//현재 그 방에 몇명있는지 알려주기
 
 
 		break;

@@ -107,7 +107,7 @@ struct sc_packet_move {
 	UINT pingTime;
 };
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-constexpr char S2C_P_PICKCHARACTER = 58;
+constexpr char S2C_P_PICKCHARACTER = 8;
 struct sc_packet_pickcharacter {
 	unsigned char  size;
 	char  type;

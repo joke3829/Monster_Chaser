@@ -58,7 +58,7 @@ void SESSION::process_packet(char* p) {
 			std::cout << "이미 " << room_Num << "번 방에는 사람이 꽉 찼습니다" << std::endl;
 			break;
 		}
-
+		// 2번 1번 0번순으로 여기 실행 
 		local_id = g_server.rooms[room_Num].GetPlayerCount();  // Local_id 할당
 		g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
 		room_num = room_Num;

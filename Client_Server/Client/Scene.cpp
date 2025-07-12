@@ -340,7 +340,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;
 							Client.SendEnterRoom(currentRoom);
-							g_state = InRoom;
+							//g_state = InRoom;
 							break;
 						}
 					}
@@ -353,7 +353,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;
 							Client.SendEnterRoom(currentRoom);
-							g_state = InRoom;
+							//g_state = InRoom;
 
 							break;
 						}
@@ -444,6 +444,8 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		m_vInRoomUIs[0]->Animation(fElapsedTime);
 		for (int i = 0; i < 3; ++i) {
 			if (i < userPerRoom[currentRoom]) {	
+					if (!Players.contains(i))
+						continue;
 				for (int j = 0; j < 3; ++j) {
 					if(j == (int)Players[i].getCharacterType() - 1)
 						m_vInRoomUIs[backUIIndex + (i * 3) + j]->setRenderState(true);

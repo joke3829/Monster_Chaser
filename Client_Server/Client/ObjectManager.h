@@ -47,7 +47,7 @@ public:
     void setCharacterType(const short t) { type = t; }
     short getCharacterType() { return type; }
    
-   
+
 private:
    
     bool readyToStart = false;
@@ -57,6 +57,7 @@ private:
     CAnimationManager* Client_AniManager = nullptr;
     // 더 필요한 상태값들...
     short type{}; //캐릭터 직업 타입
+
 };
 
 class Monster : public ObjectManager {
