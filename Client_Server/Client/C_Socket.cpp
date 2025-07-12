@@ -144,20 +144,17 @@ void C_Socket::process_packet(char* ptr)
 
 		int room_num = static_cast<int>(p->room_number);
 		int local_id = p->Local_id;
-		if (!Players.contains(local_id)) {
-			std::cout << local_id << " 번쨰 플레이어 들어옴" << std::endl;
-			Player newPlayer(local_id); // 명시적 생성자 사용
-			Players.emplace(local_id, std::move(newPlayer));
-			Players.try_emplace(local_id, local_id);
+		   if (!Players.contains(local_id)) {
+        Player newPlayer(local_id); // 명시적 생성자 사용
+        Players.emplace(local_id, std::move(newPlayer));
+        Players.try_emplace(local_id, local_id);
+    }
 
-			if (Client.get_id() == -1) {
-				Client.set_id(local_id);
-				std::cout << local_id << " 번쨰 플레이어 들어옴 2번째 " << std::endl;
-				//userPerRoom[room_num]++;
-				g_state = InRoom;
-			}
-			//Players[local_id] = new Player(local_id);
-		}
+    //  is_self가 true일 때만 내 로컬 ID 설정
+    if (p->is_self && Client.get_id() == -1) {
+        Client.set_id(local_id);
+        g_state = InRoom;
+    }
 
 		//Players[id]->setRoomNumber(room_num);
 		//Players[id]->room_players[room_num] = playersInRoom;	//현재 그 방에 몇명있는지 알려주기

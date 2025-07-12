@@ -338,8 +338,8 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
-							Client.SendEnterRoom(currentRoom);
 							currentRoom = i;
+							Client.SendEnterRoom(currentRoom);
 							g_state = InRoom;
 							break;
 						}
@@ -351,8 +351,8 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
-							Client.SendEnterRoom(currentRoom);
 							currentRoom = i;
+							Client.SendEnterRoom(currentRoom);
 							g_state = InRoom;
 
 							break;
@@ -367,9 +367,9 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 
 				g_state = SelectC;			// change g_state
 				//prevJob = userJob[local_uid];
-				prevJob = Players[local_uid].getCharacterType();
 				//	Players[local_uid].getCharacterType()
 				//	Players[local_uid].setCharacterType(prevJob);
+				prevJob = Players[local_uid].getCharacterType();
 			}
 			break;
 		case SelectC:

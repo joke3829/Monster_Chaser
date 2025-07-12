@@ -50,75 +50,71 @@ void SESSION::process_packet(char* p) {
 		break;
 	}
 	case C2S_P_ENTER_ROOM: {
-
 		cs_packet_enter_room* pkt = reinterpret_cast<cs_packet_enter_room*>(p);
-
 		int room_Num = static_cast<int>(pkt->room_number);
-		bool is_ready = false;
 		lock_guard<mutex> lock(g_server.rooms[room_Num].RoomMutex);
 
-
-		if (g_server.rooms[room_Num].IsAddPlayer())			//id 값이 맴버 변수에 들어감 
-		{		
-			local_id = g_server.rooms[room_Num].GetPlayerCount();		//Assign Local_Id
-			g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
-
-		}
-		else
-		{
-			cout << "이미 " << room_Num << "번 방에는 사람이 꽉 찼습니다" << endl;
+		if (!g_server.rooms[room_Num].IsAddPlayer()) {
+			std::cout << "이미 " << room_Num << "번 방에는 사람이 꽉 찼습니다" << std::endl;
 			break;
 		}
-		sc_packet_select_room sp;
-		sp.size = sizeof(sp);
-		sp.type = S2C_P_SELECT_ROOM;
-		sp.Local_id = g_server.users[m_uniqueNo]->local_id;
-		sp.room_number = static_cast<char>(room_Num);
 
+		local_id = g_server.rooms[room_Num].GetPlayerCount();  // Local_id 할당
+		g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
 		room_num = room_Num;
-		for (auto& id : g_server.rooms[room_Num].id)
-			g_server.users[id]->do_send(&sp);
 
-
-		
-		// 기존 유저들의 room 입장 정보 전달
-		for (int existing_id : g_server.rooms[room_num].id) {
-			if (existing_id == m_uniqueNo) continue;  // 나 자신은 제외
-
+		// ?? 1. 현재 유저의 입장 정보를 모든 유저에게 전송
+		for (auto& id : g_server.rooms[room_Num].id) {
 			sc_packet_select_room sp;
 			sp.size = sizeof(sp);
 			sp.type = S2C_P_SELECT_ROOM;
-			sp.Local_id = g_server.users[existing_id]->local_id;
-			sp.room_number = (char)room_num;
+			sp.Local_id = local_id;
+			sp.room_number = static_cast<char>(room_Num);
+			sp.is_self = (id == m_uniqueNo);  // 자기 자신에게만 true
 
-			g_server.users[m_uniqueNo]->do_send(&sp);  // 나에게 전송 (기존 유저 정보를)
+			g_server.users[id]->do_send(&sp);
 		}
 
-		// 기존 유저들의 캐릭터 선택 정보 전달
+		// ?? 2. 기존 유저들의 존재 정보를 나에게만 전송
+		for (int existing_id : g_server.rooms[room_num].id) {
+			if (existing_id == m_uniqueNo) continue;
+
+			sc_packet_select_room sp_existing;
+			sp_existing.size = sizeof(sp_existing);
+			sp_existing.type = S2C_P_SELECT_ROOM;
+			sp_existing.Local_id = g_server.users[existing_id]->local_id;
+			sp_existing.room_number = static_cast<char>(room_num);
+			sp_existing.is_self = false;  // 무조건 false
+
+			g_server.users[m_uniqueNo]->do_send(&sp_existing);
+		}
+
+		// ?? 3. 기존 유저들의 캐릭터 선택 정보 전송
 		for (const auto& [existing_id, char_type] : g_server.rooms[room_num].selected_characters) {
 			sc_packet_pickcharacter cp;
 			cp.size = sizeof(cp);
 			cp.type = S2C_P_PICKCHARACTER;
 			cp.C_type = char_type;
 			cp.Local_id = g_server.users[existing_id]->local_id;
-			g_server.users[m_uniqueNo]->do_send(&cp);  // 나에게 전송
+
+			g_server.users[m_uniqueNo]->do_send(&cp);
 		}
 
-
-
+		// ?? 4. 방 전체 인원 정보 업데이트
 		sc_packet_room_info rp;
 		rp.size = sizeof(rp);
 		rp.type = S2C_P_UPDATEROOM;
-		for (int i = 0; i < g_server.rooms.size(); ++i) {
+		for (int i = 0; i < g_server.rooms.size(); ++i)
 			rp.room_info[i] = g_server.rooms[i].GetPlayerCount();
-		}
+
 		for (auto& player : g_server.users)
 			player.second->do_send(&rp);
 
-
-		std::cout << "[클라이언트 " << m_uniqueNo << "]이 " << (int)room_num << "번 방에 입장했습니다." << std::endl;
+		std::cout << "[로컬아이디 " << local_id << "을 가진 클라이언트 " << m_uniqueNo
+			<< "]이 " << (int)room_num << "번 방에 입장했습니다." << std::endl;
 		break;
 	}
+
 	case C2S_P_PICKCHARACTER:
 	{
 		cs_packet_pickcharacter* pkt = reinterpret_cast<cs_packet_pickcharacter*>(p);
@@ -158,7 +154,7 @@ void SESSION::process_packet(char* p) {
 		sc_packet_set_ready rp;
 		rp.size = sizeof(rp);
 		rp.type = S2C_P_SETREADY;
-		rp.Local_id = g_server.users[m_uniqueNo]->local_id;
+		rp.Local_id = local_id;
 		rp.room_number = static_cast<char>(room_num);
 		rp.is_ready = ready;
 		{
@@ -234,7 +230,7 @@ void SESSION::process_packet(char* p) {
 		sc_packet_move mp;
 		mp.size = sizeof(mp);
 		mp.type = S2C_P_MOVE;
-		mp.Local_id =g_server.users[m_uniqueNo]->local_id;
+		mp.Local_id =local_id;
 		mp.pos = m_pos;
 		mp.time = time;
 		mp.state = state;

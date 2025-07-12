@@ -58,9 +58,9 @@ constexpr char S2C_P_SELECT_ROOM = 3;
 struct sc_packet_select_room {			//방 번호 선택했을 때 
 	unsigned char size;
 	char type;
-	int Local_id;		//이제 필요없음
+	int Local_id;		
 	char room_number;
-
+	bool is_self; // 추가
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
