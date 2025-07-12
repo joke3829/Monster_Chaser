@@ -1886,8 +1886,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand2.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
-	//CreateMageCharacter();
-	CreateWarriorCharacter();
+	CreateMageCharacter();
+	//CreateWarriorCharacter();
 	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
@@ -1904,13 +1904,13 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// Create Normal Object & skinning Object Copy ========================================
 
-	for (auto& obj : normalObjects) {
-		int meshIndex = obj->getMeshIndex();
-		if (meshIndex != -1 && meshIndex < meshes.size()) {
-			m_colliders.emplace_back(std::make_unique<MeshCollider>(*meshes[meshIndex]));
-			m_colliders.back()->BuildBVH();
-		}
-	}
+	//for (auto& obj : normalObjects) {
+	//	int meshIndex = obj->getMeshIndex();
+	//	if (meshIndex != -1 && meshIndex < meshes.size()) {
+	//		m_colliders.emplace_back(std::make_unique<MeshCollider>(*meshes[meshIndex]));
+	//		m_colliders.back()->BuildBVH();
+	//	}
+	//}
 
 	for (auto& o : skinned[1]->getObjects()) {
 		for (auto& ma : o->getMaterials())
@@ -1921,7 +1921,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	UINT finalmesh = meshes.size();
 
 	// terrian
-	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
@@ -1954,7 +1954,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
 	}
 
-	PrepareTerrainTexture();*/
+	PrepareTerrainTexture();
 
 	// cubeMap Ready
 	m_nSkyboxIndex = textures.size();
@@ -2455,11 +2455,11 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
-	//m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
+	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
-		/*float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
+		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
 		if (EYE.z >= -500.0f) {
 			if (cHeight < 10.5f)
 				cHeight = 10.5f;
@@ -2467,7 +2467,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		if (EYE.y < cHeight + 0.5f) {
 			m_pCamera->UpdateViewMatrix(cHeight + 0.5f);
 		}
-		else*/
+		else
 		m_pCamera->UpdateViewMatrix();
 	}
 	else
@@ -2507,7 +2507,7 @@ void CRaytracingWinterLandScene::Render()
 	m_pResourceManager->SetLights();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[m_nSkyboxIndex]->getView()->GetGPUDescriptorHandleForHeapStart());
-	//g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
 	raydesc.Depth = 1;
