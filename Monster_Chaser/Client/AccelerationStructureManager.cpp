@@ -139,7 +139,6 @@ void CAccelerationStructureManager::UpdateScene(XMFLOAT3& cameraEye)
 
 	for (std::unique_ptr<CParticle>& particle : particles) {
 		CRaytracingParticle* p = dynamic_cast<CRaytracingParticle*>(particle.get());
-		BoundingOrientedBox wBox;
 		bool bIntersect = false;
 			BoundingSphere wSphere;
 			p->getBoundingSphere().Transform(wSphere, XMLoadFloat4x4(&p->getWorldMatrix()));

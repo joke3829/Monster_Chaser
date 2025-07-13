@@ -66,8 +66,9 @@ protected:
 };
 
 
-// No Light Particle's InstanceID -> 100
-// Default is 0
+// No Light Particle's InstanceID -> 100  xxxxxxxx
+// 
+// Default is 99
 
 class CRaytracingParticle : public CParticle {
 public:
@@ -86,7 +87,7 @@ public:
 	UINT getHitGroupIndex() { return m_nHitGroupIndex; }
 
 	void setMaterial(Material& material);
-	void setNotUseLightCalurate() { m_nInstanceID = 100; }
+	void setNotUseLightCalurate() { m_nInstanceID = 100; }		// Not Use
 	void setInstanceID(UINT id) { m_nInstanceID = id; }
 	void setHitGroupIndex(UINT index) { m_nHitGroupIndex = index; }
 
@@ -113,6 +114,6 @@ protected:
 	ComPtr<ID3D12Resource> m_BLAS{};
 	ComPtr<ID3D12Resource> m_ScratchBuffer{};
 
-	UINT m_nInstanceID{};
+	UINT m_nInstanceID = 99;
 	UINT m_nHitGroupIndex{};
 };

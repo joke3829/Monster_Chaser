@@ -221,7 +221,7 @@ void CRaytracingParticle::ReBuildBLAS()
 	inputs.NumDescs = 1;
 	inputs.pGeometryDescs = &desc;
 	inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-
+	
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC ASDesc{};
 	ASDesc.Inputs = inputs;
 	ASDesc.DestAccelerationStructureData = m_BLAS->GetGPUVirtualAddress();

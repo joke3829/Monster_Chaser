@@ -35,8 +35,9 @@ struct CameraInfo
     int bReflection;
 };
 
-
 ConstantBuffer<CameraInfo> g_camera : register(b0, space0);
+
+StructuredBuffer<float4> g_RandomValue : register(t0, space0);
 
 
 
@@ -94,7 +95,7 @@ inout PointStream<BillBoardOutput2> outStream2, inout PointStream<BillBoardOutpu
                 BillBoardOutput3 output3;
                 output1.position = float3(0.0, 0.0, 0.0);
                 output2.uv = float2(0.0, 0.0);
-                output3.color = float4(0.0, 0.0, 0.0, 1.0);
+                output3.color = float4(1.0, 1.0, 1.0, 1.0);
                 for (int i = 0; i < 6; ++i)
                 {
                     outStream1.Append(output1);
@@ -120,7 +121,7 @@ inout PointStream<BillBoardOutput2> outStream2, inout PointStream<BillBoardOutpu
                 BillBoardOutput1 output1;
                 BillBoardOutput2 output2;
                 BillBoardOutput3 output3; 
-                output3.color = float4(0.0, 0.0, 0.0, 1.0);
+                output3.color = float4(1.0, 1.0, 1.0, 0.5);
                 for (int i = 0; i < 6; ++i)
                     outStream3.Append(output3);
             
