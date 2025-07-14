@@ -525,3 +525,113 @@ void CWarriorManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* pla
 		player->SetPosition(targetPosition);
 	}
 }
+
+// ==================================================================================
+
+void CPriestManager::StartCombo()
+{
+	m_bInCombo = true;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+
+	m_vComboAnimationSets = { 22,23,24,25 };
+	ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+}
+
+void CPriestManager::OnAttackInput()
+{
+	if (!m_bInCombo) {
+		StartCombo();
+		return;
+	}
+
+	// 콤보 진행
+	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
+		m_bNextAttack = true;
+	}
+}
+
+void CPriestManager::UpdateCombo(float fElapsedTime)
+{
+	if (!m_bInCombo) return;
+
+	m_fComboTimer += fElapsedTime; // 타이머 증가
+
+	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
+		if (m_bNextAttack && m_bWaitingForNextInput) {
+			const float fComboCooldown = 0.4f;
+			if (m_fComboTimer >= fComboCooldown) {
+				m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
+				ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
+				m_bNextAttack = false;
+				m_bWaitingForNextInput = false;
+				m_fComboTimer = 0.0f; // 타이머 초기화
+			}
+		}
+		else {
+			m_bWaitingForNextInput = true;
+			if (m_fComboTimer >= m_fComboWaitTime) {
+				ResetCombo();
+			}
+		}
+	}
+	else if (m_vSkillAnimationSets.size() > 0 && m_vSkillAnimationSets[0] == 28) {
+		if (m_fComboTimer >= m_fComboWaitTime) {
+			m_CurrentComboStep++;
+			if (m_CurrentComboStep < m_vSkillAnimationSets.size()) {
+				ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
+			}
+			else {
+				ResetCombo();
+			}
+			m_fComboTimer = 0.0f;
+		}
+	}
+	else {
+		ResetCombo();
+	}
+}
+
+void CPriestManager::ResetCombo()
+{
+	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // 중단 감지
+	m_bInCombo = false;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+	m_vComboAnimationSets.clear();
+	m_vSkillAnimationSets.clear();
+	setTimeZero();
+	ChangeAnimation(0, false); // idle로 전환
+}
+
+void CPriestManager::StartSkill3()
+{
+	m_bInCombo = true;
+	m_CurrentComboStep = 0;
+	m_fComboTimer = 0.0f;
+	m_bWaitingForNextInput = false;
+	m_bNextAttack = false;
+
+	m_vSkillAnimationSets = { 28, 29 , 30 };
+	m_vComboAnimationSets.clear();
+	ChangeAnimation(m_vSkillAnimationSets[m_CurrentComboStep], true);
+}
+
+void CPriestManager::OnKey3Input()
+{
+	if (!m_bInCombo) {
+		StartSkill3();
+	}
+}
+
+void CPriestManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
+{
+	if (m_vFrames[0]) {
+		XMFLOAT3 targetPosition = m_vFrames[0]->getPositionFromWMatrix();
+		player->SetPosition(targetPosition);
+	}
+}

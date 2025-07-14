@@ -1886,8 +1886,9 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand3.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
-	CreateMageCharacter();
+	//CreateMageCharacter();
 	//CreateWarriorCharacter();
+	CreatePriestCharacter();
 	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
@@ -2188,6 +2189,14 @@ void CRaytracingWinterLandScene::CreateWarriorCharacter()
 {
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\swordman_lv1.bin", "src\\texture\\Swordman\\", JOB_WARRIOR);
 	m_vPlayers.emplace_back(std::make_unique<CPlayerWarrior>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+}
+
+void CRaytracingWinterLandScene::CreatePriestCharacter()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Luna_Firemantle_33.bin", "src\\texture\\Luna\\", JOB_HEALER);
+	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 }

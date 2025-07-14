@@ -1588,14 +1588,35 @@ void CPlayerWarrior::UpdateObject(float fElapsedTime)
 
 void CPlayerPriest::Skill1()
 {
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	XMFLOAT3 characterDir = cameraDir;
+	characterDir.y = 0.0f; // delete y value
+	m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_SKILL1), true);
+	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	m_bLockAnimation1 = true;
 }
 
 void CPlayerPriest::Skill2()
 {
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	XMFLOAT3 characterDir = cameraDir;
+	characterDir.y = 0.0f; // delete y value
+	m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_SKILL2), true);
+	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	m_bLockAnimation1 = true;
 }
 
 void CPlayerPriest::Skill3()
 {
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	XMFLOAT3 characterDir = cameraDir;
+	characterDir.y = 0.0f; // delete y value
+	m_AManager->OnKey3Input();
+	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	m_bLockAnimation = true;
 }
 
 CPlayerPriest::CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager)

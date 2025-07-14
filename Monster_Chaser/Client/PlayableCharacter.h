@@ -169,13 +169,11 @@ public:
 		ANI_C_ATTACK2,
 		ANI_C_ATTACK3,
 		ANI_C_ATTACK4,
+		ANI_SKILL1,
+		ANI_SKILL2,
 		ANI_SKILL3_1,
 		ANI_SKILL3_2,
-		ANI_SKILL3_3,
-		ANI_SKILL3_4,
-		ANI_SKILL3_5,
-		ANI_SKILL2,
-		ANI_SKILL1
+		ANI_SKILL3_3
 	};
 	virtual void Skill1();
 	virtual void Skill2();

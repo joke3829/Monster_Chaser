@@ -178,6 +178,7 @@ public:
 
 	void CreateMageCharacter();
 	void CreateWarriorCharacter();
+	void CreatePriestCharacter();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();

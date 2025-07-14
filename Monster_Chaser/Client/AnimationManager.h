@@ -141,5 +141,18 @@ public:
 };
 
 class CPriestManager : public CPlayableCharacterAnimationManager {
+public:
+	CPriestManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile)
+	{
+		m_vComboAnimationSets = { 22,23,24,25 }; m_vSkillAnimationSets = {28,29,30};
+	}
 
+	virtual void StartCombo();
+	virtual void OnAttackInput();
+	virtual void UpdateCombo(float fElapsedTime);
+	virtual void ResetCombo();
+
+	virtual void StartSkill3();
+	virtual void OnKey3Input();
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
 };
