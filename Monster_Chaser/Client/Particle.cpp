@@ -74,6 +74,18 @@ void CParticle::setPosition(XMFLOAT3& pos)
 	m_WorldMatrix._41 = pos.x; m_WorldMatrix._42 = pos.y; m_WorldMatrix._43 = pos.z;
 }
 
+void CParticle::ParticleSetting(float lifeTime, float endTime)
+{
+	void* tempData{};
+
+	m_VertexBuffer->Map(0, nullptr, &tempData);
+	ParticleVertex tempV = { XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(0.0, 0.0, 0.0), lifeTime, PARTICLE_EMITTER};
+	memcpy(tempData, &tempV, sizeof(tempV));
+	m_VertexBuffer->Unmap(0, nullptr);
+
+	m_fEndTime = endTime;
+}
+
 void CParticle::UpdateObject(float fElapsedTime)
 {
 	// Not Used
@@ -81,15 +93,29 @@ void CParticle::UpdateObject(float fElapsedTime)
 
 void CParticle::PostProcess()
 {
-	UINT64* pFilledSize{};
-	m_ReadBackBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pFilledSize));
-	m_nCurrentVertex = UINT(*pFilledSize) / sizeof(ParticleVertex);
-	m_ReadBackBuffer->Unmap(0, nullptr);
+	if (m_bRender) {
+		UINT64* pFilledSize{};
+		m_ReadBackBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pFilledSize));
+		m_nCurrentVertex = UINT(*pFilledSize) / sizeof(ParticleVertex);
+		m_ReadBackBuffer->Unmap(0, nullptr);
 
-	if (m_nCurrentVertex == 1)
-		m_bStart = true;
+		if (m_nCurrentVertex < 1)
+			m_bStart = true;
 
-	m_StreamOutputBuffer.Swap(m_DrawBuffer);
+		m_StreamOutputBuffer.Swap(m_DrawBuffer);
+	}
+}
+
+void CParticle::Start()
+{
+	m_bStart = m_bRender = true;
+	m_fElapsedTime = 0.0f;
+}
+
+void CParticle::Stop()
+{
+	m_bRender = false;
+	m_nCurrentVertex = 0;
 }
 
 // =====================================================================================
@@ -254,7 +280,14 @@ void CRaytracingParticle::setMaterial(Material& material)
 
 void CRaytracingParticle::UpdateObject(float fElapsedTime)
 {
-	Render();
+	if (m_bRender) {
+		Render();
+		if (m_fEndTime != 0.0f) {
+			m_fElapsedTime += fElapsedTime;
+			if (m_fElapsedTime >= m_fEndTime)
+				Stop();
+		}
+	}
 	ReBuildBLAS();
 }
 
@@ -274,7 +307,7 @@ void CRaytracingParticle::OnePath()
 		vView.BufferLocation = m_VertexBuffer->GetGPUVirtualAddress();
 		vView.SizeInBytes = sizeof(ParticleVertex);
 		vView.StrideInBytes = sizeof(ParticleVertex);
-		m_bStart = false;
+		m_bStart = false; m_nCurrentVertex = 1;
 	}
 	else {
 		vView.BufferLocation = m_DrawBuffer->GetGPUVirtualAddress();

@@ -2504,14 +2504,14 @@ void CRaytracingParticleTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	particles.emplace_back(std::make_unique<CRaytracingParticle>());
 	particles[0]->setOnePathPipeline(m_OnePathPS);
 	particles[0]->setTwoPathPipeline(m_TwoPathPS);
+	particles[0]->ParticleSetting(0.0f, 7.0f);
 	Material pmaterial{};
 	pmaterial.m_bHasAlbedoColor = pmaterial.m_bHasAlbedoMap = true;
 	pmaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
 	pmaterial.m_nAlbedoMapIndex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\people.dds"));
-	particles[0]->setNotUseLightCalurate();
 	particles[0]->setMaterial(pmaterial);
-	particles[0]->setPosition(XMFLOAT3(0.0, 0.0, 0.0));
+	particles[0]->setPosition(XMFLOAT3(0.0, 5.0, 0.0));
 
 
 	// cubeMap Ready
@@ -2566,11 +2566,15 @@ void CRaytracingParticleTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT n
 		case 'B':
 			m_pCamera->toggleReflection();
 			break;
-		case '9':
-			m_pCamera->SetThirdPersonMode(false);
+		case '9': {
+			auto& particle = m_pResourceManager->getParticleList();
+			particle[0]->Start();
+		}
 			break;
-		case '0':
-			m_pCamera->SetThirdPersonMode(true);
+		case '0': {
+			auto& particle = m_pResourceManager->getParticleList();
+			particle[0]->Stop();
+		}
 			break;
 		}
 		break;
@@ -2751,7 +2755,7 @@ void CRaytracingParticleTestScene::CreateOnePath()
 	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
 	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
 
-	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GSOnePath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GS_M_Laser_OnePath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
 	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
 	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
 
@@ -2827,7 +2831,7 @@ void CRaytracingParticleTestScene::CreateTwoPath()
 	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
 	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
 
-	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GSTwoPath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GS_M_Laser_TwoPath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
 	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
 	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
 

@@ -30,10 +30,15 @@ public:
 	virtual void setOnePathPipeline(ComPtr<ID3D12PipelineState>& ps) { m_OnePathPipeline = ps; }
 	virtual void setTwoPathPipeline(ComPtr<ID3D12PipelineState>& ps) { m_TwoPathPipeline = ps; }
 
+	virtual void ParticleSetting(float lifeTime, float endTime = 0.0f);
+
 	virtual void UpdateObject(float fElapsedTime);
 
 	virtual void Render() {}
 	virtual void PostProcess();
+	
+	virtual void Start();
+	virtual void Stop();
 protected:
 	virtual void BufferReady();
 
@@ -45,7 +50,6 @@ protected:
 
 	UINT m_nMaxVertex{};
 	UINT m_nCurrentVertex{};
-	bool m_bStart{ true };
 
 	ComPtr<ID3D12Resource> m_DrawBuffer{};
 	ComPtr<ID3D12Resource> m_StreamOutputBuffer{};
@@ -63,6 +67,11 @@ protected:
 
 	BoundingSphere m_Sphere{};
 
+	float m_fElapsedTime{};
+	float m_fEndTime{};
+
+	bool m_bStart{ true };
+	bool m_bRender{ false };
 };
 
 
@@ -94,6 +103,7 @@ public:
 	void UpdateObject(float fElapsedTime);
 
 	void Render();
+
 protected:
 	void BufferReady();
 
