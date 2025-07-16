@@ -1884,6 +1884,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// Object File Read ========================================	! !
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand3.bin", "src\\texture\\Map\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\Cave.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	//CreateMageCharacter();
@@ -1894,6 +1895,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
+	//m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingCave.bin");
 	m_pResourceManager->ReadyLightBufferContent();
 	m_pResourceManager->LightTest();
 	// =========================================================
@@ -1923,6 +1925,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// terrian
 	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	//m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrainCave.raw", 2049, 2049, XMFLOAT3(1.0f, 1.0f, 1.0f));
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);

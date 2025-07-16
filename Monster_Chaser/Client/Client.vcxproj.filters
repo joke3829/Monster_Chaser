@@ -73,6 +73,9 @@
     <Filter Include="Resource\Character">
       <UniqueIdentifier>{48d0a0f6-d308-4778-b115-a3a09c6467ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Monster">
+      <UniqueIdentifier>{7f3c3cc3-1c64-492b-8cb7-ad098bbba5d2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -147,6 +150,9 @@
     <ClInclude Include="PlayableCharacter.h">
       <Filter>Resource\Character</Filter>
     </ClInclude>
+    <ClInclude Include="Monster.h">
+      <Filter>Resource\Monster</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -211,6 +217,9 @@
     </ClCompile>
     <ClCompile Include="PlayableCharacter.cpp">
       <Filter>Resource\Character</Filter>
+    </ClCompile>
+    <ClCompile Include="Monster.cpp">
+      <Filter>Resource\Monster</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
