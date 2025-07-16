@@ -58,6 +58,10 @@ public:
 		float remainingTime = length - m_fElapsedTime;
 		return remainingTime <= margin && remainingTime >= 0.0f;
 	}
+	bool IsAnimationInTimeRange(float startTime, float endTime) const {
+		float length = m_vAnimationSets[m_nCurrentSet]->getLength();
+		return m_fElapsedTime >= startTime && m_fElapsedTime <= endTime && m_fElapsedTime <= length;
+	}
 	const std::vector<CGameObject*>& getFrame() const { return m_vFrames; }
 
 	bool CheckCollision() const { return m_bCollision; }

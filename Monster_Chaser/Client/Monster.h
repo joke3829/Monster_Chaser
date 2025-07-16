@@ -23,6 +23,11 @@ protected:
 
 	CSkinningObject* m_Object{};
 	CAnimationManager* m_AManager{};
+
+	bool m_IsSkillActive;
+	float m_SkillStartTime;
+	float m_SkillCollisionFrameStart;
+	float m_SkillCollisionFrameEnd;
 };
 
 class Stage1_Monster : public Monster
@@ -106,4 +111,6 @@ public:
 	virtual void Skill1();
 	virtual void Skill2();
 	virtual void Skill3();
+
+	virtual void UpdateObject(float fElapsedTime);
 };
