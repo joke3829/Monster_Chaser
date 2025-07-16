@@ -25,9 +25,6 @@ protected:
 	CAnimationManager* m_AManager{};
 
 	bool m_IsSkillActive;
-	float m_SkillStartTime;
-	float m_SkillCollisionFrameStart;
-	float m_SkillCollisionFrameEnd;
 };
 
 class Stage1_Monster : public Monster

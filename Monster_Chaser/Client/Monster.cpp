@@ -112,7 +112,6 @@ void Stage3_Monster::Skill1()
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL1), true);
 		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
 		m_AManager->UpdateAniPosition(0.0f, m_Object);
-		m_SkillStartTime = GetCurrentTime();
 		m_IsSkillActive = true;
 	}
 }
