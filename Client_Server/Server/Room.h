@@ -30,8 +30,11 @@ public:
 	void BroadCast_Room();
 
 	bool IsStarted() const { return is_started; }
-	void StartGame() { is_started = true; }
+
+	void StartGame();
 	void EndGame() { is_started = false; }
+
+	void SpawnMonsters();
 
 
 	concurrent_unordered_map<int, shared_ptr<Monster>> monsters;

@@ -3,7 +3,7 @@
 
 extern C_Socket Client;
 extern std::unordered_map<int, Player> Players;
-extern std::unordered_map<int, Monster*> g_monsters;
+extern std::unordered_map<int, std::unique_ptr<Monster>> Monsters;
 extern std::array<short, 10>	 userPerRoom;
 extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
 extern bool allready;
@@ -82,7 +82,7 @@ void C_Socket::SendsetReady(const bool isReady, const int room_num)
 {
 	cs_packet_getready rp;
 	rp.size = sizeof(rp);
-	rp.type = C2S_P_GetREADY;
+	rp.type = C2S_P_GETREADY;
 	rp.room_number = room_num;
 	rp.isReady = isReady;
 	Client.send_packet(&rp);
@@ -139,10 +139,7 @@ void C_Socket::process_packet(char* ptr)
 		break;
 	}
 	case S2C_P_SELECT_ROOM: {
-		/*static bool aaa = false;
-		static bool ddd = false;
-		static std::vector<std::string> dbgStr;
-		assert((Players.size() == 0 || (aaa || ddd)) && "Players already exist");*/
+
 		sc_packet_select_room* p = reinterpret_cast<sc_packet_select_room*>(ptr);
 
 		int room_num = static_cast<int>(p->room_number);
@@ -153,24 +150,14 @@ void C_Socket::process_packet(char* ptr)
 
 			//  is_self가 true일 때만 내 로컬 ID 설정
 			if (Client.get_id() == -1) {
-				//if (p->is_self) {
-				Client.set_id(local_id);
-				g_state = InRoom;
-				//}
-				/*	char bb[256] = { 0 };
-					sprintf(bb, "Local_id: %d, isSelf: %d", local_id, p->is_self);
-					dbgStr.emplace_back(bb);*/
+				if (p->is_self) {
+					Client.set_id(local_id);
+					g_state = InRoom;
+				}
+
 			}
-			/*	aaa = true;*/
+
 		}
-		/*else {
-				char bb[256] = { 0 };
-				sprintf(bb, "non scoped Local_id: %d, isSelf: %d", local_id, p->is_self);
-				dbgStr.emplace_back(bb);
-				ddd = true;
-		}*/
-
-
 
 		break;
 	}
@@ -202,11 +189,9 @@ void C_Socket::process_packet(char* ptr)
 	{
 
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
-		//Client.set_id(p->Local_id);
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
+		g_state = GoLoading;
 
-		/*wOpacity = 0.0f;
-		m_nState = GoLoading;*/		//여기다가 넣어주기 extern해서 
 		break;
 		//4 7 9
 	}
@@ -231,6 +216,66 @@ void C_Socket::process_packet(char* ptr)
 		//------------------
 
 
+		break;
+	}
+	case S2C_P_MONSTER_SPAWN: {
+		sc_packet_monster_spawn* pkt = reinterpret_cast<sc_packet_monster_spawn*>(ptr);
+
+		int id = pkt->monster_id;
+
+		// 이미 있으면 덮어쓰기 방지
+		if (Monsters.find(id) == Monsters.end()) {
+			auto newMonster = std::make_unique<Monster>(id);
+			newMonster->setPosition(pkt->pos);
+			newMonster->setVisible(true);
+			newMonster->playIdleAnim();
+
+			Monsters[id] = std::move(newMonster);
+
+			
+		}
+		else {
+			
+		}
+
+		break;
+	}
+	case S2C_P_MONSTER_RESPAWN: {
+		sc_packet_monster_respawn* pkt = reinterpret_cast<sc_packet_monster_respawn*>(ptr);
+
+		int id = pkt->monster_id;
+
+
+		if (Monsters.find(id) != Monsters.end()) {
+			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr  
+			m->setPosition(pkt->pos);
+			m->setVisible(true);
+			m->playIdleAnim();
+		}
+		else {
+			// 존재하지 않는 경우 새로 생성  
+			auto newMonster = std::make_unique<Monster>(id);
+			newMonster->setPosition(pkt->pos);
+			newMonster->setVisible(true);
+			newMonster->playIdleAnim();
+			Monsters[id] = std::move(newMonster);
+		}
+		break;
+	}
+
+	case S2C_P_LEAVE:
+	{
+		sc_packet_leave* pkt = reinterpret_cast<sc_packet_leave*>(ptr);
+
+		int local_id = pkt->Local_id;
+
+		if (Players.find(local_id) != Players.end()) {
+			Players.erase(local_id);
+			if (local_id == Client.get_id()) {
+				Client.set_id(-1); // 클라이언트 ID 초기화
+				g_state = Title; // 타이틀 상태로 변경
+			}
+		}
 		break;
 	}
 	default:

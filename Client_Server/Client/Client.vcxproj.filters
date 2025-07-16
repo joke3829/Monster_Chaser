@@ -66,21 +66,21 @@
     <Filter Include="UI">
       <UniqueIdentifier>{942193e9-5883-4f37-ad45-b44969d80f51}</UniqueIdentifier>
     </Filter>
-    <Filter Include="소스 파일\서버관련">
-      <UniqueIdentifier>{5d46939a-3862-4eba-9cff-f66088c2ed2e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="리소스 파일">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="소스 파일\서버관련\플레이어객체">
-      <UniqueIdentifier>{dd0ec600-8aae-412c-9fc4-1dc9367e0664}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="소스 파일\서버관련\플레이어객체\플레이어 정보">
-      <UniqueIdentifier>{5a8a0fd5-210e-4d8d-ace9-d690a08eea57}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\Character">
       <UniqueIdentifier>{3ad2a8cc-b065-4e5e-88a1-948d6b8f0a17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SERVER">
+      <UniqueIdentifier>{5d46939a-3862-4eba-9cff-f66088c2ed2e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SERVER\플레이어객체">
+      <UniqueIdentifier>{dd0ec600-8aae-412c-9fc4-1dc9367e0664}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SERVER\플레이어객체\플레이어 정보">
+      <UniqueIdentifier>{5a8a0fd5-210e-4d8d-ace9-d690a08eea57}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -157,13 +157,13 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="C_Socket.h">
-      <Filter>소스 파일\서버관련</Filter>
+      <Filter>SERVER</Filter>
     </ClInclude>
     <ClInclude Include="ObjectManager.h">
-      <Filter>소스 파일\서버관련\플레이어객체</Filter>
+      <Filter>SERVER\플레이어객체</Filter>
     </ClInclude>
     <ClInclude Include="PlayerInfo.h">
-      <Filter>소스 파일\서버관련\플레이어객체\플레이어 정보</Filter>
+      <Filter>SERVER\플레이어객체\플레이어 정보</Filter>
     </ClInclude>
     <ClInclude Include="PlayableCharacter.h">
       <Filter>Resource\Character</Filter>
@@ -231,13 +231,13 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="C_Socket.cpp">
-      <Filter>소스 파일\서버관련</Filter>
+      <Filter>SERVER</Filter>
     </ClCompile>
     <ClCompile Include="ObjectManager.cpp">
-      <Filter>소스 파일\서버관련\플레이어객체</Filter>
+      <Filter>SERVER\플레이어객체</Filter>
     </ClCompile>
     <ClCompile Include="PlayerInfo.cpp">
-      <Filter>소스 파일\서버관련\플레이어객체\플레이어 정보</Filter>
+      <Filter>SERVER\플레이어객체\플레이어 정보</Filter>
     </ClCompile>
     <ClCompile Include="PlayableCharacter.cpp">
       <Filter>Resource\Character</Filter>

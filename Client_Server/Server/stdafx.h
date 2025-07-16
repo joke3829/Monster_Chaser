@@ -1,4 +1,7 @@
 #pragma once
+
+#define NOMINMAX
+
 #include <iostream>
 #include <WS2tcpip.h>
 #include <d3d12.h>

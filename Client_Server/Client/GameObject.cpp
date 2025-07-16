@@ -1,9 +1,7 @@
 #include "GameObject.h"
-#include "C_Socket.h"
 #include "ObjectManager.h"
 #include "protocol.h"
-extern C_Socket Client;
-extern std::unordered_map<int, Player> Players;
+
 CGameObject::CGameObject(const CGameObject& other)
 {
 	m_strName = other.m_strName;	

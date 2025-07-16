@@ -64,6 +64,47 @@ void Room::BroadCast_Room()
 	//g_server.users
 }
 
+void Room::StartGame()
+{
+	is_started = true;
+
+	// 기존 StartGame 로직이 있다면 유지하고...
+	for (auto& [id, monster] : monsters) {
+		sc_packet_monster_spawn sp;
+		sp.size = sizeof(sp);
+		sp.type = S2C_P_MONSTER_SPAWN;
+		sp.monster_id = id;
+		sp.monster_type = 0; // 타입 나중에 추가 가능
+		XMStoreFloat4x4(&sp.pos, XMMatrixTranslation(
+			monster->GetPosition().x, 
+			monster->GetPosition().y, 
+			monster->GetPosition().z)
+		);
+
+		for (int pid : this->id)
+			g_server.users[pid]->do_send(&sp);
+
+		std::cout << "[몬스터 " << id << "] 초기 스폰 전송 완료\n";
+	}
+
+	std::thread([this]() {
+		while (is_started) {
+			for (auto& [id, monster] : this->monsters) {
+				monster->Update(0.016f, *this,g_server.playerManager);
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(16));
+		}
+		}).detach();
+}
+
+void Room::SpawnMonsters()
+{
+	// 예시로 1마리 생성
+	int new_id = 0;
+	XMFLOAT3 spawnPos = { 0.0f, 0.0f, 0.0f };
+	monsters[new_id] = std::make_shared<Monster>(new_id, spawnPos);
+}
+
 
 
 

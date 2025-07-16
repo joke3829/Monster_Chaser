@@ -29,6 +29,8 @@ public:
 	void SendMovePacket(const float& Time, const UINT State);							//SendMovePacket	
 	void SendPickCharacter(const short RoomNum, const short Job);
 
+
+
 	//--------------------------------------------------------------//									
 
 	bool getstart() { return InGameStart; }

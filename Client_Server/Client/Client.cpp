@@ -19,7 +19,7 @@ CGameFramework gGameFramework;
 
 std::unordered_map<int, Player> Players;               // 모든 플레이어들		
 
-std::unordered_map<int, Monster*> g_monsters;            // 몬스터들
+std::unordered_map<int, std::unique_ptr<Monster>> Monsters;           // 몬스터들
 
 
 std::array<short, 10>	 userPerRoom{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			// 방 UI대신 쓸거 
@@ -80,7 +80,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
    }*/
 
 
-  
+	
 	
 
 
