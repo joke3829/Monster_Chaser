@@ -45,7 +45,7 @@ void Monster::Update(float deltaTime, const Room& room, const PlayerManager& pla
         HandleIdle(room, playerManager);
         break;
     case MonsterState::Chase:
-        HandleChase(playerManager);
+        HandleChase(room, playerManager);
         break;
     case MonsterState::Attack:
         HandleAttack(playerManager);
@@ -78,7 +78,7 @@ void Monster::HandleIdle(const Room& room, const PlayerManager& playerManager) {
     if (target_id != -1) TransitionTo(MonsterState::Chase);
 }
 
-void Monster::HandleChase(const PlayerManager& playerManager) {
+void Monster::HandleChase(const Room& room,const PlayerManager& playerManager ) {
     if (!IsPlayerInRange(playerManager)) {
         TransitionTo(MonsterState::Return);
         return;
@@ -90,8 +90,39 @@ void Monster::HandleChase(const PlayerManager& playerManager) {
         return;
     }
 
-    // 이동 처리 (MoveTowards 생략)
-    // position = MoveTowards(position, targetPos, speed * deltaTime);
+    //  이동 방향 계산
+    auto target = playerManager.GetPlayer(target_id);
+    if (!target) return;
+
+    XMFLOAT3 targetPos = {
+        target->GetPosition()._41,
+        target->GetPosition()._42,
+        target->GetPosition()._43
+    };
+
+    float speed = 100.0f; // 유닛/sec
+    float dx = targetPos.x - position.x;
+    float dy = targetPos.y - position.y;
+    float dz = targetPos.z - position.z;
+
+    float length = sqrtf(dx * dx + dy * dy + dz * dz);
+    if (length > 0.001f) {
+        dx /= length; dy /= length; dz /= length;
+
+        position.x += dx * speed * 0.016f;
+        position.y += dy * speed * 0.016f;
+        position.z += dz * speed * 0.016f;
+    }
+
+	// send monster move packet to clients
+    sc_packet_monster_move pkt;
+    pkt.size = sizeof(pkt);
+    pkt.type = S2C_P_MONSTER_MOVE;
+    pkt.monster_id = id;
+    XMStoreFloat4x4(&pkt.pos, XMMatrixTranslation(position.x, position.y, position.z));
+
+    for (int id : room.id)
+        g_server.users[id]->do_send(&pkt);
 }
 
 void Monster::HandleAttack(const PlayerManager& playerManager) {

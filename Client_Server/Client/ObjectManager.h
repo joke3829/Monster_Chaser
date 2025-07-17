@@ -31,7 +31,7 @@ public:
     }
 
     void setVisible(bool visible) {
-      /*  if (SkinningObject)
+        /*if (SkinningObject)
             SkinningObject->SetVisible(visible);*/
     }
 

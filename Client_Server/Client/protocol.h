@@ -113,6 +113,13 @@ struct sc_packet_monster_respawn {
     XMFLOAT4X4 pos;
 };
 
+constexpr char S2C_P_MONSTER_MOVE = 14;
+struct sc_packet_monster_move {
+    unsigned char size;
+    char type;
+    int monster_id;
+    XMFLOAT4X4 pos;
+};
 constexpr char S2C_P_LEAVE = 49;
 struct sc_packet_leave {
     unsigned char size;

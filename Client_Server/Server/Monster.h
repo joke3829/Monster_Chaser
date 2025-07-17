@@ -27,7 +27,7 @@ public:
 private:
     void TransitionTo(MonsterState nextState);
     void HandleIdle(const Room& room, const PlayerManager& playerManager);
-    void HandleChase(const PlayerManager& playerManager);
+    void HandleChase(const Room& room, const PlayerManager& playerManager);
     void HandleAttack(const PlayerManager& playerManager);
     void HandleReturn();
     void HandleDead(const Room& room);
