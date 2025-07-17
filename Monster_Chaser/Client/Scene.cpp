@@ -2145,15 +2145,9 @@ void CRaytracingWinterLandScene::AttackCollision(const std::vector<std::unique_p
 					if (transformedAttackerOBB.Intersects(transformedTargetSphere)) {
 						float damage = 0.0f;
 						switch (attacker->getCurrentSkill()) {
-						case 1:
-							damage = 300.0f;
-							break;
-						case 2:
-							damage = 500.0f;
-							break;
-						case 3:
-							damage = 700.0f;
-							break;
+						case 1: damage = 200.0f; break;
+						case 2: damage = 400.0f; break;
+						case 3: damage = 300.0f; break;
 						}
 						if (damage > 0.0f) {
 							target->Attacked(damage);
@@ -2353,24 +2347,22 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vMonsters)
 		p->UpdateObject(fElapsedTime);
 
-	if (m_vMonsters[0]->IsAttacking()) {
-		switch (m_vMonsters[0]->getCurrentSkill())
+	switch (m_vMonsters[0]->getCurrentSkill())
+	{
+	case 1:
+		if (m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
 		{
-		case 1:
-			if (m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
-			{
-				AttackCollision(m_vPlayers, m_vMonsters);
-			}
-			break;
-		case 2:
-			if (m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
-			{
-				AttackCollision(m_vPlayers, m_vMonsters);
-			}
-			break;
-		case 3:
-			break;
+			AttackCollision(m_vPlayers, m_vMonsters);
 		}
+		break;
+	case 2:
+		if (m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
+		{
+			AttackCollision(m_vPlayers, m_vMonsters);
+		}
+		break;
+	case 3:
+		break;
 	}
 	/*m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
 	m_pMonster->HeightCheck(m_pHeightMap.get(), fElapsedTime);*/
