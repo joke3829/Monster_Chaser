@@ -6,6 +6,7 @@
 #include "AccelerationStructureManager.h"
 #include "UIObject.h"
 #include "stdfxh.h"
+#include "Monster.h"
 
 extern DXResources g_DxResource;
 
@@ -180,6 +181,8 @@ public:
 	void CreateWarriorCharacter();
 	void CreatePriestCharacter();
 
+	void Create3StageBoss(); //스테이지 별로 하나씩 만들어서 모든 몬스터 한번에 하도록 설정하면 될 듯 - 보스는 마지막 인자 true, 일반은 false
+
 	void UpdateObject(float fElapsedTime);
 	void Render();
 	void PrepareTerrainTexture();
@@ -188,6 +191,9 @@ public:
 protected:
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};
+
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+	std::unique_ptr<CMonster>							m_pMonster{};
 	
 	unsigned int								m_nSkyboxIndex{};
 

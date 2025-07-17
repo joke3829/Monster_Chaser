@@ -85,4 +85,20 @@ public:
 	virtual void Skill3();
 
 	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+};
+
+// A real controlling monster
+class CMonster {
+public:
+	CMonster(CPlayableCharacter* monsterObject);
+
+	CPlayableCharacter* getObject() { return m_pMonsterObject; }
+	CAnimationManager* getAniManager() { return m_pMonsterObject->getAniManager(); }
+
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	void HeightCheck(CHeightMapImage* heightmap, float fElapsedTime);
+protected:
+	CPlayableCharacter* m_pMonsterObject{};
+
 };

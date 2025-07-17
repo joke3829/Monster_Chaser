@@ -73,6 +73,9 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 			case JOB_HEALER:
 				m_vAnimationManager.emplace_back(std::make_unique<CPriestManager>(inFile));
 				break;
+			case MONSTER:
+				m_vAnimationManager.emplace_back(std::make_unique<CMonsterManager>(inFile));
+				break;
 			}
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->SetFramesPointerFromSkinningObject(m_vSkinningObject[m_vSkinningObject.size() - 1]->getObjects());
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->MakeAnimationMatrixIndex(m_vSkinningObject[m_vSkinningObject.size() - 1].get());

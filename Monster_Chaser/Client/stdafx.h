@@ -74,6 +74,7 @@ constexpr unsigned short JOB_NOTHING		= 0;
 constexpr unsigned short JOB_MAGE			= 1;
 constexpr unsigned short JOB_WARRIOR		= 2;
 constexpr unsigned short JOB_HEALER			= 3;
+constexpr unsigned short MONSTER			= 4;
 
 // 조명 관련 정의
 constexpr int MAX_LIGHTS = 64;

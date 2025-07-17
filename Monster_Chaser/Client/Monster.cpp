@@ -121,24 +121,71 @@ void Stage3_Monster::Skill3()
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 }
 
+void Stage3_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_IsSkillActive || m_bDoingCombo) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_IsSkillActive && !m_bDoingCombo) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+		if ((keyBuffer['X'] & 0x80) && !(m_PrevKeyBuffer['X'] & 0x80)) {
+			Skill2();
+		}
+		if ((keyBuffer['C'] & 0x80) && !(m_PrevKeyBuffer['C'] & 0x80)) {
+			Skill3();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
 void Stage3_Monster::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
-	if (m_IsSkillActive) {
-		if (m_AManager->IsAnimationInTimeRange(0.5f, 1.0f)) {
-			//CheckCollision(); // 여기서 하는게 맞을까?
-		}
-		if (m_AManager->IsAnimationFinished()) {
-			m_IsSkillActive = false;
-		}
-	}
-
 	if (m_AManager->IsAnimationFinished()) {
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
 		test = true;
+		m_IsSkillActive = false;
 	}
 
 	if (test) {
 		m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 	}
+}
+
+// =============================================================================
+
+CMonster::CMonster(CPlayableCharacter* monsterObject)
+	: m_pMonsterObject(monsterObject)
+{
+}
+
+void CMonster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	m_pMonsterObject->ProcessInput(keyBuffer, fElapsedTime);
+}
+
+void CMonster::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime)
+{
+	CSkinningObject* p = m_pMonsterObject->getObject();
+	XMFLOAT4X4& playerWorld = p->getWorldMatrix();
+	XMFLOAT4X4& playerPreWorld = p->getPreWorldMatrix();
+	XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
+	float fy = objectWorld._42 - (30 * fElapsedTime);
+
+	float terrainHeight = heightmap->GetHeightinWorldSpace(objectWorld._41 + 1024.0f, objectWorld._43 + 1024.0f);
+	if (objectWorld._43 >= -500.0f) {
+		if (terrainHeight < 10.0f) {
+			terrainHeight = 10.0f;
+		}
+	}
+	if (fy < terrainHeight)
+		playerWorld._42 = terrainHeight;
+	else
+		playerWorld._42 -= (30 * fElapsedTime);
+	p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
+	playerPreWorld._42 = playerWorld._42;
 }

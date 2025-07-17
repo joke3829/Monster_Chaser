@@ -105,16 +105,16 @@ public:
 	bool IsComboInterrupted() const { return m_bComboEnd; }
 	void ClearComboInterrupted() { m_bComboEnd = false; }
 protected:
-	bool m_bInCombo;          
-	int m_CurrentComboStep;
-	std::vector<UINT> m_vComboAnimationSets;
-	float m_fComboTimer;
+	bool m_bInCombo = false;
+	int m_CurrentComboStep = 0;
+	std::vector<UINT> m_vComboAnimationSets{};
+	float m_fComboTimer = 0.0f;
 	const float m_fComboWaitTime = 1.0f;
-	bool m_bWaitingForNextInput;
+	bool m_bWaitingForNextInput = false;
 	bool m_bNextAttack = false;
 	bool m_bComboEnd = false;
 
-	std::vector<UINT> m_vSkillAnimationSets;
+	std::vector<UINT> m_vSkillAnimationSets{};
 };
 
 class CMageManager : public CPlayableCharacterAnimationManager {
@@ -159,4 +159,17 @@ public:
 	virtual void StartSkill3();
 	virtual void OnKey3Input();
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
+};
+
+class CMonsterManager : public CPlayableCharacterAnimationManager {
+public:
+	CMonsterManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile){}
+
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
+	{
+		if (m_vFrames[0]) {
+			XMFLOAT3 targetPosition = m_vFrames[0]->getPositionFromWMatrix();
+			player->SetPosition(targetPosition);
+		}
+	}
 };

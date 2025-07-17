@@ -184,6 +184,8 @@ public:
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void UpdateObject(float fElapsedTime);
+protected:
+	CProjectile bullet{};
 };
 
 // A real controlling player

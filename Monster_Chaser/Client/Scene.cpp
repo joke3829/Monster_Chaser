@@ -1892,7 +1892,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	//CreatePriestCharacter();
 	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+	Create3StageBoss();
+	m_pMonster = std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get());
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
 	//m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingCave.bin");
@@ -1977,11 +1978,11 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	//skinned[0]->setPreTransform(2.5f, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 67.0f, -998.0f));
-	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
-	skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	skinned[1]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
-	skinned[1]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 67.0f, -998.0f));
+	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
+	//skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	//skinned[1]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
+	//skinned[1]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 
 	// ==============================================================================
 
@@ -2068,6 +2069,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 		}
 		else {
 			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			m_pMonster->ProcessInput(keyBuffer, fElapsedTime);
 		}
 	}
 }
@@ -2202,6 +2204,18 @@ void CRaytracingWinterLandScene::CreatePriestCharacter()
 	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(),false));
+}
+
+void CRaytracingWinterLandScene::Create3StageBoss()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Stage3_Monster>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), true));
+
+	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
+	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
 void CRaytracingWinterLandScene::PrepareTerrainTexture()
@@ -2387,7 +2401,11 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
+	for (auto& p : m_vMonsters)
+		p->UpdateObject(fElapsedTime);
+
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
+	m_pMonster->HeightCheck(m_pHeightMap.get(), fElapsedTime);
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
