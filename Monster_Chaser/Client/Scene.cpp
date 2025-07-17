@@ -1353,7 +1353,7 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 	//switch (nMessage) {
 	//case WM_LBUTTONDOWN:
 	//{
-	//	if (!m_bLockAnimation && !m_IsSkillActive) {
+	//	if (!m_bLockAnimation && !m_bSkillActive) {
 	//		auto& animationManagers = m_pResourceManager->getAnimationManagers();
 	//		for (auto& animationManager : animationManagers) {
 	//			XMFLOAT3 characterDir = cameraDir;
@@ -1382,7 +1382,7 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 	//		auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
 	//		if (animationManager && !animationManager->getFrame().empty()) {
 	//			CGameObject* frame = animationManager->getFrame()[0];
-	//			if (!m_bLockAnimation && !m_IsSkillActive && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
+	//			if (!m_bLockAnimation && !m_bSkillActive && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
 	//				m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 	//				XMFLOAT3 characterDir = cameraDir;
 	//				characterDir.y = 0.0f; // delete y value
@@ -1789,8 +1789,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);
 	// Object File Read ========================================	! !
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand3.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand3.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\Cave.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
@@ -1825,41 +1825,41 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	UINT finalmesh = meshes.size();
 
 	// terrian
-	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
-	//m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrainCave.raw", 2049, 2049, XMFLOAT3(1.0f, 1.0f, 1.0f));
-	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
+	//m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	////m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrainCave.raw", 2049, 2049, XMFLOAT3(1.0f, 1.0f, 1.0f));
+	//meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
+	//normalObjects.emplace_back(std::make_unique<CGameObject>());
+	//normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
 
-	normalObjects[normalObjects.size() - 1]->SetInstanceID(10);
-	normalObjects[normalObjects.size() - 1]->getMaterials().emplace_back();
-	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
+	//normalObjects[normalObjects.size() - 1]->SetInstanceID(10);
+	//normalObjects[normalObjects.size() - 1]->getMaterials().emplace_back();
+	//normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
 
 
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
-	auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
-		return p->getFrameName() == "Water";
-		});
-	if (p != normalObjects.end()) {
-		(*p)->SetInstanceID(2);
-		(*p)->getMaterials().emplace_back();
-		Material& mt = (*p)->getMaterials()[0];
-		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
-		mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
-		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
+	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
+	//auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
+	//	return p->getFrameName() == "Water";
+	//	});
+	//if (p != normalObjects.end()) {
+	//	(*p)->SetInstanceID(2);
+	//	(*p)->getMaterials().emplace_back();
+	//	Material& mt = (*p)->getMaterials()[0];
+	//	mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
+	//	mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
+	//	mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
 
-		void* tempptr{};
-		std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
-		for (XMFLOAT2& xmf : tex0) {
-			xmf.x *= 10.0f; xmf.y *= 10.0f;
-		}
-		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
-		memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
-		meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
-	}
+	//	void* tempptr{};
+	//	std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
+	//	for (XMFLOAT2& xmf : tex0) {
+	//		xmf.x *= 10.0f; xmf.y *= 10.0f;
+	//	}
+	//	meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
+	//	memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
+	//	meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
+	//}
 
-	PrepareTerrainTexture();
+	//PrepareTerrainTexture();
 
 	// cubeMap Ready
 	m_nSkyboxIndex = textures.size();
@@ -1879,7 +1879,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	//skinned[0]->setPreTransform(2.5f, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
 	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
 	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 67.0f, -998.0f));
-	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
+	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
+	skinned[0]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -270.0f));
 	//skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	//skinned[1]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
 	//skinned[1]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
@@ -2125,6 +2126,47 @@ void CRaytracingWinterLandScene::Create3StageBoss()
 	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
+void CRaytracingWinterLandScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
+{
+	for (const auto& target : targets) {
+		if (target->IsOnceAttacked()) continue;
+		for (const auto& targetBone : target->getObject()->getObjects()) {
+			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+			BoundingSphere targetSphere = targetBone->getObjectSphere();
+			BoundingSphere transformedTargetSphere;
+			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+			for (const auto& attacker : attackers) {
+				if (!attacker->IsAttacking()) continue;
+				for (const auto& attackerBone : attacker->getObject()->getObjects()) {
+					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
+					BoundingOrientedBox attackerOBB = attackerBone->getObjectOBB();
+					BoundingOrientedBox transformedAttackerOBB;
+					attackerOBB.Transform(transformedAttackerOBB, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
+					if (transformedAttackerOBB.Intersects(transformedTargetSphere)) {
+						float damage = 0.0f;
+						switch (attacker->getCurrentSkill()) {
+						case 1:
+							damage = 300.0f;
+							break;
+						case 2:
+							damage = 500.0f;
+							break;
+						case 3:
+							damage = 700.0f;
+							break;
+						}
+						if (damage > 0.0f) {
+							target->Attacked(damage);
+						}
+						return;
+					}
+				}
+			}
+		}
+	}
+}
+
+
 void CRaytracingWinterLandScene::PrepareTerrainTexture()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC desc{};
@@ -2311,12 +2353,31 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vMonsters)
 		p->UpdateObject(fElapsedTime);
 
-	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
-	m_pMonster->HeightCheck(m_pHeightMap.get(), fElapsedTime);
+	if (m_vMonsters[0]->IsAttacking()) {
+		switch (m_vMonsters[0]->getCurrentSkill())
+		{
+		case 1:
+			if (m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				AttackCollision(m_vPlayers, m_vMonsters);
+			}
+			break;
+		case 2:
+			if (m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
+			{
+				AttackCollision(m_vPlayers, m_vMonsters);
+			}
+			break;
+		case 3:
+			break;
+		}
+	}
+	/*m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
+	m_pMonster->HeightCheck(m_pHeightMap.get(), fElapsedTime);*/
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
-		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
+		/*float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
 		if (EYE.z >= -500.0f) {
 			if (cHeight < 10.5f)
 				cHeight = 10.5f;
@@ -2324,8 +2385,8 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		if (EYE.y < cHeight + 0.5f) {
 			m_pCamera->UpdateViewMatrix(cHeight + 0.5f);
 		}
-		else
-		m_pCamera->UpdateViewMatrix();
+		else*/
+			m_pCamera->UpdateViewMatrix();
 	}
 	else
 		m_pCamera->UpdateViewMatrix();
@@ -2364,7 +2425,7 @@ void CRaytracingWinterLandScene::Render()
 	m_pResourceManager->SetLights();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[m_nSkyboxIndex]->getView()->GetGPUDescriptorHandleForHeapStart());
-	g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
+	//g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
 	raydesc.Depth = 1;

@@ -6,7 +6,7 @@ Stage1_Monster::Stage1_Monster(CSkinningObject* obj, CAnimationManager* aManager
 	if (isBoss) m_HP = 15000;
 	else m_HP = 5000;
 
-	m_IsBoss = isBoss;
+	m_bBoss = isBoss;
 }
 
 void Stage1_Monster::Skill1()
@@ -43,7 +43,7 @@ Stage2_Monster::Stage2_Monster(CSkinningObject* obj, CAnimationManager* aManager
 	if (isBoss) m_HP = 25000;
 	else m_HP = 7000;
 
-	m_IsBoss = isBoss;
+	m_bBoss = isBoss;
 }
 
 void Stage2_Monster::Skill1()
@@ -94,41 +94,53 @@ Stage3_Monster::Stage3_Monster(CSkinningObject* obj, CAnimationManager* aManager
 	: CPlayableCharacter(obj, aManager, isBoss)
 {
 	m_HP = 40000;
-	m_IsBoss = isBoss;
+	m_bBoss = isBoss;
 }
 
 void Stage3_Monster::Skill1()
 {
-	if (!m_IsSkillActive) {
+	// 0.5~0.8 && 1.3f~1.5f
+	if (!m_bSkillActive) {
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL1), true);
 		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
 		m_AManager->UpdateAniPosition(0.0f, m_Object);
-		m_IsSkillActive = true;
+		m_bSkillActive = true;
+		m_CurrentSkill = 1;
 	}
 }
 
 void Stage3_Monster::Skill2()
 {
-	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL2), true);
-	//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//0.3 ~ 0.5f
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL2), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 2;
+	}
 }
 
 void Stage3_Monster::Skill3()
 {
-	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL3), true);
-	//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//projectile
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL3), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 3;
+	}
 }
 
 void Stage3_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
-	if (m_IsSkillActive || m_bDoingCombo) {
+	if (m_bSkillActive || m_bDoingCombo) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
 		return;
 	}
 
-	if (!m_IsSkillActive && !m_bDoingCombo) {
+	if (!m_bSkillActive && !m_bDoingCombo) {
 		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
 			Skill1();
 		}
@@ -148,7 +160,7 @@ void Stage3_Monster::UpdateObject(float fElapsedTime)
 	if (m_AManager->IsAnimationFinished()) {
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
 		test = true;
-		m_IsSkillActive = false;
+		m_bSkillActive = false;
 	}
 
 	if (test) {

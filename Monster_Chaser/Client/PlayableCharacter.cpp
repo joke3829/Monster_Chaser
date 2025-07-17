@@ -4,7 +4,7 @@ CPlayableCharacter::CPlayableCharacter(CSkinningObject* object, CAnimationManage
 	: m_Object(object)
 {
 	m_AManager = dynamic_cast<CPlayableCharacterAnimationManager*>(aManager);
-	m_IsBoss = isBoss;
+	m_bBoss = isBoss;
 }
 
 // =======================================================================================
@@ -17,7 +17,7 @@ void CPlayerMage::Skill1()
 	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_SKILL1), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
-	m_IsSkillActive = true;
+	m_bSkillActive = true;
 }
 
 void CPlayerMage::Skill2()
@@ -28,7 +28,7 @@ void CPlayerMage::Skill2()
 	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_SKILL2), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
-	m_IsSkillActive = true;
+	m_bSkillActive = true;
 }
 
 void CPlayerMage::Skill3()
@@ -39,7 +39,22 @@ void CPlayerMage::Skill3()
 	m_AManager->OnKey3Input();
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
-	m_IsSkillActive = true;
+	m_bSkillActive = true;
+}
+
+void CPlayerMage::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
+	}
+	else
+	{
+		m_bLive = false;
+		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT_DEATH), true);
+	}
 }
 
 CPlayerMage::CPlayerMage(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
@@ -69,7 +84,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
-		if (!m_IsSkillActive) {
+		if (!m_bSkillActive) {
 			XMFLOAT3 characterDir = cameraDir;
 			characterDir.y = 0.0f; // delete y value
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
@@ -89,7 +104,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 			if (m_pCamera->getThirdPersonState()) {
 				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 				CGameObject* frame = m_AManager->getFrame()[0];
-				if (!m_IsSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
+				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
 					m_Object->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 					XMFLOAT3 characterDir = cameraDir;
 					characterDir.y = 0.0f; // delete y value
@@ -116,7 +131,7 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 	XMStoreFloat3(&normalizedCharacterDir, XMVector3Normalize(XMLoadFloat3(&normalizedCharacterDir)));
 	XMFLOAT3 moveDir{};
 
-	if (m_IsSkillActive || m_bDoingCombo) {
+	if (m_bSkillActive || m_bDoingCombo) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
 		return;
 	}
@@ -505,18 +520,18 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		m_AManager->UpdateAniPosition(0.0f, m_Object);
 	}
 
-	if (!m_IsSkillActive && !m_bDoingCombo) {
+	if (!m_bSkillActive && !m_bDoingCombo) {
 		if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
 			XMFLOAT3 dodgeDir = characterDir;
@@ -551,19 +566,19 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_DODGE), true);
 			m_Object->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_BIGHIT), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_BIGHIT_DEATH), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
 			Skill1();
@@ -581,22 +596,26 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 void CPlayerMage::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
-	m_AManager->UpdateCombo(fElapsedTime);
-	if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false);
-		test = true;
-		m_IsSkillActive = false;
-		m_bDoingCombo = false;
-	}
-	if (m_AManager->IsComboInterrupted()) {
-		test = true;
-		m_AManager->ClearComboInterrupted();
-		m_IsSkillActive = false;
-		m_bDoingCombo = false;
-	}
+	if (m_bLive) {
+		m_AManager->UpdateCombo(fElapsedTime);
+		if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
+			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false);
+			test = true;
+			m_bSkillActive = false;
+			m_bDoingCombo = false;
+			m_bAttacked = false;
+		}
+		if (m_AManager->IsComboInterrupted()) {
+			test = true;
+			m_AManager->ClearComboInterrupted();
+			m_bSkillActive = false;
+			m_bDoingCombo = false;
+			m_bAttacked = false;
+		}
 
-	if (test) {
-		m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
 	}
 
 	/*for (auto& bulletPtr : bullet) {
@@ -616,7 +635,7 @@ void CPlayerWarrior::Skill1()
 	m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL1), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
-	m_IsSkillActive = true;
+	m_bSkillActive = true;
 }
 
 void CPlayerWarrior::Skill2()
@@ -627,7 +646,7 @@ void CPlayerWarrior::Skill2()
 	m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL2), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
-	m_IsSkillActive = true;
+	m_bSkillActive = true;
 }
 
 void CPlayerWarrior::Skill3()
@@ -639,7 +658,23 @@ void CPlayerWarrior::Skill3()
 	m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL3_2), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
-	m_IsSkillActive = true;
+	m_bSkillActive = true;
+}
+
+void CPlayerWarrior::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	m_bSkillActive = true;
+	if (m_HP > 0.0f)
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
+	}
+	else
+	{
+		m_bLive = false;
+		m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_DEATH), true);
+	}
 }
 
 CPlayerWarrior::CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
@@ -669,7 +704,7 @@ void CPlayerWarrior::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARA
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
-		if (!m_IsSkillActive) {
+		if (!m_bSkillActive) {
 			XMFLOAT3 characterDir = cameraDir;
 			characterDir.y = 0.0f; // delete y value
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
@@ -689,7 +724,7 @@ void CPlayerWarrior::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARA
 			if (m_pCamera->getThirdPersonState()) {
 				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 				CGameObject* frame = m_AManager->getFrame()[0];
-				if (!m_IsSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
+				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
 					m_Object->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 					XMFLOAT3 characterDir = cameraDir;
 					characterDir.y = 0.0f; // delete y value
@@ -716,7 +751,7 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 	XMStoreFloat3(&normalizedCharacterDir, XMVector3Normalize(XMLoadFloat3(&normalizedCharacterDir)));
 	XMFLOAT3 moveDir{};
 
-	if (m_IsSkillActive || m_bDoingCombo) {
+	if (m_bSkillActive || m_bDoingCombo) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
 		return;
 	}
@@ -1480,18 +1515,18 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		m_AManager->UpdateAniPosition(0.0f, m_Object);
 	}
 
-	if (!m_IsSkillActive && !m_bDoingCombo) {
+	if (!m_bSkillActive && !m_bDoingCombo) {
 		if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
 			XMFLOAT3 dodgeDir = characterDir;
@@ -1526,19 +1561,19 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_DODGE), true);
 			m_Object->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_BIGHIT), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_DEATH), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
 			Skill1();
@@ -1556,22 +1591,26 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 void CPlayerWarrior::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
-	m_AManager->UpdateCombo(fElapsedTime);
-	if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
-		m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false);
-		test = true;
-		m_IsSkillActive = false;
-		m_bDoingCombo = false;
-	}
-	if (m_AManager->IsComboInterrupted()) {
-		test = true;
-		m_AManager->ClearComboInterrupted();
-		m_IsSkillActive = false;
-		m_bDoingCombo = false;
-	}
+	if (m_bLive) {
+		m_AManager->UpdateCombo(fElapsedTime);
+		if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
+			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false);
+			test = true;
+			m_bSkillActive = false;
+			m_bDoingCombo = false;
+			m_bAttacked = false;
+		}
+		if (m_AManager->IsComboInterrupted()) {
+			test = true;
+			m_AManager->ClearComboInterrupted();
+			m_bSkillActive = false;
+			m_bDoingCombo = false;
+			m_bAttacked = false;
+		}
 
-	if (test) {
-		m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
 	}
 }
 
@@ -1585,7 +1624,7 @@ void CPlayerPriest::Skill1()
 	m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_SKILL1), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
-	m_IsSkillActive = true;
+	m_bSkillActive = true;
 }
 
 void CPlayerPriest::Skill2()
@@ -1596,7 +1635,7 @@ void CPlayerPriest::Skill2()
 	m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_SKILL2), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
-	m_IsSkillActive = true;
+	m_bSkillActive = true;
 }
 
 void CPlayerPriest::Skill3()
@@ -1607,7 +1646,22 @@ void CPlayerPriest::Skill3()
 	m_AManager->OnKey3Input();
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
-	m_IsSkillActive = true;
+	m_bSkillActive = true;
+}
+
+void CPlayerPriest::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
+	}
+	else
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT_DEATH), true);
+		m_bLive = false;
+	}
 }
 
 CPlayerPriest::CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
@@ -1637,7 +1691,7 @@ void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
-		if (!m_IsSkillActive) {
+		if (!m_bSkillActive) {
 			XMFLOAT3 characterDir = cameraDir;
 			characterDir.y = 0.0f; // delete y value
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
@@ -1657,7 +1711,7 @@ void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM
 			if (m_pCamera->getThirdPersonState()) {
 				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 				CGameObject* frame = m_AManager->getFrame()[0];
-				if (!m_IsSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
+				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
 					m_Object->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 					XMFLOAT3 characterDir = cameraDir;
 					characterDir.y = 0.0f; // delete y value
@@ -1684,7 +1738,7 @@ void CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 	XMStoreFloat3(&normalizedCharacterDir, XMVector3Normalize(XMLoadFloat3(&normalizedCharacterDir)));
 	XMFLOAT3 moveDir{};
 
-	if (m_IsSkillActive || m_bDoingCombo) {
+	if (m_bSkillActive || m_bDoingCombo) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
 		return;
 	}
@@ -2073,18 +2127,18 @@ void CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		m_AManager->UpdateAniPosition(0.0f, m_Object);
 	}
 
-	if (!m_IsSkillActive && !m_bDoingCombo) {
+	if (!m_bSkillActive && !m_bDoingCombo) {
 		if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['K'] & 0x80) && !(m_PrevKeyBuffer['K'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer[VK_SPACE] & 0x80) && !(m_PrevKeyBuffer[VK_SPACE] & 0x80)) {
 			XMFLOAT3 dodgeDir = characterDir;
@@ -2119,19 +2173,19 @@ void CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_DODGE), true);
 			m_Object->SetLookDirection(dodgeDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['L'] & 0x80) && !(m_PrevKeyBuffer['L'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_BIGHIT), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['U'] & 0x80) && !(m_PrevKeyBuffer['U'] & 0x80)) {
 			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_BIGHIT_DEATH), true);
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_IsSkillActive = true;
+			m_bSkillActive = true;
 		}
 		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
 			Skill1();
@@ -2149,22 +2203,26 @@ void CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 void CPlayerPriest::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
-	m_AManager->UpdateCombo(fElapsedTime);
-	if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
-		m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false);
-		test = true;
-		m_IsSkillActive = false;
-		m_bDoingCombo = false;
-	}
-	if (m_AManager->IsComboInterrupted()) {
-		test = true;
-		m_AManager->ClearComboInterrupted();
-		m_IsSkillActive = false;
-		m_bDoingCombo = false;
-	}
+	if (m_bLive) {
+		m_AManager->UpdateCombo(fElapsedTime);
+		if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
+			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false);
+			test = true;
+			m_bSkillActive = false;
+			m_bDoingCombo = false;
+			m_bAttacked = false;
+		}
+		if (m_AManager->IsComboInterrupted()) {
+			test = true;
+			m_AManager->ClearComboInterrupted();
+			m_bSkillActive = false;
+			m_bDoingCombo = false;
+			m_bAttacked = false;
+		}
 
-	if (test) {
-		m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
 	}
 }
 

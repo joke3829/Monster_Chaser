@@ -15,8 +15,13 @@ public:
 	virtual void ProcessInput(UCHAR* keyBuffer,float fElapsedTime) {}																									
 	virtual void UpdateObject(float fElapsedTime) {}
 
-	bool IsBoss() const { return m_IsBoss; }																																	  
-																																															
+	virtual void Attacked(float damage) {}
+
+	bool IsBoss() const { return m_bBoss; }						
+	bool IsAttacking()const { return m_bSkillActive; }
+	bool IsOnceAttacked()const { return m_bAttacked; }
+																	
+	int getCurrentSkill() const { return m_CurrentSkill; }
 	CSkinningObject* getObject() { return m_Object; }																														
 	CPlayableCharacterAnimationManager* getAniManager() { return m_AManager; }				
 	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
@@ -25,7 +30,8 @@ public:
 protected:																																												
 	// stat																																													
 	float m_HP{};																																										
-	float m_MP{};																																										
+	float m_MP{};			
+	int m_CurrentSkill = 0;
 																																															
 	CSkinningObject* m_Object{};																																				  
 	CPlayableCharacterAnimationManager* m_AManager{};																												  
@@ -33,10 +39,12 @@ protected:
 																																															
 	std::shared_ptr<CCamera> m_pCamera;																																		
 																																															
-	bool m_IsBoss = false;																																							
-	bool m_IsSkillActive = false;																																					  																																		
+	bool m_bBoss = false;																																							
+	bool m_bSkillActive = false;																																					  																																		
 	bool m_bDoingCombo = false;
 	bool m_bMoving = false;
+	bool m_bLive = true;
+	bool m_bAttacked = false;
 
 	bool mouseIsInitialize = false;
 	POINT oldCursor{};
@@ -87,6 +95,8 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
+	virtual void Attacked(float damage);
+
 	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
@@ -134,6 +144,8 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
+	virtual void Attacked(float damage);
+
 	CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
@@ -180,6 +192,8 @@ public:
 	virtual void Skill1();
 	virtual void Skill2();
 	virtual void Skill3();
+
+	virtual void Attacked(float damage);
 
 	CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
 
