@@ -186,8 +186,6 @@ public:
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 protected:
-	std::vector<std::unique_ptr<MeshCollider>> m_colliders;
-
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};
 	
