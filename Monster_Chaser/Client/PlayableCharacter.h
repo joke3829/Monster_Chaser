@@ -92,7 +92,8 @@ public:
 	void UpdateObject(float fElapsedTime);
 protected:
 	// personal Resource(bullet, particle etc.)
-	CProjectile bullet{};
+	std::vector<CProjectile> bullet{};
+	int currentBullet = 0;
 };
 
 class CPlayerWarrior : public CPlayableCharacter {
@@ -185,7 +186,7 @@ public:
 
 	void UpdateObject(float fElapsedTime);
 protected:
-	CProjectile bullet{};
+	std::vector<CProjectile> bullet{};
 };
 
 // A real controlling player

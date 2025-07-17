@@ -119,12 +119,11 @@ public:
 	void CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2);
 
 	void TestCollision(const std::vector<std::unique_ptr<CGameObject>>& mapObjects, const std::vector<std::unique_ptr<CSkinningObject>>& characters);
-	void TestShootCollision(const std::vector<std::unique_ptr<CProjectile>>& Objects, const std::vector<std::unique_ptr<CSkinningObject>>& characters);
+
+	void TestShootCollision(const std::vector<std::unique_ptr<CProjectile>>& projectiles, const std::vector<std::unique_ptr<CPlayableCharacter>>& targets); //real Projectile attack collision
 
 	XMFLOAT3 CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //법선 벡터 구하기
 	float CalculateDepth(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //침투 깊이 구하기
-
-	bool CheckTriangleSphereCollision(const XMFLOAT3* tri, const BoundingSphere& sphere, XMFLOAT3& outNormal, float& outDepth);
 
 	void CreateRootSignature();
 	void CreateComputeRootSignature();
