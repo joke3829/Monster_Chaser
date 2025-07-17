@@ -1,33 +1,8 @@
 #pragma once
 #include "ResourceManager.h"
+#include "PlayableCharacter.h"
 
-class Monster{
-public:
-	Monster(CSkinningObject* object, CAnimationManager* aManager,bool isBoss);
-
-	// example
-	virtual void Skill1() {}
-	virtual void Skill2() {}
-	virtual void Skill3() {}
-
-	virtual void UpdateObject(float fElapsedTime) {}
-	bool IsBoss() const { return m_IsBoss; }
-
-	CSkinningObject* getObject() { return m_Object; }
-	CAnimationManager* getAniManager() { return m_AManager; }
-
-protected:
-	// stat
-	float m_HP{};
-	bool m_IsBoss{ false };
-
-	CSkinningObject* m_Object{};
-	CAnimationManager* m_AManager{};
-
-	bool m_IsSkillActive;
-};
-
-class Stage1_Monster : public Monster
+class Stage1_Monster : public CPlayableCharacter
 {
 public:
 	enum class Minion {
@@ -56,7 +31,7 @@ public:
 	virtual void Skill2();
 };
 
-class Stage2_Monster : public Monster
+class Stage2_Monster : public CPlayableCharacter
 {
 public:
 	enum class Minion {
@@ -88,7 +63,7 @@ public:
 	virtual void Skill3();
 };
 
-class Stage3_Monster : public Monster
+class Stage3_Monster : public CPlayableCharacter
 {
 public:
 	enum class Boss {

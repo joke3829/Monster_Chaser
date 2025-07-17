@@ -4,39 +4,38 @@
 
 class CPlayableCharacter {
 public:
-	CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager);
+	CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager,bool isBoss);
 
 	// example
 	virtual void Skill1() {}
 	virtual void Skill2() {}
-	virtual void Skill3() {}
-
-	virtual void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
-	virtual void ProcessInput(UCHAR* keyBuffer,float fElapsedTime) {}
+	virtual void Skill3() {}																																							  
+																																															
+	virtual void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}														  
+	virtual void ProcessInput(UCHAR* keyBuffer,float fElapsedTime) {}																									
 	virtual void UpdateObject(float fElapsedTime) {}
 
-	CSkinningObject* getObject() { return m_Object; }
-	CPlayableCharacterAnimationManager* getAniManager() { return m_AManager; }
-
-	void SetCamera(std::shared_ptr<CCamera>& camera) { m_pCamera = camera; }
-protected:
-	// stat
-	float m_HP{};
-	float m_MP{};
-
-
-	CSkinningObject* m_Object{};
-	CPlayableCharacterAnimationManager* m_AManager{};
-
-
-	std::shared_ptr<CCamera> m_pCamera;
-
-	bool m_bLockAnimation = false;
-	bool m_bLockAnimation1 = false;
-	bool m_bStopAnimaiton = false;
+	bool IsBoss() const { return m_IsBoss; }																																	  
+																																															
+	CSkinningObject* getObject() { return m_Object; }																														
+	CPlayableCharacterAnimationManager* getAniManager() { return m_AManager; }																				
+																																															
+	void SetCamera(std::shared_ptr<CCamera>& camera) { m_pCamera = camera; }																				  
+protected:																																												
+	// stat																																													
+	float m_HP{};																																										
+	float m_MP{};																																										
+																																															
+	CSkinningObject* m_Object{};																																				  
+	CPlayableCharacterAnimationManager* m_AManager{};																												  
+																																															
+																																															
+	std::shared_ptr<CCamera> m_pCamera;																																		
+																																															
+	bool m_IsBoss = false;																																							
+	bool m_IsSkillActive = false;																																					  																																		
 	bool m_bDoingCombo = false;
 	bool m_bMoving = false;
-	bool m_bFirst = false;
 
 	bool mouseIsInitialize = false;
 	POINT oldCursor{};
@@ -85,7 +84,7 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
-	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager);
+	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void ProcessInput(UCHAR* keyBuffer,float fElapsedTime);
@@ -132,7 +131,7 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
-	CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager);
+	CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -179,7 +178,7 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
-	CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager);
+	CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);

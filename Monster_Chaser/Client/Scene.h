@@ -184,8 +184,6 @@ public:
 	void Render();
 	void PrepareTerrainTexture();
 
-	void TestCollisions();
-
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 protected:
 	std::vector<std::unique_ptr<MeshCollider>> m_colliders;

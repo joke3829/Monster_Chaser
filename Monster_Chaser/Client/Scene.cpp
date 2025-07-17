@@ -1446,7 +1446,7 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 	//switch (nMessage) {
 	//case WM_LBUTTONDOWN:
 	//{
-	//	if (!m_bLockAnimation && !m_bLockAnimation1) {
+	//	if (!m_bLockAnimation && !m_IsSkillActive) {
 	//		auto& animationManagers = m_pResourceManager->getAnimationManagers();
 	//		for (auto& animationManager : animationManagers) {
 	//			XMFLOAT3 characterDir = cameraDir;
@@ -1475,7 +1475,7 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 	//		auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
 	//		if (animationManager && !animationManager->getFrame().empty()) {
 	//			CGameObject* frame = animationManager->getFrame()[0];
-	//			if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
+	//			if (!m_bLockAnimation && !m_IsSkillActive && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
 	//				m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 	//				XMFLOAT3 characterDir = cameraDir;
 	//				characterDir.y = 0.0f; // delete y value
@@ -1887,9 +1887,9 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\Cave.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
-	//CreateMageCharacter();
+	CreateMageCharacter();
 	//CreateWarriorCharacter();
-	CreatePriestCharacter();
+	//CreatePriestCharacter();
 	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
@@ -2182,7 +2182,7 @@ void CRaytracingWinterLandScene::CreateMageCharacter()
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	m_vPlayers.emplace_back(std::make_unique<CPlayerMage>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
-		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(),false));
 
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
@@ -2193,7 +2193,7 @@ void CRaytracingWinterLandScene::CreateWarriorCharacter()
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\swordman_lv1.bin", "src\\texture\\Swordman\\", JOB_WARRIOR);
 	m_vPlayers.emplace_back(std::make_unique<CPlayerWarrior>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
-		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(),false));
 }
 
 void CRaytracingWinterLandScene::CreatePriestCharacter()
@@ -2201,7 +2201,7 @@ void CRaytracingWinterLandScene::CreatePriestCharacter()
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Luna_Firemantle_33.bin", "src\\texture\\Luna\\", JOB_HEALER);
 	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
-		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(),false));
 }
 
 void CRaytracingWinterLandScene::PrepareTerrainTexture()
@@ -2369,86 +2369,6 @@ void CRaytracingWinterLandScene::PrepareTerrainTexture()
 	srvDesc.Texture2D.MipLevels = -1;
 	g_DxResource.device->CreateShaderResourceView(g_DxResource.nullTexture.Get(), &srvDesc, handle);
 	handle.ptr += increment;
-}
-
-void CRaytracingWinterLandScene::TestCollisions()
-{
-	auto& skinned = m_pResourceManager->getSkinningObjectList();
-	auto& meshes = m_pResourceManager->getMeshList();
-
-	struct CollisionInfo {
-		XMFLOAT3 normal;
-		float depth;
-		float meshHeight;
-	};
-
-	for (const auto& character : skinned) {
-		std::vector<CollisionInfo> collisions;
-		for (const auto& bone : character->getObjects()) {
-			if (bone->getBoundingInfo() & 0x1100) {
-				BoundingSphere boneSphere = bone->getObjectSphere();
-				boneSphere.Transform(boneSphere, XMLoadFloat4x4(&bone->getWorldMatrix()));
-
-				for (const auto& collider : m_colliders) {
-					BoundingOrientedBox mapOBB = collider->getOBB();
-					float meshHeight = mapOBB.Extents.y * 2.0f;
-
-					// Check if bone sphere intersects with collider's OBB
-					if (mapOBB.Intersects(boneSphere)) {
-						// Get the BVH tree for the collider
-						const auto& bvhTree = collider->getBVHTree();
-						std::vector<size_t> candidateTriangles;
-
-						// Query BVH tree for potential triangle intersections
-						bvhTree.query(boneSphere, candidateTriangles);
-
-						const auto& positions = collider->getPositions();
-						const auto& indices = collider->getIndices();
-
-						// Check collision with each candidate triangle from BVH
-						for (size_t i : candidateTriangles) {
-							if (i + 2 >= indices.size()) continue;
-
-							XMFLOAT3 tri[3] = {
-								positions[indices[i]],
-								positions[indices[i + 1]],
-								positions[indices[i + 2]]
-							};
-
-							XMMATRIX worldMatrix = XMLoadFloat4x4(&bone->getWorldMatrix());
-							for (int j = 0; j < 3; ++j) {
-								XMVECTOR vertex = XMLoadFloat3(&tri[j]);
-								vertex = XMVector3Transform(vertex, worldMatrix);
-								XMStoreFloat3(&tri[j], vertex);
-							}
-
-							XMFLOAT3 normal;
-							float depth;
-							if (CheckTriangleSphereCollision(tri, boneSphere, normal, depth)) {
-								collisions.push_back({ normal, depth, meshHeight });
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if (!collisions.empty()) {
-			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),
-				[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
-
-			XMFLOAT3 norm = maxCollision->normal;
-			float depth = maxCollision->depth;
-			float meshHeight = maxCollision->meshHeight;
-
-			XMVECTOR moveDir = XMLoadFloat3(&character->getMoveDirection());
-			XMVECTOR normal = XMLoadFloat3(&norm);
-			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
-			if (dotProduct < 0.0f) {
-				character->sliding(depth, norm, meshHeight);
-			}
-		}
-	}
 }
 
 void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
