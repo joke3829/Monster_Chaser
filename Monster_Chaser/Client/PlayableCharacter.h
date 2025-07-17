@@ -18,7 +18,8 @@ public:
 	bool IsBoss() const { return m_IsBoss; }																																	  
 																																															
 	CSkinningObject* getObject() { return m_Object; }																														
-	CPlayableCharacterAnimationManager* getAniManager() { return m_AManager; }																				
+	CPlayableCharacterAnimationManager* getAniManager() { return m_AManager; }				
+	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
 																																															
 	void SetCamera(std::shared_ptr<CCamera>& camera) { m_pCamera = camera; }																				  
 protected:																																												
@@ -41,6 +42,8 @@ protected:
 	POINT oldCursor{};
 
 	UCHAR m_PrevKeyBuffer[256]{};
+
+	std::vector<std::unique_ptr<CProjectile>> bullet;
 };
 
 class CPlayerMage : public CPlayableCharacter {
@@ -92,7 +95,6 @@ public:
 	void UpdateObject(float fElapsedTime);
 protected:
 	// personal Resource(bullet, particle etc.)
-	std::vector<CProjectile> bullet{};
 	int currentBullet = 0;
 };
 
@@ -186,7 +188,7 @@ public:
 
 	void UpdateObject(float fElapsedTime);
 protected:
-	std::vector<CProjectile> bullet{};
+	std::vector<std::unique_ptr<CProjectile>> bullet;
 };
 
 // A real controlling player

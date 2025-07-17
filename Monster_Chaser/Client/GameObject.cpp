@@ -1472,6 +1472,7 @@ void CProjectile::IsMoving(float fElapsedTime)
 	{
 		m_bActive = false;
 		m_fElapsedTime = 0.0f;
+		delete this;
 	}
 }
 

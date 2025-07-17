@@ -1801,6 +1801,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	Create3StageBoss();
 	m_pMonster = std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get());
+
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
 	//m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingCave.bin");
@@ -1814,14 +1815,6 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// Create Normal Object & skinning Object Copy ========================================
-
-	//for (auto& obj : normalObjects) {
-	//	int meshIndex = obj->getMeshIndex();
-	//	if (meshIndex != -1 && meshIndex < meshes.size()) {
-	//		m_colliders.emplace_back(std::make_unique<MeshCollider>(*meshes[meshIndex]));
-	//		m_colliders.back()->BuildBVH();
-	//	}
-	//}
 
 	for (auto& o : skinned[1]->getObjects()) {
 		for (auto& ma : o->getMaterials())
@@ -2095,6 +2088,13 @@ void CRaytracingWinterLandScene::CreateMageCharacter()
 
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
+
+	/*m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), "box"));
+	m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+	m_pResourceManager->getGameObjectList().back()->SetMeshIndex(m_pResourceManager->getMeshList().size()-1);
+	m_pResourceManager->getGameObjectList().back()->getMaterials().emplace_back();
+
+	m_vPlayers.back()->GetBullets()[0].get()->setGameObject(m_pResourceManager->getGameObjectList().back().get());*/
 }
 
 void CRaytracingWinterLandScene::CreateWarriorCharacter()

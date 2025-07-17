@@ -75,13 +75,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
-			bullet.emplace_back();
-			bullet[currentBullet].setPosition(m_Object->getPosition());
-			bullet[currentBullet].setMoveDirection(characterDir);
-			bullet[currentBullet].setActive(true);
-			bullet[currentBullet].setTime(0.0f);
 			m_bDoingCombo = true;
-			currentBullet++;
 		}
 		break;
 	}
@@ -605,13 +599,11 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 		m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 	}
 
-	for (auto& s : bullet) {
-		s.IsMoving(fElapsedTime);
-		if (!s.getActive())
-		{
-			currentBullet = bullet.size() - 1;
+	/*for (auto& bulletPtr : bullet) {
+		if (bulletPtr->getActive()) {
+			bulletPtr->IsMoving(fElapsedTime);
 		}
-	}
+	}*/
 }
 
 // =======================================================================================
