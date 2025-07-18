@@ -2128,6 +2128,7 @@ void CRaytracingWinterLandScene::Create3StageBoss()
 
 void CRaytracingWinterLandScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
 {
+	//스피어-박스
 	for (const auto& target : targets) {
 		if (target->IsOnceAttacked()) continue;
 		for (const auto& targetBone : target->getObject()->getObjects()) {
@@ -2143,6 +2144,37 @@ void CRaytracingWinterLandScene::AttackCollision(const std::vector<std::unique_p
 					BoundingOrientedBox transformedAttackerOBB;
 					attackerOBB.Transform(transformedAttackerOBB, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
 					if (transformedAttackerOBB.Intersects(transformedTargetSphere)) {
+						float damage = 0.0f;
+						switch (attacker->getCurrentSkill()) {
+						case 1: damage = 200.0f; break;
+						case 2: damage = 400.0f; break;
+						case 3: damage = 300.0f; break;
+						}
+						if (damage > 0.0f) {
+							target->Attacked(damage);
+						}
+						return;
+					}
+				}
+			}
+		}
+	}
+	//스피어-스피어
+	for (const auto& target : targets) {
+		if (target->IsOnceAttacked()) continue;
+		for (const auto& targetBone : target->getObject()->getObjects()) {
+			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+			BoundingSphere targetSphere = targetBone->getObjectSphere();
+			BoundingSphere transformedTargetSphere;
+			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+			for (const auto& attacker : attackers) {
+				if (!attacker->IsAttacking()) continue;
+				for (const auto& attackerBone : attacker->getObject()->getObjects()) {
+					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
+					BoundingSphere attackerSphere = attackerBone->getObjectSphere();
+					BoundingSphere transformedAttackerSphere;
+					attackerSphere.Transform(transformedAttackerSphere, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
+					if (transformedAttackerSphere.Intersects(transformedTargetSphere)) {
 						float damage = 0.0f;
 						switch (attacker->getCurrentSkill()) {
 						case 1: damage = 200.0f; break;
