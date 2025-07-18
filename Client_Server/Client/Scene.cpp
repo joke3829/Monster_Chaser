@@ -1,4 +1,4 @@
-#include "Scene.h"
+﻿#include "Scene.h"
 #include "C_Socket.h"
 #include "protocol.h"
 extern C_Socket Client;
@@ -470,6 +470,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		}
 		if (Client.getstart()) {
 			wOpacity = 0.0f;
+			m_nNextScene = SCENE_WINTERLAND;	// 한번만 테스트 성공 해봤지만 계속 터져서 이거 넣어봄
 		}
 		break;
 	}
