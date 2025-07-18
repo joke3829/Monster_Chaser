@@ -161,6 +161,7 @@ void Stage3_Monster::UpdateObject(float fElapsedTime)
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
 		test = true;
 		m_bSkillActive = false;
+		m_CurrentSkill = 0;
 	}
 
 	if (test) {
