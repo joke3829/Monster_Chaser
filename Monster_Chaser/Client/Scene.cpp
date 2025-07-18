@@ -2511,7 +2511,7 @@ void CRaytracingParticleTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	pmaterial.m_nAlbedoMapIndex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\GreenCross.dds"));
 	particles[0]->setMaterial(pmaterial);
-	particles[0]->setPosition(XMFLOAT3(0.0, 2.0, 0.0));
+	particles[0]->setPosition(XMFLOAT3(0.0, 0.0, 0.0));
 
 
 	// cubeMap Ready
@@ -2755,7 +2755,7 @@ void CRaytracingParticleTestScene::CreateOnePath()
 	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
 	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
 
-	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GS_Boom_OnePath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GS_Buff_OnePath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
 	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
 	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
 
@@ -2831,7 +2831,7 @@ void CRaytracingParticleTestScene::CreateTwoPath()
 	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
 	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
 
-	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GS_Boom_TwoPath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "GS_Buff_TwoPath", "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
 	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
 	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
 
