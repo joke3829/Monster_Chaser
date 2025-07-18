@@ -1,6 +1,6 @@
 #include "ObjectManager.h"
 extern std::mutex mtx;
-extern std::unordered_map<int, Player*> Players;
+extern std::unordered_map<int, Player> Players;
 
 ObjectManager::ObjectManager(int id)
     : my_id(id), m_Matrix() {}

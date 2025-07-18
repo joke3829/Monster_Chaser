@@ -1,4 +1,7 @@
 #pragma once
+
+#define NOMINMAX
+
 #include <iostream>
 #include <WS2tcpip.h>
 #include <d3d12.h>
@@ -47,7 +50,11 @@ enum MoveAnimationState
 	RUN_LEFT_DOWN = 19,
 	RUN_RIGHT_DOWN = 20,
 };
-
+enum Character:char {
+	Wizard=0,
+	Warrior,
+	Priest
+};
 
 struct vec3 {
 	float x;

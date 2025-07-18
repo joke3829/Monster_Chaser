@@ -5,7 +5,9 @@
 #include "ShaderBindingTableManager.h"
 #include "AccelerationStructureManager.h"
 #include "UIObject.h"
+#include "TextManager.h"
 #include "stdfxh.h"
+#include "Monster.h"
 #include "ObjectManager.h"
 
 extern DXResources g_DxResource;
@@ -19,13 +21,16 @@ public:
 	virtual void CreateOrthoMatrixBuffer();
 
 	virtual void UpdateObject(float fElapsedTime) {};
-	
+
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void ProcessInput(float fElapsedTime) {};
 
-	virtual void PrepareRender() {};
-	virtual void Render() {};
+	virtual void PrepareRender() {}
+	virtual void Render() {}
+	virtual void PostProcess() {}
+
+	virtual void TextRender() {}
 
 	short getNextSceneNumber() const { return m_nNextScene; }
 
@@ -42,10 +47,11 @@ protected:
 	std::shared_ptr<CCamera>			m_pCamera{};
 
 	ComPtr<ID3D12Resource>					m_cameraCB{};
+	std::shared_ptr<CTextManager>			m_pTextManager{};
 	short m_nNextScene = -1;
 };
 
-
+// ==================================================================================
 
 class TitleScene : public CScene {
 public:
@@ -71,12 +77,12 @@ protected:
 	float									startTime{};
 	// Room Select variables
 	int										peopleindex{};
-	
+
 
 	// InRoom variables
 	short									local_uid{};
 	short									currentRoom{};
-	std::array<short, 3>					userJob{ JOB_MAGE, JOB_MAGE, JOB_MAGE };
+	std::array<short, 3>				userJob{ JOB_MAGE, JOB_MAGE, JOB_MAGE };
 	std::array<bool, 3>						userReadyState{};
 	short									readyUIIndex{};
 	short									backUIIndex{};
@@ -84,6 +90,8 @@ protected:
 	short prevJob{};
 	short CUIindex{};
 };
+
+// ==================================================================================
 
 template<typename T>
 concept HasGameObjectInterface = requires(T t) {
@@ -111,6 +119,7 @@ public:
 
 	void PrepareRender();
 	virtual void Render();
+	virtual void PostProcess() {};
 
 	template<typename T, typename U>
 		requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
@@ -139,31 +148,9 @@ protected:
 	std::unique_ptr<CShaderBindingTableManager>			m_pShaderBindingTable{};
 	std::unique_ptr<CAccelerationStructureManager>		m_pAccelerationStructureManager{};
 
-
 	// Animation Tool
-
 	ComPtr<ID3D12RootSignature>							m_pComputeRootSignature{};
 	ComPtr<ID3D12PipelineState>							m_pAnimationComputeShader{};
-};
-
-class CRaytracingTestScene : public CRaytracingScene {
-public:
-	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
-	void ProcessInput(float fElapsedTime);
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-
-	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
-};
-
-class CRaytracingMaterialTestScene : public CRaytracingScene {
-public:
-	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
-	void ProcessInput(float fElapsedTime);
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-
-	void Render();
 };
 
 enum InGameState{IS_LOADING, IS_GAMING, IS_FINISH};

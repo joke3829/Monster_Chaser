@@ -1,11 +1,12 @@
-// Network.h
+﻿// Network.h
 #pragma once
 
 
 #include "stdafx.h"
 #include "protocol.h"
 #include "Room.h"
-#include "Character.h"
+#include "Player.h"
+#include "PlayerManager.h"
 #include "Monster.h"
 
 #pragma comment(lib, "ws2_32.lib")
@@ -33,20 +34,18 @@ class SESSION {
 public:
     SOCKET socket;
     std::unique_ptr<EXP_OVER> recv_over;
-    int m_uniqueNo;
-    XMFLOAT4X4 m_pos;
     unsigned char remained = 0;
 
-    std::string name;               //user name
-    int local_id;
-    int room_num;
+    int m_uniqueNo;
 
-    SESSION(int Num,SOCKET s);
+    std::shared_ptr<Player> player;  //  게임 상태는 여기로
+
+    SESSION(int Num, SOCKET s);
     ~SESSION();
 
     void do_recv();
     void do_send(void* buff);
-    void process_packet( char* p);
+    void process_packet(char* p);
     void BroadCasting_position(const int& size);
 };
 
@@ -63,7 +62,7 @@ public:
     
     
 
-    std::unordered_map<int, Monster*> monsters;
+    PlayerManager playerManager;  //  플레이어 상태 관리는 이걸로!
 
 
    SOCKET listen_socket;

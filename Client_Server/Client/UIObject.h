@@ -32,16 +32,16 @@ protected:
 
 	std::vector<XMFLOAT4>		m_vColor{};
 	ComPtr<ID3D12Resource>		m_ColorBuffer{};
-	void*						m_pColorMappedptr{};
+	void* m_pColorMappedptr{};
 
 	ComPtr<ID3D12Resource>		m_CB{};
 	XMFLOAT4X4					m_WorldMatrix{};
 	XMFLOAT4X4					m_uvTransform{};
-	UIConstant*					m_pMap{};
+	UIConstant* m_pMap{};
 	unsigned int				m_nCBRootParameterIndex{};
 	unsigned int				m_nTextureRootParameterIndex{};
 
-	Mesh*						m_pMesh{};
-	CTexture*					m_pTexture{};
+	Mesh* m_pMesh{};
+	CTexture* m_pTexture{};
 };
 

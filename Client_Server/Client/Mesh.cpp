@@ -1,11 +1,11 @@
-#include "Mesh.h"
+﻿#include "Mesh.h"
 
 CHeightMapImage::CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3& xmf3Scale)
 {
 	m_nWidth = nWidth;
 	m_nLength = nLength;
 	m_xmf3Scale = xmf3Scale;
-	
+
 	std::ifstream inFile{ filePath, std::ios::binary };
 	std::vector<WORD> v(m_nWidth * m_nLength);
 	inFile.read((char*)v.data(), sizeof(WORD) * m_nLength * m_nWidth);
@@ -14,7 +14,7 @@ CHeightMapImage::CHeightMapImage(const wchar_t* filePath, int nWidth, int nLengt
 	for (int z = 0; z < m_nLength; ++z) {
 		for (int x = 0; x < m_nWidth; ++x) {
 			//m_pHeightMapPixels[x + ((m_nLength - 1 - z) * m_nWidth)] = v[x + (z * m_nWidth)];//pHeightMapPixels[x + (z * m_nWidth)];
-			m_pHeightMapPixels[x + (z*m_nWidth)] = v[x + (z * m_nWidth)];
+			m_pHeightMapPixels[x + (z * m_nWidth)] = v[x + (z * m_nWidth)];
 		}
 	}
 }
@@ -61,6 +61,7 @@ Mesh::Mesh(std::ifstream& inFile, std::string strMeshName)
 		strLabel.assign(nStrLength, ' ');
 		inFile.read(strLabel.data(), nStrLength);
 		};
+	// �̸� �ޱ�
 	//GetMeshNameFromFile(inFile);
 	m_MeshName = strMeshName;
 
@@ -124,7 +125,7 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 
 			XMVECTOR N{};
 			XMFLOAT3 v1{ x * xmf3Scale.x , heightmap->GetHeight(x, z - 1),  (z - 1) * xmf3Scale.z };
-			XMFLOAT3 v2{ (x + 1) * xmf3Scale.x , heightmap->GetHeight(x + 1, z - 1),  (z - 1)* xmf3Scale.z };
+			XMFLOAT3 v2{ (x + 1) * xmf3Scale.x , heightmap->GetHeight(x + 1, z - 1),  (z - 1) * xmf3Scale.z };
 			XMFLOAT3 v3{ (x - 1) * xmf3Scale.x , heightmap->GetHeight(x - 1, z),  z * xmf3Scale.z };
 			XMFLOAT3 v4{ x * xmf3Scale.x , heightmap->GetHeight(x, z),  z * xmf3Scale.z };
 			XMFLOAT3 v5{ (x + 1) * xmf3Scale.x , heightmap->GetHeight(x + 1, z),  z * xmf3Scale.z };
@@ -188,7 +189,7 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr, IID_PPV_ARGS(m_pd3dNormalsBuffer.GetAddressOf()));
 	m_pd3dNormalsBuffer->Map(0, nullptr, &tempData);
-	memcpy(tempData, normals.data(), sizeof(XMFLOAT3)* m_nNormalsCount);
+	memcpy(tempData, normals.data(), sizeof(XMFLOAT3) * m_nNormalsCount);
 	m_pd3dNormalsBuffer->Unmap(0, nullptr);
 
 	m_bHasSubMeshes = true;
@@ -210,7 +211,7 @@ Mesh::Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName)
 	m_MeshName = meshName;
 	m_bHasBoundingBox = true;
 	m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-	
+
 	std::vector<XMFLOAT3> pos(8);
 	pos[0] = XMFLOAT3(center.x - extent.x, center.y - extent.y, center.z - extent.z);
 	pos[1] = XMFLOAT3(center.x + extent.x, center.y - extent.y, center.z - extent.z);
@@ -518,7 +519,7 @@ Mesh::Mesh(XMFLOAT3& center, float width, float height, short arrow)
 }
 //void Mesh::GetMeshNameFromFile(std::ifstream& inFile)
 //{
-//	int temp;
+//	int temp;	// ������ ��
 //	inFile.read((char*)&temp, sizeof(int));
 //
 //	char nStrLength{};
@@ -536,9 +537,11 @@ void Mesh::GetBoundInfoFromFile(std::ifstream& inFile)
 	m_OBB = BoundingOrientedBox(OBBCenter, OBBExtent, XMFLOAT4(0.0, 0.0, 0.0, 1.0));
 }
 
+// ���� ������ ������ ���ÿ� vertexbuffer ����
 void Mesh::GetPositionFromFile(std::ifstream& inFile)
 {
-	inFile.read((char*)&m_nVertexCount, sizeof(int));	
+	// ���Ͽ��� ���� �б�
+	inFile.read((char*)&m_nVertexCount, sizeof(int));	// ������ ���� �б�
 	if (m_nVertexCount > 0) {
 		m_bHasVertex = true;
 
@@ -546,10 +549,12 @@ void Mesh::GetPositionFromFile(std::ifstream& inFile)
 		vPositions.assign(m_nVertexCount, XMFLOAT3(0.0, 0.0, 0.0));
 		inFile.read((char*)vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
 
+		// vertex buffer ����
 		auto desc = BASIC_BUFFER_DESC;
 		desc.Width = sizeof(XMFLOAT3) * m_nVertexCount;
-		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, 
-		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dVertexBuffer.GetAddressOf()));
+		// �ϴ��� UPLOAD�� ����, ���� �� DEFAULT�� ���� ����
+		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
+			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dVertexBuffer.GetAddressOf()));
 
 		void* ptr;
 		m_pd3dVertexBuffer->Map(0, nullptr, &ptr);
@@ -571,6 +576,7 @@ void Mesh::GetColorsFromFile(std::ifstream& inFile)
 		// CreateBuffer
 		auto desc = BASIC_BUFFER_DESC;
 		desc.Width = sizeof(XMFLOAT4) * m_nColorCount;
+		// �ϴ��� UPLOAD�� ����, ���� �� DEFAULT�� ���� ����
 		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dColorsBuffer.GetAddressOf()));
 
@@ -596,6 +602,7 @@ void Mesh::GetTexCoord0FromFile(std::ifstream& inFile)
 		// CreateBuffer
 		auto desc = BASIC_BUFFER_DESC;
 		desc.Width = sizeof(XMFLOAT2) * m_nTexCoord0Count;
+		// �ϴ��� UPLOAD�� ����, ���� �� DEFAULT�� ���� ����
 		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dTexCoord0Buffer.GetAddressOf()));
 
@@ -618,6 +625,7 @@ void Mesh::GetTexCoord1FromFile(std::ifstream& inFile)
 		// CreateBuffer
 		auto desc = BASIC_BUFFER_DESC;
 		desc.Width = sizeof(XMFLOAT2) * m_nTexCoord1Count;
+		// �ϴ��� UPLOAD�� ����, ���� �� DEFAULT�� ���� ����
 		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dTexCoord1Buffer.GetAddressOf()));
 
@@ -639,6 +647,7 @@ void Mesh::GetNormalFromFile(std::ifstream& inFile)
 		// CreateBuffer
 		auto desc = BASIC_BUFFER_DESC;
 		desc.Width = sizeof(XMFLOAT3) * m_nNormalsCount;
+		// �ϴ��� UPLOAD�� ����, ���� �� DEFAULT�� ���� ����
 		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dNormalsBuffer.GetAddressOf()));
 
@@ -661,6 +670,7 @@ void Mesh::GetTangentFromFile(std::ifstream& inFile)
 		// CreateBuffer
 		auto desc = BASIC_BUFFER_DESC;
 		desc.Width = sizeof(XMFLOAT3) * m_nTangentsCount;
+		// �ϴ��� UPLOAD�� ����, ���� �� DEFAULT�� ���� ����
 		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dTangentsBuffer.GetAddressOf()));
 
@@ -683,6 +693,7 @@ void Mesh::GetBiTangentFromFile(std::ifstream& inFile)
 		// CreateBuffer
 		auto desc = BASIC_BUFFER_DESC;
 		desc.Width = sizeof(XMFLOAT3) * m_nBiTangentsCount;
+		// �ϴ��� UPLOAD�� ����, ���� �� DEFAULT�� ���� ����
 		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dBiTangentsBuffer.GetAddressOf()));
 
@@ -711,12 +722,12 @@ void Mesh::MakeSubMesh(std::ifstream& inFile)
 	ComPtr<ID3D12Resource> indexBuffer{};
 	int subMeshIndex{};
 	UINT indices{};
-	
+
 	// "<SubMesh>:"
 	inFile.read(&nStrLength, sizeof(char));
 	label.assign(nStrLength, ' ');
 	inFile.read((char*)label.data(), nStrLength);
-	
+
 	inFile.read((char*)&subMeshIndex, sizeof(int));
 
 	inFile.read((char*)&indices, sizeof(int));
@@ -730,6 +741,7 @@ void Mesh::MakeSubMesh(std::ifstream& inFile)
 		// CreateBuffer
 		auto desc = BASIC_BUFFER_DESC;
 		desc.Width = sizeof(UINT) * indices;
+		// �ϴ��� UPLOAD�� ����, ���� �� DEFAULT�� ���� ����
 		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(indexBuffer.GetAddressOf()));
 
