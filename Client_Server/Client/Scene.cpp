@@ -1,4 +1,4 @@
-#include "Scene.h"
+﻿#include "Scene.h"
 #include "C_Socket.h"
 #include "protocol.h"
 extern C_Socket Client;
@@ -48,7 +48,6 @@ void CScene::CreateOrthoMatrixBuffer()
 	memcpy(temp, &ortho, sizeof(XMFLOAT4X4));
 	m_cameraCB->Unmap(0, nullptr);
 }
-
 // ==================================================================================
 
 void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
@@ -471,6 +470,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		}
 		if (Client.getstart()) {
 			wOpacity = 0.0f;
+			m_nNextScene = SCENE_WINTERLAND;	// 한번만 테스트 성공 해봤지만 계속 터져서 이거 넣어봄
 		}
 		break;
 	}
@@ -704,8 +704,6 @@ void CRaytracingScene::Render()
 
 	g_DxResource.cmdList->DispatchRays(&raydesc);
 }
-
-
 
 void CRaytracingScene::CreateRootSignature()
 {
@@ -1094,14 +1092,14 @@ inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique
 
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x1100) {
+				if (bone1->getBoundingInfo() & 0x1100) { 
 					DirectX::BoundingSphere boneSphere1 = bone1->getObjectSphere();
 					bone1->getObjectSphere().Transform(boneSphere1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
-						if (obj1 != character) {
+						if (obj1 != character) { 
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x1100) {
+								if (bone2->getBoundingInfo() & 0x1100) { 
 									DirectX::BoundingSphere boneSphere2 = bone2->getObjectSphere();
 									bone2->getObjectSphere().Transform(boneSphere2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneSphere1.Intersects(boneSphere2)) {
@@ -1133,7 +1131,7 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 				for (const auto& character : object2) {
 					for (const auto& bone : character->getObjects()) {
-						if (bone->getBoundingInfo() & 0x0011) {
+						if (bone->getBoundingInfo() & 0x0011) { 
 							DirectX::BoundingOrientedBox boneOBB;
 							bone->getObjectOBB().Transform(boneOBB, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
 							if (mapOBB.Intersects(boneOBB)) {
@@ -1146,14 +1144,14 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x0011) {
+				if (bone1->getBoundingInfo() & 0x0011) { 
 					DirectX::BoundingOrientedBox boneOBB1;
 					bone1->getObjectOBB().Transform(boneOBB1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
 						if (obj1 != character) {
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x0011) {
+								if (bone2->getBoundingInfo() & 0x0011) { 
 									DirectX::BoundingOrientedBox boneOBB2;
 									bone2->getObjectOBB().Transform(boneOBB2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneOBB1.Intersects(boneOBB2)) {
@@ -1180,6 +1178,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 
 	for (const auto& character : characters) {
 		std::vector<CollisionInfo> collisions;
+
 		for (const auto& mapObj : mapObjects) {
 			int meshIndex = mapObj->getMeshIndex();
 			if (meshIndex == -1 || meshIndex >= meshes.size()) continue;
@@ -1207,7 +1206,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 
 		if (!collisions.empty()) {
 
-			auto maxCollision = std::max_element(collisions.begin(), collisions.end(), [](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
+			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
 
 			XMFLOAT3 norm = maxCollision->normal;
 			float depth = maxCollision->depth;
@@ -1216,7 +1215,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 			XMVECTOR moveDir = XMLoadFloat3(&character->getMoveDirection());
 			XMVECTOR normal = XMLoadFloat3(&norm);
 			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
-			if (dotProduct < 0.0f) {
+			if (dotProduct < 0.0f) { 
 				character->sliding(depth, norm, meshHeight);
 			}
 		}
@@ -1327,539 +1326,6 @@ void CRaytracingScene::CreateComputeShader()
 
 // =====================================================================================
 
-void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
-{
-	// Create Global & Local Root Signature
-	CreateRootSignature();
-
-	// animation Pipeline Ready
-	CreateComputeRootSignature();
-	CreateComputeShader();
-
-	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
-	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
-	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit", L"ShadowAnyHit");
-	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
-	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
-	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();
-
-	// Resource Ready
-	m_pResourceManager = std::make_unique<CResourceManager>();
-	m_pResourceManager->SetUp(3);								// LightBufferReady
-	// Read File Here ========================================	! All Files Are Read Once !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
-	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
-	m_pResourceManager->ReadyLightBufferContent();
-	m_pResourceManager->LightTest();
-	// =========================================================
-
-	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
-	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
-	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
-	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
-	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
-	std::vector<std::unique_ptr<CProjectile>>& projectile = m_pResourceManager->getProjectileList();
-	// Create new Objects, Copy SkinningObject here ========================================
-
-	UINT finalindex = normalObjects.size();
-	UINT finalmesh = meshes.size();
-
-
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), "box"));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	normalObjects[finalindex]->getMaterials().emplace_back();
-
-	projectile.emplace_back(std::make_unique<CProjectile>());
-	projectile[0]->setGameObject(normalObjects[finalindex].get());
-
-	finalindex = normalObjects.size();
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	normalObjects[finalindex]->getMaterials().emplace_back();
-	projectile.emplace_back(std::make_unique<CProjectile>());
-	projectile[1]->setGameObject(normalObjects[finalindex].get());
-
-	finalindex = normalObjects.size();
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	normalObjects[finalindex]->getMaterials().emplace_back();
-	projectile.emplace_back(std::make_unique<CProjectile>());
-	projectile[2]->setGameObject(normalObjects[finalindex].get());
-
-	//Players.try_emplace(0, )
-	Players[0].setRenderingObject(skinned[0].get());
-
-	for (int i = 1; i < Players.size(); ++i) {
-		skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
-		skinned[i]->CopyFromOtherObject(skinned[0].get());
-		if (auto* mageManager = dynamic_cast<CMageManager*>(aManagers[0].get())) {
-			aManagers.emplace_back(std::make_unique<CMageManager>(*mageManager));
-		}
-		else {
-			aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
-		}
-		aManagers[i]->SetFramesPointerFromSkinningObject(skinned[i]->getObjects());
-		aManagers[i]->MakeAnimationMatrixIndex(skinned[i].get());
-		Players[i].setRenderingObject(skinned[i].get());
-	}
-
-
-	// Create new Object Example
-	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\asdf.raw", 2049, 2049, XMFLOAT3(1.0f, 0.03f, 1.0f));
-
-	UINT finalindex = normalObjects.size();
-	UINT finalmesh = meshes.size();
-	Material tMaterial{};
-	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-
-	UINT txtIndex = textures.size();
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_NORM.dds"));
-
-	tMaterial.m_bHasAlbedoMap = true; tMaterial.m_nAlbedoMapIndex = txtIndex;
-	tMaterial.m_bHasNormalMap = true; tMaterial.m_nNormalMapIndex = txtIndex + 1;
-	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
-	normalObjects[finalindex]->SetScale(XMFLOAT3(-1.0f, 1.0f, 1.0f));
-	normalObjects[finalindex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
-	normalObjects[finalindex]->SetPosition(XMFLOAT3(-1024.0, 0.0, 1024.0));*/
-
-	/*UINT finalindex = normalObjects.size();
-	UINT finalmesh = meshes.size();
-	Material tMaterial{};
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(5.0f, 20.0f, 5.0f)));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.2, 0.4, 0.2, 1.0);
-	tMaterial.m_bHasGlossyReflection = true; tMaterial.m_fGlossyReflection = 1.0f;
-	normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
-	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 30.0, 0.0)); */
-	/*skinned[0]->getObjects()[98]->getMaterials()[0].m_bHasEmissionMap = true;
-	skinned[0]->getObjects()[98]->getMaterials()[0].m_nEmissionMapIndex = skinned[0]->getTextures().size();
-	skinned[0]->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Gorhorrid\\T_Gorhorrid_Emissive.dds"));*/
-
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky2.dds", true));
-	// ===========================================================================================
-	m_pResourceManager->InitializeGameObjectCBuffer();	// CBV RAII
-	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
-
-
-	// ShaderBindingTable
-	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
-	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
-	m_pShaderBindingTable->CreateSBT();
-
-	// Normal Object Copy & Manipulation Matrix Here ================================
-
-	// g_user[id].do_send(mp);
-	// 0	1		2
-	for (int i = 0; i < Players.size(); ++i) {
-		skinned[i]->SetPosition(XMFLOAT3(0.0f, 0.0f, 40.0f + 10.0f * i));
-		skinned[i]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-	}
-
-
-	//skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-	//skinned[1]->SetPosition(XMFLOAT3(20.0f, 0.0f, 0.0f));
-	/*skinned[1]->setPreTransform(0.8, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-	skinned[2]->setPreTransform(0.8, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());*/
-
-	// ==============================================================================
-
-	m_pResourceManager->PrepareObject();
-	m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
-	m_pResourceManager->getAnimationManagers()[1]->setCurrnetSet(3);
-
-	// Setting Camera ==============================================================
-
-
-	m_pCamera->SetTarget(skinned[Client.get_id()]->getObjects()[0].get());
-	m_pCamera->SetHOffset(3.5f);
-	m_pCamera->SetCameraLength(15.0f);
-
-	// ==========================================================================
-
-	// AccelerationStructure
-	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
-	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
-	m_pAccelerationStructureManager->InitBLAS();
-	m_pAccelerationStructureManager->InitTLAS();
-
-
-}
-
-void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
-{
-	switch (nMessage) {
-	case WM_KEYDOWN:
-		switch (wParam) {
-		case '3':
-			break;
-		case '4':
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->setCurrnetSet(3);
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->setTimeZero();
-			break;
-		case '5':
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->setCurrnetSet(4);
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->setTimeZero();
-			break;
-		case '6':
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->setCurrnetSet(5);
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->setTimeZero();
-			break;
-		case '7':
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->setCurrnetSet(6);
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->setTimeZero();
-			break;
-		case '8':
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->setCurrnetSet(7);
-			m_pResourceManager->getAnimationManagers()[Client.get_id()]->setTimeZero();
-			break;
-		case 'N':
-			m_pCamera->toggleNormalMapping();
-			break;
-		case 'M':
-			m_pCamera->toggleAlbedoColor();
-			break;
-		case 'B':
-			m_pCamera->toggleReflection();
-			break;
-		case '9':
-			m_pCamera->SetThirdPersonMode(false);
-			break;
-		case '0':
-			m_pCamera->SetThirdPersonMode(true);
-			break;
-		}
-		break;
-	}
-}
-
-void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
-{
-
-}
-
-void CRaytracingTestScene::ProcessInput(float fElapsedTime)
-{
-
-}
-
-// ==============================================================================
-
-void CRaytracingMaterialTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
-{
-	// Create Global & Local Root Signature
-	CreateRootSignature();
-
-	// animation Pipeline Ready
-	CreateComputeRootSignature();
-	CreateComputeShader();
-
-	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
-	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
-	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit", L"ShadowAnyHit");
-	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
-	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
-	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();
-
-	// Resource Ready
-	m_pResourceManager = std::make_unique<CResourceManager>();
-	m_pResourceManager->SetUp(3);
-	// Read File Here ========================================	! All Files Are Read Once !
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\w.bin", "src\\texture\\Lion\\");
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
-	//m_pResourceManager->AddResourceFromFile(L"src\\model\\portal_low.bin", "src\\texture\\Map\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\");
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid_tongue.bin", "src\\texture\\Gorhorrid\\");
-
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Monster.bin", "src\\texture\\monster\\");
-	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
-	m_pResourceManager->ReadyLightBufferContent();
-	m_pResourceManager->LightTest();
-	// =========================================================
-
-	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
-	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
-	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
-	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
-	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
-	// Create new Objects, Copy SkinningObject here  ========================================
-
-	//UINT finalindex = normalObjects.size();
-	//UINT finalmesh = meshes.size();
-	//meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 10.0f));
-	//normalObjects.emplace_back(std::make_unique<CGameObject>());
-	//normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	//normalObjects[finalindex]->getMaterials().emplace_back();
-	//Material& tMaterial = normalObjects[finalindex]->getMaterials()[0];
-	//tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(0.0, 1.0, 0.0, 0.5);
-	//tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
-	////tMaterial.m_bHasMetallic = true; tMaterial.m_fMetallic = 0.0f;
-	//tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.8;
-	//tMaterial.m_bHasSpecularHighlight = true; tMaterial.m_fSpecularHighlight = 1;
-	//tMaterial.m_bHasGlossyReflection = true; tMaterial.m_fGlossyReflection = 1;
-	//normalObjects[finalindex]->SetInstanceID(1);
-	//normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0)); 
-
-	/*meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(1000.0f, 0.0, 1000.0f)));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	normalObjects[finalindex]->getMaterials().emplace_back();
-	Material& tt = normalObjects[finalindex]->getMaterials()[0];
-	tt.m_bHasAlbedoColor = true; tt.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
-	tt.m_bHasSpecularColor = true; tt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
-	tt.m_bHasSpecularHighlight = true; tt.m_fSpecularHighlight = 1;
-	tt.m_bHasGlossiness = true; tt.m_fGlossiness = 0.5;
-	tt.m_bHasGlossyReflection = true; tt.m_fGlossyReflection = 1.0f;
-	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0));*/
-
-	//std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
-	////std::unique_ptr<CHeightMapImage> m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Terrain_WinterLands_heightmap.raw", 4096, 4096, XMFLOAT3(1.0f, 0.025f, 1.0f));
-	//UINT finalindex = normalObjects.size();
-	//UINT finalmesh = meshes.size();
-	//Material tMaterial{};
-	//meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
-	//normalObjects.emplace_back(std::make_unique<CGameObject>());
-	//normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	//normalObjects[finalindex]->SetInstanceID(10);
-
-	//UINT txtIndex = textures.size();
-	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
-	////textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_NORM.dds"));
-
-	//tMaterial.m_bHasAlbedoMap = true; tMaterial.m_nAlbedoMapIndex = txtIndex;
-	////tMaterial.m_bHasNormalMap = true; tMaterial.m_nNormalMapIndex = txtIndex + 1;
-	//tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
-	//tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
-	//tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.2;
-
-	//normalObjects[finalindex]->getMaterials().emplace_back(tMaterial);
-	//normalObjects[finalindex]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
-
-	/*UINT finalindex = normalObjects.size();
-	UINT finalmesh = meshes.size();
-
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 0.5f));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	normalObjects[finalindex]->getMaterials().emplace_back();
-	Material& dMaterial = normalObjects[finalindex]->getMaterials()[0];
-	dMaterial.m_bHasAlbedoColor = true; dMaterial.m_xmf4AlbedoColor = XMFLOAT4(20.0, 0.0, 20.0, 1.0);
-	dMaterial.m_bHasSpecularColor = true; dMaterial.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
-	dMaterial.m_bHasGlossiness = true; dMaterial.m_fGlossiness = 0.1;
-
-	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 20.0, 15.0));*/
-
-	//meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(50, 50, 2)));
-	//normalObjects.emplace_back(std::make_unique<CGameObject>());
-	//normalObjects[finalindex]->SetMeshIndex(finalmesh);
-	//normalObjects[finalindex]->getMaterials().emplace_back();
-	//Material& tMaterial = normalObjects[finalindex]->getMaterials()[0];
-	//tMaterial.m_bHasAlbedoColor = true; tMaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
-	//tMaterial.m_bHasSpecularColor = true; tMaterial.m_xmf4SpecularColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
-	////tMaterial.m_bHasMetallic = true; tMaterial.m_fMetallic = 0.0f;
-	//tMaterial.m_bHasGlossiness = true; tMaterial.m_fGlossiness = 0.5;
-	//tMaterial.m_bHasSpecularHighlight = true; tMaterial.m_fSpecularHighlight = 1;
-	//tMaterial.m_bHasGlossyReflection = true; tMaterial.m_fGlossyReflection = 1;
-	//normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, -10.0)); 
-
-	//meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 0.5f));
-	//normalObjects.emplace_back(std::make_unique<CGameObject>());
-	//normalObjects[finalindex + 1]->SetMeshIndex(finalmesh + 1);
-	//normalObjects[finalindex + 1]->getMaterials().emplace_back();
-	//Material& dMaterial = normalObjects[finalindex + 1]->getMaterials()[0];
-	//dMaterial.m_bHasAlbedoColor = true; dMaterial.m_xmf4AlbedoColor = XMFLOAT4(20.0, 0.0, 20.0, 1.0);
-	//dMaterial.m_bHasSpecularColor = true; dMaterial.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
-	//dMaterial.m_bHasGlossiness = true; dMaterial.m_fGlossiness = 0.1;
-
-	//normalObjects[finalindex + 1]->SetPosition(XMFLOAT3(0.0, 20.0, 15.0));
-	//std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
-
-	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
-	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
-	//textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_MNS.dds"));
-	//auto p = std::find_if(normalObjects.begin(), normalObjects.end(), [](std::unique_ptr<CGameObject>& p) {
-	//	return p->getFrameName() == "Water";
-	//	});
-	//if (p != normalObjects.end()) {
-	//	(*p)->SetInstanceID(1);
-	//	(*p)->getMaterials().emplace_back();
-	//	Material& mt = (*p)->getMaterials()[0];
-	//	mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
-	//	//mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.0, 0.0, 1.0, 0.7);
-	//	//mt.m_bHasSpecularColor = true; mt.m_xmf4SpecularColor = XMFLOAT4(0.04, 0.04, 0.04, 1.0);
-	//	mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
-	//	//mt.m_bHasAlbedoMap = true; mt.m_nAlbedoMapIndex = textures.size() - 3;
-	//	mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 2;
-
-	//	void* tempptr{};
-	//	std::vector<XMFLOAT2> tex0 = meshes[(*p)->getMeshIndex()]->getTex0();
-	//	for (XMFLOAT2& xmf : tex0) {
-	//		xmf.x *= 10.0f; xmf.y *= 10.0f;
-	//	}
-	//	meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
-	//	memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
-	//	meshes[(*p)->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);
-	//}
-
-	//PrepareTerrainTexture();
-
-	// cubeMap Ready
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky.dds", true));
-	// ===========================================================================================
-	m_pResourceManager->InitializeGameObjectCBuffer();	// CBV RAII
-	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
-
-
-	// ShaderBindingTable
-	m_pShaderBindingTable = std::make_unique<CShaderBindingTableManager>();
-	m_pShaderBindingTable->Setup(m_pRaytracingPipeline.get(), m_pResourceManager.get());
-	m_pShaderBindingTable->CreateSBT();
-
-	// Normal Object Copy & Manipulation Matrix Here  ===============================
-
-	// ==============================================================================
-
-	// Setting Camera ==============================================================
-	//m_pCamera->SetTarget(normalObjects[0].get());
-	//m_pCamera->SetCameraLength(20.0f);
-	// ==========================================================================
-	//m_pResourceManager->getAnimationManagers()[0]->UpdateAnimation(0.2);
-	// AccelerationStructure
-	m_pAccelerationStructureManager = std::make_unique<CAccelerationStructureManager>();
-	m_pAccelerationStructureManager->Setup(m_pResourceManager.get(), 1);
-	m_pAccelerationStructureManager->InitBLAS();
-	m_pAccelerationStructureManager->InitTLAS();
-}
-
-void CRaytracingMaterialTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
-{
-	switch (nMessage) {
-	case WM_KEYDOWN:
-		switch (wParam) {
-		case '1':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '2':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(1);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '3':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(2);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '4':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(3);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '5':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(4);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '6':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '7':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(6);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '8':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(7);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '9':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(8);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case 'n':
-		case 'N':
-			m_pCamera->toggleNormalMapping();
-			break;
-		case 'm':
-		case 'M':
-			m_pCamera->toggleAlbedoColor();
-			break;
-		}
-		break;
-	case WM_KEYUP:
-		break;
-	}
-}
-
-void CRaytracingMaterialTestScene::ProcessInput(float fElapsedTime)
-{
-	UCHAR keyBuffer[256];
-	GetKeyboardState(keyBuffer);
-
-	bool shiftDown = false;
-	if (keyBuffer[VK_SHIFT] & 0x80)
-		shiftDown = true;
-
-	if (keyBuffer['W'] & 0x80)
-		m_pCamera->Move(0, fElapsedTime, shiftDown);
-	if (keyBuffer['S'] & 0x80)
-		m_pCamera->Move(5, fElapsedTime, shiftDown);
-	if (keyBuffer['D'] & 0x80)
-		m_pCamera->Move(3, fElapsedTime, shiftDown);
-	if (keyBuffer['A'] & 0x80)
-		m_pCamera->Move(4, fElapsedTime, shiftDown);
-	if (keyBuffer[VK_SPACE] & 0x80)
-		m_pCamera->Move(1, fElapsedTime, shiftDown);
-	if (keyBuffer[VK_CONTROL] & 0x80)
-		m_pCamera->Move(2, fElapsedTime, shiftDown);
-
-	if (keyBuffer['I'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 0);
-	}
-
-	if (keyBuffer['K'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 1);
-	}
-
-	if (keyBuffer['J'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, -90.0f * fElapsedTime, 0.0f));
-	}
-	if (keyBuffer['L'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->Rotate(XMFLOAT3(0.0, 90.0f * fElapsedTime, 0.0f));
-	}
-
-	if (keyBuffer['U'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 2);
-	}
-
-	if (keyBuffer['O'] & 0x80) {
-		m_pResourceManager->getSkinningObjectList()[0]->move(fElapsedTime, 3);
-	}
-
-	if (keyBuffer[VK_RIGHT] & 0x80)
-		m_pResourceManager->getAnimationManagers()[0]->TimeIncrease(fElapsedTime);
-}
-
-void CRaytracingMaterialTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
-{
-
-}
-
-// =====================================================================================
 
 void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
@@ -2021,12 +1487,12 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		skinned[i]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
 		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
 	}
-	for (int i = Players.size(); i < Players.size()+Monsters.size(); ++i) {
+	for (int i = Players.size(); i < Players.size() + Monsters.size(); ++i) {
 		skinned[i]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 		skinned[i]->SetPosition(XMFLOAT3(-28.0f + 5.0f * i, 0.0f, -245.0f));
 		skinned[i]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 	}
-	
+
 	// ==============================================================================
 
 	// Camera Setting ==============================================================
@@ -2111,7 +1577,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			m_pPlayer->ProcessInput(keyBuffer);
+			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
 			CAnimationManager* myManager = m_pPlayer->getAniManager();
 			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());
 		}
@@ -2228,7 +1694,7 @@ void CRaytracingWinterLandScene::CreateMageCharacter()
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	m_vPlayers.emplace_back(std::make_unique<CPlayerMage>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
-		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
 
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...

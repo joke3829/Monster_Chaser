@@ -9,6 +9,7 @@ struct CB_CAMERA_INFO {
 	XMFLOAT4X4 xmf4x4ViewProj;
 	XMFLOAT4X4 xmf4x4InverseViewProj;
 	XMFLOAT3 xmf3Eye;
+	float fElapsedTime;
 	int bNormalMapping;	// front 2byte normal, back 2byte albedo
 	int bReflection;
 };
@@ -33,17 +34,18 @@ public:
 	void SetThirdPersonMode(bool bThirdPerson);
 	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }
 	void SetHOffset(float height) { m_xmf3hOffset.y = height; }
+	void SetElapsedTimeAndShader(float fElapsedTime, UINT rootParameter);
 
-	void toggleNormalMapping() 
-	{ 
+	void toggleNormalMapping()
+	{
 		unsigned int fBytes = m_pCameraInfo->bNormalMapping & 0xFFFF0000;
 		unsigned int bBytes = m_pCameraInfo->bNormalMapping & 0x0000FFFF;
 		fBytes = ~fBytes & 0XFFFF0000;
 		m_pCameraInfo->bNormalMapping = fBytes | bBytes;
 		//m_pCameraInfo->bNormalMapping = ~m_pCameraInfo->bNormalMapping; 
 	}
-	void toggleAlbedoColor() 
-	{ 
+	void toggleAlbedoColor()
+	{
 		unsigned int fByte = m_pCameraInfo->bNormalMapping & 0xFFFF0000;
 		unsigned int bByte = ~(m_pCameraInfo->bNormalMapping & 0x0000FFFF) & 0x0000FFFF;
 
@@ -71,7 +73,7 @@ protected:
 
 	XMFLOAT4X4 m_xmf4x4View;
 	XMFLOAT4X4 m_xmf4x4Proj;
-	
+
 	float m_fFOV = 60.0f;
 	float m_fAspect = 960.0f / 540.0f;
 	float m_fNear = 0.1f;

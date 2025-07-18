@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // File: Mesh.h
 //-----------------------------------------------------------------------------
 #pragma once
@@ -30,9 +30,9 @@ constexpr short MESH_PLANE_4QUADRANT = 3;
 
 class Mesh {
 public:
-	Mesh(std::ifstream& inFile, std::string strMeshName);	
+	Mesh(std::ifstream& inFile, std::string strMeshName);		// ctor
 	Mesh(CHeightMapImage* heightmap, std::string strMeshName);
-	Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName = "noNameMesh");				
+	Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName = "noNameMesh");					// boundingOBB ���鶧 ���
 	Mesh(XMFLOAT3& center, float radius, std::string meshName = "noNameMesh");
 	Mesh(XMFLOAT3& center, float width, float height, short arrow = MESH_PLANE_4QUADRANT);			// Plane
 
@@ -78,48 +78,48 @@ public:
 	bool getHasBoundingBox() const { return m_bHasBoundingBox; }
 
 	UINT getSubMeshCount() const;
-	
+
 	std::vector<XMFLOAT2>& getTex0() { return m_vTex0; }
 	void setSkinning(bool bSkinning) { m_bSkinningMesh = bSkinning; }
 protected:
 private:
-	std::string m_MeshName{};							
+	std::string m_MeshName{};							// Mesh
 
 	bool m_bHasBoundingBox = false;
 	BoundingOrientedBox m_OBB{};						// Oriented_Bounding_Box
 
-	UINT m_nVertexCount{};								
+	UINT m_nVertexCount{};								// <Positions>
 	ComPtr<ID3D12Resource> m_pd3dVertexBuffer{};		// DXGI_FORMAT_R32G32B32_FLOAT
 	bool m_bHasVertex = false;
 
-	UINT m_nColorCount{};							
-	ComPtr<ID3D12Resource> m_pd3dColorsBuffer{};		// ?
+	UINT m_nColorCount{};								// <Colors>
+	ComPtr<ID3D12Resource> m_pd3dColorsBuffer{};
 	bool m_bHasColor = false;
 
 	UINT m_nTexCoord0Count{};							// <TextureCoords0>
 	std::vector<XMFLOAT2> m_vTex0{};
-	ComPtr<ID3D12Resource> m_pd3dTexCoord0Buffer{};		
+	ComPtr<ID3D12Resource> m_pd3dTexCoord0Buffer{};
 	bool m_bHasTex0 = false;
 
 	UINT m_nTexCoord1Count{};							// <TextureCoords1>
-	ComPtr<ID3D12Resource> m_pd3dTexCoord1Buffer{};		
+	ComPtr<ID3D12Resource> m_pd3dTexCoord1Buffer{};
 	bool m_bHasTex1 = false;
 
 	UINT m_nNormalsCount{};								// <Normals>
-	ComPtr<ID3D12Resource> m_pd3dNormalsBuffer{};		
+	ComPtr<ID3D12Resource> m_pd3dNormalsBuffer{};
 	bool m_bHasNormals = false;
 
 	UINT m_nTangentsCount{};							// <Tangents>
-	ComPtr<ID3D12Resource> m_pd3dTangentsBuffer{};	
+	ComPtr<ID3D12Resource> m_pd3dTangentsBuffer{};
 	bool m_bHasTangents = false;
 
 	UINT m_nBiTangentsCount{};							// <BiTangents>
 	ComPtr<ID3D12Resource> m_pd3dBiTangentsBuffer{};
 	bool m_bHasBiTangents = false;
 
-	UINT m_nSubMeshesCount{};							
-	std::vector<ComPtr<ID3D12Resource>> m_vSubMeshes;
-	std::vector<UINT> m_vIndices;						
+	UINT m_nSubMeshesCount{};							// SubMesh
+	std::vector<ComPtr<ID3D12Resource>> m_vSubMeshes;	// SubMesh(indexbuffer)
+	std::vector<UINT> m_vIndices;
 	bool m_bHasSubMeshes = false;
 
 	bool m_bSkinningMesh = false;

@@ -59,13 +59,22 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 
 	if (!inFile.eof()) {
 		readLabel();
-		if ("<Animation>:" == strLabel) {
+		if ("<Animation>:" == strLabel) {	// 애니메이션이 있으면 매니저 생성 & 오브젝트 지정
 			switch (job) {
 			case JOB_NOTHING:
 				m_vAnimationManager.emplace_back(std::make_unique<CAnimationManager>(inFile));
 				break;
 			case JOB_MAGE:
 				m_vAnimationManager.emplace_back(std::make_unique<CMageManager>(inFile));
+				break;
+			case JOB_WARRIOR:
+				m_vAnimationManager.emplace_back(std::make_unique<CWarriorManager>(inFile));
+				break;
+			case JOB_HEALER:
+				m_vAnimationManager.emplace_back(std::make_unique<CPriestManager>(inFile));
+				break;
+			case MONSTER:
+				m_vAnimationManager.emplace_back(std::make_unique<CMonsterManager>(inFile));
 				break;
 			}
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->SetFramesPointerFromSkinningObject(m_vSkinningObject[m_vSkinningObject.size() - 1]->getObjects());
@@ -82,7 +91,7 @@ void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentI
 	m_vGameObjectList.emplace_back(std::make_unique<CGameObject>());
 	m_vGameObjectList[nCurrentObjectIndex]->InitializeObjectFromFile(inFile);
 
-	if (nParentIndex != -1) {	
+	if (nParentIndex != -1) {		// 부모가 존재한다는 뜻
 		m_vGameObjectList[nCurrentObjectIndex]->SetParentIndex(nParentIndex);
 	}
 
@@ -98,16 +107,18 @@ void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentI
 		readLabel();
 		if (strLabel == "<Mesh>:") {
 			inFile.read((char*)&tempData, sizeof(int));
-			readLabel();
+			readLabel();	// 메시의 이름 읽기
 			auto p = std::find_if(m_vMeshList.begin(), m_vMeshList.end(), [&](std::unique_ptr<Mesh>& tempMesh) {
 				return tempMesh->getName() == strLabel;
 				});
-			if (p != m_vMeshList.end()) {
+			if (p != m_vMeshList.end()) {	// 이미 리스트에 해당 이름을 가진 메시가 존재
+				// 주의할게 이름이 아예 중복이 없는지는 아직 확인을 못함
 				m_vGameObjectList[nCurrentObjectIndex]->SetMeshIndex(std::distance(m_vMeshList.begin(), p));
+				// 중복메시 제거
 				Mesh* tempMesh = new Mesh(inFile, strLabel);
 				delete tempMesh;
 			}
-			else {
+			else {	// 없으면 새로 생성과 동시에 인덱스 지정
 				m_vGameObjectList[nCurrentObjectIndex]->SetMeshIndex(m_vMeshList.size());
 				m_vMeshList.emplace_back(std::make_unique<Mesh>(inFile, strLabel));
 				if (g_ShowBoundingBox) {
@@ -124,7 +135,7 @@ void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentI
 			if (g_ShowBoundingBox) {
 				m_vGameObjectList[nCurrentObjectIndex]->getMaterials().clear();
 				Material tempM;
-				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);
+				tempM.m_bHasAlbedoColor = true; tempM.m_xmf4AlbedoColor = XMFLOAT4(g_unorm(g_dre), g_unorm(g_dre), g_unorm(g_dre), 0.5);	// 랜덤 컬러
 				m_vGameObjectList[nCurrentObjectIndex]->getMaterials().emplace_back(tempM);
 			}
 		}
@@ -132,7 +143,7 @@ void CResourceManager::AddGameObjectFromFile(std::ifstream& inFile, int nParentI
 			inFile.read((char*)&tempData, sizeof(int));
 			if (tempData > 0) {
 				for (int i = 0; i < tempData; ++i) {
-					readLabel();	// <Frame>:
+					readLabel();	// <Frame>: 부분을 빼준다
 					AddGameObjectFromFile(inFile, nCurrentObjectIndex);
 				}
 			}
@@ -154,7 +165,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 	int tempData{};
 	std::vector<Material> vMaterials;
 
-	std::string FilePathBack{ ".dds" };			
+	std::string FilePathBack{ ".dds" };				// 포맷도 바뀔 수 있다.
 
 	int nCurrentMaterial{};
 	while (1) {
@@ -198,7 +209,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 		}
 		else if (strLabel == "<AlbedoMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	
+			if (strLabel[0] == '@') {	// 이미 존재함
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -206,10 +217,10 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				vMaterials[nCurrentMaterial].m_bHasAlbedoMap = true;
 				vMaterials[nCurrentMaterial].m_nAlbedoMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
-			else if (strLabel == "null") {	
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
 				continue;
 			}
-			else {
+			else {	// 없으니 새로 만들어라
 				vMaterials[nCurrentMaterial].m_bHasAlbedoMap = true;
 				vMaterials[nCurrentMaterial].m_nAlbedoMapIndex = m_vTextureList.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -221,20 +232,20 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 		}
 		else if (strLabel == "<SpecularMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {
+			if (strLabel[0] == '@') {	// 이미 존재함
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
 					});
 				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;
-				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = std::distance(m_vTextureList.begin(), p);	
+				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = std::distance(m_vTextureList.begin(), p);	// 여기
 			}
-			else if (strLabel == "null") {	
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
 				continue;
 			}
-			else {	
-				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;	
-				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = m_vTextureList.size();	
+			else {	// 없으니 새로 만들어라
+				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;	// 여기
+				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = m_vTextureList.size();	// 여기
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
 				wstr.assign(FilePath.begin(), FilePath.end());
@@ -244,7 +255,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 		}
 		else if (strLabel == "<MetallicMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	
+			if (strLabel[0] == '@') {	// 이미 존재함
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -252,10 +263,10 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				vMaterials[nCurrentMaterial].m_bHasMetallicMap = true;
 				vMaterials[nCurrentMaterial].m_nMetallicMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
-			else if (strLabel == "null") {	
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
 				continue;
 			}
-			else {	
+			else {	// 없으니 새로 만들어라
 				vMaterials[nCurrentMaterial].m_bHasMetallicMap = true;
 				vMaterials[nCurrentMaterial].m_nMetallicMapIndex = m_vTextureList.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -267,7 +278,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 		}
 		else if (strLabel == "<NormalMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	
+			if (strLabel[0] == '@') {	// 이미 존재함
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -275,10 +286,10 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				vMaterials[nCurrentMaterial].m_bHasNormalMap = true;
 				vMaterials[nCurrentMaterial].m_nNormalMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
-			else if (strLabel == "null") {	
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
 				continue;
 			}
-			else {
+			else {	// 없으니 새로 만들어라
 				vMaterials[nCurrentMaterial].m_bHasNormalMap = true;
 				vMaterials[nCurrentMaterial].m_nNormalMapIndex = m_vTextureList.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -290,7 +301,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 		}
 		else if (strLabel == "<EmissionMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	
+			if (strLabel[0] == '@') {	// 이미 존재함
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -298,10 +309,10 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				vMaterials[nCurrentMaterial].m_bHasEmissionMap = true;
 				vMaterials[nCurrentMaterial].m_nEmissionMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
-			else if (strLabel == "null") {	
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
 				continue;
 			}
-			else {	
+			else {	// 없으니 새로 만들어라
 				vMaterials[nCurrentMaterial].m_bHasEmissionMap = true;
 				vMaterials[nCurrentMaterial].m_nEmissionMapIndex = m_vTextureList.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -313,7 +324,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 		}
 		else if (strLabel == "<DetailAlbedoMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	
+			if (strLabel[0] == '@') {	// 이미 존재함
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -321,10 +332,10 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				vMaterials[nCurrentMaterial].m_bHasDetailAlbedoMap = true;
 				vMaterials[nCurrentMaterial].m_nDetailAlbedoMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
-			else if (strLabel == "null") {	
+			else if (strLabel == "null") {	// null이면 사용 안한단 뜻
 				continue;
 			}
-			else {	
+			else {	// 없으니 새로 만들어라
 				vMaterials[nCurrentMaterial].m_bHasDetailAlbedoMap = true;
 				vMaterials[nCurrentMaterial].m_nDetailAlbedoMapIndex = m_vTextureList.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -336,7 +347,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 		}
 		else if (strLabel == "<DetailNormalMap>:") {
 			readLabel();
-			if (strLabel[0] == '@') {	
+			if (strLabel[0] == '@') {	// 이미 존재함
 				strLabel.erase(strLabel.begin());
 				auto p = std::find_if(m_vTextureList.begin(), m_vTextureList.end(), [&](std::unique_ptr<CTexture>& txt) {
 					return txt->getName() == strLabel;
@@ -344,10 +355,10 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 				vMaterials[nCurrentMaterial].m_bHasDetailNormalMap = true;
 				vMaterials[nCurrentMaterial].m_nDetailNormalMapIndex = std::distance(m_vTextureList.begin(), p);
 			}
-			else if (strLabel == "null") {	
+			else if (strLabel == "null") {	// 있더라고 null이면 사용 안한단 뜻
 				continue;
 			}
-			else {	
+			else {	// 없으니 새로 만들어라
 				vMaterials[nCurrentMaterial].m_bHasDetailNormalMap = true;
 				vMaterials[nCurrentMaterial].m_nDetailNormalMapIndex = m_vTextureList.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
@@ -360,6 +371,7 @@ void CResourceManager::AddMaterialFromFile(std::ifstream& inFile, int nCurrentIn
 		else if (strLabel == "</Materials>")
 			break;
 	}
+	// 게임 오브젝트에 마테리얼 저장
 	for (int i = 0; i < vMaterials.size(); ++i) {
 		m_vGameObjectList[nCurrentIndex]->getMaterials().emplace_back(vMaterials[i]);
 	}
@@ -382,6 +394,7 @@ void CResourceManager::PrepareObject()
 
 void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
 {
+	// 애니메이션이 없는 스키닝 객체면 문제가 생김
 	for (int i = 0; i < m_vAnimationManager.size(); ++i) {
 		m_vAnimationManager[i]->TimeIncrease(fElapsedTime);
 		m_vSkinningObject[i]->UpdateAnimationMatrixes();
@@ -390,11 +403,15 @@ void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
 	}
 }
 
-void CResourceManager::UpdatePosition(float fElapsedTime, int id)
+void CResourceManager::UpdatePosition(float fElapsedTime)
 {
-	CSkinningObject* skinningObject = getSkinningObjectList()[id].get();
-	if (skinningObject) {
-		m_vAnimationManager[id]->UpdateAniPosition(fElapsedTime, skinningObject);
+	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
+		if (m_vAnimationManager[i]) {
+			CSkinningObject* skinningObject = getSkinningObjectList()[i].get();
+			if (skinningObject) {
+				m_vAnimationManager[i]->UpdateAniPosition(fElapsedTime, skinningObject);
+			}
+		}
 	}
 }
 
@@ -420,6 +437,12 @@ void CResourceManager::UpdateWorldMatrix()
 	for (std::unique_ptr<CSkinningObject>& Skinning : m_vSkinningObject) {
 		Skinning->UpdateFrameWorldMatrix();
 	}
+}
+
+void CResourceManager::UpdateParticles(float fElapsedTime)
+{
+	for (std::unique_ptr<CParticle>& particle : m_vParticleList)
+		particle->UpdateObject(fElapsedTime);
 }
 
 std::vector<std::unique_ptr<CGameObject>>& CResourceManager::getGameObjectList()
@@ -451,17 +474,12 @@ std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 	return m_vTextureList;
 }
 
-std::vector<std::unique_ptr<CProjectile>>& CResourceManager::getProjectileList()
-{
-	return m_vProjectileList;
-}
-
 void CResourceManager::LightTest()
 {
 	Lights testLight{};
 	testLight.numLights = 1;
 	testLight.lights[0].Type = DIRECTIONAL_LIGHT;
-	testLight.lights[0].Intensity =  1.0f;
+	testLight.lights[0].Intensity = 1.0f;
 	testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
 	//testLight.lights[0].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
@@ -533,7 +551,7 @@ void CResourceManager::AddLightsFromFileRecursion(std::ifstream& inFile)
 		if ("</Frame>" == strLabel)
 			break;
 		if ("<Transform>:" == strLabel) {
-			for(int i = 0 ; i < 13; ++i)
+			for (int i = 0; i < 13; ++i)
 				inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
 		}
 		else if ("<TransformMatrix>:" == strLabel) {
@@ -558,15 +576,15 @@ void CResourceManager::AddLightsFromFileRecursion(std::ifstream& inFile)
 					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
 				}
 				else if (strLabel == "<AlbedoColor>:") {
-					for(int i = 0; i < 4; ++i)
+					for (int i = 0; i < 4; ++i)
 						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
 				}
 				else if (strLabel == "<EmissiveColor>:") {
-					for(int i = 0 ; i < 4; ++i)
+					for (int i = 0; i < 4; ++i)
 						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));;
 				}
 				else if (strLabel == "<SpecularColor>:") {
-					for(int i = 0; i < 4; ++i)
+					for (int i = 0; i < 4; ++i)
 						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
 				}
 				else if (strLabel == "<Glossiness>:") {
@@ -673,4 +691,10 @@ void CResourceManager::ReadyLightBufferContent()
 	mapptr->numLights = m_vLights.size();
 	memcpy(mapptr->lights, m_vLights.data(), sizeof(Light) * m_vLights.size());
 	m_pLights->Unmap(0, nullptr);
+}
+
+void CResourceManager::PostProcess()
+{
+	for (std::unique_ptr<CParticle>& particle : m_vParticleList)
+		particle->PostProcess();
 }

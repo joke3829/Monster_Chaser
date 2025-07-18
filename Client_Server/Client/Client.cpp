@@ -67,25 +67,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		MessageBoxA(nullptr, "서버 연결 실패. 클라이언트를 종료합니다.", "연결 실패", MB_ICONERROR);
 		return 0;  // 창 생성 없이 종료
 	}
-	
+
 	//  콘솔 종료
 	//FreeConsole();
 	std::thread recvThread(&C_Socket::do_recv, &Client);
-//	std::thread drawThread(RoomListThread);
-	
-
-	//준비 완료되기 전까지 대기
-/*   while (!Client.get_ready_to_start()) {
-	   std::this_thread::sleep_for(std::chrono::milliseconds(100));
-   }*/
-
-
-	
-	
+	//	std::thread drawThread(RoomListThread);
 
 
 
-	// 전역 문자열을 초기화합니다.
+		//준비 완료되기 전까지 대기
+	/*   while (!Client.get_ready_to_start()) {
+		   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	   }*/
+
+
+
+
+
+
+
+
+	   // 전역 문자열을 초기화합니다.
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadStringW(hInstance, IDC_CLIENT, szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(hInstance);
@@ -97,7 +99,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CLIENT));
-	
+
 
 	//MSG msg;
 

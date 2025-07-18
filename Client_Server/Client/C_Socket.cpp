@@ -1,4 +1,4 @@
-
+ï»¿
 #include "C_Socket.h"
 
 extern C_Socket Client;
@@ -46,7 +46,7 @@ void C_Socket::send_packet(void* pkt)
 	if (ret == SOCKET_ERROR) {
 		int err = WSAGetLastError();
 		if (err == WSAEWOULDBLOCK) {
-			std::cerr << "send ºí·ÎÅ· ¹ß»ı!" << std::endl;
+			std::cerr << "send ë¸”ë¡œí‚¹ ë°œìƒ!" << std::endl;
 		}
 	}
 }
@@ -118,7 +118,7 @@ void C_Socket::process_packet(char* ptr)
 	switch (type)
 	{
 
-	case S2C_P_ENTER:			//ÀÔÀå
+	case S2C_P_ENTER:			//ì…ì¥
 	{
 		sc_packet_enter* p = reinterpret_cast<sc_packet_enter*>(ptr);
 
@@ -130,7 +130,7 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_room_info* p = reinterpret_cast<sc_packet_room_info*>(ptr);
 		short room_in_Players[10];
 		memcpy(room_in_Players, p->room_info, sizeof(room_in_Players));
-		//memcpy(userperroom, p->room_info, sizeof(userperroom));		ÀÌ°Í¸¸ ÇØÁÖ¸é ³¡
+		//memcpy(userperroom, p->room_info, sizeof(userperroom));		ì´ê²ƒë§Œ í•´ì£¼ë©´ ë
 
 		memcpy(userPerRoom.data(), room_in_Players, sizeof(room_in_Players));
 
@@ -145,10 +145,10 @@ void C_Socket::process_packet(char* ptr)
 		int room_num = static_cast<int>(p->room_number);
 		int local_id = p->Local_id;
 		if (!Players.contains(local_id)) {
-			Player newPlayer(local_id); // ¸í½ÃÀû »ı¼ºÀÚ »ç¿ë
+			Player newPlayer(local_id); // ëª…ì‹œì  ìƒì„±ì ì‚¬ìš©
 			Players.emplace(local_id, std::move(newPlayer));
 
-			//  is_self°¡ trueÀÏ ¶§¸¸ ³» ·ÎÄÃ ID ¼³Á¤
+			//  is_selfê°€ trueì¼ ë•Œë§Œ ë‚´ ë¡œì»¬ ID ì„¤ì •
 			if (Client.get_id() == -1) {
 				if (p->is_self) {
 					Client.set_id(local_id);
@@ -175,12 +175,12 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_set_ready* p = reinterpret_cast<sc_packet_set_ready*>(ptr);
 
 		int id = p->Local_id;
-		int room_num = static_cast<int>(p->room_number);//ÀÌ¹Ì ¹æ ¼±ÅÃÇÒ‹š room_numÀÌ Players[id]¾È¿¡ µé¾î°¨
+		int room_num = static_cast<int>(p->room_number);//ì´ë¯¸ ë°© ì„ íƒí• ë–„ room_numì´ Players[id]ì•ˆì— ë“¤ì–´ê°
 		bool ready = p->is_ready;
 
 		Players[id].setReady(ready);
 		//Players[p->id]->setReady(ready);
-		//Players[p->id]->setRoomNumber(room_num);// ¹æ ¼±ÅÃÇßÀ»‹š ÇØ´ç ¹æ À¯Àú ¼ö ³ªÅ¸³»´Â ¸É¹ö º¯¼ö 
+		//Players[p->id]->setRoomNumber(room_num);// ë°© ì„ íƒí–ˆì„ë–„ í•´ë‹¹ ë°© ìœ ì € ìˆ˜ ë‚˜íƒ€ë‚´ëŠ” ë§´ë²„ ë³€ìˆ˜ 
 		//p->id = id;
 
 		break;
@@ -189,7 +189,7 @@ void C_Socket::process_packet(char* ptr)
 	{
 
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
-		Setstart(true);		//¸É¹ö º¯¼ö InGameStart true·Î ¹Ù²ãÁÖ±â
+		Setstart(true);		//ë§´ë²„ ë³€ìˆ˜ InGameStart trueë¡œ ë°”ê¿”ì£¼ê¸°
 		g_state = GoLoading;
 
 		break;
@@ -198,7 +198,7 @@ void C_Socket::process_packet(char* ptr)
 
 	case S2C_P_MOVE: {
 		sc_packet_move* p = reinterpret_cast<sc_packet_move*>(ptr);
-		//·ÎÄÃID
+		//ë¡œì»¬ID
 		int local_id = p->Local_id;
 		float time = p->time;
 		unsigned int state = p->state;
@@ -209,9 +209,9 @@ void C_Socket::process_packet(char* ptr)
 
 		
 
-		Players[local_id].getRenderingObject()->SetWolrdMatrix(position);
+		Players[local_id].getRenderingObject()->SetWorldMatrix(position);
 		Players[local_id].getAnimationManager()->ChangeAnimation(state, true);
-		Players[local_id].getAnimationManager()->UpdateAnimation(time);
+		Players[local_id].getAnimationManager()->UpdateAnimation(time);		// ë°›ì€ ì‹œê°„ê³¼ í˜„ì¬ ì‹œê°„ì´ ì–¼ë§ˆ ì°¨ì´ ì•ˆë‚˜ë©´ ë°”ê¾¸ì§€ ì•Šë„ë¡ ì¶”ê°€í•˜ì
 
 		
 
@@ -224,11 +224,11 @@ void C_Socket::process_packet(char* ptr)
 
 		int id = pkt->monster_id;
 
-		// ÀÌ¹Ì ÀÖÀ¸¸é µ¤¾î¾²±â ¹æÁö
+		// ì´ë¯¸ ìˆìœ¼ë©´ ë®ì–´ì“°ê¸° ë°©ì§€
 		if (Monsters.find(id) == Monsters.end()) {
 			auto newMonster = std::make_unique<Monster>(id);
 			newMonster->setPosition(pkt->pos);									 // doyoung's turn
-			newMonster->setVisible(true);										 // doyoung's turn º¸ÀÌ°Ô ÇÏ´Â°Å
+			newMonster->setVisible(true);										 // doyoung's turn ë³´ì´ê²Œ í•˜ëŠ”ê±°
 			newMonster->playIdleAnim();											 // doyoung's turn
 
 			Monsters[id] = std::move(newMonster);
@@ -255,7 +255,7 @@ void C_Socket::process_packet(char* ptr)
 			m->playIdleAnim();															  // doyoung's turn
 		}
 		else {
-			// Á¸ÀçÇÏÁö ¾Ê´Â °æ¿ì »õ·Î »ı¼º  
+			// ì¡´ì¬í•˜ì§€ ì•ŠëŠ” ê²½ìš° ìƒˆë¡œ ìƒì„±  
 		/*	auto newMonster = std::make_unique<Monster>(id);
 			newMonster->setPosition(pkt->pos);
 			newMonster->setVisible(true);
@@ -272,10 +272,10 @@ void C_Socket::process_packet(char* ptr)
 		auto it = Monsters.find(id);
 		if (it != Monsters.end()) {
 			//it->second->setPosition(pkt->pos);
-			it->second->getRenderingObject()->SetWolrdMatrix(pkt->pos);
+			it->second->getRenderingObject()->SetWorldMatrix(pkt->pos);
 		}
 		else {
-			std::cout << " ¼­¹ö¿¡¼­ ¹ŞÀº ¸ó½ºÅÍ ÀÌµ¿ ÆĞÅ¶: Á¸ÀçÇÏÁö ¾Ê´Â ID " << id << "\n";
+			std::cout << " ì„œë²„ì—ì„œ ë°›ì€ ëª¬ìŠ¤í„° ì´ë™ íŒ¨í‚·: ì¡´ì¬í•˜ì§€ ì•ŠëŠ” ID " << id << "\n";
 		}
 
 		break;
@@ -290,8 +290,8 @@ void C_Socket::process_packet(char* ptr)
 		if (Players.find(local_id) != Players.end()) {
 			Players.erase(local_id);
 			if (local_id == Client.get_id()) {
-				Client.set_id(-1); // Å¬¶óÀÌ¾ğÆ® ID ÃÊ±âÈ­
-				g_state = Title; // Å¸ÀÌÆ² »óÅÂ·Î º¯°æ
+				Client.set_id(-1); // í´ë¼ì´ì–¸íŠ¸ ID ì´ˆê¸°í™”
+				g_state = Title; // íƒ€ì´í‹€ ìƒíƒœë¡œ ë³€ê²½
 			}
 		}
 		break;
@@ -315,14 +315,14 @@ void C_Socket::do_recv()
 
 
 		if (io_byte == 0) {
-			MessageBoxA(nullptr, "IO_BYTE Å©±â°¡ 0ÀÔ´Ï´Ù.", "¼ö½Å ¿¡·¯", MB_ICONERROR);
+			MessageBoxA(nullptr, "IO_BYTE í¬ê¸°ê°€ 0ì…ë‹ˆë‹¤.", "ìˆ˜ì‹  ì—ëŸ¬", MB_ICONERROR);
 
 			break;
 		}
 		if (io_byte == SOCKET_ERROR) {
 			int err = WSAGetLastError();
-			MessageBoxW(NULL, L"¼­¹ö¿ÍÀÇ ¿¬°áÀÌ ²÷¾îÁ³½À´Ï´Ù.", L"¿¬°á Á¾·á", MB_OK | MB_ICONERROR);
-			PostQuitMessage(0);  // À©µµ¿ì ·çÇÁ Á¾·á
+			MessageBoxW(NULL, L"ì„œë²„ì™€ì˜ ì—°ê²°ì´ ëŠì–´ì¡ŒìŠµë‹ˆë‹¤.", L"ì—°ê²° ì¢…ë£Œ", MB_OK | MB_ICONERROR);
+			PostQuitMessage(0);  // ìœˆë„ìš° ë£¨í”„ ì¢…ë£Œ
 			return;
 
 		}

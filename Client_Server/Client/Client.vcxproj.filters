@@ -73,8 +73,17 @@
     <Filter Include="Resource\Character">
       <UniqueIdentifier>{3ad2a8cc-b065-4e5e-88a1-948d6b8f0a17}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Monster">
+      <UniqueIdentifier>{107730a4-50f1-4107-a5ef-cb2262c38602}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource\Particle">
+      <UniqueIdentifier>{3e13516c-371a-424d-8f63-5a6d506b8c9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TextManager">
+      <UniqueIdentifier>{6462bb79-726a-4e18-a7f6-620595cffd98}</UniqueIdentifier>
+    </Filter>
     <Filter Include="SERVER">
-      <UniqueIdentifier>{5d46939a-3862-4eba-9cff-f66088c2ed2e}</UniqueIdentifier>
+      <UniqueIdentifier>{efbe352c-a135-40a7-a2f0-427ce02c8ca7}</UniqueIdentifier>
     </Filter>
     <Filter Include="SERVER\플레이어객체">
       <UniqueIdentifier>{dd0ec600-8aae-412c-9fc4-1dc9367e0664}</UniqueIdentifier>
@@ -156,9 +165,6 @@
     <ClInclude Include="protocol.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="C_Socket.h">
-      <Filter>SERVER</Filter>
-    </ClInclude>
     <ClInclude Include="ObjectManager.h">
       <Filter>SERVER\플레이어객체</Filter>
     </ClInclude>
@@ -167,6 +173,18 @@
     </ClInclude>
     <ClInclude Include="PlayableCharacter.h">
       <Filter>Resource\Character</Filter>
+    </ClInclude>
+    <ClInclude Include="Monster.h">
+      <Filter>Resource\Monster</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.h">
+      <Filter>Resource\Particle</Filter>
+    </ClInclude>
+    <ClInclude Include="TextManager.h">
+      <Filter>TextManager</Filter>
+    </ClInclude>
+    <ClInclude Include="C_Socket.h">
+      <Filter>SERVER</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -230,9 +248,6 @@
     <ClCompile Include="UIObject.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-    <ClCompile Include="C_Socket.cpp">
-      <Filter>SERVER</Filter>
-    </ClCompile>
     <ClCompile Include="ObjectManager.cpp">
       <Filter>SERVER\플레이어객체</Filter>
     </ClCompile>
@@ -241,6 +256,18 @@
     </ClCompile>
     <ClCompile Include="PlayableCharacter.cpp">
       <Filter>Resource\Character</Filter>
+    </ClCompile>
+    <ClCompile Include="Monster.cpp">
+      <Filter>Resource\Monster</Filter>
+    </ClCompile>
+    <ClCompile Include="Particle.cpp">
+      <Filter>Resource\Particle</Filter>
+    </ClCompile>
+    <ClCompile Include="TextManager.cpp">
+      <Filter>TextManager</Filter>
+    </ClCompile>
+    <ClCompile Include="C_Socket.cpp">
+      <Filter>SERVER</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -263,5 +290,6 @@
   <ItemGroup>
     <None Include="AnimationComputeShader.hlsl" />
     <None Include="UIShader.hlsl" />
+    <None Include="ParticleShader.hlsl" />
   </ItemGroup>
 </Project>

@@ -31,8 +31,6 @@
 #include <timeapi.h>
 #include <random>
 
-#include <array>
-
 #include <conio.h>		//room UI 들어오면 없앰
 #include <chrono>		//클라 UI들어오면 없앰
 
@@ -98,10 +96,11 @@ constexpr unsigned short SCENE_CAVE			= 2;
 constexpr unsigned short SCENE_WINTERLAND	= 3;
 
 // define job
-constexpr unsigned short JOB_NOTHING		= 0;
-constexpr unsigned short JOB_MAGE			= 1;
-constexpr unsigned short JOB_WARRIOR		= 2;
-constexpr unsigned short JOB_HEALER			= 3;
+constexpr unsigned short JOB_NOTHING = 0;
+constexpr unsigned short JOB_MAGE = 1;
+constexpr unsigned short JOB_WARRIOR = 2;
+constexpr unsigned short JOB_HEALER = 3;
+constexpr unsigned short MONSTER = 4;
 
 // 조명 관련 정의
 constexpr int MAX_LIGHTS = 64;
@@ -149,6 +148,7 @@ constexpr unsigned int ANI_SKILL1 = 32;
 constexpr DXGI_SAMPLE_DESC NO_AA = { .Count = 1, .Quality = 0 };	// no anti_aliasing
 constexpr D3D12_HEAP_PROPERTIES UPLOAD_HEAP = { .Type = D3D12_HEAP_TYPE_UPLOAD };
 constexpr D3D12_HEAP_PROPERTIES DEFAULT_HEAP = { .Type = D3D12_HEAP_TYPE_DEFAULT };
+constexpr D3D12_HEAP_PROPERTIES READBACK_HEAP = { .Type = D3D12_HEAP_TYPE_READBACK };
 constexpr D3D12_RESOURCE_DESC BASIC_BUFFER_DESC = {
 	.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
 	.Width = 0,

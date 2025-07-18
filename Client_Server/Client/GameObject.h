@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Mesh.h"
 #include "Texture.h"
 
@@ -98,7 +98,7 @@ public:
 	bool InitializeObjectFromFile(std::ifstream& inFile);
 
 	template<class T>
-	void InitializeConstanctBuffer(std::vector<T>& meshes) 
+	void InitializeConstanctBuffer(std::vector<T>& meshes)
 	{
 		auto makeBuffer = [&](UINT argSize) {
 			ComPtr<ID3D12Resource> resource{};
@@ -173,10 +173,10 @@ public:
 	}
 
 	void SetPosition(XMFLOAT3 pos);
-	void Rotate(XMFLOAT3 rot);	
+	void Rotate(XMFLOAT3 rot);	// ���� right, up, look ������ ȸ��
 	void SetScale(XMFLOAT3 scale);
 
-	void move(float fElapsedTime);
+	void move(float fElapsedTime);	// test��
 
 	std::string getFrameName() const;
 	std::vector<Material>& getMaterials();
@@ -200,6 +200,7 @@ public:
 	BoundingOrientedBox& getObjectOBB() { return m_OBB; }
 	BoundingSphere& getObjectSphere() { return m_BoundingSphere; }
 
+	void SetRenderState(bool state) { m_bRender = state; }
 	void SetMeshIndex(int index);
 	void SetParentIndex(int index);
 	void SetHitGroupIndex(int index);
@@ -220,28 +221,28 @@ protected:
 	void UpdateLocalMatrix();
 	std::string m_strName{};
 
-	unsigned short m_bUseBoundingInfo{};  
+	unsigned short m_bUseBoundingInfo{};    // 바운딩 정보 유무 앞->Sphere, 뒤->OBB
 	BoundingOrientedBox m_OBB{};
 	BoundingSphere m_BoundingSphere{};
 
 	XMFLOAT3 m_xmf3Pos{};
-	XMFLOAT3 m_xmf3Scale{1.0f, 1.0f, 1.0f};
+	XMFLOAT3 m_xmf3Scale{ 1.0f, 1.0f, 1.0f };
 
 	XMFLOAT4X4 m_xmf4x4LocalMatrix{};
 	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
 	XMFLOAT4X4 m_xmf4x4AnimationMatrix{};
 
-	XMFLOAT3 m_xmf3Right{1.0f, 0.0f, 0.0f};
-	XMFLOAT3 m_xmf3Up{0.0f, 1.0f, 0.0f};
-	XMFLOAT3 m_xmf3Look{0.0f, 0.0f, 1.0f};
+	XMFLOAT3 m_xmf3Right{ 1.0f, 0.0f, 0.0f };
+	XMFLOAT3 m_xmf3Up{ 0.0f, 1.0f, 0.0f };
+	XMFLOAT3 m_xmf3Look{ 0.0f, 0.0f, 1.0f };
 
 	std::vector<Material> m_vMaterials;
-	std::vector<ComPtr<ID3D12Resource>> m_vCBuffers;	
+	std::vector<ComPtr<ID3D12Resource>> m_vCBuffers;
 	ComPtr<ID3D12Resource> m_pd3dMeshCBuffer{};
 
-	int m_nMeshIndex = -1;			
-	int m_nParentIndex = -1;		
-	int m_nHitGroupIndex = -1;		
+	int m_nMeshIndex = -1;
+	int m_nParentIndex = -1;
+	int m_nHitGroupIndex = -1;
 	unsigned int m_nInstanceID{};	// TLAS instnaceID
 };
 
@@ -259,17 +260,17 @@ public:
 
 	UINT getRefMeshIndex() const { return m_nRefMesh; }
 private:
-	UINT m_nBonesPerVertex{};	
-	UINT m_nBones{};			
-	UINT m_nVertexCount{};		
+	UINT m_nBonesPerVertex{};
+	UINT m_nBones{};
+	UINT m_nVertexCount{};
 
-	UINT m_nRefMesh{};			
+	UINT m_nRefMesh{};
 
-	std::vector<std::string> m_vBoneNames{};	
-	std::vector<XMFLOAT4X4> m_vOffsetMatrix{};	
-	std::vector<UINT> m_vBoneIndices{};			
-	std::vector<float> m_vBoneWeight{};			
-	std::vector<UINT>m_vAnimationMatrixIndex{};	
+	std::vector<std::string> m_vBoneNames{};
+	std::vector<XMFLOAT4X4> m_vOffsetMatrix{};
+	std::vector<UINT> m_vBoneIndices{};
+	std::vector<float> m_vBoneWeight{};
+	std::vector<UINT>m_vAnimationMatrixIndex{};
 
 	ComPtr<ID3D12DescriptorHeap> m_pd3dDesciptorHeap{};
 
@@ -306,9 +307,10 @@ public:
 	void Rotate(XMFLOAT3 rot);
 	void Rotation(XMFLOAT3 rot, CGameObject& frame);
 	void move(float fElapsedTime, short arrow);
+	void run(float fElapsedTime, short arrow);
 	void sliding(float depth, const XMFLOAT3& normal, float meshHeight);
 	void SetMoveDirection(XMFLOAT3& pos);
-	void SetWolrdMatrix(XMFLOAT4X4& mat);
+	void SetWorldMatrix(XMFLOAT4X4& mat);
 
 	std::string getName() const { return m_strObjectName; }
 	std::vector<std::unique_ptr<CSkinningInfo>>& getSkinningInfo();
@@ -338,7 +340,7 @@ protected:
 
 	// XMFLOAT4X4
 	XMFLOAT4X4 m_xmf4x4WorldMatrix{};
-	XMFLOAT4X4 m_xmf4x4PreTransformMatrix{};	
+	XMFLOAT4X4 m_xmf4x4PreTransformMatrix{};	// �޽��� ������ �����ϱ� ���� ���
 	XMFLOAT4X4 m_xmf4x4PreWorldMatrix{};		// test
 
 	bool m_bUsePreTransform = false;
@@ -350,6 +352,7 @@ protected:
 	XMFLOAT3 m_xmf3Sliding{};
 	XMFLOAT3 m_xmf3MoveDirection{};
 };
+
 
 class CRayTracingSkinningObject : public CSkinningObject {
 public:
@@ -393,9 +396,7 @@ public:
 
 	void setMoveDirection(XMFLOAT3 direction) { m_xmf3MoveDirection = direction; }
 	void setActive(bool state) { m_bActive = state; }
-
-	void setPosition(XMFLOAT3 pos) { m_xmf3Position = pos; }
-
+	void setPosition(XMFLOAT3 pos) { m_xmf3Position = pos; m_xmf3Position.y = 3.0f; }
 	void setSpeed(float spd) { m_fSpeed = spd; }
 	void setLifetime(float life) { m_fLifetime = life; }
 	void setTime(float time) { m_fElapsedTime = time; }
