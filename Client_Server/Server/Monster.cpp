@@ -2,7 +2,8 @@
 #include "Monster.h"
 #include "Network.h"
 
-#define PlayerChaseDistance 1000.0f // 플레이어와 몬스터 간의 추적 거리
+constexpr float MONSTER_CHASE_DISTANCE = 100.0f;
+constexpr float MONSTER_ATTACK_RANGE = 30.0f;
 
 extern Network g_server;
 
@@ -75,17 +76,19 @@ void Monster::TransitionTo(MonsterState nextState) {
 
 void Monster::HandleIdle(const Room& room, const PlayerManager& playerManager) {
     target_id = FindClosestPlayerInRoom(room, position, playerManager);
-    if (target_id != -1) TransitionTo(MonsterState::Chase);
+    if (target_id != -1 && IsPlayerNear(playerManager)) {
+        TransitionTo(MonsterState::Chase);
+    }
 }
 
 void Monster::HandleChase(const Room& room,const PlayerManager& playerManager ) {
-    if (!IsPlayerInRange(playerManager)) {
+    if (!IsPlayerNear(playerManager)) {
         TransitionTo(MonsterState::Return);
         return;
     }
 
-    float dist = DistanceToPlayer(playerManager);
-    if (dist < 100.0f) {
+  
+    if (IsPlayerInAttackRange(playerManager)) {
         TransitionTo(MonsterState::Attack);
         return;
     }
@@ -100,7 +103,7 @@ void Monster::HandleChase(const Room& room,const PlayerManager& playerManager ) 
         target->GetPosition()._43
     };
 
-    float speed = 100.0f; // 유닛/sec
+    float speed = 10.0f; // 유닛/sec
     float dx = targetPos.x - position.x;
     float dy = targetPos.y - position.y;
     float dz = targetPos.z - position.z;
@@ -114,22 +117,20 @@ void Monster::HandleChase(const Room& room,const PlayerManager& playerManager ) 
         position.z += dz * speed * 0.016f;
     }
 
-	// send monster move packet to clients
-    sc_packet_monster_move pkt;
-    pkt.size = sizeof(pkt);
-    pkt.type = S2C_P_MONSTER_MOVE;
-    pkt.monster_id = id;
-    XMStoreFloat4x4(&pkt.pos, XMMatrixTranslation(position.x, position.y, position.z));
-
-    for (int id : room.id)
-        g_server.users[id]->do_send(&pkt);
+	  SendMovePacket(room);
 }
 
 void Monster::HandleAttack(const PlayerManager& playerManager) {
-    if (!IsPlayerInRange(playerManager)) {
+    if (!IsPlayerNear(playerManager)) {
+        TransitionTo(MonsterState::Return);
+        return;
+    }
+
+    if (!IsPlayerInAttackRange(playerManager)) {
         TransitionTo(MonsterState::Chase);
         return;
     }
+
 
     // 공격 처리 (쿨타임 생략)
     // 예: playerManager.ApplyDamage(target_id, 10);
@@ -186,6 +187,23 @@ float Monster::DistanceToPlayer(const PlayerManager& playerManager) const {
     return sqrtf(dx * dx + dy * dy + dz * dz);
 }
 
-bool Monster::IsPlayerInRange(const PlayerManager& playerManager) const {
-    return DistanceToPlayer(playerManager) <= 1000.0f;
+
+bool Monster::IsPlayerNear(const PlayerManager& playerManager) const {
+    return DistanceToPlayer(playerManager) <= MONSTER_CHASE_DISTANCE;
+}
+
+bool Monster::IsPlayerInAttackRange(const PlayerManager& playerManager) const {
+    return DistanceToPlayer(playerManager) <= MONSTER_ATTACK_RANGE;
+}
+void Monster::SendMovePacket(const Room& room)
+{
+    sc_packet_monster_move pkt;
+    pkt.size = sizeof(pkt);
+    pkt.type = S2C_P_MONSTER_MOVE;
+    pkt.monster_id = id;
+    XMStoreFloat4x4(&pkt.pos, XMMatrixTranslation(position.x, position.y, position.z));
+    for (int pid : room.id) {
+        g_server.users[pid]->do_send(&pkt);
+	}
+    std::cout << "[몬스터 " << id << "] " << "X: " << position.x << "Y: " << position.y << "Z: " << position.z << endl;
 }

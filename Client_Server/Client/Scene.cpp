@@ -3,6 +3,7 @@
 #include "protocol.h"
 extern C_Socket Client;
 extern std::unordered_map<int, Player> Players;
+extern std::unordered_map<int, std::unique_ptr<Monster>> Monsters;
 extern std::array<short, 10>	 userPerRoom;
 extern TitleState g_state;
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
@@ -1929,8 +1930,9 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 
 
-	
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\몬스터이름.bin", "src\\texture\\몬스터이름\\");
+
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+
 
 
 
@@ -2017,10 +2019,14 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	for (int i = 0; i < Players.size(); ++i) {
 		skinned[i]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -998.0f));
+		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
 	}
-
-
+	for (int i = Players.size(); i < Players.size()+Monsters.size(); ++i) {
+		skinned[i]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+		skinned[i]->SetPosition(XMFLOAT3(-28.0f + 5.0f * i, 0.0f, -245.0f));
+		skinned[i]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	}
+	
 	// ==============================================================================
 
 	// Camera Setting ==============================================================
@@ -2040,6 +2046,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
+
 }
 
 void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)

@@ -207,17 +207,18 @@ void C_Socket::process_packet(char* ptr)
 		}
 		XMFLOAT4X4 position = p->pos;
 
-		// write down to position bogan process~
+		
 
 		Players[local_id].getRenderingObject()->SetWolrdMatrix(position);
 		Players[local_id].getAnimationManager()->ChangeAnimation(state, true);
 		Players[local_id].getAnimationManager()->UpdateAnimation(time);
 
-		//------------------
+		
 
 
 		break;
 	}
+
 	case S2C_P_MONSTER_SPAWN: {
 		sc_packet_monster_spawn* pkt = reinterpret_cast<sc_packet_monster_spawn*>(ptr);
 
@@ -226,9 +227,9 @@ void C_Socket::process_packet(char* ptr)
 		// 이미 있으면 덮어쓰기 방지
 		if (Monsters.find(id) == Monsters.end()) {
 			auto newMonster = std::make_unique<Monster>(id);
-			newMonster->setPosition(pkt->pos);
-			newMonster->setVisible(true);
-			newMonster->playIdleAnim();
+			newMonster->setPosition(pkt->pos);									 // doyoung's turn
+			newMonster->setVisible(true);										 // doyoung's turn 보이게 하는거
+			newMonster->playIdleAnim();											 // doyoung's turn
 
 			Monsters[id] = std::move(newMonster);
 
@@ -240,6 +241,7 @@ void C_Socket::process_packet(char* ptr)
 
 		break;
 	}
+
 	case S2C_P_MONSTER_RESPAWN: {
 		sc_packet_monster_respawn* pkt = reinterpret_cast<sc_packet_monster_respawn*>(ptr);
 
@@ -248,21 +250,37 @@ void C_Socket::process_packet(char* ptr)
 
 		if (Monsters.find(id) != Monsters.end()) {
 			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr  
-			m->setPosition(pkt->pos);
-			m->setVisible(true);
-			m->playIdleAnim();
+			m->setPosition(pkt->pos);													  // doyoung's turn
+			m->setVisible(true);														  // doyoung's turn
+			m->playIdleAnim();															  // doyoung's turn
 		}
 		else {
 			// 존재하지 않는 경우 새로 생성  
-			auto newMonster = std::make_unique<Monster>(id);
+		/*	auto newMonster = std::make_unique<Monster>(id);
 			newMonster->setPosition(pkt->pos);
 			newMonster->setVisible(true);
 			newMonster->playIdleAnim();
-			Monsters[id] = std::move(newMonster);
+			Monsters[id] = std::move(newMonster);*/
 		}
 		break;
 	}
 
+	case S2C_P_MONSTER_MOVE: {
+		sc_packet_monster_move* pkt = reinterpret_cast<sc_packet_monster_move*>(ptr);
+		int id = pkt->monster_id;
+
+		auto it = Monsters.find(id);
+		if (it != Monsters.end()) {
+			//it->second->setPosition(pkt->pos);
+			it->second->getRenderingObject()->SetWolrdMatrix(pkt->pos);
+		}
+		else {
+			std::cout << " 서버에서 받은 몬스터 이동 패킷: 존재하지 않는 ID " << id << "\n";
+		}
+
+		break;
+	}
+		
 	case S2C_P_LEAVE:
 	{
 		sc_packet_leave* pkt = reinterpret_cast<sc_packet_leave*>(ptr);

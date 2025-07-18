@@ -31,9 +31,13 @@ private:
     void HandleAttack(const PlayerManager& playerManager);
     void HandleReturn();
     void HandleDead(const Room& room);
-
     float DistanceToPlayer(const PlayerManager& playerManager) const;
-    bool IsPlayerInRange(const PlayerManager& playerManager) const;
+
+    bool IsPlayerNear(const PlayerManager& playerManager) const;
+    bool IsPlayerInAttackRange(const PlayerManager& playerManager) const;
+
+    void SendMovePacket(const Room& room);
+
 
     int id;
     int hp;

@@ -101,7 +101,7 @@ void Room::SpawnMonsters()
 {
 	// 예시로 1마리 생성
 	int new_id = 0;
-	XMFLOAT3 spawnPos = { 0.0f, 0.0f, 0.0f };
+	XMFLOAT3 spawnPos = { -28.0f, 0.0f, -245.0f };
 	monsters[new_id] = std::make_shared<Monster>(new_id, spawnPos);
 }
 
