@@ -2129,7 +2129,7 @@ void CRaytracingWinterLandScene::Create3StageBoss()
 void CRaytracingWinterLandScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
 {
 	//스피어-박스
-	for (const auto& target : targets) {
+	/*for (const auto& target : targets) {
 		if (target->IsOnceAttacked()) continue;
 		for (const auto& targetBone : target->getObject()->getObjects()) {
 			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
@@ -2158,7 +2158,7 @@ void CRaytracingWinterLandScene::AttackCollision(const std::vector<std::unique_p
 				}
 			}
 		}
-	}
+	}*/
 	//스피어-스피어
 	for (const auto& target : targets) {
 		if (target->IsOnceAttacked()) continue;
