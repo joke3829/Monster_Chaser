@@ -35,6 +35,7 @@ struct CameraInfo
     matrix mtxViewProj;
     matrix mtxInverseViewProj;
     float3 cameraEye;
+    float fElapsedTime;
     int bNormalMapping;
     int bReflection;
 };
@@ -565,21 +566,34 @@ float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, in float4
         {
             RayDesc tRay;
             uint iID = InstanceID();
-            if (iID > 2)
-                iID = 0;
-            tRay.Direction = refract(WorldRayDirection(), N, refractive_index[iID]); //refractive_index[InstanceID()]);
+            if(iID >= 99)
+                tRay.Direction = WorldRayDirection();
+            else
+            {
+                if (iID > 2)
+                    iID = 0;
+                tRay.Direction = refract(WorldRayDirection(), N, refractive_index[iID]); //refractive_index[InstanceID()]);
+            }
             tRay.Origin = GetWorldPosition();
             tRay.TMin = 0.001f;
             tRay.TMax = 600.0f;
             float4 TransmissionColor = TraceRadianceRay(tRay, payload.RayDepth);
             //float4 TransmissionColor = float4(1.0, 0.0, 1.0, 1.0);
-            
-            float3 myColor = CalculateLighting(payload, N, roughness, R0, albedoColor.rgb) + emissiveColor;
+            float3 myColor;
+            if(iID >= 99)
+                myColor = albedoColor.rgb;
+            else
+                myColor = CalculateLighting(payload, N, roughness, R0, albedoColor.rgb) + emissiveColor;
             
             finalColor = lerp(myColor, TransmissionColor.rgb, albedoColor.a);
         }
         else
-            finalColor = CalculateLighting(payload, N, roughness, R0, albedoColor.rgb) + emissiveColor;
+        {
+            if (InstanceID() >= 99)
+                finalColor = albedoColor.rgb;
+            else
+                finalColor = CalculateLighting(payload, N, roughness, R0, albedoColor.rgb) + emissiveColor;
+        }
     }
 
     if (payload.RayDepth == 1)
@@ -707,6 +721,7 @@ void ShadowAnyHit(inout RadiancePayload payload, in BuiltInTriangleIntersectionA
 [shader("closesthit")]
 void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleIntersectionAttributes attrib)
 {
+    uint iID = InstanceID();
     uint ShaderType = 0;
     if (0 != l_Material.bHasSpecularMap) ShaderType = SHADER_TYPE_SPECULAR_MAP;
     else if (0 != l_Material.bHasMetallicMap) ShaderType = SHADER_TYPE_METALLIC_MAP;
@@ -718,7 +733,7 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
 
     uint idx = PrimitiveIndex() * 3;
     float2 uvs[3];
-    float3 normals[3];
+    float3 normals[3] = { float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 1.0, 0.0) };
     
     float2 texCoord0;
     float2 texCoord1;
@@ -740,7 +755,7 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
         lightNormal = normalize(GetInterpolationHitFloat3(normals, bary));
     }
     
-    if (InstanceID() == 10)
+    if (iID == 10)
     {
         albedoColor = float4(0.0, 0.0, 0.0, 0.0);
         float4 splatfactor = g_LayerTexture[0].SampleLevel(g_Sampler, texCoord0, 0);
@@ -770,6 +785,12 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
             else
                 dAlbedo = l_DetailAlbedoMap.SampleLevel(g_Sampler, texCoord0, 0);
             albedoColor = saturate(albedoColor + dAlbedo / 2);
+        }
+        
+        if (iID >= 99)
+        {
+            float4 color = l_Colors[idx];
+            albedoColor *= color;
         }
     
         if (0 != l_Material.bHasNormalMap && g_CameraInfo.bNormalMapping & 0xFFFF0000)

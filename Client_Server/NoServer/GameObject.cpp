@@ -957,26 +957,25 @@ void CSkinningObject::Rotate(XMFLOAT3 rot)
 
 void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 {
-	XMFLOAT4X4 centerWorldMatrix = frame.getWorldMatrix(); // m_vFrames[0]�� ���� ��� ��������
-	XMMATRIX centerMatrix = XMLoadFloat4x4(&centerWorldMatrix); // ������ �����ϰ� ��ȯ
+	XMFLOAT4X4 centerWorldMatrix = frame.getWorldMatrix();
+	XMMATRIX centerMatrix = XMLoadFloat4x4(&centerWorldMatrix); 
 	
-	XMMATRIX centerInverse = XMMatrixInverse(nullptr, centerMatrix); // �߽����� ���� ����� ����� ���
+	XMMATRIX centerInverse = XMMatrixInverse(nullptr, centerMatrix);
 
-	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position); //���� ��ġ�� XMVECTOR�� �ε�
-	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse); // ���� ��ġ�� ���� ��ǥ��� ��ȯ
+	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position); 
+	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse);
 
-	XMFLOAT3 centerUp = frame.getUp(); // �߽����� Up ���� ��������
-	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp); //Up���� XMVECTOR�� ��ȯ
-	XMFLOAT3 tempUp; // rotationAxis�� XMFLOAT3 Ÿ������ ����
+	XMFLOAT3 centerUp = frame.getUp(); 
+	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp); 
+	XMFLOAT3 tempUp; 
 	XMStoreFloat3(&tempUp, rotationAxis);
-	XMMATRIX orbitMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(rot.y)); // Y���� �������� ȸ�� ��� ����
+	XMMATRIX orbitMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(rot.y));
 
-	XMVECTOR newLocalPos = XMVector3Transform(localPos, orbitMatrix); // ���� ��ǥ�迡�� ĳ���� ��ġ�� ȸ��
+	XMVECTOR newLocalPos = XMVector3Transform(localPos, orbitMatrix);
 
-	XMVECTOR newPos = XMVector3Transform(newLocalPos, centerMatrix); // ȸ���� ���� ��ġ�� ���� ��ǥ��� ��ȯ
+	XMVECTOR newPos = XMVector3Transform(newLocalPos, centerMatrix); 
 	XMStoreFloat3(&m_xmf3Position, newPos);
 
-	// ���� ���� �������� ���� ȿ��
 	XMVECTOR oldLook = XMLoadFloat3(&m_xmf3Look);
 	XMVECTOR oldRight = XMLoadFloat3(&m_xmf3Right);
 	XMVECTOR newLook = XMVector3TransformNormal(oldLook, orbitMatrix);
@@ -985,19 +984,47 @@ void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 	XMStoreFloat3(&m_xmf3Right, XMVector3Normalize(newRight));
 	m_xmf3Up = tempUp;
 
-	// ���� ��� ������Ʈ
 	UpdateWorldMatrix();
 }
 
 void CSkinningObject::move(float fElapsedTime, short arrow) {
-	if (0 == arrow)
+	if (0 == arrow) // Forward
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 5.0f * fElapsedTime));
+	else if (1 == arrow) // Forward-Right (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
+	else if (2 == arrow) // Right
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * 5.0f * fElapsedTime));
+	else if (3 == arrow) // Backward-Right (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
+	else if (4 == arrow) // Backward
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -5.0f * fElapsedTime));
+	else if (5 == arrow) // Backward-Left (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
+	else if (6 == arrow) // Left
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * -5.0f * fElapsedTime));
+	else if (7 == arrow) // Forward-Left (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
+	UpdateWorldMatrix();
+}
+
+void CSkinningObject::run(float fElapsedTime, short arrow)
+{
+	if (0 == arrow) // Forward
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 30.0f * fElapsedTime));
-	else if (2 == arrow)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * 30.0f * fElapsedTime));
-	else if (3 == arrow)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * -30.0f * fElapsedTime));
-	else
+	else if (1 == arrow) // Forward-Right (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
+	else if (2 == arrow) // Right
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * 30.0f * fElapsedTime));
+	else if (3 == arrow) // Backward-Right (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
+	else if (4 == arrow) // Backward
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -30.0f * fElapsedTime));
+	else if (5 == arrow) // Backward-Left (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
+	else if (6 == arrow) // Left
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * -30.0f * fElapsedTime));
+	else if (7 == arrow) // Forward-Left (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
 	UpdateWorldMatrix();
 }
 
@@ -1288,7 +1315,6 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 			D3D12_CPU_DESCRIPTOR_HANDLE insertHandle = insert->GetCPUDescriptorHandleForHeapStart();
 			UINT incrementSize = g_DxResource.device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-			// ������۸� ���� insert�� �տ� ����
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cDesc{};
 			cDesc.BufferLocation = constResource->GetGPUVirtualAddress(); cDesc.SizeInBytes = Align(sizeof(XMINT3), 256);
 			g_DxResource.device->CreateConstantBufferView(&cDesc, insertHandle);
@@ -1443,6 +1469,7 @@ void CProjectile::IsMoving(float fElapsedTime)
 	{
 		m_bActive = false;
 		m_fElapsedTime = 0.0f;
+		delete this;
 	}
 }
 

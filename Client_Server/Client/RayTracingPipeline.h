@@ -21,7 +21,7 @@ public:
 	std::vector<LPCWSTR>& getExports();
 private:
 	ComPtr<ID3D12StateObject> m_pRaytracingPipelineState{};
-	
+
 	//std::vector<D3D12_STATE_SUBOBJECT> m_vSubobjects;
 	// test
 	std::unique_ptr<D3D12_STATE_SUBOBJECT[]> m_pSubobjects{};

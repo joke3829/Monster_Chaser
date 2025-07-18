@@ -9,6 +9,7 @@ public:
 	CAnimationSet(std::ifstream& inFile, UINT nBones);
 
 	void UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime);
+	void BlendAnimationMatrix(std::vector<CGameObject*>& vMatrixes, float fElapsedTime, std::vector<XMFLOAT4X4>& outMatrices);
 
 	float getLength() const { return m_fLength; }
 	int getNumKeyFrame() const { return m_nKeyFrame; }
@@ -40,7 +41,7 @@ public:
 	void TimeIncrease(float fElapsedTime);
 	void UpdateAnimation(float fElapsedTime);
 	void UpdateAnimationMatrix();
-	void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player) {}
 	void ChangeAnimation(UINT nSet);
 	void ChangeAnimation(UINT nSet, bool playOnce = false); // playOnce 
 	void setCurrnetSet(UINT n) { m_nCurrentSet = n; }
@@ -51,11 +52,15 @@ public:
 
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
 	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
-	bool IsAnimationNearEnd(float margin = 0.2f) const
+	bool IsAnimationNearEnd(float margin = 0.05f) const
 	{
 		float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 		float remainingTime = length - m_fElapsedTime;
 		return remainingTime <= margin && remainingTime >= 0.0f;
+	}
+	bool IsAnimationInTimeRange(float startTime, float endTime) const {
+		float length = m_vAnimationSets[m_nCurrentSet]->getLength();
+		return m_fElapsedTime >= startTime && m_fElapsedTime <= endTime && m_fElapsedTime <= length;
 	}
 	const std::vector<CGameObject*>& getFrame() const { return m_vFrames; }
 
@@ -76,6 +81,11 @@ protected:
 
 	bool m_bPlayOnce = false;
 	bool m_bCollision = false;
+
+	bool m_bIsBlending;
+	float m_fBlendTime;         // blend time
+	float m_fBlendDuration;     // blend during time
+	UINT m_nPrevSet;            // previous animation set
 };
 
 class CPlayableCharacterAnimationManager : public CAnimationManager {
@@ -86,6 +96,7 @@ public:
 	virtual void OnAttackInput() {}
 	virtual void UpdateCombo(float fElapsedTime) {}
 	virtual void ResetCombo() {}
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player) {}
 
 	virtual void StartSkill3() {};
 	virtual void OnKey3Input() {};
@@ -94,16 +105,16 @@ public:
 	bool IsComboInterrupted() const { return m_bComboEnd; }
 	void ClearComboInterrupted() { m_bComboEnd = false; }
 protected:
-	bool m_bInCombo;
-	int m_CurrentComboStep;
-	std::vector<UINT> m_vComboAnimationSets;
-	float m_fComboTimer;
-	const float m_fComboWaitTime = 0.5f;
-	bool m_bWaitingForNextInput;
+	bool m_bInCombo = false;
+	int m_CurrentComboStep = 0;
+	std::vector<UINT> m_vComboAnimationSets{};
+	float m_fComboTimer = 0.0f;
+	const float m_fComboWaitTime = 1.0f;
+	bool m_bWaitingForNextInput = false;
 	bool m_bNextAttack = false;
 	bool m_bComboEnd = false;
 
-	std::vector<UINT> m_vSkillAnimationSets;
+	std::vector<UINT> m_vSkillAnimationSets{};
 };
 
 class CMageManager : public CPlayableCharacterAnimationManager {
@@ -120,4 +131,49 @@ public:
 
 	virtual void StartSkill3();
 	virtual void OnKey3Input();
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
+};
+
+class CWarriorManager : public CPlayableCharacterAnimationManager {
+public:
+	CWarriorManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile)
+	{
+		m_vComboAnimationSets = { 23,24,25 }; m_vSkillAnimationSets = {  };
+	}
+
+	virtual void StartCombo();
+	virtual void OnAttackInput();
+	virtual void UpdateCombo(float fElapsedTime);
+	virtual void ResetCombo();
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
+};
+
+class CPriestManager : public CPlayableCharacterAnimationManager {
+public:
+	CPriestManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile)
+	{
+		m_vComboAnimationSets = { 22,23,24,25 }; m_vSkillAnimationSets = { 28,29,30 };
+	}
+
+	virtual void StartCombo();
+	virtual void OnAttackInput();
+	virtual void UpdateCombo(float fElapsedTime);
+	virtual void ResetCombo();
+
+	virtual void StartSkill3();
+	virtual void OnKey3Input();
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
+};
+
+class CMonsterManager : public CPlayableCharacterAnimationManager {
+public:
+	CMonsterManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile) {}
+
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
+	{
+		if (m_vFrames[0]) {
+			XMFLOAT3 targetPosition = m_vFrames[0]->getPositionFromWMatrix();
+			player->SetPosition(targetPosition);
+		}
+	}
 };

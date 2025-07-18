@@ -7,6 +7,7 @@
 #include "UIObject.h"
 #include "TextManager.h"
 #include "stdfxh.h"
+#include "Monster.h"
 
 extern DXResources g_DxResource;
 
@@ -274,4 +275,48 @@ protected:
 
 	float maxMP = 100;
 	float cMP = 100;
+};
+
+class CRaytracingCollisionTestScene : public CRaytracingScene {
+public:
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
+	void ProcessInput(float fElapsedTime);
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void CreateUIRootSignature();
+	void CreateUIPipelineState();
+
+	void CreateMageCharacter();
+	void CreateWarriorCharacter();
+	void CreatePriestCharacter();
+
+	void Create3StageBoss(); //스테이지 별로 하나씩 만들어서 모든 몬스터 한번에 하도록 설정하면 될 듯 - 보스는 마지막 인자 true, 일반은 false
+
+	void AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& players, const std::vector<std::unique_ptr<CPlayableCharacter>>& monsters);
+
+	void UpdateObject(float fElapsedTime);
+	void Render();
+	void PrepareTerrainTexture();
+
+	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+protected:
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
+	std::unique_ptr<CPlayer>							m_pPlayer{};
+
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+	std::unique_ptr<CMonster>							m_pMonster{};
+
+	unsigned int								m_nSkyboxIndex{};
+
+	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
+	InGameState									m_nState{};
+
+	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
+	float										startTime{};
+	float										wOpacity = 1.0f;
+
+	// terrainDescriptor
+	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
+	ComPtr<ID3D12Resource>								m_pTerrainCB{};
 };

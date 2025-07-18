@@ -73,16 +73,17 @@ constexpr unsigned short DEFINED_UAV_BUFFER_HEIGHT = 720;
 // 위 네개 정의는 바뀔 수 있다.
 
 // define Scene
-constexpr unsigned short SCENE_TITLE		= 0;
-constexpr unsigned short SCENE_PLAIN		= 1;
-constexpr unsigned short SCENE_CAVE			= 2;
-constexpr unsigned short SCENE_WINTERLAND	= 3;
+constexpr unsigned short SCENE_TITLE = 0;
+constexpr unsigned short SCENE_PLAIN = 1;
+constexpr unsigned short SCENE_CAVE = 2;
+constexpr unsigned short SCENE_WINTERLAND = 3;
 
 // define job
-constexpr unsigned short JOB_NOTHING		= 0;
-constexpr unsigned short JOB_MAGE			= 1;
-constexpr unsigned short JOB_WARRIOR		= 2;
-constexpr unsigned short JOB_HEALER			= 3;
+constexpr unsigned short JOB_NOTHING = 0;
+constexpr unsigned short JOB_MAGE = 1;
+constexpr unsigned short JOB_WARRIOR = 2;
+constexpr unsigned short JOB_HEALER = 3;
+constexpr unsigned short MONSTER = 4;
 
 // 조명 관련 정의
 constexpr int MAX_LIGHTS = 64;
@@ -90,41 +91,6 @@ constexpr int MAX_LIGHTS = 64;
 constexpr unsigned int DIRECTIONAL_LIGHT = 0;
 constexpr unsigned int POINT_LIGHT = 1;
 constexpr unsigned int SPOT_LIGHT = 2;
-
-// animation define
-constexpr unsigned int ANI_IDLE = 0;
-constexpr unsigned int ANI_HIT = 1;
-constexpr unsigned int ANI_HIT_DEATH = 2;
-constexpr unsigned int ANI_BIGHIT = 3;
-constexpr unsigned int ANI_BIGHIT_DEATH = 4;
-constexpr unsigned int ANI_WALK_FORWARD = 5;
-constexpr unsigned int ANI_WALK_LEFT_UP = 6;
-constexpr unsigned int ANI_WALK_RIGHT_UP = 7;
-constexpr unsigned int ANI_WALK_LEFT = 8;
-constexpr unsigned int ANI_WALK_RIGHT = 9;
-constexpr unsigned int ANI_WALK_BACKWARD = 10;
-constexpr unsigned int ANI_WALK_LEFT_DOWN = 11;
-constexpr unsigned int ANI_WALK_RIGHT_DOWN = 12;
-constexpr unsigned int ANI_RUN_FORWARD = 13;
-constexpr unsigned int ANI_RUN_LEFT_UP = 14;
-constexpr unsigned int ANI_RUN_RIGHT_UP = 15;
-constexpr unsigned int ANI_RUN_LEFT = 16;
-constexpr unsigned int ANI_RUN_RIGHT = 17;
-constexpr unsigned int ANI_RUN_BACKWARD = 18;
-constexpr unsigned int ANI_RUN_LEFT_DOWN = 19;
-constexpr unsigned int ANI_RUN_RIGHT_DOWN = 20;
-constexpr unsigned int ANI_DODGE = 21;
-constexpr unsigned int ANI_C_ATTACK1 = 22;
-constexpr unsigned int ANI_C_ATTACK2 = 23;
-constexpr unsigned int ANI_C_ATTACK3 = 24;
-constexpr unsigned int ANI_C_ATTACK4 = 25;
-constexpr unsigned int ANI_SKILL3_1 = 26;
-constexpr unsigned int ANI_SKILL3_2 = 27;
-constexpr unsigned int ANI_SKILL3_3 = 28;
-constexpr unsigned int ANI_SKILL3_4 = 29;
-constexpr unsigned int ANI_SKILL3_5 = 30;
-constexpr unsigned int ANI_SKILL2 = 31;
-constexpr unsigned int ANI_SKILL1 = 32;
 
 // 자주 쓰이는 설정들을 미리 지정
 constexpr DXGI_SAMPLE_DESC NO_AA = { .Count = 1, .Quality = 0 };	// no anti_aliasing

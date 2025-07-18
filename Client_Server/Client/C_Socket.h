@@ -27,6 +27,9 @@ public:
 	void SendsetReady(const bool isReady, const int room_num);										//Send Readypakcet if isReday is true->player set ready
 	void SendBroadCastRoom();																		
 	void SendMovePacket(const float& Time, const UINT State);							//SendMovePacket	
+	void SendPickCharacter(const short RoomNum, const short Job);
+
+
 
 	//--------------------------------------------------------------//									
 

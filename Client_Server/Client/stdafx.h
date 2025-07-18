@@ -20,7 +20,7 @@
 #include <thread>
 
 
-
+#include <limits>
 #include <iostream>
 #include <WS2tcpip.h>
 #include <vector>
@@ -31,13 +31,12 @@
 #include <timeapi.h>
 #include <random>
 
-#include <array>
-
 #include <conio.h>		//room UI 들어오면 없앰
 #include <chrono>		//클라 UI들어오면 없앰
 
 #include <numeric>
 #include <cmath>
+#include <format>
 
 
 #include <d3d12.h>
@@ -49,12 +48,19 @@
 #include <DirectXMath.h>
 #include <DirectXCollision.h>
 
+#include <d2d1_3.h>
+#include <d3d11on12.h>
+#include <dwrite.h>
+
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "Winmm.lib")
 #pragma comment(lib, "ws2_32.lib")
 
+#pragma comment(lib, "d2d1.lib")
+#pragma comment(lib, "dwrite.lib")
+#pragma comment(lib, "d3d11.lib")
 
 using namespace DirectX;
 using namespace std::chrono;
@@ -67,7 +73,7 @@ enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...
 	ALBEDO_COLOR, EMISSIVE_COLOR, SPECULAR_COLOR, GLOSSINESS
 };
 
-enum TitleState { Title, RoomSelect, InRoom, GoLoading };
+enum TitleState { Title, RoomSelect, InRoom, SelectC, GoLoading };
 //========================================================================================
 
 // 상수 정의 ===========================================================================
@@ -88,10 +94,11 @@ constexpr unsigned short SCENE_CAVE			= 2;
 constexpr unsigned short SCENE_WINTERLAND	= 3;
 
 // define job
-constexpr unsigned short JOB_NOTHING		= 0;
-constexpr unsigned short JOB_MAGE			= 1;
-constexpr unsigned short JOB_WARRIOR		= 2;
-constexpr unsigned short JOB_HEALER			= 3;
+constexpr unsigned short JOB_NOTHING = 0;
+constexpr unsigned short JOB_MAGE = 1;
+constexpr unsigned short JOB_WARRIOR = 2;
+constexpr unsigned short JOB_HEALER = 3;
+constexpr unsigned short MONSTER = 4;
 
 // 조명 관련 정의
 constexpr int MAX_LIGHTS = 64;
@@ -139,6 +146,7 @@ constexpr unsigned int ANI_SKILL1 = 32;
 constexpr DXGI_SAMPLE_DESC NO_AA = { .Count = 1, .Quality = 0 };	// no anti_aliasing
 constexpr D3D12_HEAP_PROPERTIES UPLOAD_HEAP = { .Type = D3D12_HEAP_TYPE_UPLOAD };
 constexpr D3D12_HEAP_PROPERTIES DEFAULT_HEAP = { .Type = D3D12_HEAP_TYPE_DEFAULT };
+constexpr D3D12_HEAP_PROPERTIES READBACK_HEAP = { .Type = D3D12_HEAP_TYPE_READBACK };
 constexpr D3D12_RESOURCE_DESC BASIC_BUFFER_DESC = {
 	.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
 	.Width = 0,

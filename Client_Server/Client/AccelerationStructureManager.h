@@ -29,7 +29,7 @@ public:
 	// TLAS를 생성한다.
 	void InitTLAS();
 	// AccelerationStructure를 만든다.
-	void MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs, 
+	void MakeAccelerationStructure(D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs,
 		ComPtr<ID3D12Resource>& asResource, UINT64* updateScratchSize = nullptr, bool allowUpdate = false);
 
 private:

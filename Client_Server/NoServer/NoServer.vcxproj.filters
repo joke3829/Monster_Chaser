@@ -79,6 +79,9 @@
     <Filter Include="TextManager">
       <UniqueIdentifier>{5be32bef-f2a9-4b77-bc04-d66b009bbee7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\Monster">
+      <UniqueIdentifier>{aed38396-cd81-4bce-9eb3-37898a94ad83}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -159,6 +162,9 @@
     <ClInclude Include="TextManager.h">
       <Filter>TextManager</Filter>
     </ClInclude>
+    <ClInclude Include="Monster.h">
+      <Filter>Resource\Monster</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -229,6 +235,9 @@
     </ClCompile>
     <ClCompile Include="Scene.cpp">
       <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Monster.cpp">
+      <Filter>Resource\Monster</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

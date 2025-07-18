@@ -1,4 +1,4 @@
-#include "AccelerationStructureManager.h"
+﻿#include "AccelerationStructureManager.h"
 
 void CAccelerationStructureManager::Setup(CResourceManager* resourceManager, UINT parameterIndex)
 {
@@ -15,6 +15,49 @@ void CAccelerationStructureManager::UpdateScene(XMFLOAT3& cameraEye)
 {
 	std::vector<std::unique_ptr<CGameObject>>& objects = m_pResourceManager->getGameObjectList();
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+	std::vector<std::unique_ptr<CParticle>>& particles = m_pResourceManager->getParticleList();
+	/*int i = m_nStaticMesh;
+	if (m_bFirst) {
+		for (std::unique_ptr<CGameObject>& object : objects) {
+			int n = object->getMeshIndex();
+			if (n != -1) {
+				if (meshes[n]->getHasVertex()) {
+					m_pInstanceData[i].AccelerationStructure = m_vBLASList[n]->GetGPUVirtualAddress();
+					m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+					m_pInstanceData[i].InstanceID = i;
+					m_pInstanceData[i].InstanceMask = 1;
+					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+					XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
+					++i;
+				}
+			}
+		}
+		m_nStaticMesh = i;
+		m_bFirst = false;
+	}
+	for (std::unique_ptr<CSkinningObject>& Skinning : m_pResourceManager->getSkinningObjectList()) {
+		std::vector<ComPtr<ID3D12Resource>>& skinningBLASs = Skinning->getBLAS();
+		std::vector<std::shared_ptr<Mesh>>& sMeshes = Skinning->getMeshes();
+		for (std::unique_ptr<CGameObject>& object : Skinning->getObjects()) {
+			int n = object->getMeshIndex();
+			if (n != -1) {
+				if (sMeshes[n]->getHasVertex()) {
+					m_pInstanceData[i].AccelerationStructure = skinningBLASs[n]->GetGPUVirtualAddress();
+					m_pInstanceData[i].InstanceContributionToHitGroupIndex = object->getHitGroupIndex();
+					m_pInstanceData[i].InstanceID = i;
+					m_pInstanceData[i].InstanceMask = 1;
+					m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+					auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+					if(sMeshes[n]->getbSkinning())
+						XMStoreFloat3x4(ptr, XMLoadFloat4x4(&Skinning->getPreWorldMatrix()));
+					else
+						XMStoreFloat3x4(ptr, XMLoadFloat4x4(&object->getWorldMatrix()));
+					++i;
+				}
+			}
+		}
+	}*/
 	UINT i{};
 	BoundingSphere validSphere = BoundingSphere(cameraEye, 600.0f);
 	for (std::unique_ptr<CGameObject>& object : objects) {
@@ -94,6 +137,24 @@ void CAccelerationStructureManager::UpdateScene(XMFLOAT3& cameraEye)
 		}
 	}
 
+	for (std::unique_ptr<CParticle>& particle : particles) {
+		CRaytracingParticle* p = dynamic_cast<CRaytracingParticle*>(particle.get());
+		bool bIntersect = false;
+		BoundingSphere wSphere;
+		p->getBoundingSphere().Transform(wSphere, XMLoadFloat4x4(&p->getWorldMatrix()));
+		if (wSphere.Intersects(validSphere)) bIntersect = true;
+		if (bIntersect) {
+			m_pInstanceData[i].AccelerationStructure = p->getBLAS()->GetGPUVirtualAddress();
+			m_pInstanceData[i].InstanceContributionToHitGroupIndex = p->getHitGroupIndex();
+			m_pInstanceData[i].InstanceID = p->getInstanceID();
+			m_pInstanceData[i].InstanceMask = 1;
+			m_pInstanceData[i].Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
+			auto* ptr = reinterpret_cast<XMFLOAT3X4*>(&m_pInstanceData[i].Transform);
+			XMStoreFloat3x4(ptr, XMLoadFloat4x4(&p->getWorldMatrix()));
+			++i;
+		}
+	}
+
 	//D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {
 	//	.DestAccelerationStructureData = m_TLAS->GetGPUVirtualAddress(),
 	//	.Inputs = {
@@ -148,7 +209,7 @@ void CAccelerationStructureManager::MakeBLAS(ComPtr<ID3D12Resource>& resource, s
 			desc.Triangles.Transform3x4 = 0;
 			desc.Triangles.VertexBuffer = {
 				.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
-				.StrideInBytes = sizeof(float) * 3 
+				.StrideInBytes = sizeof(float) * 3
 			};
 			desc.Triangles.VertexCount = mesh->getVertexCount();
 			desc.Triangles.VertexFormat = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -235,6 +296,7 @@ void CAccelerationStructureManager::InitTLAS()
 			}
 		}
 	}
+	m_nValidObject += m_pResourceManager->getParticleList().size();
 
 	auto instanceDesc = BASIC_BUFFER_DESC;
 	instanceDesc.Width = sizeof(D3D12_RAYTRACING_INSTANCE_DESC) * m_nValidObject;
@@ -304,7 +366,7 @@ void CAccelerationStructureManager::MakeAccelerationStructure(D3D12_BUILD_RAYTRA
 	ID3D12Device5* device = g_DxResource.device;
 	ID3D12CommandAllocator* cmdAlloc = g_DxResource.cmdAlloc;
 	ID3D12GraphicsCommandList4* cmdList = g_DxResource.cmdList;
-	ID3D12CommandQueue* cmdQueue = g_DxResource.cmdQueue; 
+	ID3D12CommandQueue* cmdQueue = g_DxResource.cmdQueue;
 
 	auto makeBuffer = [&](ComPtr<ID3D12Resource>& d3dResource, UINT bufferSize, auto InitialState)
 		{
