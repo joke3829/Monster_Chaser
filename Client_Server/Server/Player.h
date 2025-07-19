@@ -10,6 +10,7 @@ public:
     int room_num;
     XMFLOAT4X4 position;
     int hp = 100;
+	int gold = 0; // 플레이어가 획득한 골드
     bool isReady = false;
 
 
@@ -20,6 +21,9 @@ public:
     void SetPosition(const XMFLOAT4X4& pos);
     const XMFLOAT4X4& GetPosition() const;
 
-    void TakeDamage(int dmg);
+    bool  TakeDamage(int dmg);
     void Move(float dx, float dy, float dz); // 이동처리 예시
+
+    int GetHP() { return hp; }
+
 };

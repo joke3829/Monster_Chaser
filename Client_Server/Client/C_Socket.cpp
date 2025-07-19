@@ -78,6 +78,14 @@ void C_Socket::SendPickCharacter(const short RoomNum, const short Job)
 	Client.send_packet(&p);
 }
 
+void C_Socket::SendPlayerReady()
+{
+	cs_packet_ready pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_READYINGAME;
+	Client.send_packet(&pkt);
+}
+
 void C_Socket::SendsetReady(const bool isReady, const int room_num)
 {
 	cs_packet_getready rp;
@@ -213,8 +221,6 @@ void C_Socket::process_packet(char* ptr)
 		Players[local_id].getAnimationManager()->ChangeAnimation(state, true);
 		Players[local_id].getAnimationManager()->UpdateAnimation(time);		// 받은 시간과 현재 시간이 얼마 차이 안나면 바꾸지 않도록 추가하자
 
-		
-
 
 		break;
 	}
@@ -227,9 +233,9 @@ void C_Socket::process_packet(char* ptr)
 		// 이미 있으면 덮어쓰기 방지
 		if (Monsters.find(id) == Monsters.end()) {
 			auto newMonster = std::make_unique<Monster>(id);
-			newMonster->setPosition(pkt->pos);									 // doyoung's turn
-			newMonster->setVisible(true);										 // doyoung's turn 보이게 하는거
-			newMonster->playIdleAnim();											 // doyoung's turn
+			newMonster->setPosition(pkt->pos);			// doyoung's turn
+			//newMonster->setVisible(true);										 // doyoung's turn 보이게 하는거
+			//newMonster->playIdleAnim();											 // doyoung's turn
 
 			Monsters[id] = std::move(newMonster);
 
@@ -251,8 +257,8 @@ void C_Socket::process_packet(char* ptr)
 		if (Monsters.find(id) != Monsters.end()) {
 			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr  
 			m->setPosition(pkt->pos);													  // doyoung's turn
-			m->setVisible(true);														  // doyoung's turn
-			m->playIdleAnim();															  // doyoung's turn
+			//m->setVisible(true);														  // doyoung's turn
+			//m->playIdleAnim();															  // doyoung's turn
 		}
 		else {
 			// 존재하지 않는 경우 새로 생성  
@@ -268,14 +274,12 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_MONSTER_MOVE: {
 		sc_packet_monster_move* pkt = reinterpret_cast<sc_packet_monster_move*>(ptr);
 		int id = pkt->monster_id;
-
-		auto it = Monsters.find(id);
-		if (it != Monsters.end()) {
-			//it->second->setPosition(pkt->pos);
-			it->second->getRenderingObject()->SetWorldMatrix(pkt->pos);
-		}
-		else {
-			std::cout << " 서버에서 받은 몬스터 이동 패킷: 존재하지 않는 ID " << id << "\n";
+		
+		if (Monsters.contains(id)) {
+			auto& monster = Monsters[id];
+			monster->setPosition(pkt->pos);
+			//monster->setVisible(true);
+			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
 		}
 
 		break;
@@ -299,7 +303,6 @@ void C_Socket::process_packet(char* ptr)
 	default:
 		break;
 	}
-
 
 }
 

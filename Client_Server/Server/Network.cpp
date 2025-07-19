@@ -210,7 +210,7 @@ void SESSION::process_packet(char* p) {
             die.size = sizeof(die);
             die.type = S2C_P_MONSTER_DIE;
             die.monster_id = monster_id;
-
+            die.gold = monster->GetGold(); // 몬스터가 죽었을 때 골드 전송
             for (int pid : room.id)
                 g_server.users[pid]->do_send(&die);
         }
@@ -218,6 +218,36 @@ void SESSION::process_packet(char* p) {
         break;
     }
 
+    case C2S_P_MONSTER_HIT: {
+
+        auto* pkt = reinterpret_cast<cs_packet_monster_hit*>(p);
+        
+        Room& room = g_server.rooms[player->room_num];
+        auto monster = room.monsters[pkt->attacker_id];
+        auto target = g_server.playerManager.GetPlayer(pkt->target_player_id);
+
+
+		//target->GetHP() -= pkt->damage; // 플레이어의 HP 감소
+
+        if (monster && target) {
+           // bool dead = target->TakeDamage(10); // 예시: 10 데미지
+
+            // 클라에 피격 정보 전송
+            sc_packet_player_hit hpkt;
+            hpkt.size = sizeof(hpkt);
+            hpkt.type = S2C_P_PLAYER_HIT;
+            hpkt.target_id = pkt->target_player_id;
+            hpkt.current_hp = target->GetHP();
+
+            for (int pid : room.id)
+                g_server.users[pid]->do_send(&hpkt);
+
+            //if (dead) {
+            //    // 죽었을 경우 처리 추가 가능
+            //}
+        }
+        break;
+    }
                         
 
     }

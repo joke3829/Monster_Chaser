@@ -28,7 +28,7 @@ public:
 	void SendBroadCastRoom();																		
 	void SendMovePacket(const float& Time, const UINT State);							//SendMovePacket	
 	void SendPickCharacter(const short RoomNum, const short Job);
-
+	void SendPlayerReady();	//Send Player Ready Packet
 
 
 	//--------------------------------------------------------------//									

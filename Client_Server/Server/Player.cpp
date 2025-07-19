@@ -14,10 +14,11 @@ const XMFLOAT4X4& Player::GetPosition() const {
     return position;
 }
 
-void Player::TakeDamage(int dmg) {
+bool  Player::TakeDamage(int dmg) {
     std::lock_guard<std::mutex> lock(playerMutex);
     hp -= dmg;
     if (hp < 0) hp = 0;
+	return hp == 0; // 0ÀÌ µÇ¸é Á×À½
 }
 
 void Player::Move(float dx, float dy, float dz) {

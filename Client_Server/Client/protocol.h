@@ -81,6 +81,12 @@ struct sc_packet_pickcharacter {
     short C_type;
 };
 
+constexpr char S2C_P_INGAME_START = 9;
+struct sc_packet_ingame_start {
+    unsigned char size;
+    char type;
+};
+
 constexpr char S2C_P_MONSTER_SPAWN = 10;
 struct sc_packet_monster_spawn {
     unsigned char size;
@@ -103,6 +109,7 @@ struct sc_packet_monster_die {
     unsigned char size;
     char type;
     int monster_id;
+    int gold;
 };
 
 constexpr char S2C_P_MONSTER_RESPAWN = 13;
@@ -113,13 +120,26 @@ struct sc_packet_monster_respawn {
     XMFLOAT4X4 pos;
 };
 
+
 constexpr char S2C_P_MONSTER_MOVE = 14;
 struct sc_packet_monster_move {
     unsigned char size;
     char type;
     int monster_id;
     XMFLOAT4X4 pos;
+    int state;  // MonsterState (Idle, Chase, Attack, Return, Dead)
 };
+
+
+
+constexpr char S2C_P_PLAYER_HIT = 15;  // 예: 15
+struct sc_packet_player_hit {
+    unsigned char size;
+    char type;
+    int target_id;
+    int current_hp;
+};
+
 constexpr char S2C_P_LEAVE = 49;
 struct sc_packet_leave {
     unsigned char size;
@@ -185,12 +205,25 @@ struct cs_packet_pickcharacter {
     char room_number;
     short C_type;
 };
+constexpr char C2S_P_READYINGAME = 59;
+struct cs_packet_ready {
+    unsigned char size;
+    char type;
+};
 
-constexpr char C2S_P_PLAYERATTACK = 59;
+constexpr char C2S_P_PLAYERATTACK = 60;
 struct cs_packet_player_attack {
     unsigned char size;
     char type;
     int target_monster_id;
 };
 
+
+constexpr char C2S_P_MONSTER_HIT = 61;
+struct cs_packet_monster_hit {
+    unsigned char size;
+    char type;
+    int attacker_id;  // 몬스터 ID
+    int target_player_id;
+};
 #pragma pack(pop)

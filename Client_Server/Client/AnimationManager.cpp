@@ -207,7 +207,9 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 		// calculate animation matrix
 		std::vector<XMFLOAT4X4> prevMatrices(m_vFrames.size());
 		std::vector<XMFLOAT4X4> currMatrices(m_vFrames.size());
-		m_vAnimationSets[m_nPrevSet]->BlendAnimationMatrix(m_vFrames, m_fElapsedTime, prevMatrices);
+		//---------------------------------------------------------------------------------------------------
+		m_vAnimationSets[m_nPrevSet]->BlendAnimationMatrix(m_vFrames, m_fElapsedTime, prevMatrices);	// Doyuoug you can do it
+		//---------------------------------------------------------------------------------------------------
 		m_vAnimationSets[m_nCurrentSet]->BlendAnimationMatrix(m_vFrames, m_fElapsedTime, currMatrices);
 
 		// calculate animation blend weight

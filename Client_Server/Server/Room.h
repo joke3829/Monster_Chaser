@@ -3,7 +3,7 @@
 
 #include "protocol.h"
 #include "Monster.h"
-
+#include "array"
 
 
 class SESSION;
@@ -47,7 +47,9 @@ private:
 	int ready_user = 0;			// 레드 버튼을 누른 유저 수
 	
 	static int room_num;
-	bool is_ready[3];
+	bool is_ready[3];			//준비상태
+
+	array<bool, 3> player_ready = { false, false, false }; // 플레이어 준비 상태
 
 
 	bool is_started = false; // 게임이 시작되었는지 여부 다른 클라가 해당 방에 입장 못하도록 솔플 이나 듀오로 돌릴수도 있음

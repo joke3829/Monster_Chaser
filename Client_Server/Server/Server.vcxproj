@@ -164,7 +164,6 @@
     </ClInclude>
     <ClInclude Include="Room.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="Vector3.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Player.cpp">

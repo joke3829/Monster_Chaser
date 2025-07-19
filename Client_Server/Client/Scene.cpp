@@ -116,31 +116,7 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// =============================================================================================
 
-	/*int tempIndex = meshes.size();
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
-	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
-	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
 
-	backUIIndex = m_vInRoomUIs.size();
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 296, 484));
-	for (int i = 0; i < 3; ++i) {
-		m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
-		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport((i * 296) + (18 * (i + 1)), 18);
-		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
-	}
-
-	readyUIIndex = m_vInRoomUIs.size();
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 175, 65));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InRoom\\ReadyText.dds"));
-	for (int i = 0; i < 3; ++i) {
-		m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
-		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport((i * 296) + (18 * (i + 1)) + 130, 437);
-	}
-
-	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[tempIndex].get()));
-	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
-	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.0);*/
 
 	int tempIndex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
@@ -262,61 +238,6 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 		break;
 	}
 }
-//void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
-//{
-//	switch (nMessage) {
-//	case WM_LBUTTONDOWN: {
-//		int mx = LOWORD(lParam);
-//		int my = HIWORD(lParam);
-//
-//		switch (g_state) {
-//		case Title:
-//			g_state = RoomSelect;
-//			Client.SendBroadCastRoom();
-//			break;
-//		case RoomSelect:			
-//			for (int i = 0; i < 10; ++i) {
-//				int j = i % 2;
-//				if (j == 0) {
-//					int x1 = 20, x2 = 460;
-//					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
-//					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
-//						if (userPerRoom[i] < 3) {
-//							local_uid = userPerRoom[i]++;
-//							currentRoom = i;				
-//							Client.SendEnterRoom(currentRoom);
-//							break;
-//						}
-//					}
-//				}
-//				else {
-//					int x1 = 500, x2 = 940;
-//					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
-//					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
-//						if (userPerRoom[i] < 3) {
-//							local_uid = userPerRoom[i]++;
-//							currentRoom = i;
-//							Client.SendEnterRoom(currentRoom);
-//							break;
-//						}
-//					}
-//				}
-//			}
-//			
-//			break;
-//		case InRoom:
-//			break;
-//		}
-//		break;
-//	}
-//	case WM_LBUTTONUP: {
-//		break;
-//	}
-//	case WM_MOUSEMOVE: {
-//		break;
-//	}
-//	}
-//}
 
 void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
@@ -340,7 +261,6 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;
 							Client.SendEnterRoom(currentRoom);
-							//g_state = InRoom;
 							break;
 						}
 					}
@@ -353,8 +273,6 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 							local_uid = userPerRoom[i]++;
 							currentRoom = i;
 							Client.SendEnterRoom(currentRoom);
-							//g_state = InRoom;
-
 							break;
 						}
 					}
@@ -470,7 +388,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		}
 		if (Client.getstart()) {
 			wOpacity = 0.0f;
-			m_nNextScene = SCENE_WINTERLAND;	// 한번만 테스트 성공 해봤지만 계속 터져서 이거 넣어봄
+			//m_nNextScene = SCENE_WINTERLAND;	// 한번만 테스트 성공 해봤지만 계속 터져서 이거 넣어봄
 		}
 		break;
 	}
@@ -1092,14 +1010,14 @@ inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique
 
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x1100) { 
+				if (bone1->getBoundingInfo() & 0x1100) {
 					DirectX::BoundingSphere boneSphere1 = bone1->getObjectSphere();
 					bone1->getObjectSphere().Transform(boneSphere1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
-						if (obj1 != character) { 
+						if (obj1 != character) {
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x1100) { 
+								if (bone2->getBoundingInfo() & 0x1100) {
 									DirectX::BoundingSphere boneSphere2 = bone2->getObjectSphere();
 									bone2->getObjectSphere().Transform(boneSphere2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneSphere1.Intersects(boneSphere2)) {
@@ -1131,7 +1049,7 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 				for (const auto& character : object2) {
 					for (const auto& bone : character->getObjects()) {
-						if (bone->getBoundingInfo() & 0x0011) { 
+						if (bone->getBoundingInfo() & 0x0011) {
 							DirectX::BoundingOrientedBox boneOBB;
 							bone->getObjectOBB().Transform(boneOBB, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
 							if (mapOBB.Intersects(boneOBB)) {
@@ -1144,14 +1062,14 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x0011) { 
+				if (bone1->getBoundingInfo() & 0x0011) {
 					DirectX::BoundingOrientedBox boneOBB1;
 					bone1->getObjectOBB().Transform(boneOBB1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
 						if (obj1 != character) {
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x0011) { 
+								if (bone2->getBoundingInfo() & 0x0011) {
 									DirectX::BoundingOrientedBox boneOBB2;
 									bone2->getObjectOBB().Transform(boneOBB2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneOBB1.Intersects(boneOBB2)) {
@@ -1206,7 +1124,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 
 		if (!collisions.empty()) {
 
-			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
+			auto maxCollision = std::max_element(collisions.begin(), collisions.end(), [](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
 
 			XMFLOAT3 norm = maxCollision->normal;
 			float depth = maxCollision->depth;
@@ -1215,7 +1133,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 			XMVECTOR moveDir = XMLoadFloat3(&character->getMoveDirection());
 			XMVECTOR normal = XMLoadFloat3(&norm);
 			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
-			if (dotProduct < 0.0f) { 
+			if (dotProduct < 0.0f) {
 				character->sliding(depth, norm, meshHeight);
 			}
 		}
@@ -1387,6 +1305,28 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		if (i == Client.get_id()) {
 			m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 		}
+
+		skinned[i]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
+		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
+
+	}
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+
+	// Monsters 렌더링 및 애니메이션 연결
+	int baseIndex = Players.size();
+	for (int i = 0; i < Monsters.size(); ++i) {
+		auto& monster = Monsters[i];
+
+		int skinnedIndex = baseIndex + i;
+		if (skinnedIndex >= skinned.size() || skinnedIndex >= aManagers.size())
+			continue;
+
+		monster->setRenderingObject(skinned[skinned.size()-1].get());
+		monster->setAnimationManager(aManagers[aManagers.size() - 1].get());
+
+		skinned[skinnedIndex]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+		skinned[skinnedIndex]->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
+		skinned[skinnedIndex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 	}
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
@@ -1397,37 +1337,6 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 
 
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
-
-
-
-
-
-	// =========================================================
-	// 
-	// Create Normal Object & skinning Object Copy ========================================
-
-	/*for (auto& o : skinned[1]->getObjects()) {
-		for (auto& ma : o->getMaterials())
-			ma.m_bHasEmissiveColor = false;
-	}*/
-	/*Players[0].setRenderingObject(skinned[0].get());
-	Players[0].setAnimationManager(aManagers[0].get());
-
-	for (int i = 1; i < Players.size(); ++i) {
-		skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
-		skinned[i]->CopyFromOtherObject(skinned[0].get());
-		if (auto* mageManager = dynamic_cast<CMageManager*>(aManagers[0].get())) {
-			aManagers.emplace_back(std::make_unique<CMageManager>(*mageManager));
-		}
-		else {
-			aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
-		}
-		aManagers[i]->SetFramesPointerFromSkinningObject(skinned[i]->getObjects());
-		aManagers[i]->MakeAnimationMatrixIndex(skinned[i].get());
-		Players[i].setRenderingObject(skinned[i].get());
-		Players[i].setAnimationManager(aManagers[i].get());
-	}*/
 
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
@@ -1483,15 +1392,12 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// Copy(normalObject) & SetPreMatrix ===============================
 
-	for (int i = 0; i < Players.size(); ++i) {
-		skinned[i]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
-	}
-	for (int i = Players.size(); i < Players.size() + Monsters.size(); ++i) {
+
+	/*for (int i = Players.size(); i < Players.size() + Monsters.size(); ++i) {
 		skinned[i]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 		skinned[i]->SetPosition(XMFLOAT3(-28.0f + 5.0f * i, 0.0f, -245.0f));
 		skinned[i]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
-	}
+	}*/
 
 	// ==============================================================================
 
@@ -1512,6 +1418,9 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
+
+	
+	//Client.SendPlayerReady();
 
 }
 
@@ -1584,8 +1493,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 	}
 }
 
-void CRaytracingWinterLandScene::CreateUIRootSignature()
-{
+void CRaytracingWinterLandScene::CreateUIRootSignature() {
 	D3D12_DESCRIPTOR_RANGE tRange{};
 	tRange.BaseShaderRegister = 0;
 	tRange.NumDescriptors = 1;
