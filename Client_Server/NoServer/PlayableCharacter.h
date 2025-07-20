@@ -24,9 +24,17 @@ public:
 	int getCurrentSkill() const { return m_CurrentSkill; }
 	CSkinningObject* getObject() { return m_Object; }
 	CPlayableCharacterAnimationManager* getAniManager() { return m_AManager; }
-	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
 
 	void SetCamera(std::shared_ptr<CCamera>& camera) { m_pCamera = camera; }
+
+	virtual std::vector<std::unique_ptr<CProjectile>>& GetBullets() {
+		static std::vector<std::unique_ptr<CProjectile>> empty;
+		return empty;
+	}
+	virtual const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const {
+		static std::vector<std::unique_ptr<CProjectile>> empty;
+		return empty;
+	}
 protected:
 	// stat																																													
 	float m_HP{};
@@ -50,8 +58,6 @@ protected:
 	POINT oldCursor{};
 
 	UCHAR m_PrevKeyBuffer[256]{};
-
-	std::vector<std::unique_ptr<CProjectile>> bullet;
 };
 
 class CPlayerMage : public CPlayableCharacter {
@@ -103,8 +109,13 @@ public:
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void UpdateObject(float fElapsedTime);
+
+	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
+	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
 protected:
 	// personal Resource(bullet, particle etc.)
+
+	std::vector<std::unique_ptr<CProjectile>> bullet;
 	int currentBullet = 0;
 };
 
@@ -201,6 +212,9 @@ public:
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void UpdateObject(float fElapsedTime);
+
+	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
+	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
 protected:
 	std::vector<std::unique_ptr<CProjectile>> bullet;
 };

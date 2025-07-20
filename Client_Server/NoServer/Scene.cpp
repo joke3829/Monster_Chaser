@@ -3652,13 +3652,21 @@ void CRaytracingCollisionTestScene::CreateMageCharacter()
 
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f),1.0f,"sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	CPlayerMage* mage = dynamic_cast<CPlayerMage*>(m_vPlayers.back().get());
+	Material sharedMaterial;
 
-	/*m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), "box"));
-	m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
-	m_pResourceManager->getGameObjectList().back()->SetMeshIndex(m_pResourceManager->getMeshList().size()-1);
-	m_pResourceManager->getGameObjectList().back()->getMaterials().emplace_back();
+	for (int i = 0; i < 10; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
 
-	m_vPlayers.back()->GetBullets()[0].get()->setGameObject(m_pResourceManager->getGameObjectList().back().get());*/
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		mage->GetBullets().push_back(std::move(projectile));
+	}
 }
 
 void CRaytracingCollisionTestScene::CreateWarriorCharacter()
@@ -3755,6 +3763,32 @@ void CRaytracingCollisionTestScene::AttackCollision(const std::vector<std::uniqu
 	}
 }
 
+void CRaytracingCollisionTestScene::ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
+{
+	for (const auto& target : targets) {
+		for (const auto& targetBone : target->getObject()->getObjects()) {
+			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+			BoundingSphere targetSphere = targetBone->getObjectSphere();
+			BoundingSphere transformedtargetSphere;
+			targetSphere.Transform(transformedtargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+			for (const auto& player : attackers) {
+				auto& bullets = player->GetBullets();
+				if (bullets.empty()) continue;
+				for (const auto& bullet : bullets) {
+					if (!bullet || !bullet->getActive()) continue;
+					BoundingOrientedBox bulletSphere = bullet->getObjects().getObjectOBB();
+					BoundingOrientedBox transformedBulletBox;
+					bulletSphere.Transform(transformedBulletBox, XMLoadFloat4x4(&bullet->getObjects().getWorldMatrix()));
+					if (transformedBulletBox.Intersects(transformedtargetSphere)) {
+						target->Attacked(10000.0f);
+						bullet->getObjects().SetPosition(player->getObject()->getPosition());
+						bullet->setActive(false);
+					}
+				}
+			}
+		}
+	}
+}
 
 void CRaytracingCollisionTestScene::PrepareTerrainTexture()
 {
@@ -3941,6 +3975,8 @@ void CRaytracingCollisionTestScene::UpdateObject(float fElapsedTime)
 
 	for (auto& p : m_vMonsters)
 		p->UpdateObject(fElapsedTime);
+
+	ShootCollision(m_vMonsters, m_vPlayers);
 
 	switch (m_vMonsters[0]->getCurrentSkill())
 	{

@@ -133,6 +133,21 @@ void Stage3_Monster::Skill3()
 	}
 }
 
+void Stage3_Monster::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+	}
+	else
+	{
+		m_bLive = false;
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
+	}
+}
+
 void Stage3_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
 	if (m_bSkillActive || m_bDoingCombo) {
@@ -156,16 +171,19 @@ void Stage3_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 
 void Stage3_Monster::UpdateObject(float fElapsedTime)
 {
-	bool test = false;
-	if (m_AManager->IsAnimationFinished()) {
-		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
-		test = true;
-		m_bSkillActive = false;
-		m_CurrentSkill = 0;
-	}
+	if (m_bLive) {
+		bool test = false;
+		if (m_AManager->IsAnimationFinished()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
+			test = true;
+			m_bSkillActive = false;
+			m_CurrentSkill = 0;
+			m_bAttacked = false;
+		}
 
-	if (test) {
-		m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
 	}
 }
 

@@ -84,6 +84,8 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
+	virtual void Attacked(float damage);
+
 	virtual void UpdateObject(float fElapsedTime);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };

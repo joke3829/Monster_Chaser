@@ -91,6 +91,15 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
+			if (!bullet.empty()) {
+				CProjectile* projectile = bullet[currentBullet].get();
+				if (projectile && !projectile->getActive()) {
+					projectile->setPosition(m_Object->getPosition());
+					projectile->setMoveDirection(cameraDir);
+					projectile->setActive(true);
+					currentBullet = (currentBullet + 1) % bullet.size();
+				}
+			}
 		}
 		break;
 	}
@@ -618,11 +627,11 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 		}
 	}
 
-	/*for (auto& bulletPtr : bullet) {
+	for (auto& bulletPtr : bullet) {
 		if (bulletPtr->getActive()) {
 			bulletPtr->IsMoving(fElapsedTime);
 		}
-	}*/
+	}
 }
 
 // =======================================================================================
