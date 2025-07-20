@@ -208,6 +208,96 @@ protected:
 	// terrainDescriptor
 	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
 	ComPtr<ID3D12Resource>								m_pTerrainCB{};
+
+	// InGame UI
+	std::array<std::vector<std::unique_ptr<UIObject>>, 3>	m_vStatusUIs{};
+	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
+	std::unique_ptr<UIObject>				m_pShopUI;
+
+	short m_numUser = 1;						// replace
+	std::array<size_t, 3>				m_buffpixelHeight{};
+	std::array<std::array<bool, 3>, 3>	m_BuffState{};	// replace
+	std::array<float, 3> maxHPs;		// replace
+	std::array<float, 3> cHPs;			// replace
+
+	short cItem = 0;		// replace server var
+	bool itemUse{};			// replace server var
+
+	std::array<float, 3> coolTime{};
+	std::array<float, 3> curCTime{};
+
+	float maxMP = 100;			// replace
+	float cMP = 100;			// replace
+
+	void PlayerUISetup(short job);		// player job need
+};
+
+// real use scene
+class CRaytracingCaveScene : public CRaytracingScene {
+public:
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
+	void ProcessInput(float fElapsedTime);
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void CreateUIRootSignature();
+	void CreateUIPipelineState();
+
+	void CreateMageCharacter();
+
+	void UpdateObject(float fElapsedTime);
+	void Render();
+
+	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+protected:
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
+	std::unique_ptr<CPlayer>							m_pPlayer{};
+
+	unsigned int								m_nSkyboxIndex{};
+
+	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
+	InGameState									m_nState{};
+
+	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
+	float										startTime{};
+	float										wOpacity = 1.0f;
+};
+
+// real use scene
+class CRaytracingETPScene : public CRaytracingScene {
+public:
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
+	void ProcessInput(float fElapsedTime);
+	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
+
+	void CreateUIRootSignature();
+	void CreateUIPipelineState();
+
+	void CreateMageCharacter();
+
+	void UpdateObject(float fElapsedTime);
+	void Render();
+	void PrepareTerrainTexture();
+
+	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+protected:
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
+	std::unique_ptr<CPlayer>							m_pPlayer{};
+
+	unsigned int								m_nSkyboxIndex{};
+
+	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
+	InGameState									m_nState{};
+
+	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
+	float										startTime{};
+	float										wOpacity = 1.0f;
+
+	// terrainDescriptor
+	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
+	ComPtr<ID3D12Resource>								m_pTerrainCB{};
 };
 
 

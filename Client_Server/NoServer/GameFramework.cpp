@@ -213,7 +213,7 @@ void CGameFramework::ChangeFullScreenState()
 
 void CGameFramework::InitScene()
 {
-	m_pScene = std::make_unique<CRaytracingParticleTestScene>();
+	m_pScene = std::make_unique<CRaytracingETPScene>();
 	m_pScene->SetCamera(m_pCamera);
 	m_pScene->SetUp(m_pd3dOutputBuffer);
 	bIngame = true;
@@ -299,6 +299,12 @@ void CGameFramework::ChangeScene(short definedScene)
 	case SCENE_WINTERLAND:
 		bIngame = true;
 		m_pScene = std::make_unique<CRaytracingWinterLandScene>();
+		m_pScene->SetCamera(m_pCamera);
+		m_pScene->SetUp(m_pd3dOutputBuffer);
+		break;
+	case SCENE_CAVE:
+		bIngame = true;
+		m_pScene = std::make_unique<CRaytracingCaveScene>();
 		m_pScene->SetCamera(m_pCamera);
 		m_pScene->SetUp(m_pd3dOutputBuffer);
 		break;
