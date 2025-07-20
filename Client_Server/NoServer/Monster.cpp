@@ -130,6 +130,33 @@ void Stage3_Monster::Skill3()
 		m_AManager->UpdateAniPosition(0.0f, m_Object);
 		m_bSkillActive = true;
 		m_CurrentSkill = 3;
+		if (!bullet.empty()) {
+			const int numProjectiles = 5;
+			const float spreadAngle = 15.0f;
+			float startAngle = -spreadAngle / 2.0f;
+			float angleStep = spreadAngle / (numProjectiles - 1);
+
+			for (int i = 0; i < numProjectiles && !bullet.empty(); ++i) {
+				CProjectile* projectile = bullet[currentBullet].get();
+				if (projectile && !projectile->getActive()) {
+					projectile->setPosition(m_Object->getPosition());
+
+					// Calculate the spread direction
+					XMFLOAT3 lookDirection = m_Object->getLook();
+					float angle = startAngle + (i * angleStep);
+					float rad = angle * (3.14159265359f / 180.0f);
+					XMFLOAT3 spreadDirection(
+						lookDirection.x * cos(rad) - lookDirection.z * sin(rad),
+						lookDirection.y,
+						lookDirection.x * sin(rad) + lookDirection.z * cos(rad)
+					);
+
+					projectile->setMoveDirection(spreadDirection);
+					projectile->setActive(true);
+					currentBullet = (currentBullet + 1) % bullet.size();
+				}
+			}
+		}
 	}
 }
 
@@ -184,7 +211,14 @@ void Stage3_Monster::UpdateObject(float fElapsedTime)
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
+
+		for (auto& bulletPtr : bullet) {
+			if (bulletPtr->getActive()) {
+				bulletPtr->IsMoving(fElapsedTime);
+			}
+		}
 	}
+
 }
 
 // =============================================================================

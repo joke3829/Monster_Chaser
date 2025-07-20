@@ -625,13 +625,14 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
-	}
 
-	for (auto& bulletPtr : bullet) {
-		if (bulletPtr->getActive()) {
-			bulletPtr->IsMoving(fElapsedTime);
+		for (auto& bulletPtr : bullet) {
+			if (bulletPtr->getActive()) {
+				bulletPtr->IsMoving(fElapsedTime);
+			}
 		}
 	}
+
 }
 
 // =======================================================================================

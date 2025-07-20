@@ -88,6 +88,14 @@ public:
 
 	virtual void UpdateObject(float fElapsedTime);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+
+	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
+	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
+protected:
+	// personal Resource(bullet, particle etc.)
+
+	std::vector<std::unique_ptr<CProjectile>> bullet;
+	int currentBullet = 0;
 };
 
 // A real controlling monster

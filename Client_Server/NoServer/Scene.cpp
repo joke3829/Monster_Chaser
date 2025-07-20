@@ -3695,6 +3695,22 @@ void CRaytracingCollisionTestScene::Create3StageBoss()
 	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
 	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	Stage3_Monster* monster = dynamic_cast<Stage3_Monster*>(m_vMonsters.back().get());
+	Material sharedMaterial;
+
+	for (int i = 0; i < 10; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		monster->GetBullets().push_back(std::move(projectile));
+	}
 }
 
 void CRaytracingCollisionTestScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
@@ -3993,6 +4009,7 @@ void CRaytracingCollisionTestScene::UpdateObject(float fElapsedTime)
 		}
 		break;
 	case 3:
+		ShootCollision(m_vPlayers, m_vMonsters);
 		break;
 	}
 	/*m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
