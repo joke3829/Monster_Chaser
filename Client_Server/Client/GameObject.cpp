@@ -1,15 +1,12 @@
-#include "GameObject.h"
-#include "C_Socket.h"
-#include "ObjectManager.h"
-#include "protocol.h"
-extern C_Socket Client;
-extern std::unordered_map<int, Player> Players;
+﻿#include "GameObject.h"
+
+
 CGameObject::CGameObject(const CGameObject& other)
 {
-	m_strName = other.m_strName;	
+	m_strName = other.m_strName;
 	m_xmf3Pos = other.m_xmf3Pos;
 	m_xmf3Scale = other.m_xmf3Scale;
-	
+
 	m_xmf3Right = other.m_xmf3Right;
 	m_xmf3Up = other.m_xmf3Up;
 	m_xmf3Look = other.m_xmf3Look;
@@ -18,11 +15,11 @@ CGameObject::CGameObject(const CGameObject& other)
 	UpdateLocalMatrix();
 
 	m_bUseBoundingInfo = other.m_bUseBoundingInfo;
+
 	m_OBB = other.m_OBB;
 	m_BoundingSphere = other.m_BoundingSphere;
 	// SBT may have already registered Resources (in the case of not Skinning)
 	// Share material if index is the same
-
 
 	for (int i = 0; i < other.m_vMaterials.size(); ++i)
 		m_vMaterials.emplace_back(other.m_vMaterials[i]);
@@ -146,8 +143,8 @@ void CGameObject::SetScale(XMFLOAT3 scale)
 }
 
 void CGameObject::move(float fElapsedTime) {
-	 XMStoreFloat3(&m_xmf3Pos, XMLoadFloat3(&m_xmf3Pos) + (XMLoadFloat3(&m_xmf3Look) * 30.0f * fElapsedTime));
-	 UpdateLocalMatrix();
+	XMStoreFloat3(&m_xmf3Pos, XMLoadFloat3(&m_xmf3Pos) + (XMLoadFloat3(&m_xmf3Look) * 30.0f * fElapsedTime));
+	UpdateLocalMatrix();
 }
 
 std::string CGameObject::getFrameName() const
@@ -326,7 +323,7 @@ void CSkinningInfo::MakeBufferAndDescriptorHeap(ComPtr<ID3D12Resource>& pMatrixB
 
 	// CB
 	auto desc = BASIC_BUFFER_DESC;
-	
+
 	desc.Width = Align(sizeof(UINT) * 2, 256);
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pConstantBuffer.GetAddressOf()));
 	m_pConstantBuffer->Map(0, nullptr, &tempData);
@@ -507,10 +504,10 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 				}
 			}
 			else {
-				if(bBoneBound){
+				if (bBoneBound) {
 					inFile.read((char*)&tempData, sizeof(int));
-					readLabel();	
-					Mesh* tempMesh = new Mesh(inFile, strLabel);	
+					readLabel();
+					Mesh* tempMesh = new Mesh(inFile, strLabel);
 					delete tempMesh;
 				}
 				else {
@@ -534,7 +531,7 @@ void CSkinningObject::AddObjectFromFile(std::ifstream& inFile, int nParentIndex)
 			}
 		}
 		else if (strLabel == "<SkinningInfo>:") {
-			if(g_ShowBoundingBox)	// Fail -> Frame not has Bound
+			if (g_ShowBoundingBox)	// Fail -> Frame not has Bound
 				m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size() - 1));
 			else
 				m_vSkinningInfo.emplace_back(std::make_unique<CSkinningInfo>(inFile, m_vMeshes.size()));
@@ -696,7 +693,7 @@ void CSkinningObject::AddMaterialFromFile(std::ifstream& inFile, int nCurrentInd
 				continue;
 			}
 			else {	// Create New Texture
-				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;	
+				vMaterials[nCurrentMaterial].m_bHasSpecularMap = true;
 				vMaterials[nCurrentMaterial].m_nSpecularMapIndex = m_vTextures.size();
 				std::string FilePath = FilePathFront + strLabel + FilePathBack;
 				std::wstring wstr;
@@ -910,13 +907,8 @@ void CSkinningObject::UpdateWorldMatrix()
 }
 void CSkinningObject::SetPosition(XMFLOAT3 pos)
 {
-
 	m_xmf3Position = pos;
-	
 	UpdateWorldMatrix();
-	
-	
-
 }
 void CSkinningObject::SetLookDirection(const XMFLOAT3& look, const XMFLOAT3& up)
 {
@@ -965,26 +957,25 @@ void CSkinningObject::Rotate(XMFLOAT3 rot)
 
 void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 {
-	XMFLOAT4X4 centerWorldMatrix = frame.getWorldMatrix(); // m_vFrames[0]�� ���� ��� ��������
-	XMMATRIX centerMatrix = XMLoadFloat4x4(&centerWorldMatrix); // ������ �����ϰ� ��ȯ
-	
-	XMMATRIX centerInverse = XMMatrixInverse(nullptr, centerMatrix); // �߽����� ���� ����� ����� ���
+	XMFLOAT4X4 centerWorldMatrix = frame.getWorldMatrix();
+	XMMATRIX centerMatrix = XMLoadFloat4x4(&centerWorldMatrix);
 
-	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position); //���� ��ġ�� XMVECTOR�� �ε�
-	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse); // ���� ��ġ�� ���� ��ǥ��� ��ȯ
+	XMMATRIX centerInverse = XMMatrixInverse(nullptr, centerMatrix);
 
-	XMFLOAT3 centerUp = frame.getUp(); // �߽����� Up ���� ��������
-	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp); //Up���� XMVECTOR�� ��ȯ
-	XMFLOAT3 tempUp; // rotationAxis�� XMFLOAT3 Ÿ������ ����
+	XMVECTOR currentPos = XMLoadFloat3(&m_xmf3Position);
+	XMVECTOR localPos = XMVector3Transform(currentPos, centerInverse);
+
+	XMFLOAT3 centerUp = frame.getUp();
+	XMVECTOR rotationAxis = XMLoadFloat3(&centerUp);
+	XMFLOAT3 tempUp;
 	XMStoreFloat3(&tempUp, rotationAxis);
-	XMMATRIX orbitMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(rot.y)); // Y���� �������� ȸ�� ��� ����
+	XMMATRIX orbitMatrix = XMMatrixRotationAxis(rotationAxis, XMConvertToRadians(rot.y));
 
-	XMVECTOR newLocalPos = XMVector3Transform(localPos, orbitMatrix); // ���� ��ǥ�迡�� ĳ���� ��ġ�� ȸ��
+	XMVECTOR newLocalPos = XMVector3Transform(localPos, orbitMatrix);
 
-	XMVECTOR newPos = XMVector3Transform(newLocalPos, centerMatrix); // ȸ���� ���� ��ġ�� ���� ��ǥ��� ��ȯ
+	XMVECTOR newPos = XMVector3Transform(newLocalPos, centerMatrix);
 	XMStoreFloat3(&m_xmf3Position, newPos);
 
-	// ���� ���� �������� ���� ȿ��
 	XMVECTOR oldLook = XMLoadFloat3(&m_xmf3Look);
 	XMVECTOR oldRight = XMLoadFloat3(&m_xmf3Right);
 	XMVECTOR newLook = XMVector3TransformNormal(oldLook, orbitMatrix);
@@ -993,19 +984,47 @@ void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 	XMStoreFloat3(&m_xmf3Right, XMVector3Normalize(newRight));
 	m_xmf3Up = tempUp;
 
-	// ���� ��� ������Ʈ
 	UpdateWorldMatrix();
 }
 
 void CSkinningObject::move(float fElapsedTime, short arrow) {
-	if (0 == arrow)
+	if (0 == arrow) // Forward
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 5.0f * fElapsedTime));
+	else if (1 == arrow) // Forward-Right (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
+	else if (2 == arrow) // Right
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * 5.0f * fElapsedTime));
+	else if (3 == arrow) // Backward-Right (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
+	else if (4 == arrow) // Backward
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -5.0f * fElapsedTime));
+	else if (5 == arrow) // Backward-Left (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
+	else if (6 == arrow) // Left
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * -5.0f * fElapsedTime));
+	else if (7 == arrow) // Forward-Left (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
+	UpdateWorldMatrix();
+}
+
+void CSkinningObject::run(float fElapsedTime, short arrow)
+{
+	if (0 == arrow) // Forward
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 30.0f * fElapsedTime));
-	else if (2 == arrow)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * 30.0f * fElapsedTime));
-	else if (3 == arrow)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Up) * -30.0f * fElapsedTime));
-	else
+	else if (1 == arrow) // Forward-Right (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
+	else if (2 == arrow) // Right
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * 30.0f * fElapsedTime));
+	else if (3 == arrow) // Backward-Right (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
+	else if (4 == arrow) // Backward
 		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -30.0f * fElapsedTime));
+	else if (5 == arrow) // Backward-Left (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
+	else if (6 == arrow) // Left
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * -30.0f * fElapsedTime));
+	else if (7 == arrow) // Forward-Left (45 degrees)
+		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
 	UpdateWorldMatrix();
 }
 
@@ -1061,7 +1080,7 @@ void CSkinningObject::SetMoveDirection(XMFLOAT3& pos)
 	m_xmf3MoveDirection = pos;
 }
 
-void CSkinningObject::SetWolrdMatrix(XMFLOAT4X4& mat)
+void CSkinningObject::SetWorldMatrix(XMFLOAT4X4& mat)
 {
 	m_xmf4x4WorldMatrix = mat;
 }
@@ -1108,7 +1127,7 @@ void CRayTracingSkinningObject::ReBuildBLAS()
 			for (int i = 0; i < nSubMesh; ++i) {
 				D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 				desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-				desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;	
+				desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 				desc.Triangles.Transform3x4 = 0;
 				desc.Triangles.VertexBuffer = {
 					.StartAddress = (g_ShowBoundingBox) ? m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress() : m_vOutputVertexBuffer[ref]->GetGPUVirtualAddress(),
@@ -1126,7 +1145,7 @@ void CRayTracingSkinningObject::ReBuildBLAS()
 		else {
 			D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 			desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;	
+			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 			desc.Triangles.Transform3x4 = 0;
 			desc.Triangles.VertexBuffer = {
 				.StartAddress = (g_ShowBoundingBox) ? m_vMeshes[ref]->getVertexBuffer()->GetGPUVirtualAddress() : m_vOutputVertexBuffer[ref]->GetGPUVirtualAddress(),
@@ -1143,7 +1162,7 @@ void CRayTracingSkinningObject::ReBuildBLAS()
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
 		inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-		inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+		inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD;
 		inputs.NumDescs = GeometryDesc.size();
 		inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 		inputs.pGeometryDescs = GeometryDesc.data();
@@ -1186,7 +1205,7 @@ void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::
 		for (int i = 0; i < nSubMesh; ++i) {
 			D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 			desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;	
+			desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 			desc.Triangles.Transform3x4 = 0;
 			desc.Triangles.VertexBuffer = {
 				.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
@@ -1204,7 +1223,7 @@ void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::
 	else {
 		D3D12_RAYTRACING_GEOMETRY_DESC desc{};
 		desc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-		desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;	
+		desc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE;
 		desc.Triangles.Transform3x4 = 0;
 		desc.Triangles.VertexBuffer = {
 			.StartAddress = mesh->getVertexBuffer()->GetGPUVirtualAddress(),
@@ -1221,7 +1240,7 @@ void CRayTracingSkinningObject::InitBLAS(ComPtr<ID3D12Resource>& resource, std::
 
 	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs{};
 	inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-	inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
+	inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_BUILD;
 	inputs.NumDescs = GeometryDesc.size();
 	inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 	inputs.pGeometryDescs = GeometryDesc.data();
@@ -1267,7 +1286,7 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 
 	for (std::unique_ptr<CSkinningInfo>& info : m_vSkinningInfo) {
 		int n = info->getRefMeshIndex();
-		if(!g_ShowBoundingBox)
+		if (!g_ShowBoundingBox)
 			m_vMeshes[n]->setSkinning(true);
 	}
 	for (std::shared_ptr<Mesh>& mesh : m_vMeshes) {
@@ -1301,7 +1320,6 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 			D3D12_CPU_DESCRIPTOR_HANDLE insertHandle = insert->GetCPUDescriptorHandleForHeapStart();
 			UINT incrementSize = g_DxResource.device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-			// ������۸� ���� insert�� �տ� ����
 			D3D12_CONSTANT_BUFFER_VIEW_DESC cDesc{};
 			cDesc.BufferLocation = constResource->GetGPUVirtualAddress(); cDesc.SizeInBytes = Align(sizeof(XMINT3), 256);
 			g_DxResource.device->CreateConstantBufferView(&cDesc, insertHandle);
@@ -1420,7 +1438,7 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 			insertHandle.ptr += incrementSize;
 
 			constResource->Unmap(0, nullptr);
-		
+
 
 		}
 		m_vInputConstantBuffer.emplace_back(constResource);
@@ -1434,9 +1452,7 @@ void CRayTracingSkinningObject::ReadyOutputVertexBuffer()
 	}
 }
 
-
 // ========================================================================================
-
 
 CProjectile::CProjectile()
 {
@@ -1454,11 +1470,12 @@ void CProjectile::IsMoving(float fElapsedTime)
 	m_Objects->SetPosition(m_xmf3Position);
 
 	m_fElapsedTime += fElapsedTime;
-	/*if (m_fLifetime > 0.0f && m_fElapsedTime >= m_fLifetime)
+	if (m_fLifetime > 0.0f && m_fElapsedTime >= m_fLifetime)
 	{
 		m_bActive = false;
 		m_fElapsedTime = 0.0f;
-	}*/
+		delete this;
+	}
 }
 
 void CProjectile::UpdateWorldMatrix()
@@ -1466,4 +1483,3 @@ void CProjectile::UpdateWorldMatrix()
 	XMMATRIX mtxTranslate = XMMatrixTranslation(m_xmf3Position.x, m_xmf3Position.y, m_xmf3Position.z);
 	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, mtxTranslate);
 }
-

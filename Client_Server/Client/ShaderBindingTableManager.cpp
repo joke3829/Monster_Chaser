@@ -2,7 +2,7 @@
 
 // 여기에 셰이더 이름을 사용할 개수 만큼 쓴다.
 const wchar_t* RayGenShaderNames[] = { L"RayGenShader" };
-const wchar_t* MissShaderNames[] = { L"RadianceMiss", L"ShadowMiss"};
+const wchar_t* MissShaderNames[] = { L"RadianceMiss", L"ShadowMiss" };
 
 struct LocalRootArg {
 	D3D12_GPU_VIRTUAL_ADDRESS CBufferGPUVirtualAddress;		// Material상수버퍼
@@ -133,7 +133,7 @@ void CShaderBindingTableManager::CreateSBT()
 		}
 		m_pHitGroupTable->Unmap(0, nullptr);
 		*/
-		
+
 		m_nHitGroupSize = D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + sizeof(LocalRootArg);
 		m_nHitGroupStride = Align(m_nHitGroupSize, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT);
 
@@ -143,6 +143,7 @@ void CShaderBindingTableManager::CreateSBT()
 		std::vector<std::unique_ptr<CTexture>>& vTextures = m_pResourceManager->getTextureList();
 		// Skinning
 		std::vector<std::unique_ptr<CSkinningObject>>& vSkinnings = m_pResourceManager->getSkinningObjectList();
+		std::vector<std::unique_ptr<CParticle>>& vParticles = m_pResourceManager->getParticleList();
 
 		for (std::unique_ptr<CGameObject>& object : vObjects) {
 			int n = object->getMeshIndex();
@@ -170,6 +171,8 @@ void CShaderBindingTableManager::CreateSBT()
 				}
 			}
 		}
+		// Particle
+		nVaildMeshes += vParticles.size();
 
 		makeBuffer(m_pHitGroupTable, m_nHitGroupStride * nVaildMeshes * exports.size());
 		m_nHitGroupSize = m_pHitGroupTable.Get()->GetDesc().Width;
@@ -579,8 +582,82 @@ void CShaderBindingTableManager::CreateSBT()
 				}
 			}
 		}
+
+		for (std::unique_ptr<CParticle>& particle : vParticles) {
+			CRaytracingParticle* p = dynamic_cast<CRaytracingParticle*>(particle.get());
+			Material& myMaterial = p->getMaterial();
+			p->setHitGroupIndex(nRecords);
+			for (int j = 0; j < HitGroupIDs.size(); ++j) {
+				LocalRootArg args{};
+				{
+					args.CBufferGPUVirtualAddress = p->getMaterialCB()->GetGPUVirtualAddress();
+					args.MeshCBufferGPUVirtualAddress = p->getMeshCB()->GetGPUVirtualAddress();
+					// 정점
+					args.VertexBuffer = p->getVertexBuffer()->GetGPUVirtualAddress();
+					// 컬러
+					args.ColorsBuffer = p->getColorBuffer()->GetGPUVirtualAddress();
+					// Tex0
+					args.TexCoord0Buffer = p->getTexCoordBuffer()->GetGPUVirtualAddress();
+					// Tex1
+					args.TexCoord1Buffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
+					// Normal
+					args.NormalsBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
+					// Tangent
+					args.TangentBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
+					// BiTangent
+					args.BiTangentBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
+					// Index
+					args.IndexBuffer = g_DxResource.nullBuffer->GetGPUVirtualAddress();
+
+					// AlbedoMap
+					if (myMaterial.m_bHasAlbedoMap)
+						args.AlbedoMap = vTextures[myMaterial.m_nAlbedoMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+					else
+						args.AlbedoMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
+					// SpecularMap
+					if (myMaterial.m_bHasSpecularMap)
+						args.SpecularMap = vTextures[myMaterial.m_nSpecularMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+					else
+						args.SpecularMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
+					// NormalMap
+					if (myMaterial.m_bHasNormalMap)
+						args.NormalMap = vTextures[myMaterial.m_nNormalMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+					else
+						args.NormalMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
+					// MetallicMap
+					if (myMaterial.m_bHasMetallicMap)
+						args.MetallicMap = vTextures[myMaterial.m_nMetallicMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+					else
+						args.MetallicMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
+					// EmissionMap
+					if (myMaterial.m_bHasEmissionMap)
+						args.EmissionMap = vTextures[myMaterial.m_nEmissionMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+					else
+						args.EmissionMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
+					// DetailAlbedoMap
+					if (myMaterial.m_bHasDetailAlbedoMap)
+						args.DetailAlbedoMap = vTextures[myMaterial.m_nDetailAlbedoMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+					else
+						args.DetailAlbedoMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
+					// DetailNormalMap
+					if (myMaterial.m_bHasDetailNormalMap)
+						args.DetailNormalMap = vTextures[myMaterial.m_nDetailNormalMapIndex]->getView()->GetGPUDescriptorHandleForHeapStart();
+					else
+						args.DetailNormalMap = m_pd3dNullBufferView->GetGPUDescriptorHandleForHeapStart();
+				}
+				memcpy(ptrtemp, HitGroupIDs[j], D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES);
+				ptrtemp = static_cast<char*>(ptrtemp) + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES;
+				memcpy(ptrtemp, &args, sizeof(LocalRootArg));
+				ptrStride = static_cast<char*>(ptrStride) + m_nHitGroupStride;
+				ptrtemp = ptrStride;
+
+				++nRecords;
+			}
+		}
 		m_pHitGroupTable->Unmap(0, nullptr);
-		
+
+
+
 	}
 }
 

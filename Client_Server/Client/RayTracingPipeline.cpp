@@ -30,7 +30,7 @@ void CRayTracingPipeline::AddLibrarySubObject(const unsigned char* compiledShade
 	m_vSubobjects.emplace_back(temp);*/
 	m_pSubobjects[m_nCurrentIndex].Type = D3D12_STATE_SUBOBJECT_TYPE_DXIL_LIBRARY;
 	m_pSubobjects[m_nCurrentIndex].pDesc = lib;
-	++ m_nCurrentIndex;
+	++m_nCurrentIndex;
 }
 
 // 사용할 것만 넣기
@@ -39,9 +39,9 @@ void CRayTracingPipeline::AddHitGroupSubObject(wchar_t* exportName, wchar_t* Clo
 	D3D12_HIT_GROUP_DESC* hitGroup = new D3D12_HIT_GROUP_DESC{};
 	hitGroup->Type = D3D12_HIT_GROUP_TYPE_TRIANGLES;	// 바뀔 수도 있음
 	hitGroup->ClosestHitShaderImport = ClosestHit;
-	if(AnyHit)
+	if (AnyHit)
 		hitGroup->AnyHitShaderImport = AnyHit;
-	if(Intersect)
+	if (Intersect)
 		hitGroup->IntersectionShaderImport = Intersect;
 	hitGroup->HitGroupExport = exportName;
 
@@ -89,7 +89,7 @@ void CRayTracingPipeline::AddLocalRootAndAsoociationSubObject(ID3D12RootSignatur
 	exportsAss->pSubobjectToAssociate = &m_pSubobjects[m_nCurrentIndex - 1];
 	exportsAss->NumExports = m_exports.size();
 	exportsAss->pExports = m_exports.data();
-	
+
 	/*D3D12_STATE_SUBOBJECT temp{};
 	temp.Type = D3D12_STATE_SUBOBJECT_TYPE_SUBOBJECT_TO_EXPORTS_ASSOCIATION;
 	temp.pDesc = exportsAss;

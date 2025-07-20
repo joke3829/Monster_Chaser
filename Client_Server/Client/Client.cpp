@@ -19,7 +19,7 @@ CGameFramework gGameFramework;
 
 std::unordered_map<int, Player> Players;               // 모든 플레이어들		
 
-std::unordered_map<int, Monster*> g_monsters;            // 몬스터들
+std::unordered_map<int, std::unique_ptr<Monster>> Monsters;           // 몬스터들
 
 
 std::array<short, 10>	 userPerRoom{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			// 방 UI대신 쓸거 
@@ -42,38 +42,6 @@ void SetCursorPosition(int x, int y) {
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-//void DrawRoomList()
-//{
-//	SetCursorPosition(0, 0);  // 항상 콘솔 맨 위부터 덮어쓰기
-//
-//	std::cout << "=== [Room Status] ===\n";
-//	std::cout << "총 클라이언트 수: " << Players.size() << std::endl;
-//	for (int i = 0; i < MAX_ROOM; ++i) {
-//		std::cout << i << "번 방: " << userPerRoom[i] << "/" << MAX_ROOM_MEMBER << std::endl;
-//	}
-//	std::cout << "=====================" << std::endl;
-//	std::cout << "'r' 키: Ready 전송 / 'q' 키: 종료" << std::endl;
-//}
-//void RoomListThread() {
-//	using namespace std::chrono;
-//
-//	while (!Client.getstart()) {
-//		auto start = steady_clock::now();
-//
-//		{
-//			
-//			DrawRoomList();
-//		}
-//
-//		// 정확히 1초 간격으로 유지
-//		auto end = steady_clock::now();
-//		auto elapsed = duration_cast<milliseconds>(end - start);
-//
-//		if (elapsed < 1000ms)
-//			std::this_thread::sleep_for(1000ms - elapsed);
-//	}
-//}
-
 
 // 여기는 방 UI들어오면 삭제할 부분
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -83,41 +51,41 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
-	AllocConsole();
-	freopen("CONOUT$", "w", stdout);
-	freopen("CONIN$", "r", stdin);
-	std::string ip;
-	std::cout << "서버 IP 주소를 입력하세요: ";
-	std::cin >> ip;
+	//AllocConsole();
+	//freopen("CONOUT$", "w", stdout);
+	//freopen("CONIN$", "r", stdin);
+	//std::string ip;
+	//std::cout << "서버 IP 주소를 입력하세요: ";
+	//std::cin >> ip;
 
 
-	// TODO: 여기에 코드를 입력합니다.
+	//// TODO: 여기에 코드를 입력합니다.
 
-	if (!Client.Init(ip.c_str(), PORT_NUM))            //Change IP Address (DY - 220.120.240.160)
-
+	//if (!Client.Init(ip.c_str(), PORT_NUM))            //Change IP Address (DY - 220.120.240.160)
+	if (!Client.Init("127.0.0.1", PORT_NUM))
 	{
 		MessageBoxA(nullptr, "서버 연결 실패. 클라이언트를 종료합니다.", "연결 실패", MB_ICONERROR);
 		return 0;  // 창 생성 없이 종료
 	}
-	
-	
+
+	//  콘솔 종료
+	//FreeConsole();
 	std::thread recvThread(&C_Socket::do_recv, &Client);
-//	std::thread drawThread(RoomListThread);
-	
-
-	//준비 완료되기 전까지 대기
-/*   while (!Client.get_ready_to_start()) {
-	   std::this_thread::sleep_for(std::chrono::milliseconds(100));
-   }*/
+	//	std::thread drawThread(RoomListThread);
 
 
-   //  콘솔 종료
-	FreeConsole();
-	
+		//준비 완료되기 전까지 대기
+	/*   while (!Client.get_ready_to_start()) {
+		   std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	   }*/
 
 
 
-	// 전역 문자열을 초기화합니다.
+
+
+
+
+	   // 전역 문자열을 초기화합니다.
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
 	LoadStringW(hInstance, IDC_CLIENT, szWindowClass, MAX_LOADSTRING);
 	MyRegisterClass(hInstance);
@@ -129,7 +97,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	}
 
 	HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_CLIENT));
-	
+
 
 	//MSG msg;
 

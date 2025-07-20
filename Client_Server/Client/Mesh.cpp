@@ -1,11 +1,11 @@
-#include "Mesh.h"
+﻿#include "Mesh.h"
 
 CHeightMapImage::CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3& xmf3Scale)
 {
 	m_nWidth = nWidth;
 	m_nLength = nLength;
 	m_xmf3Scale = xmf3Scale;
-	
+
 	std::ifstream inFile{ filePath, std::ios::binary };
 	std::vector<WORD> v(m_nWidth * m_nLength);
 	inFile.read((char*)v.data(), sizeof(WORD) * m_nLength * m_nWidth);
@@ -14,7 +14,7 @@ CHeightMapImage::CHeightMapImage(const wchar_t* filePath, int nWidth, int nLengt
 	for (int z = 0; z < m_nLength; ++z) {
 		for (int x = 0; x < m_nWidth; ++x) {
 			//m_pHeightMapPixels[x + ((m_nLength - 1 - z) * m_nWidth)] = v[x + (z * m_nWidth)];//pHeightMapPixels[x + (z * m_nWidth)];
-			m_pHeightMapPixels[x + (z*m_nWidth)] = v[x + (z * m_nWidth)];
+			m_pHeightMapPixels[x + (z * m_nWidth)] = v[x + (z * m_nWidth)];
 		}
 	}
 }
@@ -125,7 +125,7 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 
 			XMVECTOR N{};
 			XMFLOAT3 v1{ x * xmf3Scale.x , heightmap->GetHeight(x, z - 1),  (z - 1) * xmf3Scale.z };
-			XMFLOAT3 v2{ (x + 1) * xmf3Scale.x , heightmap->GetHeight(x + 1, z - 1),  (z - 1)* xmf3Scale.z };
+			XMFLOAT3 v2{ (x + 1) * xmf3Scale.x , heightmap->GetHeight(x + 1, z - 1),  (z - 1) * xmf3Scale.z };
 			XMFLOAT3 v3{ (x - 1) * xmf3Scale.x , heightmap->GetHeight(x - 1, z),  z * xmf3Scale.z };
 			XMFLOAT3 v4{ x * xmf3Scale.x , heightmap->GetHeight(x, z),  z * xmf3Scale.z };
 			XMFLOAT3 v5{ (x + 1) * xmf3Scale.x , heightmap->GetHeight(x + 1, z),  z * xmf3Scale.z };
@@ -189,7 +189,7 @@ Mesh::Mesh(CHeightMapImage* heightmap, std::string strMeshName)
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr, IID_PPV_ARGS(m_pd3dNormalsBuffer.GetAddressOf()));
 	m_pd3dNormalsBuffer->Map(0, nullptr, &tempData);
-	memcpy(tempData, normals.data(), sizeof(XMFLOAT3)* m_nNormalsCount);
+	memcpy(tempData, normals.data(), sizeof(XMFLOAT3) * m_nNormalsCount);
 	m_pd3dNormalsBuffer->Unmap(0, nullptr);
 
 	m_bHasSubMeshes = true;
@@ -211,7 +211,7 @@ Mesh::Mesh(XMFLOAT3& center, XMFLOAT3& extent, std::string meshName)
 	m_MeshName = meshName;
 	m_bHasBoundingBox = true;
 	m_OBB = BoundingOrientedBox(center, extent, XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f));
-	
+
 	std::vector<XMFLOAT3> pos(8);
 	pos[0] = XMFLOAT3(center.x - extent.x, center.y - extent.y, center.z - extent.z);
 	pos[1] = XMFLOAT3(center.x + extent.x, center.y - extent.y, center.z - extent.z);
@@ -420,7 +420,7 @@ Mesh::Mesh(XMFLOAT3& center, float radius, std::string meshName)
 	m_vSubMeshes.emplace_back(tempBuffer);
 }
 
-Mesh::Mesh(XMFLOAT3& center, float width, float height)
+Mesh::Mesh(XMFLOAT3& center, float width, float height, short arrow)
 {
 	//float hw = width / 2;
 	//float hh = height / 2;
@@ -430,10 +430,33 @@ Mesh::Mesh(XMFLOAT3& center, float width, float height)
 	pos[2] = XMFLOAT3(center.x + hw, center.y + hh, 0.0f);
 	pos[3] = XMFLOAT3(center.x - hw, center.y + hh, 0.0f);*/
 
-	pos[0] = XMFLOAT3(0.0f, -height, 0.0f);
-	pos[1] = XMFLOAT3(width, -height, 0.0f);
-	pos[2] = XMFLOAT3(width, 0.0f, 0.0f);
-	pos[3] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	switch (arrow) {
+	case MESH_PLANE_1QUADRANT:
+		pos[0] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		pos[1] = XMFLOAT3(width, 0.0f, 0.0f);
+		pos[2] = XMFLOAT3(width, height, 0.0f);
+		pos[3] = XMFLOAT3(0.0f, height, 0.0f);
+		break;
+	case MESH_PLANE_2QUADRANT:
+		pos[0] = XMFLOAT3(-width, 0.0f, 0.0f);
+		pos[1] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		pos[2] = XMFLOAT3(0.0f, height, 0.0f);
+		pos[3] = XMFLOAT3(-width, height, 0.0f);
+		break;
+	case MESH_PLANE_3QUADRANT:
+		pos[0] = XMFLOAT3(-width, -height, 0.0f);
+		pos[1] = XMFLOAT3(0.0f, -height, 0.0f);
+		pos[2] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		pos[3] = XMFLOAT3(-width, 0.0f, 0.0f);
+		break;
+	case MESH_PLANE_4QUADRANT:
+	default:
+		pos[0] = XMFLOAT3(0.0f, -height, 0.0f);
+		pos[1] = XMFLOAT3(width, -height, 0.0f);
+		pos[2] = XMFLOAT3(width, 0.0f, 0.0f);
+		pos[3] = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		break;
+	}
 
 	m_bHasVertex = true;
 	m_nVertexCount = 4;
@@ -530,8 +553,8 @@ void Mesh::GetPositionFromFile(std::ifstream& inFile)
 		auto desc = BASIC_BUFFER_DESC;
 		desc.Width = sizeof(XMFLOAT3) * m_nVertexCount;
 		// �ϴ��� UPLOAD�� ����, ���� �� DEFAULT�� ���� ����
-		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, 
-		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dVertexBuffer.GetAddressOf()));
+		g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc,
+			D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dVertexBuffer.GetAddressOf()));
 
 		void* ptr;
 		m_pd3dVertexBuffer->Map(0, nullptr, &ptr);
@@ -699,12 +722,12 @@ void Mesh::MakeSubMesh(std::ifstream& inFile)
 	ComPtr<ID3D12Resource> indexBuffer{};
 	int subMeshIndex{};
 	UINT indices{};
-	
+
 	// "<SubMesh>:"
 	inFile.read(&nStrLength, sizeof(char));
 	label.assign(nStrLength, ' ');
 	inFile.read((char*)label.data(), nStrLength);
-	
+
 	inFile.read((char*)&subMeshIndex, sizeof(int));
 
 	inFile.read((char*)&indices, sizeof(int));

@@ -67,6 +67,15 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 			case JOB_MAGE:
 				m_vAnimationManager.emplace_back(std::make_unique<CMageManager>(inFile));
 				break;
+			case JOB_WARRIOR:
+				m_vAnimationManager.emplace_back(std::make_unique<CWarriorManager>(inFile));
+				break;
+			case JOB_HEALER:
+				m_vAnimationManager.emplace_back(std::make_unique<CPriestManager>(inFile));
+				break;
+			case MONSTER:
+				m_vAnimationManager.emplace_back(std::make_unique<CMonsterManager>(inFile));
+				break;
 			}
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->SetFramesPointerFromSkinningObject(m_vSkinningObject[m_vSkinningObject.size() - 1]->getObjects());
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->MakeAnimationMatrixIndex(m_vSkinningObject[m_vSkinningObject.size() - 1].get());
@@ -394,11 +403,15 @@ void CResourceManager::UpdateSkinningMesh(float fElapsedTime)
 	}
 }
 
-void CResourceManager::UpdatePosition(float fElapsedTime, int id)
+void CResourceManager::UpdatePosition(float fElapsedTime)
 {
-	CSkinningObject* skinningObject = getSkinningObjectList()[id].get();
-	if (skinningObject) {
-		m_vAnimationManager[id]->UpdateAniPosition(fElapsedTime, skinningObject);
+	for (size_t i = 0; i < m_vAnimationManager.size(); ++i) {
+		if (m_vAnimationManager[i]) {
+			CSkinningObject* skinningObject = getSkinningObjectList()[i].get();
+			if (skinningObject) {
+				m_vAnimationManager[i]->UpdateAniPosition(fElapsedTime, skinningObject);
+			}
+		}
 	}
 }
 
@@ -424,6 +437,12 @@ void CResourceManager::UpdateWorldMatrix()
 	for (std::unique_ptr<CSkinningObject>& Skinning : m_vSkinningObject) {
 		Skinning->UpdateFrameWorldMatrix();
 	}
+}
+
+void CResourceManager::UpdateParticles(float fElapsedTime)
+{
+	for (std::unique_ptr<CParticle>& particle : m_vParticleList)
+		particle->UpdateObject(fElapsedTime);
 }
 
 std::vector<std::unique_ptr<CGameObject>>& CResourceManager::getGameObjectList()
@@ -455,17 +474,12 @@ std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 	return m_vTextureList;
 }
 
-std::vector<std::unique_ptr<CProjectile>>& CResourceManager::getProjectileList()
-{
-	return m_vProjectileList;
-}
-
 void CResourceManager::LightTest()
 {
 	Lights testLight{};
 	testLight.numLights = 1;
 	testLight.lights[0].Type = DIRECTIONAL_LIGHT;
-	testLight.lights[0].Intensity =  1.0f;
+	testLight.lights[0].Intensity = 1.0f;
 	testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
 	//testLight.lights[0].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
 	testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
@@ -537,7 +551,7 @@ void CResourceManager::AddLightsFromFileRecursion(std::ifstream& inFile)
 		if ("</Frame>" == strLabel)
 			break;
 		if ("<Transform>:" == strLabel) {
-			for(int i = 0 ; i < 13; ++i)
+			for (int i = 0; i < 13; ++i)
 				inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
 		}
 		else if ("<TransformMatrix>:" == strLabel) {
@@ -562,15 +576,15 @@ void CResourceManager::AddLightsFromFileRecursion(std::ifstream& inFile)
 					inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
 				}
 				else if (strLabel == "<AlbedoColor>:") {
-					for(int i = 0; i < 4; ++i)
+					for (int i = 0; i < 4; ++i)
 						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
 				}
 				else if (strLabel == "<EmissiveColor>:") {
-					for(int i = 0 ; i < 4; ++i)
+					for (int i = 0; i < 4; ++i)
 						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));;
 				}
 				else if (strLabel == "<SpecularColor>:") {
-					for(int i = 0; i < 4; ++i)
+					for (int i = 0; i < 4; ++i)
 						inFile.read(reinterpret_cast<char*>(&tempData), sizeof(int));
 				}
 				else if (strLabel == "<Glossiness>:") {
@@ -677,4 +691,10 @@ void CResourceManager::ReadyLightBufferContent()
 	mapptr->numLights = m_vLights.size();
 	memcpy(mapptr->lights, m_vLights.data(), sizeof(Light) * m_vLights.size());
 	m_pLights->Unmap(0, nullptr);
+}
+
+void CResourceManager::PostProcess()
+{
+	for (std::unique_ptr<CParticle>& particle : m_vParticleList)
+		particle->PostProcess();
 }

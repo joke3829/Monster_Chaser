@@ -18,7 +18,7 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 
 	// device, fence Create
 	InitDevice();
-	
+
 	// RayTracing Support Check
 	CheckRayTracingSupport();
 
@@ -36,7 +36,7 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 		InitOutputBuffer();
 
 	// Global Variable & Scene Ready
-	
+
 	g_DxResource.device = m_pd3dDevice.Get();
 	g_DxResource.cmdAlloc = m_pd3dCommandAllocator.Get();
 	g_DxResource.cmdList = m_pd3dCommandList.Get();
@@ -117,12 +117,12 @@ void CGameFramework::InitSwapChain()
 	desc.SampleDesc = NO_AA;
 	desc.BufferCount = 2;
 	desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	
+
 	IDXGISwapChain1* swapchain1{};
 	m_pdxgiFactory->CreateSwapChainForHwnd(m_pd3dCommandQueue.Get(), m_hWnd, &desc, nullptr, nullptr, &swapchain1);
 	swapchain1->QueryInterface(m_pdxgiSwapChain.GetAddressOf());
 	swapchain1->Release();
-	
+
 	if (!m_pdxgiSwapChain) {
 		OutputDebugString(L"Not SwapChain Created\n");
 		exit(0);
@@ -298,7 +298,6 @@ void CGameFramework::ChangeScene(short definedScene)
 	case SCENE_WINTERLAND:
 		bIngame = true;
 		m_pScene = std::make_unique<CRaytracingWinterLandScene>();
-		//m_pScene = std::make_unique<CRaytracingTestScene>();
 		m_pScene->SetCamera(m_pCamera);
 		m_pScene->SetUp(m_pd3dOutputBuffer);
 		break;
@@ -329,34 +328,6 @@ void CGameFramework::Render()
 		};
 	//m_Timer.Tick(60.0f);
 	m_Timer.Tick();
-	//if (m_bRaster) {	// Not Used
-	//	m_pd3dCommandAllocator->Reset();
-	//	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
-	//
-	//	UINT nCurrentBufferIndex = m_pdxgiSwapChain->GetCurrentBackBufferIndex();
-	//
-	//	barrier(m_pd3dBackBuffer[nCurrentBufferIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	//	D3D12_CPU_DESCRIPTOR_HANDLE d3dCPUHandle = m_pd3dRenderTargetView->GetCPUDescriptorHandleForHeapStart();
-	//	d3dCPUHandle.ptr += (m_nRTVIncrementSize * nCurrentBufferIndex);
-	//	float colors[] = { 0.5f, 0.5f, 1.0f, 1.0f };
-	//	m_pd3dCommandList->ClearRenderTargetView(d3dCPUHandle, colors, 0, nullptr);
-	//
-	//	d3dCPUHandle = m_pd3dDepthStencilView->GetCPUDescriptorHandleForHeapStart();
-	//	m_pd3dCommandList->ClearDepthStencilView(d3dCPUHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-	//	
-	//	// Render Here(Set & Draw) ===================
-	//
-	//	// ===========================================
-	//
-	//	barrier(m_pd3dBackBuffer[nCurrentBufferIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	//
-	//	m_pd3dCommandList->Close();
-	//	m_pd3dCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(m_pd3dCommandList.GetAddressOf()));
-	//	Flush();
-	//
-	//	m_pdxgiSwapChain->Present(0, 0);
-	//}
-	//else {	// RayTracing
 	m_pd3dCommandAllocator->Reset();
 	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
 
@@ -373,6 +344,18 @@ void CGameFramework::Render()
 	}
 	m_pScene->Render();
 	// ===========================================
+
+	// Undetermined =============================================================
+	m_pd3dCommandList->Close();
+	m_pd3dCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(m_pd3dCommandList.GetAddressOf()));
+
+	Flush();
+	m_pScene->TextRender();
+
+	m_pd3dCommandAllocator->Reset();
+	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
+
+	// ==========================================================================
 
 	ID3D12Resource* backBuffer{};
 	m_pdxgiSwapChain->GetBuffer(m_pdxgiSwapChain->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&backBuffer));
@@ -393,6 +376,8 @@ void CGameFramework::Render()
 	Flush();
 
 	m_pdxgiSwapChain->Present(0, 0);
+
+	m_pScene->PostProcess();
 
 	m_Timer.GetFrameRate(m_pszFrameRate + 8, 37);
 	SetWindowText(m_hWnd, m_pszFrameRate);

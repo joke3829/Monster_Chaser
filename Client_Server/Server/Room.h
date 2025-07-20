@@ -2,11 +2,13 @@
 #pragma once
 
 #include "protocol.h"
+#include "Monster.h"
+
 
 
 class SESSION;
 class Network;
-
+class Monster;
 class Room {
 public:
 	Room();
@@ -28,12 +30,17 @@ public:
 	void BroadCast_Room();
 
 	bool IsStarted() const { return is_started; }
-	void StartGame() { is_started = true; }
+
+	void StartGame();
 	void EndGame() { is_started = false; }
 
+	void SpawnMonsters();
 
 
+	concurrent_unordered_map<int, shared_ptr<Monster>> monsters;
 	std::vector<int>id;        //해당 방에 들어온 id 관리 -> 락이 필요함 
+	concurrency::concurrent_unordered_map<int, short> selected_characters; // 캐릭터 선택 정보 (추가)
+	
 	mutex RoomMutex;
 private:
 	int room_number;			// 방 번호

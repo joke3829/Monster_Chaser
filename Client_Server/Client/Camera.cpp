@@ -1,4 +1,4 @@
-#include "Camera.h"
+﻿#include "Camera.h"
 
 CCamera::~CCamera()
 {
@@ -9,7 +9,7 @@ CCamera::~CCamera()
 void CCamera::Setup(int nRootParameterIndex)
 {
 	m_nRootParameterIndex = nRootParameterIndex;
-	
+
 	auto desc = BASIC_BUFFER_DESC;
 	desc.Width = Align(sizeof(CB_CAMERA_INFO), 256);
 	g_DxResource.device->CreateCommittedResource(&UPLOAD_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(m_pd3dCameraBuffer.GetAddressOf()));
@@ -92,12 +92,12 @@ void CCamera::UpdateViewMatrix(float height)
 	else {
 		XMStoreFloat3(&m_xmf3At, (XMLoadFloat3(&m_xmf3Eye) + XMLoadFloat3(&m_xmf3Dir)));
 	}
-		XMStoreFloat4x4(&m_xmf4x4View, XMMatrixLookAtLH(XMLoadFloat3(&m_xmf3Eye), XMLoadFloat3(&m_xmf3At), XMLoadFloat3(&m_xmf3Up)));
+	XMStoreFloat4x4(&m_xmf4x4View, XMMatrixLookAtLH(XMLoadFloat3(&m_xmf3Eye), XMLoadFloat3(&m_xmf3At), XMLoadFloat3(&m_xmf3Up)));
 
-		XMMATRIX viewProj = XMLoadFloat4x4(&m_xmf4x4View) * XMLoadFloat4x4(&m_xmf4x4Proj);
-		m_pCameraInfo->xmf3Eye = m_xmf3Eye;
-		XMStoreFloat4x4(&m_pCameraInfo->xmf4x4ViewProj, XMMatrixTranspose(viewProj));
-		XMStoreFloat4x4(&m_pCameraInfo->xmf4x4InverseViewProj, XMMatrixTranspose(XMMatrixInverse(nullptr, viewProj)));
+	XMMATRIX viewProj = XMLoadFloat4x4(&m_xmf4x4View) * XMLoadFloat4x4(&m_xmf4x4Proj);
+	m_pCameraInfo->xmf3Eye = m_xmf3Eye;
+	XMStoreFloat4x4(&m_pCameraInfo->xmf4x4ViewProj, XMMatrixTranspose(viewProj));
+	XMStoreFloat4x4(&m_pCameraInfo->xmf4x4InverseViewProj, XMMatrixTranspose(XMMatrixInverse(nullptr, viewProj)));
 }
 
 void CCamera::SetShaderVariable()
@@ -118,3 +118,8 @@ void CCamera::SetThirdPersonMode(bool bThirdPerson)
 	m_bThirdPerson = bThirdPerson;
 }
 
+void CCamera::SetElapsedTimeAndShader(float fElapsedTime, UINT rootParameter)
+{
+	m_pCameraInfo->fElapsedTime = fElapsedTime;
+	g_DxResource.cmdList->SetGraphicsRootConstantBufferView(rootParameter, m_pd3dCameraBuffer->GetGPUVirtualAddress());
+}

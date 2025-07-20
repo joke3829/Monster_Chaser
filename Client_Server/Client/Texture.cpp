@@ -9,7 +9,7 @@ CTexture::CTexture(const wchar_t* pszFileName, bool cubeMap, bool bDDS)
 
 	// 현재는 .dds를 읽는 코드만 사용한다, 필요 시 WIC도 추가하겠다.
 	ComPtr<ID3D12Resource> pd3dUploadBuffer{};
-	
+
 	std::unique_ptr<uint8_t[]> decodedData;	// dds 데이터로도 사용
 	std::vector<D3D12_SUBRESOURCE_DATA> vSubresources;
 	DDS_ALPHA_MODE ddsAlphaMode = DDS_ALPHA_MODE_UNKNOWN;
