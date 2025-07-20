@@ -213,7 +213,7 @@ void CGameFramework::ChangeFullScreenState()
 
 void CGameFramework::InitScene()
 {
-	m_pScene = std::make_unique<CRaytracingWinterLandScene>();
+	m_pScene = std::make_unique<CRaytracingCollisionTestScene>();
 	m_pScene->SetCamera(m_pCamera);
 	m_pScene->SetUp(m_pd3dOutputBuffer);
 	bIngame = true;
