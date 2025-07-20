@@ -2244,7 +2244,7 @@ void CPlayer::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 	m_pPlayerObject->ProcessInput(keyBuffer, fElapsedTime);
 }
 
-void CPlayer::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime)
+void CPlayer::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum)
 {
 	CSkinningObject* p = m_pPlayerObject->getObject();
 	XMFLOAT4X4& playerWorld = p->getWorldMatrix();
@@ -2252,14 +2252,18 @@ void CPlayer::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime)
 	XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
 	float fy = objectWorld._42 - (30 * fElapsedTime);
 
-	float terrainHeight = heightmap->GetHeightinWorldSpace(objectWorld._41 + 1024.0f, objectWorld._43 + 1024.0f);
-	if (objectWorld._43 >= -500.0f) {
-		if (terrainHeight < 10.0f) {
-			terrainHeight = 10.0f;
+	float terrainHeight = heightmap->GetHeightinWorldSpace(objectWorld._41 - offsetx, objectWorld._43 - offsetz);
+	switch (mapNum) {
+	case SCENE_WINTERLAND:
+		if (objectWorld._43 >= -500.0f) {
+			if (terrainHeight < 10.0f) {
+				terrainHeight = 10.0f;
+			}
 		}
+		break;
 	}
-	if (fy < terrainHeight)
-		playerWorld._42 = terrainHeight;
+	if (fy < terrainHeight + offsety)
+		playerWorld._42 = terrainHeight  + offsety;
 	else
 		playerWorld._42 -= (30 * fElapsedTime);
 	p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));

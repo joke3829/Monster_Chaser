@@ -2346,7 +2346,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
-	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
+	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 	
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
@@ -2728,15 +2728,15 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	UINT finalmesh = meshes.size();
 
 	// terrian
-	/*m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrainCave.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0001f, 1.0f));
-	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
+	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\CaveHeightMap.raw", 512, 512, XMFLOAT3(500.0f / 512.0f, 0.0092f, 500.0f / 512.0f));
+	/*meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
 
 	normalObjects[normalObjects.size() - 1]->getMaterials().emplace_back();
 	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_bHasAlbedoColor = true;
 	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_xmf4AlbedoColor = XMFLOAT4(0.5, 0.5, 0.5, 1.0);
-	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));*/
+	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-200.0, -10.0, -66.5));*/
 
 
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\dlnk_Water_01_nrm.dds"));
@@ -3003,25 +3003,19 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
-	//m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
+	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
 
-	/*if (m_pCamera->getThirdPersonState()) {
+	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
-		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
-		if (EYE.z >= -500.0f) {
-			if (cHeight < 10.5f)
-				cHeight = 10.5f;
-		}
-		if (EYE.y < cHeight + 0.5f) {
-			m_pCamera->UpdateViewMatrix(cHeight + 0.5f);
+		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 200.0f, EYE.z + 66.5f);
+		if (EYE.y < cHeight - 10.0f + 0.5f) {
+			m_pCamera->UpdateViewMatrix(cHeight - 10.0f + 0.5f);
 		}
 		else
 			m_pCamera->UpdateViewMatrix();
 	}
-	else*/
-	if (m_pCamera->getThirdPersonState())
-		m_pCamera->getEyeCalculateOffset();
-	m_pCamera->UpdateViewMatrix();
+	else
+		m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 
 	switch (m_nState) {
