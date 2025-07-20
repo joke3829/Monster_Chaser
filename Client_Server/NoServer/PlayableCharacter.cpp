@@ -95,7 +95,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 				CProjectile* projectile = bullet[currentBullet].get();
 				if (projectile && !projectile->getActive()) {
 					projectile->setPosition(m_Object->getPosition());
-					projectile->setMoveDirection(cameraDir);
+					projectile->setMoveDirection(characterDir);
 					projectile->setActive(true);
 					currentBullet = (currentBullet + 1) % bullet.size();
 				}
