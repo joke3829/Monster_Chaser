@@ -18,6 +18,7 @@ void CPlayerMage::Skill1()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 1;
 }
 
 void CPlayerMage::Skill2()
@@ -29,6 +30,7 @@ void CPlayerMage::Skill2()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 2;
 }
 
 void CPlayerMage::Skill3()
@@ -40,6 +42,7 @@ void CPlayerMage::Skill3()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 3;
 }
 
 void CPlayerMage::Attacked(float damage)
@@ -91,15 +94,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
-			if (!bullet.empty()) {
-				CProjectile* projectile = bullet[currentBullet].get();
-				if (projectile && !projectile->getActive()) {
-					projectile->setPosition(m_Object->getPosition());
-					projectile->setMoveDirection(characterDir);
-					projectile->setActive(true);
-					currentBullet = (currentBullet + 1) % bullet.size();
-				}
-			}
+			MakeBullet();
 		}
 		break;
 	}
@@ -605,6 +600,7 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 void CPlayerMage::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
+	m_bCheckAC = false;
 	if (m_bLive) {
 		m_AManager->UpdateCombo(fElapsedTime);
 		if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
@@ -613,6 +609,11 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 			m_bSkillActive = false;
 			m_bDoingCombo = false;
 			m_bAttacked = false;
+			for (int i = 0; i < 5; ++i)
+			{
+				m_bBulletFired[i] = false;
+			}
+			m_CurrentSkill = 0;
 		}
 		if (m_AManager->IsComboInterrupted()) {
 			test = true;
@@ -631,8 +632,69 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 				bulletPtr->IsMoving(fElapsedTime);
 			}
 		}
+
+		switch (getCurrentSkill())
+		{
+		case 1: //0.5~0.6, 1.2~1.3, 2.0~2.1, 2.2~2.3, 3.1~3.2
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f) && !m_bBulletFired[0])
+			{
+				MakeBullet(80.0f);
+				m_bBulletFired[0] = true;
+			}
+			else if (getAniManager()->IsAnimationInTimeRange(1.2f, 1.3f) && !m_bBulletFired[1])
+			{
+				MakeBullet(80.0f);
+				m_bBulletFired[1] = true;
+			}
+			else if (getAniManager()->IsAnimationInTimeRange(2.0f, 2.1f) && !m_bBulletFired[2])
+			{
+				MakeBullet(80.0f);
+				m_bBulletFired[2] = true;
+			}
+			else if (getAniManager()->IsAnimationInTimeRange(2.2f, 2.3f) && !m_bBulletFired[3])
+			{
+				MakeBullet(80.0f);
+				m_bBulletFired[3] = true;
+			}
+			else if (getAniManager()->IsAnimationInTimeRange(3.1f, 3.2f) && !m_bBulletFired[4])
+			{
+				MakeBullet(80.0f);
+				m_bBulletFired[4] = true;
+			}
+			break;
+		case 2:
+			if (!m_bBulletFired[0]){
+				MakeBullet(80.0f, 2);
+				m_bBulletFired[0] = true;
+			}
+			break;
+		}
 	}
 
+}
+
+void CPlayerMage::MakeBullet(float speed, int skill)
+{
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	if (!bullet.empty()) {
+		CProjectile* projectile = bullet[currentBullet].get();
+		if (projectile && !projectile->getActive()) {
+			if (skill == 1) {
+				projectile->setPosition(m_Object->getPosition());
+				projectile->setMoveDirection(XMFLOAT3(cameraDir.x, 0.0f, cameraDir.z));
+			}
+			else if (skill == 2) {
+				XMFLOAT3 pos = m_Object->getPosition();
+				pos.y += 50.0f;
+				projectile->setPosition(pos,2);
+				projectile->setMoveDirection(XMFLOAT3(cameraDir.x, -0.4f, cameraDir.z));
+				projectile->getObjects().SetScale(XMFLOAT3(10.0f, 10.0f, 10.0f));
+			}
+			projectile->setSpeed(speed);
+			projectile->setActive(true);
+			currentBullet = (currentBullet + 1) % bullet.size();
+		}
+	}
 }
 
 // =======================================================================================
@@ -646,6 +708,7 @@ void CPlayerWarrior::Skill1()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 1;
 }
 
 void CPlayerWarrior::Skill2()
@@ -657,6 +720,7 @@ void CPlayerWarrior::Skill2()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 2;
 }
 
 void CPlayerWarrior::Skill3()
@@ -669,6 +733,7 @@ void CPlayerWarrior::Skill3()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 3;
 }
 
 void CPlayerWarrior::Attacked(float damage)
@@ -1635,6 +1700,7 @@ void CPlayerPriest::Skill1()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 1;
 }
 
 void CPlayerPriest::Skill2()
@@ -1646,6 +1712,7 @@ void CPlayerPriest::Skill2()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 2;
 }
 
 void CPlayerPriest::Skill3()
@@ -1657,6 +1724,7 @@ void CPlayerPriest::Skill3()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 3;
 }
 
 void CPlayerPriest::Attacked(float damage)
@@ -1708,6 +1776,7 @@ void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
+			MakeBullet();
 		}
 		break;
 	}
@@ -2221,6 +2290,7 @@ void CPlayerPriest::UpdateObject(float fElapsedTime)
 			m_bSkillActive = false;
 			m_bDoingCombo = false;
 			m_bAttacked = false;
+			m_CurrentSkill = 0;
 		}
 		if (m_AManager->IsComboInterrupted()) {
 			test = true;
@@ -2232,6 +2302,21 @@ void CPlayerPriest::UpdateObject(float fElapsedTime)
 
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+	}
+}
+
+void CPlayerPriest::MakeBullet(float speed, int skill)
+{
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	if (!bullet.empty()) {
+		CProjectile* projectile = bullet[currentBullet].get();
+		if (projectile && !projectile->getActive()) {
+			projectile->setPosition(m_Object->getPosition());
+			projectile->setMoveDirection(XMFLOAT3(cameraDir.x, 0.0f, cameraDir.z));
+			projectile->setSpeed(speed);
+			projectile->setActive(true);
+			currentBullet = (currentBullet + 1) % bullet.size();
 		}
 	}
 }

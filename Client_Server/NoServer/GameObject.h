@@ -395,7 +395,7 @@ public:
 
 	void setMoveDirection(XMFLOAT3 direction) { m_xmf3MoveDirection = direction; }
 	void setActive(bool state) { m_bActive = state; }
-	void setPosition(XMFLOAT3 pos) { m_xmf3Position = pos; m_xmf3Position.y = 3.0f; }
+	void setPosition(XMFLOAT3 pos, int xx = 1) { m_xmf3Position = pos; if (xx == 1) { m_xmf3Position.y = 3.0f; } }
 	void setSpeed(float spd) { m_fSpeed = spd; }
 	void setLifetime(float life) { m_fLifetime = life; }
 	void setTime(float time) { m_fElapsedTime = time; }

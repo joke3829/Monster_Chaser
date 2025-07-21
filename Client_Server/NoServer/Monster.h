@@ -89,6 +89,18 @@ public:
 	virtual void UpdateObject(float fElapsedTime);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
+	virtual bool HasActiveBullet() const
+	{
+		for (const auto& bullet : bullet)
+		{
+			if (bullet && bullet->getActive())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
 	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
 protected:

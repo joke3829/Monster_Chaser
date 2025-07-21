@@ -19,13 +19,18 @@ public:
 
 	bool IsBoss() const { return m_bBoss; }
 	bool IsAttacking()const { return m_bSkillActive; }
+	bool IsCombo()const { return m_bDoingCombo; }
 	bool IsOnceAttacked()const { return m_bAttacked; }
+	bool CheckAC() const { return m_bCheckAC; }
 
 	int getCurrentSkill() const { return m_CurrentSkill; }
 	CSkinningObject* getObject() { return m_Object; }
 	CPlayableCharacterAnimationManager* getAniManager() { return m_AManager; }
 
 	void SetCamera(std::shared_ptr<CCamera>& camera) { m_pCamera = camera; }
+	void SetHead(CGameObject* h) { m_Head = h; }
+
+	virtual bool HasActiveBullet() const { return false; }
 
 	virtual std::vector<std::unique_ptr<CProjectile>>& GetBullets() {
 		static std::vector<std::unique_ptr<CProjectile>> empty;
@@ -43,7 +48,7 @@ protected:
 
 	CSkinningObject* m_Object{};
 	CPlayableCharacterAnimationManager* m_AManager{};
-
+	CGameObject* m_Head{};
 
 	std::shared_ptr<CCamera> m_pCamera;
 
@@ -53,6 +58,8 @@ protected:
 	bool m_bMoving = false;
 	bool m_bLive = true;
 	bool m_bAttacked = false;
+
+	bool m_bCheckAC = false;
 
 	bool mouseIsInitialize = false;
 	POINT oldCursor{};
@@ -110,6 +117,20 @@ public:
 
 	void UpdateObject(float fElapsedTime);
 
+	void MakeBullet(float speed=50.0f, int skill=1);
+
+	virtual bool HasActiveBullet() const
+	{
+		for (const auto& bullet : bullet)
+		{
+			if (bullet && bullet->getActive())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
 	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
 protected:
@@ -117,6 +138,8 @@ protected:
 
 	std::vector<std::unique_ptr<CProjectile>> bullet;
 	int currentBullet = 0;
+
+	bool m_bBulletFired[5] = { false, false, false, false, false };
 };
 
 class CPlayerWarrior : public CPlayableCharacter {
@@ -213,10 +236,25 @@ public:
 
 	void UpdateObject(float fElapsedTime);
 
+	void MakeBullet(float speed = 50.0f, int skill = 1);
+
+	virtual bool HasActiveBullet() const
+	{
+		for (const auto& bullet : bullet)
+		{
+			if (bullet && bullet->getActive())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
 	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
 protected:
 	std::vector<std::unique_ptr<CProjectile>> bullet;
+	int currentBullet = 0;
 };
 
 // A real controlling player

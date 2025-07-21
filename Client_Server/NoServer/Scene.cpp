@@ -3657,7 +3657,7 @@ void CRaytracingCollisionTestScene::CreateMageCharacter()
 	CPlayerMage* mage = dynamic_cast<CPlayerMage*>(m_vPlayers.back().get());
 	Material sharedMaterial;
 
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 20; ++i) {
 		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
 		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
 		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
@@ -3696,12 +3696,21 @@ void CRaytracingCollisionTestScene::Create3StageBoss()
 	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
 	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 
+	for (auto& s : m_vMonsters[0]->getObject()->getObjects())
+	{
+		if (s->getFrameName() == "Gorhorrid_Tongue_8")
+		{
+			m_vMonsters[0]->SetHead(s.get());
+			break;
+		}
+	}
+
 	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
 	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
 	Stage3_Monster* monster = dynamic_cast<Stage3_Monster*>(m_vMonsters.back().get());
 	Material sharedMaterial;
 
-	for (int i = 0; i < 10; ++i) {
+	for (int i = 0; i < 15; ++i) {
 		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
 		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
 		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
@@ -3785,19 +3794,19 @@ void CRaytracingCollisionTestScene::ShootCollision(const std::vector<std::unique
 		for (const auto& targetBone : target->getObject()->getObjects()) {
 			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
 			BoundingSphere targetSphere = targetBone->getObjectSphere();
-			BoundingSphere transformedtargetSphere;
-			targetSphere.Transform(transformedtargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
-			for (const auto& player : attackers) {
-				auto& bullets = player->GetBullets();
+			BoundingSphere transformedTargetSphere;
+			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+			for (const auto& attack : attackers) {
+				auto& bullets = attack->GetBullets();
 				if (bullets.empty()) continue;
 				for (const auto& bullet : bullets) {
 					if (!bullet || !bullet->getActive()) continue;
 					BoundingOrientedBox bulletSphere = bullet->getObjects().getObjectOBB();
 					BoundingOrientedBox transformedBulletBox;
 					bulletSphere.Transform(transformedBulletBox, XMLoadFloat4x4(&bullet->getObjects().getWorldMatrix()));
-					if (transformedBulletBox.Intersects(transformedtargetSphere)) {
+					if (transformedBulletBox.Intersects(transformedTargetSphere)) {
 						target->Attacked(10000.0f);
-						bullet->getObjects().SetPosition(player->getObject()->getPosition());
+						bullet->getObjects().SetPosition(attack->getObject()->getPosition());
 						bullet->setActive(false);
 					}
 				}
@@ -3987,31 +3996,35 @@ void CRaytracingCollisionTestScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->UpdateWorldMatrix();
 
 	for (auto& p : m_vPlayers)
-		p->UpdateObject(fElapsedTime);
-
-	for (auto& p : m_vMonsters)
-		p->UpdateObject(fElapsedTime);
-
-	ShootCollision(m_vMonsters, m_vPlayers);
-
-	switch (m_vMonsters[0]->getCurrentSkill())
 	{
-	case 1:
-		if (m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+		p->UpdateObject(fElapsedTime);
+
+		if (p->CheckAC())
 		{
-			AttackCollision(m_vPlayers, m_vMonsters);
+			AttackCollision(m_vMonsters, m_vPlayers);
 		}
-		break;
-	case 2:
-		if (m_vMonsters[0]->getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
+		if (p->HasActiveBullet())
 		{
-			AttackCollision(m_vPlayers, m_vMonsters);
+			ShootCollision(m_vMonsters, m_vPlayers);
 		}
-		break;
-	case 3:
-		ShootCollision(m_vPlayers, m_vMonsters);
-		break;
 	}
+
+	for (auto& m : m_vMonsters)
+	{
+		m->UpdateObject(fElapsedTime);
+
+		if (m->CheckAC())
+		{
+			AttackCollision(m_vPlayers, m_vMonsters);
+		}
+		if (m->HasActiveBullet())
+		{
+			ShootCollision(m_vPlayers, m_vMonsters);
+		}
+	}
+
+	//ShootCollision(m_vMonsters, m_vPlayers);
+
 	/*m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
 	m_pMonster->HeightCheck(m_pHeightMap.get(), fElapsedTime);*/
 

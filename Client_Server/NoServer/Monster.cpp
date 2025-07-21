@@ -135,21 +135,17 @@ void Stage3_Monster::Skill3()
 			const float spreadAngle = 15.0f;
 			float startAngle = -spreadAngle / 2.0f;
 			float angleStep = spreadAngle / (numProjectiles - 1);
+			XMFLOAT3 pos = XMFLOAT3(m_Head->getWorldMatrix()._41, m_Head->getWorldMatrix()._42, m_Head->getWorldMatrix()._43);
 
 			for (int i = 0; i < numProjectiles && !bullet.empty(); ++i) {
 				CProjectile* projectile = bullet[currentBullet].get();
 				if (projectile && !projectile->getActive()) {
-					projectile->setPosition(m_Object->getPosition());
+					projectile->setPosition(pos,2);
 
-					// Calculate the spread direction
 					XMFLOAT3 lookDirection = m_Object->getLook();
 					float angle = startAngle + (i * angleStep);
 					float rad = angle * (3.14159265359f / 180.0f);
-					XMFLOAT3 spreadDirection(
-						lookDirection.x * cos(rad) - lookDirection.z * sin(rad),
-						lookDirection.y,
-						lookDirection.x * sin(rad) + lookDirection.z * cos(rad)
-					);
+					XMFLOAT3 spreadDirection(lookDirection.x * cos(rad) - lookDirection.z * sin(rad), -0.15f , lookDirection.x * sin(rad) + lookDirection.z * cos(rad));
 
 					projectile->setMoveDirection(spreadDirection);
 					projectile->setActive(true);
@@ -198,8 +194,9 @@ void Stage3_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 
 void Stage3_Monster::UpdateObject(float fElapsedTime)
 {
+	bool test = false;
+	m_bCheckAC = false;
 	if (m_bLive) {
-		bool test = false;
 		if (m_AManager->IsAnimationFinished()) {
 			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
 			test = true;
@@ -216,6 +213,22 @@ void Stage3_Monster::UpdateObject(float fElapsedTime)
 			if (bulletPtr->getActive()) {
 				bulletPtr->IsMoving(fElapsedTime);
 			}
+		}
+
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		case 2:
+			if (getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
 		}
 	}
 
