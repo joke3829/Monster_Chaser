@@ -112,10 +112,10 @@ void Room::SpawnMonsters()
 	switch (stage)
 	{
 	case 1:
-		monsters[new_id++] = std::make_shared<Monster>(1000, XMFLOAT3(-28.0f, 0.0f, -235.0f), MonsterType::Feroptere);
-		monsters[new_id++] = std::make_shared<Monster>(1001, XMFLOAT3(-28.0f, 0.0f, -245.0f), MonsterType::Pistiripere);
-		monsters[new_id++] = std::make_shared<Monster>(1002, XMFLOAT3(-28.0f, 0.0f, -255.0f), MonsterType::RostrokarackLarvae);
-		monsters[new_id++] = std::make_shared<Monster>(1003, XMFLOAT3(-28.0f, 0.0f, -265.0f), MonsterType::XenokarceBoss); // 보스
+		//monsters[new_id++] = std::make_shared<Monster>(1000, XMFLOAT3(-28.0f, 0.0f, -235.0f), MonsterType::Feroptere);//5마리
+		//monsters[new_id++] = std::make_shared<Monster>(1001, XMFLOAT3(-28.0f, 0.0f, -245.0f), MonsterType::Pistiripere);//5마리
+		//monsters[new_id++] = std::make_shared<Monster>(1002, XMFLOAT3(-28.0f, 0.0f, -255.0f), MonsterType::RostrokarackLarvae);//5마리
+		monsters[new_id] = std::make_shared<Monster>(new_id++, XMFLOAT3(-28.0f, 0.0f, -265.0f), MonsterType::XenokarceBoss); // 보스
 		break;
 	case 2:
 		break; // 2스테이지 몬스터는 아직 정의되지 않음

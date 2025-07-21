@@ -1311,10 +1311,10 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
 
 	}
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Pistriptere.bin", "src\\texture\\Pistriptere\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\RostrokarackLarvae.bin", "src\\texture\\RostrokarackLarvae\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\");		// 5마리
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Pistriptere.bin", "src\\texture\\Pistriptere\\");	// 5마리
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\RostrokarackLarvae.bin", "src\\texture\\RostrokarackLarvae\\");	//5마리 
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");		//1마리
 
 	// Monsters 렌더링 및 애니메이션 연결
 	int baseIndex = Players.size();
@@ -1329,7 +1329,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		monster->setAnimationManager(aManagers[aManagers.size() - 1].get());
 
 		skinned[skinnedIndex]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-		skinned[skinnedIndex]->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
+		//skinned[skinnedIndex]->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
 		skinned[skinnedIndex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 	}
 	// Light Read

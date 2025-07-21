@@ -74,5 +74,5 @@ public:
 private:
     int m_targetID = -1;
     int hp = 300;
-    short type{ JOB_NOTHING };
+    MonsterType type{ JOB_NOTHING };
 };

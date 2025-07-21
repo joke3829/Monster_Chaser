@@ -66,6 +66,7 @@ enum Character:char {
 
 
 enum class MonsterType {
+	None = 0,
 	Feroptere,
 	Pistiripere,
 	RostrokarackLarvae,

@@ -229,7 +229,7 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_monster_spawn* pkt = reinterpret_cast<sc_packet_monster_spawn*>(ptr);
 
 		int id = pkt->monster_id;
-
+		MonsterType type = pkt->monster_type;
 		// 이미 있으면 덮어쓰기 방지
 		if (Monsters.find(id) == Monsters.end()) {
 			auto newMonster = std::make_unique<Monster>(id);

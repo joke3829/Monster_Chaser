@@ -74,6 +74,7 @@ enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...
 };
 
 enum class MonsterType {
+	None = 0,
 	Feroptere,
 	Pistiripere,
 	RostrokarackLarvae,
