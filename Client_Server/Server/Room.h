@@ -6,6 +6,8 @@
 #include "array"
 
 
+
+
 class SESSION;
 class Network;
 class Monster;
@@ -37,6 +39,9 @@ public:
 	void SpawnMonsters();
 
 
+	void setStage(int new_stage) { stage = new_stage; }
+	int getStage() const { return stage; }
+
 	concurrent_unordered_map<int, shared_ptr<Monster>> monsters;
 	std::vector<int>id;        //해당 방에 들어온 id 관리 -> 락이 필요함 
 	concurrency::concurrent_unordered_map<int, short> selected_characters; // 캐릭터 선택 정보 (추가)
@@ -51,6 +56,7 @@ private:
 
 	array<bool, 3> player_ready = { false, false, false }; // 플레이어 준비 상태
 
+	int stage = NotStart; // 현재 스테이지 (예: 0: 인게임 X 1:스테이지1, 2: 스테이지 2, 3: 스테이지 3)
 
 	bool is_started = false; // 게임이 시작되었는지 여부 다른 클라가 해당 방에 입장 못하도록 솔플 이나 듀오로 돌릴수도 있음
 };

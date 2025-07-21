@@ -74,7 +74,7 @@ void Room::StartGame()
 		sp.size = sizeof(sp);
 		sp.type = S2C_P_MONSTER_SPAWN;
 		sp.monster_id = id;
-		sp.monster_type = 0; // 타입 나중에 추가 가능
+		sp.monster_type = monster->GetType(); // 타입 나중에 추가 가능
 		XMStoreFloat4x4(&sp.pos, XMMatrixTranslation(
 			monster->GetPosition().x, 
 			monster->GetPosition().y, 
@@ -86,23 +86,35 @@ void Room::StartGame()
 
 		std::cout << "[몬스터 " << id << "] 초기 스폰 전송 완료\n";
 	}
-
-	std::thread([this]() {
-		while (is_started) {
-			for (auto& [id, monster] : this->monsters) {
-				monster->Update(0.016f, *this,g_server.playerManager);
+	if (monsters.size() > 0) {
+		std::thread([this]() {
+			while (is_started) {
+				for (auto& [id, monster] : this->monsters) {
+					monster->Update(0.016f, *this, g_server.playerManager);
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(16));
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(16));
-		}
-		}).detach();
+			}).detach();
+	}
+	
 }
 
 void Room::SpawnMonsters()
 {
 	// 예시로 1마리 생성
 	int new_id = 0;
-	XMFLOAT3 spawnPos = { -28.0f, 0.0f, -245.0f };
-	monsters[new_id] = std::make_shared<Monster>(new_id, spawnPos);
+	/*XMFLOAT3 spawnPos = { -28.0f, 0.0f, -245.0f };
+	monsters[new_id] = std::make_shared<Monster>(new_id, spawnPos);*/
+
+	if (!monsters.empty()) return;
+
+	// 예: 1스테이지 기준
+	if (stage == 1) {
+		monsters[new_id++] = std::make_shared<Monster>(1000, XMFLOAT3(-28.0f, 0.0f, -235.0f), MonsterType::Feroptere);
+		monsters[new_id++] = std::make_shared<Monster>(1001, XMFLOAT3(-28.0f, 0.0f, -245.0f), MonsterType::Pistiripere);
+		monsters[new_id++] = std::make_shared<Monster>(1002, XMFLOAT3(-28.0f, 0.0f, -255.0f), MonsterType::RostrokarackLarvae);
+		monsters[new_id++] = std::make_shared<Monster>(1003, XMFLOAT3(-28.0f, 0.0f, -265.0f), MonsterType::XenokarceBoss); // 보스
+	}
 }
 
 

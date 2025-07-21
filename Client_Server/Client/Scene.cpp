@@ -377,7 +377,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 					m_vInRoomUIs[readyUIIndex + i]->setRenderState(true);
 				else {
 					m_vInRoomUIs[readyUIIndex + i]->setRenderState(false);
-					Client.Setstart(false);
+					//Client.Setstart(false);
 				}
 			}
 			else {
@@ -388,6 +388,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		}
 		if (Client.getstart()) {
 			wOpacity = 0.0f;
+			g_state = GoLoading;		// change g_state
 			//m_nNextScene = SCENE_WINTERLAND;	// 한번만 테스트 성공 해봤지만 계속 터져서 이거 넣어봄
 		}
 		break;
@@ -1310,7 +1311,10 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
 
 	}
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Pistriptere.bin", "src\\texture\\Pistriptere\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\RostrokarackLarvae.bin", "src\\texture\\RostrokarackLarvae\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 
 	// Monsters 렌더링 및 애니메이션 연결
 	int baseIndex = Players.size();

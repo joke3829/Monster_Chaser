@@ -35,8 +35,8 @@ int FindClosestPlayerInRoom(const Room& room, const DirectX::XMFLOAT3& monsterPo
     return closestId;
 }
 
-Monster::Monster(int id, const XMFLOAT3& spawnPos)
-    : id(id), hp(100), state(MonsterState::Idle), position(spawnPos), spawnPoint(spawnPos) {
+Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
+    : id(id), hp(100), state(MonsterState::Idle), position(spawnPos), spawnPoint(spawnPos), type(t){
 
     std::random_device rd;
     std::mt19937 gen(rd());

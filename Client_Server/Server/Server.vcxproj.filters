@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="소스 파일\QuadTree">
-      <UniqueIdentifier>{ac0f242b-f4bd-4844-b138-79c5108c39d3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="소스 파일\OBJECT">
       <UniqueIdentifier>{1f38f330-df32-4b07-97b2-562cab24fe8d}</UniqueIdentifier>
     </Filter>
@@ -42,12 +39,6 @@
     <ClInclude Include="Room.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="QuadTree.h">
-      <Filter>소스 파일\QuadTree</Filter>
-    </ClInclude>
-    <ClInclude Include="qt.h">
-      <Filter>소스 파일\QuadTree</Filter>
-    </ClInclude>
     <ClInclude Include="ITEM.h">
       <Filter>소스 파일\OBJECT\ITEM</Filter>
     </ClInclude>
@@ -73,12 +64,6 @@
     </ClCompile>
     <ClCompile Include="Room.cpp">
       <Filter>소스 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="QuadTree.cpp">
-      <Filter>소스 파일\QuadTree</Filter>
-    </ClCompile>
-    <ClCompile Include="qt.cpp">
-      <Filter>소스 파일\QuadTree</Filter>
     </ClCompile>
     <ClCompile Include="ITEM.cpp">
       <Filter>소스 파일\OBJECT\ITEM</Filter>

@@ -27,6 +27,14 @@ using namespace std;
 using namespace concurrency;
 using namespace chrono;
 
+
+
+
+constexpr int NotStart = 0; // 게임 시작 전 상태
+constexpr int Stage1 = 1;  // 스테이지1	
+constexpr int Stage2 = 2;  // 스테이지2
+constexpr int Stage3 = 2;  // 스테이지3
+
 #define MAX_USER 5000
 
 
@@ -56,13 +64,15 @@ enum Character:char {
 	Priest
 };
 
-struct vec3 {
-	float x;
-	float y;
-	float z;
-};
-struct vec2 {
-	float x;
-	float y;
-	
+
+enum class MonsterType {
+	Feroptere,
+	Pistiripere,
+	RostrokarackLarvae,
+	XenokarceBoss,
+	Occisodonte,
+	Limadon,
+	Fulgurodonte,
+	RostrokarckBoss,
+	GorhorridBoss,
 };

@@ -198,7 +198,7 @@ void C_Socket::process_packet(char* ptr)
 
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
-		g_state = GoLoading;
+		//g_state = GoLoading;
 
 		break;
 		//4 7 9

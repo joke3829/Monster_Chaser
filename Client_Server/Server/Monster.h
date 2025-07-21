@@ -14,11 +14,13 @@ enum class MonsterState {
     Dead
 };
 
+
 class Room;
 
 class Monster {
 public:
-    Monster(int id, const XMFLOAT3& spawnPos);
+    Monster(int id, const XMFLOAT3& spawnPos, MonsterType t);
+    MonsterType GetType() const { return type; }
 
     void Update(float deltaTime, const Room& room, const PlayerManager& playerManager);
     bool TakeDamage(int dmg);
@@ -43,6 +45,8 @@ private:
     void SendSyncPacket(const Room& room);
 
     int id;
+    MonsterType type;
+
     int hp;
     int target_id = -1;
     MonsterState state;
@@ -54,6 +58,5 @@ private:
     bool isRespawning = false;
     std::chrono::steady_clock::time_point respawnTime;
     std::chrono::steady_clock::time_point lastAttackTime;
-
     std::mutex mtx;
 };

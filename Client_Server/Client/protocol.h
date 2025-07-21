@@ -92,7 +92,7 @@ struct sc_packet_monster_spawn {
     unsigned char size;
     char type;
     int monster_id;
-    int monster_type;
+    MonsterType monster_type;
     XMFLOAT4X4 pos;
 };
 
@@ -225,5 +225,6 @@ struct cs_packet_monster_hit {
     char type;
     int attacker_id;  // 몬스터 ID
     int target_player_id;
+    int attack_power; // 공격력
 };
 #pragma pack(pop)

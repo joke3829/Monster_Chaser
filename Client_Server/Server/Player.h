@@ -25,5 +25,10 @@ public:
     void Move(float dx, float dy, float dz); // 이동처리 예시
 
     int GetHP() { return hp; }
+    int setHP(int new_hp) { 
+        std::lock_guard<std::mutex> lock(playerMutex);
+        hp = new_hp; 
+        return hp; 
+	}
 
 };

@@ -143,6 +143,8 @@ void SESSION::process_packet(char* p) {
             sp.type = S2C_P_ALLREADY;
             sp.room_number = static_cast<char>(room_num);
 
+			g_server.rooms[room_num].setStage(Stage1);      // Set Stage to Stage1
+
 			g_server.rooms[room_num].SpawnMonsters();       //Monster Spawn
 			g_server.rooms[room_num].StartGame();           //Start Game
 
@@ -226,8 +228,9 @@ void SESSION::process_packet(char* p) {
         auto monster = room.monsters[pkt->attacker_id];
         auto target = g_server.playerManager.GetPlayer(pkt->target_player_id);
 
-
-		//target->GetHP() -= pkt->damage; // 플레이어의 HP 감소
+        int hp = target->GetHP();
+		hp -= pkt->attack_power; // 플레이어의 HP 감소
+		target->setHP(hp);
 
         if (monster && target) {
            // bool dead = target->TakeDamage(10); // 예시: 10 데미지

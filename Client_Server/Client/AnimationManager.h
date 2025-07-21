@@ -85,7 +85,7 @@ protected:
 	bool m_bIsBlending;
 	float m_fBlendTime;         // blend time
 	float m_fBlendDuration;     // blend during time
-	UINT m_nPrevSet;            // previous animation set
+	UINT m_nPrevSet = 0;            // previous animation set
 };
 
 class CPlayableCharacterAnimationManager : public CAnimationManager {
