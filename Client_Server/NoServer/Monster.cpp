@@ -139,6 +139,7 @@ void Stage3_Monster::Skill3()
 
 			for (int i = 0; i < numProjectiles && !bullet.empty(); ++i) {
 				CProjectile* projectile = bullet[currentBullet].get();
+				projectile->getObjects().SetScale(XMFLOAT3(5.0f, 5.0f, 5.0f));
 				if (projectile && !projectile->getActive()) {
 					projectile->setPosition(pos,2);
 
