@@ -1,4 +1,4 @@
-ï»¿// Room.cpp
+// Room.cpp
 #include "stdafx.h"
 #include "Room.h"
 #include "Network.h"
@@ -7,7 +7,7 @@
 extern Network g_server;
 int Room::room_num = 0;
 Room::Room() : room_number(room_num++) {
-	// í•„ìš” ì‹œ ì´ˆê¸°í™” ì½”ë“œ ì¶”ê°€
+	// ÇÊ¿ä ½Ã ÃÊ±âÈ­ ÄÚµå Ãß°¡
 }
 
 
@@ -36,7 +36,7 @@ void Room::AddPlayer(const int& enter_id)
 
 
 
-void Room::SendRoomInfo() {        //ë°© í˜„í™© ë³´ë‚´ì£¼ê¸°
+void Room::SendRoomInfo() {        //¹æ ÇöÈ² º¸³»ÁÖ±â
 	sc_packet_room_info pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = S2C_P_UPDATEROOM;
@@ -57,7 +57,7 @@ void Room::BroadCast_Room()
 
 
 	//for (auto& player : g_server.users) {							//send other player to broadcast room update
-	//	//if (player.second->m_uniqueNo == this->m_uniqueNo)  // ë‚˜ ìì‹ ì€ ì œì™¸
+	//	//if (player.second->m_uniqueNo == this->m_uniqueNo)  // ³ª ÀÚ½ÅÀº Á¦¿Ü
 	//	//	continue;	
 	//	player.second->do_send(&rp);								//if come UI Not to send me
 	//}
@@ -68,13 +68,13 @@ void Room::StartGame()
 {
 	is_started = true;
 
-	// ê¸°ì¡´ StartGame ë¡œì§ì´ ìˆë‹¤ë©´ ìœ ì§€í•˜ê³ ...
+	// ±âÁ¸ StartGame ·ÎÁ÷ÀÌ ÀÖ´Ù¸é À¯ÁöÇÏ°í...
 	for (auto& [id, monster] : monsters) {
 		sc_packet_monster_spawn sp;
 		sp.size = sizeof(sp);
 		sp.type = S2C_P_MONSTER_SPAWN;
 		sp.monster_id = id;
-		sp.monster_type = monster->GetType(); // íƒ€ì… ë‚˜ì¤‘ì— ì¶”ê°€ ê°€ëŠ¥
+		sp.monster_type = monster->GetType(); // Å¸ÀÔ ³ªÁß¿¡ Ãß°¡ °¡´É
 		XMStoreFloat4x4(&sp.pos, XMMatrixTranslation(
 			monster->GetPosition().x, 
 			monster->GetPosition().y, 
@@ -84,7 +84,7 @@ void Room::StartGame()
 		for (int pid : this->id)
 			g_server.users[pid]->do_send(&sp);
 
-		std::cout << "[ëª¬ìŠ¤í„° " << id << "] ì´ˆê¸° ìŠ¤í° ì „ì†¡ ì™„ë£Œ\n";
+		std::cout << "[¸ó½ºÅÍ " << id << "] ÃÊ±â ½ºÆù Àü¼Û ¿Ï·á\n";
 	}
 	if (monsters.size() > 0) {
 		std::thread([this]() {
@@ -101,26 +101,26 @@ void Room::StartGame()
 
 void Room::SpawnMonsters()
 {
-	// ì˜ˆì‹œë¡œ 1ë§ˆë¦¬ ìƒì„±
+	// ¿¹½Ã·Î 1¸¶¸® »ı¼º
 	int new_id = 0;
 	/*XMFLOAT3 spawnPos = { -28.0f, 0.0f, -245.0f };
 	monsters[new_id] = std::make_shared<Monster>(new_id, spawnPos);*/
 
 	if (!monsters.empty()) return;
 
-	// ì˜ˆ: 1ìŠ¤í…Œì´ì§€ ê¸°ì¤€
+	// ¿¹: 1½ºÅ×ÀÌÁö ±âÁØ
 	switch (stage)
 	{
 	case 1:
-		//monsters[new_id++] = std::make_shared<Monster>(1000, XMFLOAT3(-28.0f, 0.0f, -235.0f), MonsterType::Feroptere);//5ë§ˆë¦¬
-		//monsters[new_id++] = std::make_shared<Monster>(1001, XMFLOAT3(-28.0f, 0.0f, -245.0f), MonsterType::Pistiripere);//5ë§ˆë¦¬
-		//monsters[new_id++] = std::make_shared<Monster>(1002, XMFLOAT3(-28.0f, 0.0f, -255.0f), MonsterType::RostrokarackLarvae);//5ë§ˆë¦¬
-		monsters[new_id] = std::make_shared<Monster>(new_id++, XMFLOAT3(-28.0f, 0.0f, -265.0f), MonsterType::XenokarceBoss); // ë³´ìŠ¤
+		//monsters[new_id++] = std::make_shared<Monster>(1000, XMFLOAT3(-28.0f, 0.0f, -235.0f), MonsterType::Feroptere);//5¸¶¸®
+		//monsters[new_id++] = std::make_shared<Monster>(1001, XMFLOAT3(-28.0f, 0.0f, -245.0f), MonsterType::Pistiripere);//5¸¶¸®
+		//monsters[new_id++] = std::make_shared<Monster>(1002, XMFLOAT3(-28.0f, 0.0f, -255.0f), MonsterType::RostrokarackLarvae);//5¸¶¸®
+		monsters[new_id] = std::make_shared<Monster>(new_id++, XMFLOAT3(-28.0f, 0.0f, -265.0f), MonsterType::XenokarceBoss); // º¸½º
 		break;
 	case 2:
-		break; // 2ìŠ¤í…Œì´ì§€ ëª¬ìŠ¤í„°ëŠ” ì•„ì§ ì •ì˜ë˜ì§€ ì•ŠìŒ
+		break; // 2½ºÅ×ÀÌÁö ¸ó½ºÅÍ´Â ¾ÆÁ÷ Á¤ÀÇµÇÁö ¾ÊÀ½
 	case 3:
-		break; // 3ìŠ¤í…Œì´ì§€ ëª¬ìŠ¤í„°ëŠ” ì•„ì§ ì •ì˜ë˜ì§€ ì•ŠìŒ
+		break; // 3½ºÅ×ÀÌÁö ¸ó½ºÅÍ´Â ¾ÆÁ÷ Á¤ÀÇµÇÁö ¾ÊÀ½
 	default:
 		break;
 	}
