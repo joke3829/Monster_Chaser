@@ -1715,6 +1715,7 @@ void CPlayerWarrior::UpdateObject(float fElapsedTime)
 			{
 				m_bCheckAC = true;
 			}*/
+
 			// ½ºÅ³-2
 			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f) || getAniManager()->IsAnimationInTimeRange(0.7f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.4f) || getAniManager()->IsAnimationInTimeRange(1.5f, 1.6f) || getAniManager()->IsAnimationInTimeRange(2.0f, 2.1f))
 			{
