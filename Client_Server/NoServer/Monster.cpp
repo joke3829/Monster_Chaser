@@ -132,14 +132,14 @@ void Stage3_Monster::Skill3()
 		m_CurrentSkill = 3;
 		if (!bullet.empty()) {
 			const int numProjectiles = 5;
-			const float spreadAngle = 15.0f;
+			const float spreadAngle = 30.0f;
 			float startAngle = -spreadAngle / 2.0f;
 			float angleStep = spreadAngle / (numProjectiles - 1);
 			XMFLOAT3 pos = XMFLOAT3(m_Head->getWorldMatrix()._41, m_Head->getWorldMatrix()._42, m_Head->getWorldMatrix()._43);
 
 			for (int i = 0; i < numProjectiles && !bullet.empty(); ++i) {
 				CProjectile* projectile = bullet[currentBullet].get();
-				projectile->getObjects().SetScale(XMFLOAT3(5.0f, 5.0f, 5.0f));
+				projectile->getObjects().SetScale(XMFLOAT3(2.5f, 2.5f, 2.5f));
 				if (projectile && !projectile->getActive()) {
 					projectile->setPosition(pos,2);
 
