@@ -29,6 +29,8 @@ public:
 
 	virtual void Skill1();
 	virtual void Skill2();
+
+	virtual void UpdateObject(float fElapsedTime);
 };
 
 class Stage2_Monster : public CPlayableCharacter
