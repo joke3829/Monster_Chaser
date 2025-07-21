@@ -3357,8 +3357,8 @@ void CRaytracingCollisionTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\Cave.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
-	CreateMageCharacter();
-	//CreateWarriorCharacter();
+	//CreateMageCharacter();
+	CreateWarriorCharacter();
 	//CreatePriestCharacter();
 	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 
@@ -3440,7 +3440,7 @@ void CRaytracingCollisionTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// Copy(normalObject) & SetPreMatrix ===============================
 
 	//skinned[0]->setPreTransform(2.5f, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
-	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
+	skinned[0]->setPreTransform(4.0f, XMFLOAT3(), XMFLOAT3());
 	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 67.0f, -998.0f));
 	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
 	skinned[0]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -270.0f));
@@ -3764,7 +3764,7 @@ void CRaytracingCollisionTestScene::AttackCollision(const std::vector<std::uniqu
 			BoundingSphere transformedTargetSphere;
 			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
 			for (const auto& attacker : attackers) {
-				if (!attacker->IsAttacking()) continue;
+				if (!attacker->IsAttacking() && !attacker->IsCombo()) continue;
 				for (const auto& attackerBone : attacker->getObject()->getObjects()) {
 					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
 					BoundingSphere attackerSphere = attackerBone->getObjectSphere();
@@ -3776,10 +3776,9 @@ void CRaytracingCollisionTestScene::AttackCollision(const std::vector<std::uniqu
 						case 1: damage = 200.0f; break;
 						case 2: damage = 400.0f; break;
 						case 3: damage = 300.0f; break;
+						default: damage = 100.0f; break;
 						}
-						if (damage > 0.0f) {
-							target->Attacked(damage);
-						}
+						target->Attacked(damage);
 						return;
 					}
 				}

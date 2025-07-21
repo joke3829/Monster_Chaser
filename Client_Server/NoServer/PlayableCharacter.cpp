@@ -1666,6 +1666,7 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 void CPlayerWarrior::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
+	m_bCheckAC = false;
 	if (m_bLive) {
 		m_AManager->UpdateCombo(fElapsedTime);
 		if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
@@ -1674,6 +1675,7 @@ void CPlayerWarrior::UpdateObject(float fElapsedTime)
 			m_bSkillActive = false;
 			m_bDoingCombo = false;
 			m_bAttacked = false;
+			m_CurrentSkill = 0;
 		}
 		if (m_AManager->IsComboInterrupted()) {
 			test = true;
@@ -1681,10 +1683,44 @@ void CPlayerWarrior::UpdateObject(float fElapsedTime)
 			m_bSkillActive = false;
 			m_bDoingCombo = false;
 			m_bAttacked = false;
+			m_CurrentSkill = 0;
 		}
 
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+
+		if (m_bDoingCombo)
+		{
+			m_bCheckAC = true;
+		}
+
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.4f, 0.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		case 2:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		case 3:
+			// 스킬-1
+			/*if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f))
+			{
+				m_bCheckAC = true;
+			}*/
+			// 스킬-2
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f) || getAniManager()->IsAnimationInTimeRange(0.7f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.4f) || getAniManager()->IsAnimationInTimeRange(1.5f, 1.6f) || getAniManager()->IsAnimationInTimeRange(2.0f, 2.1f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
 		}
 	}
 }
