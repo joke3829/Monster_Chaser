@@ -167,6 +167,7 @@ public:
 	void CreateUIPipelineState();
 
 	void CreateMageCharacter();
+	void CreateMonsterSet();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();
@@ -176,6 +177,9 @@ public:
 protected:
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};
+
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+	std::unique_ptr<CMonster>							m_pMonster{};
 
 	unsigned int								m_nSkyboxIndex{};
 

@@ -1311,27 +1311,10 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
 
 	}
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\");		// 5마리
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Pistriptere.bin", "src\\texture\\Pistriptere\\");	// 5마리
-	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\RostrokarackLarvae.bin", "src\\texture\\RostrokarackLarvae\\");	//5마리 
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");		//1마리
 
 	// Monsters 렌더링 및 애니메이션 연결
-	int baseIndex = Players.size();
-	for (int i = 0; i < Monsters.size(); ++i) {
-		auto& monster = Monsters[i];
+	CreateMonsterSet(); //16마리 생성 및 렌더링
 
-		int skinnedIndex = baseIndex + i;
-		if (skinnedIndex >= skinned.size() || skinnedIndex >= aManagers.size())
-			continue;
-
-		monster->setRenderingObject(skinned[skinned.size()-1].get());
-		monster->setAnimationManager(aManagers[aManagers.size() - 1].get());
-
-		skinned[skinnedIndex]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-		//skinned[skinnedIndex]->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
-		skinned[skinnedIndex]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
-	}
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
 	m_pResourceManager->ReadyLightBufferContent();
@@ -1612,6 +1595,78 @@ void CRaytracingWinterLandScene::CreateMageCharacter()
 	// ex) bullet, particle, barrier  etc...
 }
 
+void CRaytracingWinterLandScene::CreateMonsterSet()
+{
+	int num = 0;
+	int baseIndex = Players.size(); // 수정해
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\",MONSTER);		// 5마리
+
+	for (int i = 0; i < 5; ++i) {
+		m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
+			m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+			m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+		auto& monster = Monsters[num];
+
+		monster->setRenderingObject(m_vMonsters.back()->getObject());
+		monster->setAnimationManager(m_vMonsters.back()->getAniManager());
+
+		m_vMonsters[num]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+		//m_vMonsters[num]->getObject()->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
+		m_vMonsters[num]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+		num++;
+	}
+
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Pistriptere.bin", "src\\texture\\Pistriptere\\", MONSTER);	// 5마리
+
+	for (int i = 0; i < 5; ++i) {
+		m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
+			m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+			m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+		auto& monster = Monsters[num];
+
+		monster->setRenderingObject(m_vMonsters.back()->getObject());
+		monster->setAnimationManager(m_vMonsters.back()->getAniManager());
+
+		m_vMonsters[num]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+		//m_vMonsters[num]->getObject()->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
+		m_vMonsters[num]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+		num++;
+	}
+
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\RostrokarackLarvae.bin", "src\\texture\\RostrokarackLarvae\\", MONSTER);	//5마리
+
+	for (int i = 0; i < 5; ++i) {
+		m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
+			m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+			m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+		auto& monster = Monsters[num];
+
+		monster->setRenderingObject(m_vMonsters.back()->getObject());
+		monster->setAnimationManager(m_vMonsters.back()->getAniManager());
+
+		m_vMonsters[num]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+		//m_vMonsters[num]->getObject()->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
+		m_vMonsters[num]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+		num++;
+	}
+
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\", MONSTER); //1마리
+	m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), true));
+	auto& monster = Monsters[num];
+
+	monster->setRenderingObject(m_vMonsters.back()->getObject());
+	monster->setAnimationManager(m_vMonsters.back()->getAniManager());
+
+	m_vMonsters[num]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	//m_vMonsters[num]->getObject()->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
+	m_vMonsters[num]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+}
+
 void CRaytracingWinterLandScene::PrepareTerrainTexture()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC desc{};
@@ -1794,6 +1849,9 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
+
+	for (auto& m : m_vMonsters)
+		m->UpdateObject(fElapsedTime);
 
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
 
