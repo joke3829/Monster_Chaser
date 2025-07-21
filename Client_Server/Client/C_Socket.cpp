@@ -234,9 +234,10 @@ void C_Socket::process_packet(char* ptr)
 		if (Monsters.find(id) == Monsters.end()) {
 			auto newMonster = std::make_unique<Monster>(id);
 			newMonster->setPosition(pkt->pos);			// doyoung's turn
+			newMonster->setMonsterType(pkt->monster_type);	
 			//newMonster->setVisible(true);										 // doyoung's turn 보이게 하는거
 			//newMonster->playIdleAnim();											 // doyoung's turn
-
+			
 			Monsters[id] = std::move(newMonster);
 
 			

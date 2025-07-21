@@ -71,6 +71,9 @@ public:
     void setTargetID(int tid) { m_targetID = tid; }
     int getTargetID() const { return m_targetID; }
 
+	void setMonsterType(MonsterType t) { type = t; }
+	MonsterType getMonsterType  () const { return type; }
+
 private:
     int m_targetID = -1;
     int hp = 300;

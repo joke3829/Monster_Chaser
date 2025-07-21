@@ -1598,7 +1598,6 @@ void CRaytracingWinterLandScene::CreateMageCharacter()
 void CRaytracingWinterLandScene::CreateMonsterSet()
 {
 	int num = 0;
-	int baseIndex = Players.size(); // 수정해
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\",MONSTER);		// 5마리
 
 	for (int i = 0; i < 5; ++i) {
