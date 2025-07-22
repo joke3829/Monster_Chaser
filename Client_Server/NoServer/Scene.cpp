@@ -3108,7 +3108,7 @@ void CRaytracingCaveScene::CreateMageCharacter()
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	m_vPlayers.emplace_back(std::make_unique<CPlayerMage>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
-		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
@@ -3815,7 +3815,7 @@ void CRaytracingETPScene::CreateMageCharacter()
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	m_vPlayers.emplace_back(std::make_unique<CPlayerMage>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
-		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
