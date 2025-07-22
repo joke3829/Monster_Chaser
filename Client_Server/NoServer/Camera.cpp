@@ -16,6 +16,7 @@ void CCamera::Setup(int nRootParameterIndex)
 	m_pd3dCameraBuffer->Map(0, nullptr, (void**)&m_pCameraInfo);
 	m_pCameraInfo->bNormalMapping = ~0;
 	m_pCameraInfo->bReflection = 0;
+	m_pCameraInfo->nMapNumber = 0;
 
 	XMStoreFloat4x4(&m_xmf4x4Proj, XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fFOV), m_fAspect, m_fNear, m_fFar));
 }
@@ -122,4 +123,9 @@ void CCamera::SetElapsedTimeAndShader(float fElapsedTime, UINT rootParameter)
 {
 	m_pCameraInfo->fElapsedTime = fElapsedTime;
 	g_DxResource.cmdList->SetGraphicsRootConstantBufferView(rootParameter, m_pd3dCameraBuffer->GetGPUVirtualAddress());
+}
+
+void CCamera::SetMapNumber(int num)
+{
+	m_pCameraInfo->nMapNumber = num;
 }
