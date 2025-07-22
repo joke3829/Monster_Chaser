@@ -45,7 +45,7 @@ void CScene::CreateOrthoMatrixBuffer()
 
 // ==================================================================================
 
-void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
+void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
 	m_pOutputBuffer = outputBuffer;
 
@@ -467,7 +467,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 			wOpacity += 0.35f * fElapsedTime;
 			if (wOpacity > 1.0f) {
 				wOpacity = 1.0f;
-				m_nNextScene = SCENE_CAVE;
+				m_nNextScene = SCENE_PLAIN;
 			}
 			m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
@@ -591,203 +591,203 @@ void CRaytracingScene::Render()
 
 
 
-void CRaytracingScene::CreateRootSignature()
-{
-	{
-		// Global Root Signature
-		D3D12_DESCRIPTOR_RANGE rootRange{};								// u0
-		rootRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-		rootRange.NumDescriptors = 1;
-		rootRange.BaseShaderRegister = 0;
-		rootRange.RegisterSpace = 0;
-
-		D3D12_DESCRIPTOR_RANGE cubeMapRange{};							// t3
-		cubeMapRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		cubeMapRange.NumDescriptors = 1;
-		cubeMapRange.BaseShaderRegister = 3;
-		cubeMapRange.RegisterSpace = 0;
-
-		D3D12_DESCRIPTOR_RANGE terrainTRange[2]{};						// b0, space2
-		terrainTRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-		terrainTRange[0].NumDescriptors = 1;
-		terrainTRange[0].BaseShaderRegister = 2;
-		terrainTRange[0].RegisterSpace = 0;
-
-		terrainTRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		terrainTRange[1].NumDescriptors = 13;
-		terrainTRange[1].BaseShaderRegister = 4;
-		terrainTRange[1].RegisterSpace = 0;
-		terrainTRange[1].OffsetInDescriptorsFromTableStart = 1;
-
-		// 0. uavBuffer, 1. AS, 2. camera, 3. Lights, 4. Enviorment(cubeMap), 5. TerrainInfo
-		D3D12_ROOT_PARAMETER params[NUM_G_ROOTPARAMETER] = {};
-		params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;	// u0
-		params[0].DescriptorTable.NumDescriptorRanges = 1;
-		params[0].DescriptorTable.pDescriptorRanges = &rootRange;
-
-		params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;				// t0
-		params[1].Descriptor.RegisterSpace = 0;
-		params[1].Descriptor.ShaderRegister = 0;
-
-		params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;				// b0, space0
-		params[2].Descriptor.RegisterSpace = 0;
-		params[2].Descriptor.ShaderRegister = 0;
-
-		params[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;				// b0, space1
-		params[3].Descriptor.RegisterSpace = 1;
-		params[3].Descriptor.ShaderRegister = 0;
-
-		params[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[4].DescriptorTable.NumDescriptorRanges = 1;
-		params[4].DescriptorTable.pDescriptorRanges = &cubeMapRange;
-
-		params[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[5].DescriptorTable.NumDescriptorRanges = 2;
-		params[5].DescriptorTable.pDescriptorRanges = terrainTRange;
-
-		D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
-		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
-		samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-		samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		samplerDesc.RegisterSpace = 0;
-		samplerDesc.ShaderRegister = 0;
-		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-		D3D12_ROOT_SIGNATURE_DESC rtDesc{};
-		rtDesc.NumParameters = NUM_G_ROOTPARAMETER;
-		rtDesc.NumStaticSamplers = 1;
-		rtDesc.pParameters = params;
-		rtDesc.pStaticSamplers = &samplerDesc;
-
-		ID3DBlob* pBlob{};
-		D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
-		g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pGlobalRootSignature.GetAddressOf()));
-		pBlob->Release();
-	}
-	{
-		// LocalRootSignature
-		D3D12_DESCRIPTOR_RANGE srvRange[7] = {};
-		srvRange[0].BaseShaderRegister = 2;		// t2, space0
-		srvRange[0].NumDescriptors = 1;
-		srvRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[0].RegisterSpace = 0;
-
-		srvRange[1].BaseShaderRegister = 2;		// t2, space1
-		srvRange[1].NumDescriptors = 1;
-		srvRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[1].RegisterSpace = 1;
-
-		srvRange[2].BaseShaderRegister = 2;		// t2, space2
-		srvRange[2].NumDescriptors = 1;
-		srvRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[2].RegisterSpace = 2;
-
-		srvRange[3].BaseShaderRegister = 2;		// t2, space3
-		srvRange[3].NumDescriptors = 1;
-		srvRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[3].RegisterSpace = 3;
-
-		srvRange[4].BaseShaderRegister = 2;		// t2, space4
-		srvRange[4].NumDescriptors = 1;
-		srvRange[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[4].RegisterSpace = 4;
-
-		srvRange[5].BaseShaderRegister = 2;		// t2, space5
-		srvRange[5].NumDescriptors = 1;
-		srvRange[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[5].RegisterSpace = 5;
-
-		srvRange[6].BaseShaderRegister = 2;		// t2, space6
-		srvRange[6].NumDescriptors = 1;
-		srvRange[6].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[6].RegisterSpace = 6;
-
-		D3D12_ROOT_PARAMETER params[17] = {};
-		params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	// b1, space0
-		params[0].Descriptor.RegisterSpace = 0;
-		params[0].Descriptor.ShaderRegister = 1;
-
-		params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	// b1, spcae1
-		params[1].Descriptor.RegisterSpace = 1;
-		params[1].Descriptor.ShaderRegister = 1;
-
-		params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space0
-		params[2].Descriptor.RegisterSpace = 0;
-		params[2].Descriptor.ShaderRegister = 1;
-
-		params[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space1
-		params[3].Descriptor.RegisterSpace = 1;
-		params[3].Descriptor.ShaderRegister = 1;
-
-		params[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space2
-		params[4].Descriptor.RegisterSpace = 2;
-		params[4].Descriptor.ShaderRegister = 1;
-
-		params[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space3
-		params[5].Descriptor.RegisterSpace = 3;
-		params[5].Descriptor.ShaderRegister = 1;
-
-		params[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space4
-		params[6].Descriptor.RegisterSpace = 4;
-		params[6].Descriptor.ShaderRegister = 1;
-
-		params[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space5
-		params[7].Descriptor.RegisterSpace = 5;
-		params[7].Descriptor.ShaderRegister = 1;
-
-		params[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space6
-		params[8].Descriptor.RegisterSpace = 6;
-		params[8].Descriptor.ShaderRegister = 1;
-
-		params[9].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space7
-		params[9].Descriptor.RegisterSpace = 7;
-		params[9].Descriptor.ShaderRegister = 1;
-
-		// texture
-		params[10].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[10].DescriptorTable.NumDescriptorRanges = 1;
-		params[10].DescriptorTable.pDescriptorRanges = &srvRange[0];
-
-		params[11].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[11].DescriptorTable.NumDescriptorRanges = 1;
-		params[11].DescriptorTable.pDescriptorRanges = &srvRange[1];
-
-		params[12].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[12].DescriptorTable.NumDescriptorRanges = 1;
-		params[12].DescriptorTable.pDescriptorRanges = &srvRange[2];
-
-		params[13].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[13].DescriptorTable.NumDescriptorRanges = 1;
-		params[13].DescriptorTable.pDescriptorRanges = &srvRange[3];
-
-		params[14].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[14].DescriptorTable.NumDescriptorRanges = 1;
-		params[14].DescriptorTable.pDescriptorRanges = &srvRange[4];
-
-		params[15].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[15].DescriptorTable.NumDescriptorRanges = 1;
-		params[15].DescriptorTable.pDescriptorRanges = &srvRange[5];
-
-		params[16].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[16].DescriptorTable.NumDescriptorRanges = 1;
-		params[16].DescriptorTable.pDescriptorRanges = &srvRange[6];
-
-		D3D12_ROOT_SIGNATURE_DESC rtDesc{};
-		rtDesc.NumParameters = 17;
-		rtDesc.NumStaticSamplers = 0;
-		rtDesc.pParameters = params;
-		rtDesc.pStaticSamplers = nullptr;
-		rtDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-
-		ID3DBlob* pBlob{};
-		D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
-		g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pLocalRootSignature.GetAddressOf()));
-		pBlob->Release();
-	}
-}
+//void CRaytracingScene::CreateRootSignature()
+//{
+//	{
+//		// Global Root Signature
+//		D3D12_DESCRIPTOR_RANGE rootRange{};								// u0
+//		rootRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+//		rootRange.NumDescriptors = 1;
+//		rootRange.BaseShaderRegister = 0;
+//		rootRange.RegisterSpace = 0;
+//
+//		D3D12_DESCRIPTOR_RANGE cubeMapRange{};							// t3
+//		cubeMapRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+//		cubeMapRange.NumDescriptors = 1;
+//		cubeMapRange.BaseShaderRegister = 3;
+//		cubeMapRange.RegisterSpace = 0;
+//
+//		D3D12_DESCRIPTOR_RANGE terrainTRange[2]{};						// b0, space2
+//		terrainTRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+//		terrainTRange[0].NumDescriptors = 1;
+//		terrainTRange[0].BaseShaderRegister = 2;
+//		terrainTRange[0].RegisterSpace = 0;
+//
+//		terrainTRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+//		terrainTRange[1].NumDescriptors = 13;
+//		terrainTRange[1].BaseShaderRegister = 4;
+//		terrainTRange[1].RegisterSpace = 0;
+//		terrainTRange[1].OffsetInDescriptorsFromTableStart = 1;
+//
+//		// 0. uavBuffer, 1. AS, 2. camera, 3. Lights, 4. Enviorment(cubeMap), 5. TerrainInfo
+//		D3D12_ROOT_PARAMETER params[NUM_G_ROOTPARAMETER] = {};
+//		params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;	// u0
+//		params[0].DescriptorTable.NumDescriptorRanges = 1;
+//		params[0].DescriptorTable.pDescriptorRanges = &rootRange;
+//
+//		params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;				// t0
+//		params[1].Descriptor.RegisterSpace = 0;
+//		params[1].Descriptor.ShaderRegister = 0;
+//
+//		params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;				// b0, space0
+//		params[2].Descriptor.RegisterSpace = 0;
+//		params[2].Descriptor.ShaderRegister = 0;
+//
+//		params[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;				// b0, space1
+//		params[3].Descriptor.RegisterSpace = 1;
+//		params[3].Descriptor.ShaderRegister = 0;
+//
+//		params[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+//		params[4].DescriptorTable.NumDescriptorRanges = 1;
+//		params[4].DescriptorTable.pDescriptorRanges = &cubeMapRange;
+//
+//		params[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+//		params[5].DescriptorTable.NumDescriptorRanges = 2;
+//		params[5].DescriptorTable.pDescriptorRanges = terrainTRange;
+//
+//		D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
+//		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+//		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+//		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+//		samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+//		samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+//		samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+//		samplerDesc.RegisterSpace = 0;
+//		samplerDesc.ShaderRegister = 0;
+//		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+//
+//		D3D12_ROOT_SIGNATURE_DESC rtDesc{};
+//		rtDesc.NumParameters = NUM_G_ROOTPARAMETER;
+//		rtDesc.NumStaticSamplers = 1;
+//		rtDesc.pParameters = params;
+//		rtDesc.pStaticSamplers = &samplerDesc;
+//
+//		ID3DBlob* pBlob{};
+//		D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+//		g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pGlobalRootSignature.GetAddressOf()));
+//		pBlob->Release();
+//	}
+//	{
+//		// LocalRootSignature
+//		D3D12_DESCRIPTOR_RANGE srvRange[7] = {};
+//		srvRange[0].BaseShaderRegister = 2;		// t2, space0
+//		srvRange[0].NumDescriptors = 1;
+//		srvRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+//		srvRange[0].RegisterSpace = 0;
+//
+//		srvRange[1].BaseShaderRegister = 2;		// t2, space1
+//		srvRange[1].NumDescriptors = 1;
+//		srvRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+//		srvRange[1].RegisterSpace = 1;
+//
+//		srvRange[2].BaseShaderRegister = 2;		// t2, space2
+//		srvRange[2].NumDescriptors = 1;
+//		srvRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+//		srvRange[2].RegisterSpace = 2;
+//
+//		srvRange[3].BaseShaderRegister = 2;		// t2, space3
+//		srvRange[3].NumDescriptors = 1;
+//		srvRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+//		srvRange[3].RegisterSpace = 3;
+//
+//		srvRange[4].BaseShaderRegister = 2;		// t2, space4
+//		srvRange[4].NumDescriptors = 1;
+//		srvRange[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+//		srvRange[4].RegisterSpace = 4;
+//
+//		srvRange[5].BaseShaderRegister = 2;		// t2, space5
+//		srvRange[5].NumDescriptors = 1;
+//		srvRange[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+//		srvRange[5].RegisterSpace = 5;
+//
+//		srvRange[6].BaseShaderRegister = 2;		// t2, space6
+//		srvRange[6].NumDescriptors = 1;
+//		srvRange[6].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+//		srvRange[6].RegisterSpace = 6;
+//
+//		D3D12_ROOT_PARAMETER params[17] = {};
+//		params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	// b1, space0
+//		params[0].Descriptor.RegisterSpace = 0;
+//		params[0].Descriptor.ShaderRegister = 1;
+//
+//		params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	// b1, spcae1
+//		params[1].Descriptor.RegisterSpace = 1;
+//		params[1].Descriptor.ShaderRegister = 1;
+//
+//		params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space0
+//		params[2].Descriptor.RegisterSpace = 0;
+//		params[2].Descriptor.ShaderRegister = 1;
+//
+//		params[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space1
+//		params[3].Descriptor.RegisterSpace = 1;
+//		params[3].Descriptor.ShaderRegister = 1;
+//
+//		params[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space2
+//		params[4].Descriptor.RegisterSpace = 2;
+//		params[4].Descriptor.ShaderRegister = 1;
+//
+//		params[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space3
+//		params[5].Descriptor.RegisterSpace = 3;
+//		params[5].Descriptor.ShaderRegister = 1;
+//
+//		params[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space4
+//		params[6].Descriptor.RegisterSpace = 4;
+//		params[6].Descriptor.ShaderRegister = 1;
+//
+//		params[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space5
+//		params[7].Descriptor.RegisterSpace = 5;
+//		params[7].Descriptor.ShaderRegister = 1;
+//
+//		params[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space6
+//		params[8].Descriptor.RegisterSpace = 6;
+//		params[8].Descriptor.ShaderRegister = 1;
+//
+//		params[9].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space7
+//		params[9].Descriptor.RegisterSpace = 7;
+//		params[9].Descriptor.ShaderRegister = 1;
+//
+//		// texture
+//		params[10].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+//		params[10].DescriptorTable.NumDescriptorRanges = 1;
+//		params[10].DescriptorTable.pDescriptorRanges = &srvRange[0];
+//
+//		params[11].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+//		params[11].DescriptorTable.NumDescriptorRanges = 1;
+//		params[11].DescriptorTable.pDescriptorRanges = &srvRange[1];
+//
+//		params[12].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+//		params[12].DescriptorTable.NumDescriptorRanges = 1;
+//		params[12].DescriptorTable.pDescriptorRanges = &srvRange[2];
+//
+//		params[13].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+//		params[13].DescriptorTable.NumDescriptorRanges = 1;
+//		params[13].DescriptorTable.pDescriptorRanges = &srvRange[3];
+//
+//		params[14].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+//		params[14].DescriptorTable.NumDescriptorRanges = 1;
+//		params[14].DescriptorTable.pDescriptorRanges = &srvRange[4];
+//
+//		params[15].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+//		params[15].DescriptorTable.NumDescriptorRanges = 1;
+//		params[15].DescriptorTable.pDescriptorRanges = &srvRange[5];
+//
+//		params[16].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+//		params[16].DescriptorTable.NumDescriptorRanges = 1;
+//		params[16].DescriptorTable.pDescriptorRanges = &srvRange[6];
+//
+//		D3D12_ROOT_SIGNATURE_DESC rtDesc{};
+//		rtDesc.NumParameters = 17;
+//		rtDesc.NumStaticSamplers = 0;
+//		rtDesc.pParameters = params;
+//		rtDesc.pStaticSamplers = nullptr;
+//		rtDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
+//
+//		ID3DBlob* pBlob{};
+//		D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+//		g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pLocalRootSignature.GetAddressOf()));
+//		pBlob->Release();
+//	}
+//}
 
 void CRaytracingScene::CreateComputeRootSignature()
 {
@@ -1225,14 +1225,14 @@ void CRaytracingScene::CreateComputeShader()
 void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
 	// Create Global & Local Root Signature
-	CreateRootSignature();
+	//CreateRootSignature();
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
 	CreateComputeShader();
 
 	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	/*m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
 	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
 	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
@@ -1241,7 +1241,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
 	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();
+	m_pRaytracingPipeline->MakePipelineState();*/
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
@@ -1484,14 +1484,14 @@ void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 void CRaytracingMaterialTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 {
 	// Create Global & Local Root Signature
-	CreateRootSignature();
+	//CreateRootSignature();
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
 	CreateComputeShader();
 
 	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	/*m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
 	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
 	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
@@ -1500,7 +1500,7 @@ void CRaytracingMaterialTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
 	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();
+	m_pRaytracingPipeline->MakePipelineState();*/
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
@@ -1834,7 +1834,7 @@ void CRaytracingMaterialTestScene::Render()
 // =====================================================================================
 
 
-void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
+void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
 	m_pOutputBuffer = outputBuffer;
 	// CreateUISetup
@@ -1843,30 +1843,18 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	CreateUIRootSignature();
 	CreateUIPipelineState();
 
-	// Create Global & Local Root Signature
-	CreateRootSignature();
-
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
 	CreateComputeShader();
 
 	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
-	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
-	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit", L"ShadowAnyHit");
-	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
-	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
-	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();
+	m_pRaytracingPipeline = pipeline;
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);
 	// Object File Read ========================================	! !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand1.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	CreateMageCharacter();
@@ -1903,6 +1891,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	normalObjects[normalObjects.size() - 1]->SetInstanceID(10);
 	normalObjects[normalObjects.size() - 1]->getMaterials().emplace_back();
 	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
+
+	//m_pCollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
 
 
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
@@ -2002,6 +1992,71 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 				m_nState = IS_FINISH;
 			}
 			break;
+
+		case 'U':
+			cHPs[0] += 10;
+			if (maxHPs[0] < cHPs[0])
+				cHPs[0] = maxHPs[0];
+			break;
+		case 'J':
+			cHPs[0] -= 10;
+			if (0 > cHPs[0])
+				cHPs[0] = 0;
+			break;
+		case '1':
+			m_BuffState[0][0] = !m_BuffState[0][0];
+			break;
+		case '2':
+			m_BuffState[0][1] = !m_BuffState[0][1];
+			break;
+		case '3':
+			m_BuffState[0][2] = !m_BuffState[0][2];
+			break;
+		case '4':
+			cMP = 100;
+			break;
+		case 'Z':
+			m_vItemUIs[cItem]->setRenderState(false);
+			--cItem;
+			if (cItem < 0) cItem = 3;
+			m_vItemUIs[cItem]->setRenderState(true);
+			break;
+		case 'C':
+			m_vItemUIs[cItem]->setRenderState(false);
+			++cItem;
+			if (cItem > 3) cItem = 0;
+			m_vItemUIs[cItem]->setRenderState(true);
+			break;
+		case 'X':
+			if (itemNum[cItem] > 0 && m_nState == IS_GAMING) {
+				--itemNum[cItem];
+			}
+			break;
+		case 'Q':
+			if (cMP >= 30 && curCTime[0] <= 0) {
+				cMP -= 30;
+				curCTime[0] = coolTime[0];
+			}
+			break;
+		case 'E':
+			if (cMP >= 40 && curCTime[1] <= 0) {
+				cMP -= 40;
+				curCTime[1] = coolTime[1];
+			}
+			break;
+		case 'R':
+			if (cMP >= 60 && curCTime[2] <= 0) {
+				cMP -= 60;
+				curCTime[2] = coolTime[2];
+			}
+			break;
+		case 'P':
+			if (m_nState == IS_GAMING) {
+				m_bOpenShop = !m_bOpenShop;
+				ShowCursor(m_bOpenShop);
+				m_pShopUI->setRenderState(m_bOpenShop);
+			}
+			break;
 		}
 		break;
 	case WM_KEYUP:
@@ -2011,7 +2066,13 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 
 void CRaytracingWinterLandScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	m_pPlayer->MouseProcess(hWnd, nMessage, wParam, lParam);
+	if (m_nState == IS_GAMING) {
+		if (m_bOpenShop) {
+
+		}
+		else
+			m_pPlayer->MouseProcess(hWnd, nMessage, wParam, lParam);
+	}
 }
 
 void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
@@ -2414,10 +2475,6 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-	if (itemUse)
-		m_vItemUIs[4]->setColor(0.0, 0.0, 0.0, 0.0);
-	else
-		m_vItemUIs[4]->setColor(0.0, 0.0, 0.0, 0.5);
 	{
 		if (cMP < 30)
 			m_vSkillUIs[6]->setRenderState(true);
@@ -2509,6 +2566,8 @@ void CRaytracingWinterLandScene::Render()
 
 	for (auto& p : m_vSkillUIs)
 		p->Render();
+
+	m_pShopUI->Render();
 	// ===============================================
 
 
@@ -2622,10 +2681,6 @@ void CRaytracingWinterLandScene::PlayerUISetup(short job)
 	}
 	m_vItemUIs[0]->setRenderState(true);
 
-	uindex = m_vItemUIs.size();
-	m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
-	m_vItemUIs[uindex]->setColor(0.0, 0.0, 0.0, 0.0);
-	m_vItemUIs[uindex]->setPositionInViewport(20, 525);
 	// =============================================================================
 
 	// skills ======================================================================
@@ -2663,11 +2718,20 @@ void CRaytracingWinterLandScene::PlayerUISetup(short job)
 		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
 		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
 	}
+
+	// Shop ============================================================================
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 400, 500));
+	tindex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Shop.dds"));
+	m_pShopUI = std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex].get());
+	m_pShopUI->setPositionInViewport(780, 50);
+	m_pShopUI->setRenderState(false);
 }
 
 // ==========================================================================
 
-void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
+void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
 	m_pOutputBuffer = outputBuffer;
 	// CreateUISetup
@@ -2677,14 +2741,14 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	CreateUIPipelineState();
 
 	// Create Global & Local Root Signature
-	CreateRootSignature();
+	//CreateRootSignature();
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
 	CreateComputeShader();
 
 	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	/*m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
 	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
 	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
@@ -2693,7 +2757,8 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
 	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();
+	m_pRaytracingPipeline->MakePipelineState();*/
+	m_pRaytracingPipeline = pipeline;
 	
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
@@ -2729,7 +2794,8 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// terrian
 	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\CaveHeightMap.raw", 512, 512, XMFLOAT3(500.0f / 512.0f, 0.0092f, 500.0f / 512.0f));
-	/*meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
+	m_pCollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\CaveCollisionHMap.raw", 512, 512, XMFLOAT3(500.0f / 512.0f, 1.0f, 500.0f / 512.0f));
+	/*meshes.emplace_back(std::make_unique<Mesh>(m_pCollisionHMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
 
@@ -2737,7 +2803,6 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_bHasAlbedoColor = true;
 	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_xmf4AlbedoColor = XMFLOAT4(0.5, 0.5, 0.5, 1.0);
 	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-200.0, -10.0, -66.5));*/
-
 
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\dlnk_Water_01_nrm.dds"));
 	std::for_each(normalObjects.begin(), normalObjects.end(), [&](std::unique_ptr<CGameObject>& p) {
@@ -2798,6 +2863,8 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
+
+	PlayerUISetup(JOB_MAGE);
 }
 
 void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -2824,6 +2891,70 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			if (m_nState == IS_GAMING) {
 				startTime = 0.0f;
 				m_nState = IS_FINISH;
+			}
+			break;
+		case 'U':
+			cHPs[0] += 10;
+			if (maxHPs[0] < cHPs[0])
+				cHPs[0] = maxHPs[0];
+			break;
+		case 'J':
+			cHPs[0] -= 10;
+			if (0 > cHPs[0])
+				cHPs[0] = 0;
+			break;
+		case '1':
+			m_BuffState[0][0] = !m_BuffState[0][0];
+			break;
+		case '2':
+			m_BuffState[0][1] = !m_BuffState[0][1];
+			break;
+		case '3':
+			m_BuffState[0][2] = !m_BuffState[0][2];
+			break;
+		case '4':
+			cMP = 100;
+			break;
+		case 'Z':
+			m_vItemUIs[cItem]->setRenderState(false);
+			--cItem;
+			if (cItem < 0) cItem = 3;
+			m_vItemUIs[cItem]->setRenderState(true);
+			break;
+		case 'C':
+			m_vItemUIs[cItem]->setRenderState(false);
+			++cItem;
+			if (cItem > 3) cItem = 0;
+			m_vItemUIs[cItem]->setRenderState(true);
+			break;
+		case 'X':
+			if (itemNum[cItem] > 0 && m_nState == IS_GAMING) {
+				--itemNum[cItem];
+			}
+			break;
+		case 'Q':
+			if (cMP >= 30 && curCTime[0] <= 0) {
+				cMP -= 30;
+				curCTime[0] = coolTime[0];
+			}
+			break;
+		case 'E':
+			if (cMP >= 40 && curCTime[1] <= 0) {
+				cMP -= 40;
+				curCTime[1] = coolTime[1];
+			}
+			break;
+		case 'R':
+			if (cMP >= 60 && curCTime[2] <= 0) {
+				cMP -= 60;
+				curCTime[2] = coolTime[2];
+			}
+			break;
+		case 'P':
+			if (m_nState == IS_GAMING) {
+				m_bOpenShop = !m_bOpenShop;
+				ShowCursor(m_bOpenShop);
+				m_pShopUI->setRenderState(m_bOpenShop);
 			}
 			break;
 		}
@@ -3003,6 +3134,7 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
+	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
 
 	if (m_pCamera->getThirdPersonState()) {
@@ -3035,13 +3167,60 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 		wOpacity += 0.2 * fElapsedTime;
 		if (wOpacity > 1.0f) {
 			ShowCursor(TRUE);
-			m_nNextScene = SCENE_TITLE;
+			m_nNextScene = SCENE_WINTERLAND;
 			wOpacity = 1.0f;
 		}
 		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
 	}
 	}
+	// Player UI ==================================================
+	int buffstart = 20; int bstride = 40;
+	for (int i = 0; i < m_numUser; ++i) {
+		int t{};
+		// hp/mp
+		m_vStatusUIs[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
+		if (i == 0) {
+			m_vStatusUIs[i][3]->setScaleXWithUV(cMP / maxMP);
+		}
+		if (i > 0) {
+			buffstart = 15; bstride = 30;
+		}
+		for (int j = 0; j < 3; ++j) {
+			if (m_BuffState[i][j]) {
+				m_vStatusUIs[i][j + 4]->setRenderState(true);
+				m_vStatusUIs[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), m_buffpixelHeight[i]);
+				++t;
+			}
+			else {
+				m_vStatusUIs[i][j + 4]->setRenderState(false);
+			}
+		}
+	}
+
+	{
+		if (cMP < 30)
+			m_vSkillUIs[6]->setRenderState(true);
+		else
+			m_vSkillUIs[6]->setRenderState(false);
+
+		if (cMP < 40)
+			m_vSkillUIs[7]->setRenderState(true);
+		else
+			m_vSkillUIs[7]->setRenderState(false);
+
+		if (cMP < 60)
+			m_vSkillUIs[8]->setRenderState(true);
+		else
+			m_vSkillUIs[8]->setRenderState(false);
+
+		for (int i = 0; i < 3; ++i) {
+			curCTime[i] -= fElapsedTime;
+			if (curCTime[i] < 0) curCTime[i] = 0.0f;
+			m_vSkillUIs[i + 3]->setScaleY(curCTime[i] / coolTime[i]);
+		}
+	}
+	// =================================================================
 }
 
 void CRaytracingCaveScene::Render()
@@ -3089,7 +3268,7 @@ void CRaytracingCaveScene::Render()
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	D3D12_VIEWPORT vv{};
-	vv.Width = DEFINED_GAME_WINDOW_WIDTH; vv.Height = DEFINED_GAME_WINDOW_HEIGHT; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
+	vv.Width = DEFINED_UAV_BUFFER_WIDTH; vv.Height = DEFINED_UAV_BUFFER_HEIGHT; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
 	cmdList->RSSetViewports(1, &vv);
 	D3D12_RECT ss{ 0, 0, DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT };
 	cmdList->RSSetScissorRects(1, &ss);
@@ -3099,17 +3278,184 @@ void CRaytracingCaveScene::Render()
 	cmdList->SetGraphicsRootConstantBufferView(0, m_cameraCB->GetGPUVirtualAddress());
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	// player UI ====================================
+	for (short i = 0; i < m_numUser; ++i) {
+		for (auto& p : m_vStatusUIs[i])
+			p->Render();
+	}
+	for (auto& p : m_vItemUIs)
+		p->Render();
+
+	for (auto& p : m_vSkillUIs)
+		p->Render();
+
+	m_pShopUI->Render();
+	// ===============================================
+
 	for (auto& p : m_vUIs)
 		p->Render();
 
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
 
+void CRaytracingCaveScene::PlayerUISetup(short job)
+{
+	size_t mindex{};
+	size_t tindex{};
+	size_t uindex{};
+
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+
+	// status UI ===================================================================
+	maxHPs[0] = 1200; maxHPs[1] = 1000; maxHPs[2] = 800;
+	cHPs[0] = 1200; cHPs[1] = 800; cHPs[2] = 730;
+
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 30, 30));		// buff icon
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 340, 28));		// hp/mp bar
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 330, 18));		// hp/mp
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 255, 12));		// coop hp/mp
+
+	tindex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_HPbar.dds"));	// HPbar
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MPbar.dds"));	// MPbar
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MP.dds"));	// MP
+
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff0.dds"));	// buff0
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff1.dds"));	// buff1
+	{
+		uindex = m_vStatusUIs[0].size();			// 0 - hpbar
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 20);
+
+		uindex = m_vStatusUIs[0].size();			// 1 - hp
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get()));
+		m_vStatusUIs[0][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
+		m_vStatusUIs[0][uindex]->setPositionInViewport(25, 25);
+
+		uindex = m_vStatusUIs[0].size();			// 2 - mp bar
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex + 1].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 60);
+
+		uindex = m_vStatusUIs[0].size();			// 2 - mp
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get(), textures[tindex + 2].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(25, 65);
+
+		m_buffpixelHeight[0] = 100;
+		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
+		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 4].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
+		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
+		m_vStatusUIs[0][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
+	}
+
+	//for (int i = 0; i < 2; ++i) {
+	//	uindex = m_vStatusUIs[i + 1].size();			// 1 - hp
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
+
+	//	uindex = m_vStatusUIs[i + 1].size();			// 2 - mp
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15 + 30);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(0.0, 0.0, 1.0, 1.0);
+
+	//	m_buffpixelHeight[i + 1] = (i * 115) + 150 + 15 + 30 + 30;
+	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(0.0, 1.0, 1.0, 1.0);
+	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.5, 1.0, 1.0);
+	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
+	//}
+	// =============================================================================
+
+	// item ========================================================================
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 140, 175));
+
+	tindex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item0.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item1.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item2.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item3.dds"));
+
+	for (int i = 0; i < 4; ++i) {
+		uindex = m_vItemUIs.size();
+		m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
+		m_vItemUIs[uindex]->setColor(0.2 * (i + 1), 0.3, 0.2 * (i + 1), 1.0);
+		m_vItemUIs[uindex]->setPositionInViewport(20, 525);
+		m_vItemUIs[uindex]->setRenderState(false);
+	}
+	m_vItemUIs[0]->setRenderState(true);
+
+	// =============================================================================
+
+	// skills ======================================================================
+
+	coolTime[0] = 5.0f; coolTime[1] = 10.0f; coolTime[2] = 20.0f;
+
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 100, 100));
+
+	tindex = textures.size();
+	switch (job) {
+	case JOB_MAGE:
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician0.dds"));
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician1.dds"));
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician2.dds"));
+		break;
+	}
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_MP_Less.dds"));
+	for (int i = 0; i < 3; ++i) {
+		uindex = m_vSkillUIs.size();
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
+		//m_vSkillUIs[uindex]->setColor(1.0, 0.5, 0.5, 1.0);
+		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		uindex = m_vSkillUIs.size();
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vSkillUIs[uindex]->setColor(0.0, 0.0, 0.0, 0.5);
+		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		uindex = m_vSkillUIs.size();
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
+		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
+	}
+
+	// Shop ============================================================================
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 400, 500));
+	tindex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Shop.dds"));
+	m_pShopUI = std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex].get());
+	m_pShopUI->setPositionInViewport(780, 50);
+	m_pShopUI->setRenderState(false);
+}
+
 // ==========================================================================
 
-void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
+void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
 	m_pOutputBuffer = outputBuffer;
+
 	// CreateUISetup
 	CreateOrthoMatrixBuffer();
 	CreateRTVDSV();
@@ -3117,14 +3463,14 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	CreateUIPipelineState();
 
 	// Create Global & Local Root Signature
-	CreateRootSignature();
+	//CreateRootSignature();
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
 	CreateComputeShader();
 
 	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	/*m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
 	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
 	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
@@ -3133,13 +3479,14 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
 	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();
+	m_pRaytracingPipeline->MakePipelineState();*/
+	m_pRaytracingPipeline = pipeline;
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);
 	// Object File Read ========================================	! !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\ETP.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	CreateMageCharacter();
@@ -3149,7 +3496,6 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\Light_ETP.bin");
 	m_pResourceManager->ReadyLightBufferContent();
-	//m_pResourceManager->LightTest();
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
@@ -3167,6 +3513,19 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
 
+	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\ETPTerrain2.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
+	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
+
+	normalObjects[normalObjects.size() - 1]->SetInstanceID(10);
+	normalObjects[normalObjects.size() - 1]->getMaterials().emplace_back();
+	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_bHasMetallic = true;
+	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_bHasGlossiness = true;
+	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_fGlossiness = 0.0f;
+	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-512.0, 0.0, -512.0));
+
+	PrepareTerrainTexture();
 
 	// cubeMap Ready
 	m_nSkyboxIndex = textures.size();
@@ -3207,6 +3566,8 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
+
+	PlayerUISetup(JOB_MAGE);
 }
 
 void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -3235,9 +3596,73 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 				m_nState = IS_FINISH;
 			}
 			break;
-		case '7':
-			m_pResourceManager->getSkinningObjectList()[0]->SetPosition(
-				m_pResourceManager->getGameObjectList()[3]->getPositionFromWMatrix());
+		case 'U':
+			cHPs[0] += 10;
+			if (maxHPs[0] < cHPs[0])
+				cHPs[0] = maxHPs[0];
+			break;
+		case 'J':
+			cHPs[0] -= 10;
+			if (0 > cHPs[0])
+				cHPs[0] = 0;
+			break;
+		case '1':
+			m_BuffState[0][0] = !m_BuffState[0][0];
+			break;
+		case '2':
+			m_BuffState[0][1] = !m_BuffState[0][1];
+			break;
+		case '3':
+			m_BuffState[0][2] = !m_BuffState[0][2];
+			break;
+		case '4':
+			cMP = 100;
+			break;
+		case 'Z':
+			m_vItemUIs[cItem]->setRenderState(false);
+			--cItem;
+			if (cItem < 0) cItem = 3;
+			m_vItemUIs[cItem]->setRenderState(true);
+			//m_pTextManager->UpdateText(ItemNumTextIndex, std::to_wstring(itemNum[cItem]).c_str(), 125, 665, true);
+			break;
+		case 'C':
+			m_vItemUIs[cItem]->setRenderState(false);
+			++cItem;
+			if (cItem > 3) cItem = 0;
+			m_vItemUIs[cItem]->setRenderState(true);
+			//m_pTextManager->UpdateText(ItemNumTextIndex, std::to_wstring(itemNum[cItem]).c_str(), 125, 665, true);
+			break;
+		case 'X':
+			if (itemNum[cItem] > 0 && m_nState == IS_GAMING) {
+				--itemNum[cItem];
+				//m_pTextManager->UpdateText(ItemNumTextIndex, std::to_wstring(itemNum[cItem]).c_str(), 125, 665, true);
+			}
+			break;
+		case 'Q':
+			if (cMP >= 30 && curCTime[0] <= 0) {
+				cMP -= 30;
+				curCTime[0] = coolTime[0];
+			}
+			break;
+		case 'E':
+			if (cMP >= 40 && curCTime[1] <= 0) {
+				cMP -= 40;
+				curCTime[1] = coolTime[1];
+			}
+			break;
+		case 'R':
+			if (cMP >= 60 && curCTime[2] <= 0) {
+				cMP -= 60;
+				curCTime[2] = coolTime[2];
+			}
+			break;
+		case 'P':
+			if (m_nState == IS_GAMING) {
+				m_bOpenShop = !m_bOpenShop;
+				ShowCursor(m_bOpenShop);
+				m_pShopUI->setRenderState(m_bOpenShop);
+				//m_pTextManager->UpdateText(GoldTextIndex, std::to_wstring(m_nGold).c_str(), 840, 500, m_bOpenShop);
+			}
 			break;
 		}
 		break;
@@ -3429,11 +3854,11 @@ void CRaytracingETPScene::PrepareTerrainTexture()
 
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	size_t textureIndex = textures.size();
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Terrain_WinterLands_splatmap.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\RockStalagmites00_terrain2.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\Stonerock03_Metallic.dds"));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SnowGround00_Albedo.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Terrain_ETP_splatmap.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\SandRiver00_Terrain.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\Grassgreen00_Albedo.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\GroundSoil00_Terrain.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\dlnk_RockWall_00_Terrain.dds"));
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	D3D12_RESOURCE_DESC d3dRD;
@@ -3583,25 +4008,19 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
-	/*m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime);
+	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
-		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
-		if (EYE.z >= -500.0f) {
-			if (cHeight < 10.5f)
-				cHeight = 10.5f;
-		}
+		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 512.0f, EYE.z + 512.0f);
 		if (EYE.y < cHeight + 0.5f) {
 			m_pCamera->UpdateViewMatrix(cHeight + 0.5f);
 		}
 		else
 			m_pCamera->UpdateViewMatrix();
 	}
-	else*/
-	if (m_pCamera->getThirdPersonState())
-		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
-	m_pCamera->UpdateViewMatrix();
+	else
+		m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 
 	switch (m_nState) {
@@ -3621,13 +4040,61 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		wOpacity += 0.2 * fElapsedTime;
 		if (wOpacity > 1.0f) {
 			ShowCursor(TRUE);
-			m_nNextScene = SCENE_TITLE;
+			m_nNextScene = SCENE_CAVE;
 			wOpacity = 1.0f;
 		}
 		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
 	}
 	}
+
+	// Player UI ==================================================
+	int buffstart = 20; int bstride = 40;
+	for (int i = 0; i < m_numUser; ++i) {
+		int t{};
+		// hp/mp
+		m_vStatusUIs[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
+		if (i == 0) {
+			m_vStatusUIs[i][3]->setScaleXWithUV(cMP / maxMP);
+		}
+		if (i > 0) {
+			buffstart = 15; bstride = 30;
+		}
+		for (int j = 0; j < 3; ++j) {
+			if (m_BuffState[i][j]) {
+				m_vStatusUIs[i][j + 4]->setRenderState(true);
+				m_vStatusUIs[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), m_buffpixelHeight[i]);
+				++t;
+			}
+			else {
+				m_vStatusUIs[i][j + 4]->setRenderState(false);
+			}
+		}
+	}
+
+	{
+		if (cMP < 30)
+			m_vSkillUIs[6]->setRenderState(true);
+		else
+			m_vSkillUIs[6]->setRenderState(false);
+
+		if (cMP < 40)
+			m_vSkillUIs[7]->setRenderState(true);
+		else
+			m_vSkillUIs[7]->setRenderState(false);
+
+		if (cMP < 60)
+			m_vSkillUIs[8]->setRenderState(true);
+		else
+			m_vSkillUIs[8]->setRenderState(false);
+
+		for (int i = 0; i < 3; ++i) {
+			curCTime[i] -= fElapsedTime;
+			if (curCTime[i] < 0) curCTime[i] = 0.0f;
+			m_vSkillUIs[i + 3]->setScaleY(curCTime[i] / coolTime[i]);
+		}
+	}
+	// =================================================================
 }
 
 void CRaytracingETPScene::Render()
@@ -3637,7 +4104,7 @@ void CRaytracingETPScene::Render()
 	m_pResourceManager->SetLights();
 	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
 	g_DxResource.cmdList->SetComputeRootDescriptorTable(4, textures[m_nSkyboxIndex]->getView()->GetGPUDescriptorHandleForHeapStart());
-	//g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
+	g_DxResource.cmdList->SetComputeRootDescriptorTable(5, m_pTerrainDescriptor->GetGPUDescriptorHandleForHeapStart());
 
 	D3D12_DISPATCH_RAYS_DESC raydesc{};
 	raydesc.Depth = 1;
@@ -3686,6 +4153,17 @@ void CRaytracingETPScene::Render()
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// player UI ====================================
+	for (short i = 0; i < m_numUser; ++i) {
+		for (auto& p : m_vStatusUIs[i])
+			p->Render();
+	}
+	for (auto& p : m_vItemUIs)
+		p->Render();
+
+	for (auto& p : m_vSkillUIs)
+		p->Render();
+
+	m_pShopUI->Render();
 	// ===============================================
 
 
@@ -3693,6 +4171,167 @@ void CRaytracingETPScene::Render()
 		p->Render();
 
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+}
+
+void CRaytracingETPScene::PlayerUISetup(short job)
+{
+	/*m_pTextManager = std::make_unique<CTextManager>();
+	m_pTextManager->InitManager(m_pOutputBuffer);*/
+
+	size_t mindex{};
+	size_t tindex{};
+	size_t uindex{};
+
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
+
+	// status UI ===================================================================
+	maxHPs[0] = 1200; maxHPs[1] = 1000; maxHPs[2] = 800;
+	cHPs[0] = 1200; cHPs[1] = 800; cHPs[2] = 730;
+
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 30, 30));		// buff icon
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 340, 28));		// hp/mp bar
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 330, 18));		// hp/mp
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 255, 12));		// coop hp/mp
+
+	tindex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_HPbar.dds"));	// HPbar
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MPbar.dds"));	// MPbar
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MP.dds"));	// MP
+
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff0.dds"));	// buff0
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff1.dds"));	// buff1
+	{
+		uindex = m_vStatusUIs[0].size();			// 0 - hpbar
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 20);
+
+		uindex = m_vStatusUIs[0].size();			// 1 - hp
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get()));
+		m_vStatusUIs[0][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
+		m_vStatusUIs[0][uindex]->setPositionInViewport(25, 25);
+
+		uindex = m_vStatusUIs[0].size();			// 2 - mp bar
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex + 1].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 60);
+
+		uindex = m_vStatusUIs[0].size();			// 2 - mp
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get(), textures[tindex + 2].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(25, 65);
+
+		m_buffpixelHeight[0] = 100;
+		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
+		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 4].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
+		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
+		m_vStatusUIs[0][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
+	}
+
+	//for (int i = 0; i < 2; ++i) {
+	//	uindex = m_vStatusUIs[i + 1].size();			// 1 - hp
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
+
+	//	uindex = m_vStatusUIs[i + 1].size();			// 2 - mp
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15 + 30);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(0.0, 0.0, 1.0, 1.0);
+
+	//	m_buffpixelHeight[i + 1] = (i * 115) + 150 + 15 + 30 + 30;
+	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(0.0, 1.0, 1.0, 1.0);
+	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.5, 1.0, 1.0);
+	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
+	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
+	//	m_vStatusUIs[i + 1][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
+	//}
+	// =============================================================================
+
+	// item ========================================================================
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 140, 175));
+
+	tindex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item0.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item1.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item2.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item3.dds"));
+
+	for (int i = 0; i < 4; ++i) {
+		uindex = m_vItemUIs.size();
+		m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
+		m_vItemUIs[uindex]->setColor(0.2 * (i + 1), 0.3, 0.2 * (i + 1), 1.0);
+		m_vItemUIs[uindex]->setPositionInViewport(20, 525);
+		m_vItemUIs[uindex]->setRenderState(false);
+	}
+	m_vItemUIs[0]->setRenderState(true);
+
+	//ItemNumTextIndex = m_pTextManager->getTextListSize();
+	//m_pTextManager->AddText(L"바탕", 24, D2D1::ColorF::White, std::to_wstring(itemNum[0]).c_str(), 125, 665);
+
+	// =============================================================================
+
+	// skills ======================================================================
+
+	coolTime[0] = 5.0f; coolTime[1] = 10.0f; coolTime[2] = 20.0f;
+
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 100, 100));
+
+	tindex = textures.size();
+	switch (job) {
+	case JOB_MAGE:
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician0.dds"));
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician1.dds"));
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician2.dds"));
+		break;
+	}
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_MP_Less.dds"));
+	for (int i = 0; i < 3; ++i) {
+		uindex = m_vSkillUIs.size();
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
+		//m_vSkillUIs[uindex]->setColor(1.0, 0.5, 0.5, 1.0);
+		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		uindex = m_vSkillUIs.size();
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vSkillUIs[uindex]->setColor(0.0, 0.0, 0.0, 0.5);
+		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
+	}
+
+	for (int i = 0; i < 3; ++i) {
+		uindex = m_vSkillUIs.size();
+		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
+		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
+	}
+
+	// Shop ============================================================================
+	mindex = meshes.size();
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 400, 500));
+	tindex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Shop.dds"));
+	m_pShopUI = std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex].get());
+	m_pShopUI->setPositionInViewport(780, 50);
+	m_pShopUI->setRenderState(false);
+
+	//GoldTextIndex = m_pTextManager->getTextListSize();
+	//m_pTextManager->AddText(L"바탕", 24, D2D1::ColorF::White, L"", 840, 500);
 }
 
 // ==========================================================================
@@ -3709,14 +4348,14 @@ void CRaytracingParticleTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	CreateTwoPath();
 
 	// Create Global & Local Root Signature
-	CreateRootSignature();
+	//CreateRootSignature();
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
 	CreateComputeShader();
 
 	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	/*m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
 	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
 	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
@@ -3725,7 +4364,7 @@ void CRaytracingParticleTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
 	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();
+	m_pRaytracingPipeline->MakePipelineState();*/
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
@@ -3788,14 +4427,6 @@ void CRaytracingParticleTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pAccelerationStructureManager->InitBLAS();
 	m_pAccelerationStructureManager->InitTLAS();
 
-	// Text Setting ============================
-	m_pTextManager = std::make_shared<CTextManager>();
-	m_pTextManager->InitManager(m_pOutputBuffer);
-	m_pTextManager->AddText(L"던파 연단된 칼날", 25, D2D1::ColorF::Azure, L"언더테일 아시는구나! 혹시 모르시는분들에 대해 설명해드립니다 샌즈랑 언더테일의 세 가지 엔딩루트중 몰살엔딩의 최종보스로 진.짜.겁.나.어.렵.습.니.다 공격은 전부다 회피하고 만피가 92인데 샌즈의 공격의 1초당 60이 다는데다가 독뎀까지 추가로 붙어있습니다.. 하지만 이러면 절대로 게임을 깰 수 가없으니 제작진이 치명적인 약점을 만들었죠. 생즈의 치명적인 약점이 바로 지친다는 것입니다. 패턴들을 다 견디고나면 지쳐서 자신의 턴을 유지한채로 잠에듭니다. 하지만 잠이들었을때 창을옮겨서 공격을 시도하고 샌즈는 1차공격은 피하지만 그 후에 바로날아오는 2차 공격을 맞고 죽습니다.", 0, 0);
-	m_pTextManager->AddText(L"던파 연단된 칼날", 25, D2D1::ColorF::Blue, L"주거주거마", 0, 50);
-	m_pTextManager->AddText(L"던파 연단된 칼날", 25, D2D1::ColorF::Red, L"김도영은 2000원을 내놔라", 0, 500);
-
-	// ==========================================
 }
 
 void CRaytracingParticleTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -4109,7 +4740,7 @@ void CRaytracingParticleTestScene::PostProcess()
 
 void CRaytracingParticleTestScene::TextRender()
 {
-	m_pTextManager->Render();
+	//m_pTextManager->Render();
 }
 
 
@@ -4576,14 +5207,14 @@ void CRaytracingCollisionTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	CreateUIPipelineState();
 
 	// Create Global & Local Root Signature
-	CreateRootSignature();
+	//CreateRootSignature();
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
 	CreateComputeShader();
 
 	// Create And Set up PipelineState
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
+	/*m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
 	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
 	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
 	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
@@ -4592,7 +5223,7 @@ void CRaytracingCollisionTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
 	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
 	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();
+	m_pRaytracingPipeline->MakePipelineState();*/
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
