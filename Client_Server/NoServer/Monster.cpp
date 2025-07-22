@@ -1,108 +1,42 @@
 #include "Monster.h"
 
-Stage1_Monster::Stage1_Monster(CSkinningObject* obj, CAnimationManager* aManager, bool isBoss)
-	: CPlayableCharacter(obj, aManager, isBoss)
+Feroptere::Feroptere(CSkinningObject* obj, CAnimationManager* aManager)
+	: CPlayableCharacter(obj, aManager)
 {
-	if (isBoss) m_HP = 15000;
-	else m_HP = 5000;
-
-	m_bBoss = isBoss;
+	m_HP = 5000;
 }
 
-void Stage1_Monster::Skill1()
+void Feroptere::Skill1()
 {
-	if (IsBoss())
-	{
-		if (!m_bSkillActive) {
-			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL1), true);
-			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bSkillActive = true;
-			m_CurrentSkill = 1;
-		}
-	}
-	else
-	{
-		if (!m_bSkillActive) {
-			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
-			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bSkillActive = true;
-			m_CurrentSkill = 1;
-		}
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 1;
 	}
 }
 
-void Stage1_Monster::Skill2()
-{
-	if (IsBoss())
-	{
-		if (!m_bSkillActive) {
-			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL2), true);
-			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bSkillActive = true;
-			m_CurrentSkill = 2;
-		}
-	}
-}
-
-void Stage1_Monster::Attacked(float damage)
+void Feroptere::Attacked(float damage)
 {
 	m_HP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		if (IsBoss()) {
-			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
-		}
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
 	}
-	else
-	{
-		m_bLive = false;
-		if (IsBoss()) {
-			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-		}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
 	}
 }
 
-void Stage1_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
-{
-	if (m_bSkillActive) {
-		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
-	}
-
-	if (!m_bSkillActive) {
-		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
-			Skill1();
-		}
-		if ((keyBuffer['X'] & 0x80) && !(m_PrevKeyBuffer['X'] & 0x80)) {
-			Skill2();
-		}
-	}
-	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
-}
-
-void Stage1_Monster::UpdateObject(float fElapsedTime)
+void Feroptere::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
-			if (IsBoss()) {
-				m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), true);
-			}
-			else {
-				m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
-			}
-
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
 			test = true;
 			m_bSkillActive = false;
 			m_CurrentSkill = 0;
@@ -121,127 +55,49 @@ void Stage1_Monster::UpdateObject(float fElapsedTime)
 				m_bCheckAC = true;
 			}
 			break;
-		case 2:
-			if (getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
-			{
-				m_bCheckAC = true;
-			}
-			break;
 		}
 	}
 }
 
-// ==============================================================
+// ==================================================
 
-Stage2_Monster::Stage2_Monster(CSkinningObject* obj, CAnimationManager* aManager, bool isBoss)
-	: CPlayableCharacter(obj, aManager, isBoss)
+Pistriptere::Pistriptere(CSkinningObject* obj, CAnimationManager* aManager)
+	: CPlayableCharacter(obj, aManager)
 {
-	if (isBoss) m_HP = 25000;
-	else m_HP = 7000;
-
-	m_bBoss = isBoss;
+	m_HP = 5000;
 }
 
-void Stage2_Monster::Skill1()
+void Pistriptere::Skill1()
 {
-	if (IsBoss())
-	{
-		if (!m_bSkillActive) {
-			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL1), true);
-			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bSkillActive = true;
-			m_CurrentSkill = 1;
-		}
-	}
-	else
-	{
-		if (!m_bSkillActive) {
-			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
-			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bSkillActive = true;
-			m_CurrentSkill = 1;
-		}
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 1;
 	}
 }
 
-void Stage2_Monster::Skill2()
-{
-	if (IsBoss())
-	{
-		if (!m_bSkillActive) {
-			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL2), true);
-			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bSkillActive = true;
-			m_CurrentSkill = 2;
-		}
-	}
-	else
-	{
-		if (!m_bSkillActive) {
-			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL2), true);
-			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bSkillActive = true;
-			m_CurrentSkill = 2;
-		}
-	}
-}
-
-void Stage2_Monster::Skill3()
-{
-	if (IsBoss())
-	{
-		if (!m_bSkillActive) {
-			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL3), true);
-			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-			m_bSkillActive = true;
-			m_CurrentSkill = 3;
-		}
-	}
-}
-
-void Stage2_Monster::Attacked(float damage)
+void Pistriptere::Attacked(float damage)
 {
 	m_HP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		if (IsBoss()) {
-			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
-		}
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
 	}
-	else
-	{
-		m_bLive = false;
-		if (IsBoss()) {
-			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-		}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
 	}
 }
 
-void Stage2_Monster::UpdateObject(float fElapsedTime)
+void Pistriptere::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
-			if (IsBoss()) {
-				m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), true);
-			}
-			else {
-				m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
-			}
-
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
 			test = true;
 			m_bSkillActive = false;
 			m_CurrentSkill = 0;
@@ -252,10 +108,65 @@ void Stage2_Monster::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
-		for (auto& bulletPtr : bullet) {
-			if (bulletPtr->getActive()) {
-				bulletPtr->IsMoving(fElapsedTime);
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
 			}
+			break;
+		}
+	}
+}
+
+// ==================================================
+
+RostrokarckLarvae::RostrokarckLarvae(CSkinningObject* obj, CAnimationManager* aManager)
+	: CPlayableCharacter(obj, aManager)
+{
+	m_HP = 5000;
+}
+
+void RostrokarckLarvae::Skill1()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 1;
+	}
+}
+
+void RostrokarckLarvae::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+	}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
+	}
+}
+
+void RostrokarckLarvae::UpdateObject(float fElapsedTime)
+{
+	bool test = false;
+	m_bCheckAC = false;
+	if (m_bLive) {
+		if (m_AManager->IsAnimationFinished()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
+			test = true;
+			m_bSkillActive = false;
+			m_CurrentSkill = 0;
+			m_bAttacked = false;
+		}
+
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
 		switch (getCurrentSkill())
@@ -266,8 +177,79 @@ void Stage2_Monster::UpdateObject(float fElapsedTime)
 				m_bCheckAC = true;
 			}
 			break;
+		}
+	}
+}
+
+// ==================================================
+
+Xenokarce::Xenokarce(CSkinningObject* obj, CAnimationManager* aManager)
+	: CPlayableCharacter(obj, aManager)
+{
+	m_HP = 15000;
+}
+
+void Xenokarce::Skill1()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL1), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 1;
+	}
+}
+
+void Xenokarce::Skill2()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL2), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 1;
+	}
+}
+
+void Xenokarce::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+	}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
+	}
+}
+
+void Xenokarce::UpdateObject(float fElapsedTime)
+{
+	bool test = false;
+	m_bCheckAC = false;
+	if (m_bLive) {
+		if (m_AManager->IsAnimationFinished()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), true);
+			test = true;
+			m_bSkillActive = false;
+			m_CurrentSkill = 0;
+			m_bAttacked = false;
+		}
+
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
 		case 2:
-			if (getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
 			{
 				m_bCheckAC = true;
 			}
@@ -276,37 +258,339 @@ void Stage2_Monster::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Stage2_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
-{
-	if (m_bSkillActive) {
-		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
-	}
+// ==================================================
 
+Fulgurodonte::Fulgurodonte(CSkinningObject* obj, CAnimationManager* aManager)
+	: CPlayableCharacter(obj, aManager)
+{
+	m_HP = 7000;
+}
+
+void Fulgurodonte::Skill1()
+{
 	if (!m_bSkillActive) {
-		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
-			Skill1();
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 1;
+	}
+}
+
+void Fulgurodonte::Skill2()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL2), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 2;
+	}
+}
+
+void Fulgurodonte::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+	}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
+	}
+}
+
+void Fulgurodonte::UpdateObject(float fElapsedTime)
+{
+	bool test = false;
+	m_bCheckAC = false;
+	if (m_bLive) {
+		if (m_AManager->IsAnimationFinished()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
+			test = true;
+			m_bSkillActive = false;
+			m_CurrentSkill = 0;
+			m_bAttacked = false;
 		}
-		if ((keyBuffer['X'] & 0x80) && !(m_PrevKeyBuffer['X'] & 0x80)) {
-			Skill2();
+
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
-		if ((keyBuffer['C'] & 0x80) && !(m_PrevKeyBuffer['C'] & 0x80)) {
-			Skill3();
+
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+		case 2:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
 		}
 	}
-	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
+// ==================================================
+
+Limadon::Limadon(CSkinningObject* obj, CAnimationManager* aManager)
+	: CPlayableCharacter(obj, aManager)
+{
+	m_HP = 7000;
+}
+
+void Limadon::Skill1()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 1;
+	}
+}
+
+void Limadon::Skill2()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL2), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 2;
+	}
+}
+
+void Limadon::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+	}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
+	}
+}
+
+void Limadon::UpdateObject(float fElapsedTime)
+{
+	bool test = false;
+	m_bCheckAC = false;
+	if (m_bLive) {
+		if (m_AManager->IsAnimationFinished()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
+			test = true;
+			m_bSkillActive = false;
+			m_CurrentSkill = 0;
+			m_bAttacked = false;
+		}
+
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+		case 2:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		}
+	}
+}
+
+// ==================================================
+
+Occisodonte::Occisodonte(CSkinningObject* obj, CAnimationManager* aManager)
+	: CPlayableCharacter(obj, aManager)
+{
+	m_HP = 7000;
+}
+
+void Occisodonte::Skill1()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 1;
+	}
+}
+
+void Occisodonte::Skill2()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL2), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 2;
+	}
+}
+
+void Occisodonte::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+	}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
+	}
+}
+
+void Occisodonte::UpdateObject(float fElapsedTime)
+{
+	bool test = false;
+	m_bCheckAC = false;
+	if (m_bLive) {
+		if (m_AManager->IsAnimationFinished()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
+			test = true;
+			m_bSkillActive = false;
+			m_CurrentSkill = 0;
+			m_bAttacked = false;
+		}
+
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+		case 2:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		}
+	}
+}
+
+// ==================================================
+
+Crassorrid::Crassorrid(CSkinningObject* obj, CAnimationManager* aManager)
+	: CPlayableCharacter(obj, aManager)
+{
+	m_HP = 25000;
+}
+
+void Crassorrid::Skill1()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL1), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 1;
+	}
+}
+
+void Crassorrid::Skill2()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL2), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 2;
+	}
+}
+
+void Crassorrid::Skill3()
+{
+	if (!m_bSkillActive) {
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL3), true);
+		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		m_bSkillActive = true;
+		m_CurrentSkill = 3;
+	}
+}
+
+void Crassorrid::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+	}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
+	}
+}
+
+void Crassorrid::UpdateObject(float fElapsedTime)
+{
+	bool test = false;
+	m_bCheckAC = false;
+	if (m_bLive) {
+		if (m_AManager->IsAnimationFinished()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), true);
+			test = true;
+			m_bSkillActive = false;
+			m_CurrentSkill = 0;
+			m_bAttacked = false;
+		}
+
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+		case 2:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+		case 3:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		}
+	}
 }
 
 // ==============================================================
 
-Stage3_Monster::Stage3_Monster(CSkinningObject* obj, CAnimationManager* aManager, bool isBoss)
-	: CPlayableCharacter(obj, aManager, isBoss)
+Gorhorrid::Gorhorrid(CSkinningObject* obj, CAnimationManager* aManager)
+	: CPlayableCharacter(obj, aManager)
 {
 	m_HP = 40000;
-	m_bBoss = isBoss;
 }
 
-void Stage3_Monster::Skill1()
+void Gorhorrid::Skill1()
 {
 	// 0.5~0.8 && 1.3f~1.5f
 	if (!m_bSkillActive) {
@@ -318,7 +602,7 @@ void Stage3_Monster::Skill1()
 	}
 }
 
-void Stage3_Monster::Skill2()
+void Gorhorrid::Skill2()
 {
 	//0.3 ~ 0.5f
 	if (!m_bSkillActive) {
@@ -330,7 +614,7 @@ void Stage3_Monster::Skill2()
 	}
 }
 
-void Stage3_Monster::Skill3()
+void Gorhorrid::Skill3()
 {
 	//projectile
 	if (!m_bSkillActive) {
@@ -366,7 +650,7 @@ void Stage3_Monster::Skill3()
 	}
 }
 
-void Stage3_Monster::Attacked(float damage)
+void Gorhorrid::Attacked(float damage)
 {
 	m_HP -= damage;
 	m_bAttacked = true;
@@ -381,7 +665,7 @@ void Stage3_Monster::Attacked(float damage)
 	}
 }
 
-void Stage3_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+void Gorhorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
@@ -402,7 +686,7 @@ void Stage3_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
 }
 
-void Stage3_Monster::UpdateObject(float fElapsedTime)
+void Gorhorrid::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
@@ -477,3 +761,5 @@ void CMonster::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime)
 	p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
 	playerPreWorld._42 = playerWorld._42;
 }
+
+// ==================================================

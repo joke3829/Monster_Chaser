@@ -1,10 +1,9 @@
 #include "PlayableCharacter.h"
 
-CPlayableCharacter::CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
+CPlayableCharacter::CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager)
 	: m_Object(object)
 {
 	m_AManager = dynamic_cast<CPlayableCharacterAnimationManager*>(aManager);
-	m_bBoss = isBoss;
 }
 
 // =======================================================================================
@@ -60,8 +59,8 @@ void CPlayerMage::Attacked(float damage)
 	}
 }
 
-CPlayerMage::CPlayerMage(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
-	: CPlayableCharacter(object, aManager, isBoss)
+CPlayerMage::CPlayerMage(CSkinningObject* object, CAnimationManager* aManager)
+	: CPlayableCharacter(object, aManager)
 {
 	m_HP = 800.0f;
 	m_MP = 100.0f;
@@ -752,8 +751,8 @@ void CPlayerWarrior::Attacked(float damage)
 	}
 }
 
-CPlayerWarrior::CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
-	: CPlayableCharacter(object, aManager, isBoss)
+CPlayerWarrior::CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager)
+	: CPlayableCharacter(object, aManager)
 {
 	m_HP = 1200.0f;
 	m_MP = 100.0f;
@@ -1779,8 +1778,8 @@ void CPlayerPriest::Attacked(float damage)
 	}
 }
 
-CPlayerPriest::CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
-	: CPlayableCharacter(object, aManager, isBoss)
+CPlayerPriest::CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager)
+	: CPlayableCharacter(object, aManager)
 {
 	m_HP = 1000.0f;
 	m_MP = 100.0f;

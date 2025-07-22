@@ -4,7 +4,7 @@
 
 class CPlayableCharacter {
 public:
-	CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
+	CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager);
 
 	// example
 	virtual void Skill1() {}
@@ -17,7 +17,6 @@ public:
 
 	virtual void Attacked(float damage) {}
 
-	bool IsBoss() const { return m_bBoss; }
 	bool IsAttacking()const { return m_bSkillActive; }
 	bool IsCombo()const { return m_bDoingCombo; }
 	bool IsOnceAttacked()const { return m_bAttacked; }
@@ -52,7 +51,6 @@ protected:
 
 	std::shared_ptr<CCamera> m_pCamera;
 
-	bool m_bBoss = false;
 	bool m_bSkillActive = false;
 	bool m_bDoingCombo = false;
 	bool m_bMoving = false;
@@ -110,7 +108,7 @@ public:
 
 	virtual void Attacked(float damage);
 
-	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
+	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -180,7 +178,7 @@ public:
 
 	virtual void Attacked(float damage);
 
-	CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
+	CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -229,7 +227,7 @@ public:
 
 	virtual void Attacked(float damage);
 
-	CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
+	CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
