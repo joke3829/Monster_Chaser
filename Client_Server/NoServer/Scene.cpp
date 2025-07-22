@@ -2350,6 +2350,11 @@ void CRaytracingWinterLandScene::Create_Gorhorrid()
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
+	for (auto& o : m_pResourceManager->getSkinningObjectList().back()->getObjects()) {
+		for (auto& ma : o->getMaterials())
+			ma.m_bHasEmissiveColor = false;
+	}
+
 	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
 	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
@@ -3336,9 +3341,14 @@ void CRaytracingCaveScene::Create_Limadon()
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
-	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-58.0f, 0.0f, -245.0f));
-	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	for (auto& o : m_pResourceManager->getSkinningObjectList().back()->getObjects()) {
+		for (auto& ma : o->getMaterials())
+			ma.m_bHasEmissiveColor = false;
+	}
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-58.0f, 0.0f, -245.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
 void CRaytracingCaveScene::Create_Fulgurodonte()
@@ -3348,9 +3358,14 @@ void CRaytracingCaveScene::Create_Fulgurodonte()
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
-	m_vMonsters[1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[1]->getObject()->SetPosition(XMFLOAT3(-38.0f, 0.0f, -245.0f));
-	m_vMonsters[1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	for (auto& o : m_pResourceManager->getSkinningObjectList().back()->getObjects()) {
+		for (auto& ma : o->getMaterials())
+			ma.m_bHasEmissiveColor = false;
+	}
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-38.0f, 0.0f, -245.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
 void CRaytracingCaveScene::Create_Occisodonte()
@@ -3360,9 +3375,14 @@ void CRaytracingCaveScene::Create_Occisodonte()
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
-	m_vMonsters[2]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[2]->getObject()->SetPosition(XMFLOAT3(-18.0f, 0.0f, -245.0f));
-	m_vMonsters[2]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	for (auto& o : m_pResourceManager->getSkinningObjectList().back()->getObjects()) {
+		for (auto& ma : o->getMaterials())
+			ma.m_bHasEmissiveColor = false;
+	}
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-18.0f, 0.0f, -245.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
 void CRaytracingCaveScene::Create_Crassorrid()
@@ -3372,9 +3392,14 @@ void CRaytracingCaveScene::Create_Crassorrid()
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
-	m_vMonsters[0]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
-	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	for (auto& o : m_pResourceManager->getSkinningObjectList().back()->getObjects()) {
+		for (auto& ma : o->getMaterials())
+			ma.m_bHasEmissiveColor = false;
+	}
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
 void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
@@ -4212,6 +4237,11 @@ void CRaytracingETPScene::Create_Xenokarce()
 	m_vMonsters.emplace_back(std::make_unique<Xenokarce>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	for (auto& o : m_pResourceManager->getSkinningObjectList().back()->getObjects()) {
+		for (auto& ma : o->getMaterials())
+			ma.m_bHasEmissiveColor = false;
+	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-40.0f, 0.0f, 40.0f));
