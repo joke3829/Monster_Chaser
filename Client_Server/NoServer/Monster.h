@@ -29,6 +29,11 @@ public:
 
 	virtual void Skill1();
 	virtual void Skill2();
+
+	virtual void Attacked(float damage);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+
+	virtual void UpdateObject(float fElapsedTime);
 };
 
 class Stage2_Monster : public CPlayableCharacter
@@ -61,6 +66,31 @@ public:
 	virtual void Skill1();
 	virtual void Skill2();
 	virtual void Skill3();
+
+	virtual void Attacked(float damage);
+
+	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+
+	virtual bool HasActiveBullet() const
+	{
+		for (const auto& bullet : bullet)
+		{
+			if (bullet && bullet->getActive())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
+	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
+protected:
+	// personal Resource(bullet, particle etc.)
+
+	std::vector<std::unique_ptr<CProjectile>> bullet;
+	int currentBullet = 0;
 };
 
 class Stage3_Monster : public CPlayableCharacter

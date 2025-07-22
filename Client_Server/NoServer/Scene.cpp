@@ -3357,12 +3357,16 @@ void CRaytracingCollisionTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\Cave.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
-	//CreateMageCharacter();
-	CreateWarriorCharacter();
+	CreateMageCharacter();
+	//CreateWarriorCharacter();
 	//CreatePriestCharacter();
 	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 
-	Create3StageBoss();
+	//Create1StageMinion();
+	//Create1StageBoss();
+	Create2StageMinion();
+	//Create2StageBoss();
+	//Create3StageBoss();
 	m_pMonster = std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get());
 
 	// Light Read
@@ -3439,8 +3443,8 @@ void CRaytracingCollisionTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	// Copy(normalObject) & SetPreMatrix ===============================
 
-	//skinned[0]->setPreTransform(2.5f, XMFLOAT3(90.0f, 0.0f, 0.0f), XMFLOAT3());
-	skinned[0]->setPreTransform(4.0f, XMFLOAT3(), XMFLOAT3());
+	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3()); //mage, priest
+	//skinned[0]->setPreTransform(4.0f, XMFLOAT3(), XMFLOAT3()); //warrior
 	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 67.0f, -998.0f));
 	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
 	skinned[0]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -270.0f));
@@ -3533,7 +3537,9 @@ void CRaytracingCollisionTestScene::ProcessInput(float fElapsedTime)
 		}
 		else {
 			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
-			m_pMonster->ProcessInput(keyBuffer, fElapsedTime);
+			for (auto& a : m_vMonsters) {
+				a->ProcessInput(keyBuffer, fElapsedTime);
+			}
 		}
 	}
 }
@@ -3683,6 +3689,90 @@ void CRaytracingCollisionTestScene::CreatePriestCharacter()
 	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+}
+
+void CRaytracingCollisionTestScene::Create1StageMinion()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+
+	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
+	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Pistriptere.bin", "src\\texture\\Pistriptere\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+	
+	m_vMonsters[1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[1]->getObject()->SetPosition(XMFLOAT3(-38.0f, 0.0f, -245.0f));
+	m_vMonsters[1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\RostrokarckLarvae.bin", "src\\texture\\RostrokarckLarvae\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+	
+	m_vMonsters[2]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[2]->getObject()->SetPosition(XMFLOAT3(-18.0f, 0.0f, -245.0f));
+	m_vMonsters[2]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+}
+
+void CRaytracingCollisionTestScene::Create1StageBoss()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), true));
+
+	m_vMonsters[0]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
+	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+}
+
+void CRaytracingCollisionTestScene::Create2StageMinion()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Limadon.bin", "src\\texture\\Limadon\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Stage2_Monster>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+
+	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-58.0f, 0.0f, -245.0f));
+	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Fulgurodonte.bin", "src\\texture\\Fulgurodonte\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Stage2_Monster>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+	
+	m_vMonsters[1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[1]->getObject()->SetPosition(XMFLOAT3(-38.0f, 0.0f, -245.0f));
+	m_vMonsters[1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Occisodonte.bin", "src\\texture\\Occisodonte\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Stage2_Monster>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
+	
+	m_vMonsters[2]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[2]->getObject()->SetPosition(XMFLOAT3(-18.0f, 0.0f, -245.0f));
+	m_vMonsters[2]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+}
+
+void CRaytracingCollisionTestScene::Create2StageBoss()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Rostrokarck.bin", "src\\texture\\Rostrokarck\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Stage2_Monster>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), true));
+
+	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
+	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
 void CRaytracingCollisionTestScene::Create3StageBoss()

@@ -13,15 +13,23 @@ void Stage1_Monster::Skill1()
 {
 	if (IsBoss())
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL1), true);
-		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL1), true);
+			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bSkillActive = true;
+			m_CurrentSkill = 1;
+		}
 	}
 	else
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
-		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
+			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bSkillActive = true;
+			m_CurrentSkill = 1;
+		}
 	}
 }
 
@@ -29,9 +37,97 @@ void Stage1_Monster::Skill2()
 {
 	if (IsBoss())
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL2), true);
-		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL2), true);
+			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bSkillActive = true;
+			m_CurrentSkill = 2;
+		}
+	}
+}
+
+void Stage1_Monster::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		if (IsBoss()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+		}
+		else {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		}
+	}
+	else
+	{
+		m_bLive = false;
+		if (IsBoss()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
+		}
+		else {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
+		}
+	}
+}
+
+void Stage1_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_bSkillActive) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_bSkillActive) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+		if ((keyBuffer['X'] & 0x80) && !(m_PrevKeyBuffer['X'] & 0x80)) {
+			Skill2();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
+void Stage1_Monster::UpdateObject(float fElapsedTime)
+{
+	bool test = false;
+	m_bCheckAC = false;
+	if (m_bLive) {
+		if (m_AManager->IsAnimationFinished()) {
+			if (IsBoss()) {
+				m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), true);
+			}
+			else {
+				m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
+			}
+
+			test = true;
+			m_bSkillActive = false;
+			m_CurrentSkill = 0;
+			m_bAttacked = false;
+		}
+
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		case 2:
+			if (getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		}
 	}
 }
 
@@ -50,15 +146,23 @@ void Stage2_Monster::Skill1()
 {
 	if (IsBoss())
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL1), true);
-		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL1), true);
+			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bSkillActive = true;
+			m_CurrentSkill = 1;
+		}
 	}
 	else
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
-		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL1), true);
+			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bSkillActive = true;
+			m_CurrentSkill = 1;
+		}
 	}
 }
 
@@ -66,15 +170,23 @@ void Stage2_Monster::Skill2()
 {
 	if (IsBoss())
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL2), true);
-		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL2), true);
+			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bSkillActive = true;
+			m_CurrentSkill = 2;
+		}
 	}
 	else
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL2), true);
-		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_SKILL2), true);
+			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bSkillActive = true;
+			m_CurrentSkill = 2;
+		}
 	}
 }
 
@@ -82,10 +194,107 @@ void Stage2_Monster::Skill3()
 {
 	if (IsBoss())
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL3), true);
-		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_SKILL3), true);
+			//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
+			m_AManager->UpdateAniPosition(0.0f, m_Object);
+			m_bSkillActive = true;
+			m_CurrentSkill = 3;
+		}
 	}
+}
+
+void Stage2_Monster::Attacked(float damage)
+{
+	m_HP -= damage;
+	m_bAttacked = true;
+	if (m_HP > 0.0f)
+	{
+		if (IsBoss()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+		}
+		else {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		}
+	}
+	else
+	{
+		m_bLive = false;
+		if (IsBoss()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
+		}
+		else {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
+		}
+	}
+}
+
+void Stage2_Monster::UpdateObject(float fElapsedTime)
+{
+	bool test = false;
+	m_bCheckAC = false;
+	if (m_bLive) {
+		if (m_AManager->IsAnimationFinished()) {
+			if (IsBoss()) {
+				m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), true);
+			}
+			else {
+				m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
+			}
+
+			test = true;
+			m_bSkillActive = false;
+			m_CurrentSkill = 0;
+			m_bAttacked = false;
+		}
+
+		if (test) {
+			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+
+		for (auto& bulletPtr : bullet) {
+			if (bulletPtr->getActive()) {
+				bulletPtr->IsMoving(fElapsedTime);
+			}
+		}
+
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		case 2:
+			if (getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		}
+	}
+}
+
+void Stage2_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_bSkillActive) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_bSkillActive) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+		if ((keyBuffer['X'] & 0x80) && !(m_PrevKeyBuffer['X'] & 0x80)) {
+			Skill2();
+		}
+		if ((keyBuffer['C'] & 0x80) && !(m_PrevKeyBuffer['C'] & 0x80)) {
+			Skill3();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
 }
 
 // ==============================================================
@@ -174,12 +383,12 @@ void Stage3_Monster::Attacked(float damage)
 
 void Stage3_Monster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
-	if (m_bSkillActive || m_bDoingCombo) {
+	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
 		return;
 	}
 
-	if (!m_bSkillActive && !m_bDoingCombo) {
+	if (!m_bSkillActive) {
 		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
 			Skill1();
 		}

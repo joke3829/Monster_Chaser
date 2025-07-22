@@ -291,6 +291,10 @@ public:
 	void CreateWarriorCharacter();
 	void CreatePriestCharacter();
 
+	void Create1StageMinion();
+	void Create1StageBoss();
+	void Create2StageMinion();
+	void Create2StageBoss();
 	void Create3StageBoss(); //스테이지 별로 하나씩 만들어서 모든 몬스터 한번에 하도록 설정하면 될 듯 - 보스는 마지막 인자 true, 일반은 false
 
 	void AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers);
