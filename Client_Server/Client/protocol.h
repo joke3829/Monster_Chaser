@@ -205,10 +205,13 @@ struct cs_packet_pickcharacter {
     char room_number;
     short C_type;
 };
+
 constexpr char C2S_P_READYINGAME = 59;
-struct cs_packet_ready {
+struct cs_packet_readytoIngame {
     unsigned char size;
     char type;
+    int local_id; // 로컬 ID
+    int room_number; // 방 번호
 };
 
 constexpr char C2S_P_PLAYERATTACK = 60;

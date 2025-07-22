@@ -55,8 +55,8 @@ void Monster::Update(float deltaTime, const Room& room, const PlayerManager& pla
     switch (state) {
     case MonsterState::Idle:    HandleIdle(room, playerManager); break;
     case MonsterState::Chase:   HandleChase(playerManager, room); break;
-    case MonsterState::Attack:  HandleAttack(playerManager); break;
-    case MonsterState::Return:  HandleReturn(); break;
+    case MonsterState::Attack:  HandleAttack(playerManager,room); break;
+    case MonsterState::Return:  HandleReturn(room); break;
     case MonsterState::Dead:    HandleDead(room); return; // 죽으면 패킷 보내지 않음
     }
 
@@ -66,6 +66,8 @@ void Monster::Update(float deltaTime, const Room& room, const PlayerManager& pla
 bool Monster::TakeDamage(int dmg) {
     std::lock_guard<std::mutex> lock(mtx);
     hp -= dmg;
+   
+
     if (hp <= 0) {
         TransitionTo(MonsterState::Dead);
         return true;
@@ -117,10 +119,10 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         position.y += dy * speed * 0.016f;
         position.z += dz * speed * 0.016f;
     }
-
+    //SendSyncPacket(room);
 }
 
-void Monster::HandleAttack(const PlayerManager& playerManager) {
+void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room) {
     if (!IsPlayerNear(playerManager)) {
         TransitionTo(MonsterState::Return);
         return;
@@ -137,17 +139,26 @@ void Monster::HandleAttack(const PlayerManager& playerManager) {
     if (elapsed >= MONSTER_ATTACK_COOLDOWN) {
         lastAttackTime = now;
 
-        //  실제 데미지 적용
+        cs_packet_monster_hit pkt;
+        pkt.size = sizeof(pkt);
+		pkt.type = C2S_P_MONSTER_HIT;
+		pkt.attacker_id = id;
+		pkt.target_player_id = target_id;
+		pkt.attack_power = 10; // 예시: 공격력 10
+        //  방의 유저 목록을 직접 사용
+        for (int pid : room.id) {
+            g_server.users[pid]->do_send(&pkt);
+        }
         auto player = playerManager.GetPlayer(target_id);
         if (player) {
-            player->TakeDamage(10);  // 예: 고정 데미지 10
+          //  player->TakeDamage(10);  // 예: 고정 데미지 10
             std::cout << "[몬스터 " << id << "] 플레이어 " << target_id << " 공격!\n";
         }
     }
 }
 
 
-void Monster::HandleReturn() {
+void Monster::HandleReturn(const Room& room) {
     float dx = spawnPoint.x - position.x;
     float dy = spawnPoint.y - position.y;
     float dz = spawnPoint.z - position.z;
@@ -164,6 +175,8 @@ void Monster::HandleReturn() {
     position.x += dx * MONSTER_RETURN_SPEED * 0.016f;
     position.y += dy * MONSTER_RETURN_SPEED * 0.016f;
     position.z += dz * MONSTER_RETURN_SPEED * 0.016f;
+
+    //SendSyncPacket(room);
 }
 
 
@@ -179,6 +192,9 @@ void Monster::HandleDead(const Room& room) {
         isRespawning = false;
         position = spawnPoint;
         TransitionTo(MonsterState::Idle);
+
+       
+
 
         sc_packet_monster_respawn pkt;
         pkt.size = sizeof(pkt);

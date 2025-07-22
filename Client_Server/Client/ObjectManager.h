@@ -58,15 +58,20 @@ public:
         return hp;
     }
 
+    void Plusgold(int amount) {
+        gold += amount;
+	}
+
 private:
     bool readyToStart = false;
     int hp = 100;
+	int gold = 0; // 플레이어가 가진 골드    
     short type{ JOB_NOTHING };
 };
 
 class Monster : public ObjectManager {
 public:
-    Monster(int id) : ObjectManager(id) {}
+    Monster(int id, MonsterType t);
 
     void setTargetID(int tid) { m_targetID = tid; }
     int getTargetID() const { return m_targetID; }
@@ -74,8 +79,11 @@ public:
 	void setMonsterType(MonsterType t) { type = t; }
 	MonsterType getMonsterType  () const { return type; }
 
+	void setSpawnPoint(const XMFLOAT3& point) { spawnPoint = point; }
+	void setHP(int newHP) { hp = newHP; }    
 private:
     int m_targetID = -1;
     int hp = 300;
-    MonsterType type{ JOB_NOTHING };
+    MonsterType type;
+	XMFLOAT3 spawnPoint; // 몬스터 스폰 위치
 };

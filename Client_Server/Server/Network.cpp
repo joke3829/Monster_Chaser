@@ -144,14 +144,31 @@ void SESSION::process_packet(char* p) {
             sp.room_number = static_cast<char>(room_num);
 
 			g_server.rooms[room_num].setStage(Stage1);      // Set Stage to Stage1
-
+            myMutex.lock();
 			g_server.rooms[room_num].SpawnMonsters();       //Monster Spawn
 			g_server.rooms[room_num].StartGame();           //Start Game
-
+            myMutex.unlock();
 
             for (int id : g_server.rooms[room_num].id)
                 g_server.users[id]->do_send(&sp);
         }
+        break;
+    }
+
+    case C2S_P_READYINGAME: {
+        auto* pkt = reinterpret_cast<cs_packet_readytoIngame*>(p);
+        int room_num = pkt->room_number;
+        int local_id = pkt->local_id;
+
+        Room& room = g_server.rooms[room_num];
+        room.setReady(local_id, true);  // ✅ 이 로컬 ID를 true로 표시
+
+        if (room.isAllGameStartReady()) {
+            room.StartGame();  // 몬스터 스레드 시작
+        }
+
+        std::cout << "[Ingame Ready] room: " << room_num << ", local_id: " << local_id << "\n";
+       
         break;
     }
     case C2S_P_ROOM_UPDATE: {
@@ -195,14 +212,14 @@ void SESSION::process_packet(char* p) {
         if (it == room.monsters.end()) break;
 
         auto& monster = it->second;
-        bool isDead = monster->TakeDamage(10); // ✅ 데미지만 주고 결과만 받아옴
+        bool isDead = monster->TakeDamage(10); // 나중에 10은 플레이어 직업 공격력으로 체크 
 
         // 모두에게 히트 패킷 전송
-        sc_packet_monster_hit hit{};
+        sc_packet_monster_hit hit;
         hit.size = sizeof(hit);
         hit.type = S2C_P_MONSTER_HIT;
         hit.monster_id = monster_id;
-        hit.current_hp = std::max(0, monster->GetHP()); // 새로 만들면 좋음
+        hit.current_hp = monster->GetHP(); // 새로 만들면 좋음
       
         for (int pid : room.id)
             g_server.users[pid]->do_send(&hit);
@@ -213,6 +230,7 @@ void SESSION::process_packet(char* p) {
             die.type = S2C_P_MONSTER_DIE;
             die.monster_id = monster_id;
             die.gold = monster->GetGold(); // 몬스터가 죽었을 때 골드 전송
+			//die.player_id = player->local_id; // 플레이어 ID 추가
             for (int pid : room.id)
                 g_server.users[pid]->do_send(&die);
         }

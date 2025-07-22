@@ -38,10 +38,11 @@ public:
 
 	void SpawnMonsters();
 
+	void setReady(int local_id, bool ready);
 
 	void setStage(int new_stage) { stage = new_stage; }
 	int getStage() const { return stage; }
-
+	bool isAllGameStartReady() const;
 	concurrent_unordered_map<int, shared_ptr<Monster>> monsters;
 	std::vector<int>id;        //해당 방에 들어온 id 관리 -> 락이 필요함 
 	concurrency::concurrent_unordered_map<int, short> selected_characters; // 캐릭터 선택 정보 (추가)
@@ -52,9 +53,9 @@ private:
 	int ready_user = 0;			// 레드 버튼을 누른 유저 수
 	
 	static int room_num;
-	bool is_ready[3];			//준비상태
+	
 
-	array<bool, 3> player_ready = { false, false, false }; // 플레이어 준비 상태
+	array<bool, 3> player_readytoPlaygame = { false, false, false }; // 플레이어 준비 상태
 
 	int stage = NotStart; // 현재 스테이지 (예: 0: 인게임 X 1:스테이지1, 2: 스테이지 2, 3: 스테이지 3)
 

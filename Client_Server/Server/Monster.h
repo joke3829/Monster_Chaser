@@ -34,8 +34,8 @@ private:
     void TransitionTo(MonsterState nextState);
     void HandleIdle(const Room& room, const PlayerManager& playerManager);
     void HandleChase(const PlayerManager& playerManager, const Room& room);
-    void HandleAttack(const PlayerManager& playerManager);
-    void HandleReturn();
+    void HandleAttack(const PlayerManager& playerManager, const Room& room);
+    void HandleReturn(const Room& room);
     void HandleDead(const Room& room);
     float DistanceToPlayer(const PlayerManager& playerManager) const;
 
@@ -49,6 +49,7 @@ private:
 
     int hp;
     int target_id = -1;
+
     MonsterState state;
     XMFLOAT3 position;
     XMFLOAT3 spawnPoint;

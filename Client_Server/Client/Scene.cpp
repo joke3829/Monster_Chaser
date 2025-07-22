@@ -1597,6 +1597,7 @@ void CRaytracingWinterLandScene::CreateMageCharacter()
 
 void CRaytracingWinterLandScene::CreateMonsterSet()
 {
+
 	int num = 0;
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\",MONSTER);		// 5마리
 
@@ -1634,7 +1635,7 @@ void CRaytracingWinterLandScene::CreateMonsterSet()
 		num++;
 	}
 
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\RostrokarackLarvae.bin", "src\\texture\\RostrokarackLarvae\\", MONSTER);	//5마리
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\RostrokarckLarvae.bin", "src\\texture\\RostrokarckLarvae\\", MONSTER);	//5마리
 
 	for (int i = 0; i < 5; ++i) {
 		m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
@@ -1645,7 +1646,7 @@ void CRaytracingWinterLandScene::CreateMonsterSet()
 		monster->setRenderingObject(m_vMonsters.back()->getObject());
 		monster->setAnimationManager(m_vMonsters.back()->getAniManager());
 
-		m_vMonsters[num]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+		m_vMonsters[num]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
 		//m_vMonsters[num]->getObject()->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
 		m_vMonsters[num]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 

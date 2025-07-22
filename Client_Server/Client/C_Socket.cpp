@@ -230,24 +230,52 @@ void C_Socket::process_packet(char* ptr)
 
 		int id = pkt->monster_id;
 		MonsterType type = pkt->monster_type;
+
+		auto& monster = Monsters[pkt->monster_id];
+		if (monster) {
+			//monster->setHP(pkt->hp);
+			monster->setMonsterType(pkt->monster_type);
+			// monster->playIdleAnim(); // 준비됐다면
+		}
+		break;
 		// 이미 있으면 덮어쓰기 방지
 		if (Monsters.find(id) == Monsters.end()) {
-			auto newMonster = std::make_unique<Monster>(id);
+			auto newMonster = std::make_unique<Monster>(id,type);
 			newMonster->setPosition(pkt->pos);			// doyoung's turn
-			newMonster->setMonsterType(pkt->monster_type);	
+			newMonster->setMonsterType(pkt->monster_type);
 			//newMonster->setVisible(true);										 // doyoung's turn 보이게 하는거
 			//newMonster->playIdleAnim();											 // doyoung's turn
-			
+
 			Monsters[id] = std::move(newMonster);
 
-			
+
 		}
 		else {
-			
-		}
 
+	
+		}
 		break;
 	}
+	case S2C_P_MONSTER_DIE: {
+		sc_packet_monster_die* pkt = reinterpret_cast<sc_packet_monster_die*>(ptr);
+		int monster_id = pkt->monster_id;
+		int gold = pkt->gold;
+		if (Monsters.find(monster_id) != Monsters.end()) {
+			auto& monster = Monsters[monster_id];
+			monster->setHP(0); // 몬스터 HP를 0으로 설정
+			
+			// 몬스터가 죽었을 때 골드 드랍 처리
+			// 예: 플레이어에게 골드 지급 로직 추가 가능
+			// 예시로 그냥 출력
+			std::cout << "몬스터 " << monster_id << "가 죽었습니다. 드랍된 골드: " << gold << std::endl;
+			// 몬스터 제거 로직 추가 가능
+			Monsters.erase(monster_id);
+		}
+		break;
+		
+	}
+
+	
 
 	case S2C_P_MONSTER_RESPAWN: {
 		sc_packet_monster_respawn* pkt = reinterpret_cast<sc_packet_monster_respawn*>(ptr);

@@ -113,15 +113,15 @@ void Room::SpawnMonsters()
 	{
 	case 1:
 		for(int i = 0; i < 5; ++i) {
-			monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 10.0f, -235.0f), MonsterType::Feroptere); // Feroptere 몬스터 5마리
+			monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 40.0f, -235.0f), MonsterType::Feroptere); // Feroptere 몬스터 5마리
 			new_id++;
 		}
 		for (int i = 0; i < 5; ++i) {
-			monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 10.0f, -225.0f), MonsterType::Pistiripere); // Feroptere 몬스터 5마리
+			monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 20.0f, -225.0f), MonsterType::Pistiripere); // Feroptere 몬스터 5마리
 			new_id++;
 		}
 		for (int i = 0; i < 5; ++i) {
-			monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 10.0f, -215.0f), MonsterType::RostrokarackLarvae); // Feroptere 몬스터 5마리
+			monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 80.0f, -275.0f), MonsterType::RostrokarackLarvae); // Feroptere 몬스터 5마리
 			new_id++;
 		}
 		
@@ -137,6 +137,23 @@ void Room::SpawnMonsters()
 	}
 	
 
+}
+
+void Room::setReady(int local_id, bool ready)
+{
+	if (local_id >= 0 && local_id < 3)
+		player_readytoPlaygame[local_id] = ready;
+}
+
+bool Room::isAllGameStartReady() const
+{
+	int activePlayerCount = id.size();
+	int readyCount = 0;
+	for (int i = 0; i < activePlayerCount; ++i) {
+		if (player_readytoPlaygame[i]) ++readyCount;
+	}
+	return readyCount == activePlayerCount;
+	
 }
 
 
