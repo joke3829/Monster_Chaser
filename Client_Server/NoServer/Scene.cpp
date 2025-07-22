@@ -2561,11 +2561,35 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	Flush();
 	// Skinning Object BLAS ReBuild
 	m_pResourceManager->ReBuildBLAS();
-
 	m_pResourceManager->UpdateWorldMatrix();
 
 	for (auto& p : m_vPlayers)
+	{
 		p->UpdateObject(fElapsedTime);
+
+		if (p->CheckAC())
+		{
+			AttackCollision(m_vMonsters, m_vPlayers);
+		}
+		if (p->HasActiveBullet())
+		{
+			ShootCollision(m_vMonsters, m_vPlayers);
+		}
+	}
+
+	for (auto& m : m_vMonsters)
+	{
+		m->UpdateObject(fElapsedTime);
+
+		if (m->CheckAC())
+		{
+			AttackCollision(m_vPlayers, m_vMonsters);
+		}
+		if (m->HasActiveBullet())
+		{
+			ShootCollision(m_vPlayers, m_vMonsters);
+		}
+	}
 
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 	
@@ -3371,7 +3395,32 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->UpdateWorldMatrix();
 
 	for (auto& p : m_vPlayers)
+	{
 		p->UpdateObject(fElapsedTime);
+
+		if (p->CheckAC())
+		{
+			AttackCollision(m_vMonsters, m_vPlayers);
+		}
+		if (p->HasActiveBullet())
+		{
+			ShootCollision(m_vMonsters, m_vPlayers);
+		}
+	}
+
+	//for (auto& m : m_vMonsters)
+	//{
+	//	m->UpdateObject(fElapsedTime);
+	//
+	//	if (m->CheckAC())
+	//	{
+	//		AttackCollision(m_vPlayers, m_vMonsters);
+	//	}
+	//	if (m->HasActiveBullet())
+	//	{
+	//		ShootCollision(m_vPlayers, m_vMonsters);
+	//	}
+	//}
 
 	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
@@ -4354,10 +4403,32 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->UpdateWorldMatrix();
 
 	for (auto& p : m_vPlayers)
+	{
 		p->UpdateObject(fElapsedTime);
 
+		if (p->CheckAC())
+		{
+			AttackCollision(m_vMonsters, m_vPlayers);
+		}
+		if (p->HasActiveBullet())
+		{
+			ShootCollision(m_vMonsters, m_vPlayers);
+		}
+	}
+
 	//for (auto& m : m_vMonsters)
+	//{
 	//	m->UpdateObject(fElapsedTime);
+	//
+	//	if (m->CheckAC())
+	//	{
+	//		AttackCollision(m_vPlayers, m_vMonsters);
+	//	}
+	//	if (m->HasActiveBullet())
+	//	{
+	//		ShootCollision(m_vPlayers, m_vMonsters);
+	//	}
+	//}
 
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 
