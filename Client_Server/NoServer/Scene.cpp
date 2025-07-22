@@ -1199,6 +1199,98 @@ float CRaytracingScene::CalculateDepth(const BoundingOrientedBox& obb, const Bou
 	return sphere.Radius - dist;
 }
 
+void CRaytracingScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
+{
+	//스피어-박스
+	/*for (const auto& target : targets) {
+		if (target->IsOnceAttacked()) continue;
+		for (const auto& targetBone : target->getObject()->getObjects()) {
+			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+			BoundingSphere targetSphere = targetBone->getObjectSphere();
+			BoundingSphere transformedTargetSphere;
+			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+			for (const auto& attacker : attackers) {
+				if (!attacker->IsAttacking()) continue;
+				for (const auto& attackerBone : attacker->getObject()->getObjects()) {
+					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
+					BoundingOrientedBox attackerOBB = attackerBone->getObjectOBB();
+					BoundingOrientedBox transformedAttackerOBB;
+					attackerOBB.Transform(transformedAttackerOBB, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
+					if (transformedAttackerOBB.Intersects(transformedTargetSphere)) {
+						float damage = 0.0f;
+						switch (attacker->getCurrentSkill()) {
+						case 1: damage = 200.0f; break;
+						case 2: damage = 400.0f; break;
+						case 3: damage = 300.0f; break;
+						}
+						if (damage > 0.0f) {
+							target->Attacked(damage);
+						}
+						return;
+					}
+				}
+			}
+		}
+	}*/
+	//스피어-스피어
+	for (const auto& target : targets) {
+		if (target->IsOnceAttacked()) continue;
+		for (const auto& targetBone : target->getObject()->getObjects()) {
+			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+			BoundingSphere targetSphere = targetBone->getObjectSphere();
+			BoundingSphere transformedTargetSphere;
+			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+			for (const auto& attacker : attackers) {
+				if (!attacker->IsAttacking() && !attacker->IsCombo()) continue;
+				for (const auto& attackerBone : attacker->getObject()->getObjects()) {
+					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
+					BoundingSphere attackerSphere = attackerBone->getObjectSphere();
+					BoundingSphere transformedAttackerSphere;
+					attackerSphere.Transform(transformedAttackerSphere, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
+					if (transformedAttackerSphere.Intersects(transformedTargetSphere)) {
+						float damage = 0.0f;
+						switch (attacker->getCurrentSkill()) {
+						case 1: damage = 200.0f; break;
+						case 2: damage = 400.0f; break;
+						case 3: damage = 300.0f; break;
+						default: damage = 100.0f; break;
+						}
+						target->Attacked(damage);
+						return;
+					}
+				}
+			}
+		}
+	}
+}
+
+void CRaytracingScene::ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
+{
+	for (const auto& target : targets) {
+		for (const auto& targetBone : target->getObject()->getObjects()) {
+			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+			BoundingSphere targetSphere = targetBone->getObjectSphere();
+			BoundingSphere transformedTargetSphere;
+			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+			for (const auto& attack : attackers) {
+				auto& bullets = attack->GetBullets();
+				if (bullets.empty()) continue;
+				for (const auto& bullet : bullets) {
+					if (!bullet || !bullet->getActive()) continue;
+					BoundingOrientedBox bulletSphere = bullet->getObjects().getObjectOBB();
+					BoundingOrientedBox transformedBulletBox;
+					bulletSphere.Transform(transformedBulletBox, XMLoadFloat4x4(&bullet->getObjects().getWorldMatrix()));
+					if (transformedBulletBox.Intersects(transformedTargetSphere)) {
+						target->Attacked(10000.0f);
+						bullet->getObjects().SetPosition(attack->getObject()->getPosition());
+						bullet->setActive(false);
+					}
+				}
+			}
+		}
+	}
+}
+
 void CRaytracingScene::CreateComputeShader()
 {
 	ID3DBlob* pBlob{};
@@ -2218,6 +2310,74 @@ void CRaytracingWinterLandScene::CreateMageCharacter()
 
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	CPlayerMage* mage = dynamic_cast<CPlayerMage*>(m_vPlayers.back().get());
+	Material sharedMaterial;
+
+	for (int i = 0; i < 20; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		mage->GetBullets().push_back(std::move(projectile));
+	}
+}
+
+void CRaytracingWinterLandScene::CreateWarriorCharacter()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\swordman_lv1.bin", "src\\texture\\Swordman\\", JOB_WARRIOR);
+	m_vPlayers.emplace_back(std::make_unique<CPlayerWarrior>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+}
+
+void CRaytracingWinterLandScene::CreatePriestCharacter()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Luna_Firemantle_33.bin", "src\\texture\\Luna\\", JOB_HEALER);
+	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+}
+
+void CRaytracingWinterLandScene::Create_Gorhorrid()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Gorhorrid>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
+	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	for (auto& s : m_vMonsters[0]->getObject()->getObjects())
+	{
+		if (s->getFrameName() == "Gorhorrid_Tongue_8")
+		{
+			m_vMonsters[0]->SetHead(s.get());
+			break;
+		}
+	}
+
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	Gorhorrid* monster = dynamic_cast<Gorhorrid*>(m_vMonsters.back().get());
+	Material sharedMaterial;
+
+	for (int i = 0; i < 15; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		monster->GetBullets().push_back(std::move(projectile));
+	}
 }
 
 void CRaytracingWinterLandScene::PrepareTerrainTexture()
@@ -3112,6 +3272,85 @@ void CRaytracingCaveScene::CreateMageCharacter()
 
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	CPlayerMage* mage = dynamic_cast<CPlayerMage*>(m_vPlayers.back().get());
+	Material sharedMaterial;
+
+	for (int i = 0; i < 20; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		mage->GetBullets().push_back(std::move(projectile));
+	}
+}
+
+void CRaytracingCaveScene::CreateWarriorCharacter()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\swordman_lv1.bin", "src\\texture\\Swordman\\", JOB_WARRIOR);
+	m_vPlayers.emplace_back(std::make_unique<CPlayerWarrior>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+}
+
+void CRaytracingCaveScene::CreatePriestCharacter()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Luna_Firemantle_33.bin", "src\\texture\\Luna\\", JOB_HEALER);
+	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+}
+
+void CRaytracingCaveScene::Create_Limadon()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Limadon.bin", "src\\texture\\Limadon\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Limadon>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-58.0f, 0.0f, -245.0f));
+	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+}
+
+void CRaytracingCaveScene::Create_Fulgurodonte()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Fulgurodonte.bin", "src\\texture\\Fulgurodonte\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Fulgurodonte>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	m_vMonsters[1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[1]->getObject()->SetPosition(XMFLOAT3(-38.0f, 0.0f, -245.0f));
+	m_vMonsters[1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+}
+
+void CRaytracingCaveScene::Create_Occisodonte()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Occisodonte.bin", "src\\texture\\Occisodonte\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Occisodonte>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	m_vMonsters[2]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[2]->getObject()->SetPosition(XMFLOAT3(-18.0f, 0.0f, -245.0f));
+	m_vMonsters[2]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+}
+
+void CRaytracingCaveScene::Create_Crassorrid()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Crassorrid.bin", "src\\texture\\Crassorrid\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Crassorrid>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	m_vMonsters[0]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
+	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
 void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
@@ -3492,7 +3731,10 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	CreateMageCharacter();
 	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+	Create_Feroptere();
+	Create_Pistriptere();
+	Create_RostrokarckLarvae();
+	Create_Xenokarce();
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\Light_ETP.bin");
 	m_pResourceManager->ReadyLightBufferContent();
@@ -3819,6 +4061,112 @@ void CRaytracingETPScene::CreateMageCharacter()
 
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	CPlayerMage* mage = dynamic_cast<CPlayerMage*>(m_vPlayers.back().get());
+	Material sharedMaterial;
+
+	for (int i = 0; i < 20; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		mage->GetBullets().push_back(std::move(projectile));
+	}
+}
+
+void CRaytracingETPScene::CreateWarriorCharacter()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\swordman_lv1.bin", "src\\texture\\Swordman\\", JOB_WARRIOR);
+	m_vPlayers.emplace_back(std::make_unique<CPlayerWarrior>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+}
+
+void CRaytracingETPScene::CreatePriestCharacter()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Luna_Firemantle_33.bin", "src\\texture\\Luna\\", JOB_HEALER);
+	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+}
+
+void CRaytracingETPScene::Create_Feroptere()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Feroptere>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	for (auto& o : m_pResourceManager->getSkinningObjectList().back()->getObjects()) {
+		for (auto& ma : o->getMaterials())
+			ma.m_bHasEmissiveColor = false;
+	}
+
+	//m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	//m_pResourceManager->getSkinningObjectList()[2]->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[1].get());
+	//m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CAnimationManager>(*m_pResourceManager->getAnimationManagers()[1].get()));
+	//m_pResourceManager->getAnimationManagers()[2]->SetFramesPointerFromSkinningObject(m_pResourceManager->getSkinningObjectList()[2]->getObjects());
+	//m_pResourceManager->getAnimationManagers()[2]->MakeAnimationMatrixIndex(m_pResourceManager->getSkinningObjectList()[2].get());
+	//
+	//m_vMonsters.emplace_back(std::make_unique<Feroptere>(m_vMonsters.back()->getObject(), m_vMonsters.back()->getAniManager()));
+	//
+	//m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	//m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-48.0f, 0.0f, -245.0f));
+	//m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+}
+
+void CRaytracingETPScene::Create_Pistriptere()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Pistriptere.bin", "src\\texture\\Pistriptere\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Pistriptere>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	for (auto& o : m_pResourceManager->getSkinningObjectList().back()->getObjects()) {
+		for (auto& ma : o->getMaterials())
+			ma.m_bHasEmissiveColor = false;
+	}
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(30.0f, 0.0f, 0.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+}
+
+void CRaytracingETPScene::Create_RostrokarckLarvae()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\RostrokarckLarvae.bin", "src\\texture\\RostrokarckLarvae\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<RostrokarckLarvae>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	for (auto& o : m_pResourceManager->getSkinningObjectList().back()->getObjects()) {
+		for (auto& ma : o->getMaterials())
+			ma.m_bHasEmissiveColor = false;
+	}
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 0.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+}
+
+void CRaytracingETPScene::Create_Xenokarce()
+{
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\", MONSTER);
+	m_vMonsters.emplace_back(std::make_unique<Xenokarce>(
+		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
+		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-40.0f, 0.0f, 40.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
 void CRaytracingETPScene::PrepareTerrainTexture()
@@ -4007,6 +4355,9 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
+
+	//for (auto& m : m_vMonsters)
+	//	m->UpdateObject(fElapsedTime);
 
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 

@@ -134,12 +134,21 @@ public:
 	XMFLOAT3 CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere);
 	float CalculateDepth(const BoundingOrientedBox& obb, const BoundingSphere& sphere);
 
+	//Real Collision
+	void AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers);
+	void ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers);
+
 	//void CreateRootSignature();
 	void CreateComputeRootSignature();
 	void CreateComputeShader();
 
 	virtual void PrepareTerrainTexture() {}
 protected:
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
+	std::unique_ptr<CPlayer>							m_pPlayer{};
+
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+	std::unique_ptr<CMonster>							m_pMonster{};
 
 	//ComPtr<ID3D12RootSignature>							m_pLocalRootSignature{};
 	std::shared_ptr<CRayTracingPipeline>				m_pRaytracingPipeline{};
@@ -186,6 +195,10 @@ public:
 	void CreateUIPipelineState();
 
 	void CreateMageCharacter();
+	void CreateWarriorCharacter();
+	void CreatePriestCharacter();
+
+	void Create_Gorhorrid();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();
@@ -196,8 +209,6 @@ public:
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
 protected:
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
-	std::unique_ptr<CPlayer>							m_pPlayer{};
 	
 	unsigned int								m_nSkyboxIndex{};
 
@@ -257,6 +268,13 @@ public:
 	void CreateUIPipelineState();
 
 	void CreateMageCharacter();
+	void CreateWarriorCharacter();
+	void CreatePriestCharacter();
+
+	void Create_Limadon();
+	void Create_Fulgurodonte();
+	void Create_Occisodonte();
+	void Create_Crassorrid();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();
@@ -266,8 +284,6 @@ public:
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
 protected:
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
-	std::unique_ptr<CPlayer>							m_pPlayer{};
 
 	unsigned int								m_nSkyboxIndex{};
 
@@ -323,6 +339,13 @@ public:
 	void CreateUIPipelineState();
 
 	void CreateMageCharacter();
+	void CreateWarriorCharacter();
+	void CreatePriestCharacter();
+
+	void Create_Feroptere();
+	void Create_Pistriptere();
+	void Create_RostrokarckLarvae();
+	void Create_Xenokarce();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();
@@ -332,9 +355,6 @@ public:
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 protected:
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
-	std::unique_ptr<CPlayer>							m_pPlayer{};
-
 	unsigned int								m_nSkyboxIndex{};
 
 	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};

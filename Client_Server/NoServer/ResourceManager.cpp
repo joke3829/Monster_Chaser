@@ -74,7 +74,7 @@ bool CResourceManager::AddSkinningResourceFromFile(wchar_t* FilePath, std::strin
 				m_vAnimationManager.emplace_back(std::make_unique<CPriestManager>(inFile));
 				break;
 			case MONSTER:
-				m_vAnimationManager.emplace_back(std::make_unique<CMonsterManager>(inFile));
+				m_vAnimationManager.emplace_back(std::make_unique<CAnimationManager>(inFile));
 				break;
 			}
 			m_vAnimationManager[m_vAnimationManager.size() - 1]->SetFramesPointerFromSkinningObject(m_vSkinningObject[m_vSkinningObject.size() - 1]->getObjects());
