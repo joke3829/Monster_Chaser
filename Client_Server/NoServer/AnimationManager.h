@@ -164,3 +164,16 @@ public:
 	virtual void OnKey3Input();
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
 };
+
+class CMonsterManager : public CPlayableCharacterAnimationManager {
+public:
+	CMonsterManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile) {}
+
+	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
+	{
+		if (m_vFrames[0]) {
+			XMFLOAT3 targetPosition = m_vFrames[0]->getPositionFromWMatrix();
+			player->SetPosition(targetPosition);
+		}
+	}
+};

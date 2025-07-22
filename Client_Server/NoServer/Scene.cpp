@@ -4416,19 +4416,19 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-	//for (auto& m : m_vMonsters)
-	//{
-	//	m->UpdateObject(fElapsedTime);
-	//
-	//	if (m->CheckAC())
-	//	{
-	//		AttackCollision(m_vPlayers, m_vMonsters);
-	//	}
-	//	if (m->HasActiveBullet())
-	//	{
-	//		ShootCollision(m_vPlayers, m_vMonsters);
-	//	}
-	//}
+	for (auto& m : m_vMonsters)
+	{
+		m->UpdateObject(fElapsedTime);
+	
+		if (m->CheckAC())
+		{
+			AttackCollision(m_vPlayers, m_vMonsters);
+		}
+		if (m->HasActiveBullet())
+		{
+			ShootCollision(m_vPlayers, m_vMonsters);
+		}
+	}
 
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 

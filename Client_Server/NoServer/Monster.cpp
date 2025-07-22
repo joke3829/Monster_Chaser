@@ -4,6 +4,7 @@ Feroptere::Feroptere(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
 	m_HP = 5000;
+	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 }
 
 void Feroptere::Skill1()
@@ -26,6 +27,7 @@ void Feroptere::Attacked(float damage)
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
 	}
 	else {
+		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
 	}
 }
@@ -65,6 +67,7 @@ Pistriptere::Pistriptere(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
 	m_HP = 5000;
+	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 }
 
 void Pistriptere::Skill1()
@@ -87,6 +90,7 @@ void Pistriptere::Attacked(float damage)
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
 	}
 	else {
+		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
 	}
 }
@@ -126,6 +130,7 @@ RostrokarckLarvae::RostrokarckLarvae(CSkinningObject* obj, CAnimationManager* aM
 	: CPlayableCharacter(obj, aManager)
 {
 	m_HP = 5000;
+	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 }
 
 void RostrokarckLarvae::Skill1()
@@ -148,6 +153,7 @@ void RostrokarckLarvae::Attacked(float damage)
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
 	}
 	else {
+		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
 	}
 }
@@ -187,6 +193,7 @@ Xenokarce::Xenokarce(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
 	m_HP = 15000;
+	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
 }
 
 void Xenokarce::Skill1()
@@ -220,6 +227,7 @@ void Xenokarce::Attacked(float damage)
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
 	}
 	else {
+		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
 	}
 }
@@ -264,6 +272,7 @@ Fulgurodonte::Fulgurodonte(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
 	m_HP = 7000;
+	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 }
 
 void Fulgurodonte::Skill1()
@@ -297,6 +306,7 @@ void Fulgurodonte::Attacked(float damage)
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
 	}
 	else {
+		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
 	}
 }
@@ -341,6 +351,7 @@ Limadon::Limadon(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
 	m_HP = 7000;
+	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 }
 
 void Limadon::Skill1()
@@ -374,6 +385,7 @@ void Limadon::Attacked(float damage)
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
 	}
 	else {
+		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
 	}
 }
@@ -418,6 +430,7 @@ Occisodonte::Occisodonte(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
 	m_HP = 7000;
+	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 }
 
 void Occisodonte::Skill1()
@@ -451,6 +464,7 @@ void Occisodonte::Attacked(float damage)
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
 	}
 	else {
+		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
 	}
 }
@@ -495,6 +509,7 @@ Crassorrid::Crassorrid(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
 	m_HP = 25000;
+	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
 }
 
 void Crassorrid::Skill1()
@@ -539,6 +554,7 @@ void Crassorrid::Attacked(float damage)
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
 	}
 	else {
+		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
 	}
 }
@@ -588,6 +604,7 @@ Gorhorrid::Gorhorrid(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
 	m_HP = 40000;
+	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
 }
 
 void Gorhorrid::Skill1()
