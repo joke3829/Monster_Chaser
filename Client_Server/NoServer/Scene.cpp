@@ -1222,26 +1222,16 @@ void CRaytracingScene::CreateComputeShader()
 
 // =====================================================================================
 
-void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
+void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
-	// Create Global & Local Root Signature
-	//CreateRootSignature();
+	m_pOutputBuffer = outputBuffer;
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
 	CreateComputeShader();
 
 	// Create And Set up PipelineState
-	/*m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
-	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
-	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit", L"ShadowAnyHit");
-	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
-	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
-	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();*/
+	m_pRaytracingPipeline = pipeline;
 
 	// Resource Ready
 	m_pResourceManager = std::make_unique<CResourceManager>();
@@ -1250,7 +1240,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
@@ -1267,8 +1257,8 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// Create new Objects, Copy SkinningObject here ========================================
 
 	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	skinned[2]->CopyFromOtherObject(skinned[0].get());
-	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[0].get()));
+	skinned[2]->CopyFromOtherObject(skinned[1].get());
+	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[1].get()));
 	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
 	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
 
@@ -1351,9 +1341,10 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->getAnimationManagers()[1]->setCurrnetSet(3);
 
 	// Setting Camera ==============================================================
-	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	//m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
 	m_pCamera->SetHOffset(3.5f);
 	m_pCamera->SetCameraLength(15.0f);
+	m_pCamera->SetMapNumber(SCENE_WINTERLAND);
 	// ==========================================================================
 
 	// AccelerationStructure
@@ -1476,7 +1467,58 @@ void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WP
 
 void CRaytracingTestScene::ProcessInput(float fElapsedTime)
 {
+	UCHAR keyBuffer[256];
+	GetKeyboardState(keyBuffer);
+	bool shiftDown = false;
+	if (keyBuffer[VK_SHIFT] & 0x80)
+		shiftDown = true;
+	if (keyBuffer['W'] & 0x80)
+		m_pCamera->Move(0, fElapsedTime, shiftDown);
+	if (keyBuffer['S'] & 0x80)
+		m_pCamera->Move(5, fElapsedTime, shiftDown);
+	if (keyBuffer['D'] & 0x80)
+		m_pCamera->Move(3, fElapsedTime, shiftDown);
+	if (keyBuffer['A'] & 0x80)
+		m_pCamera->Move(4, fElapsedTime, shiftDown);
+	if (keyBuffer[VK_SPACE] & 0x80)
+		m_pCamera->Move(1, fElapsedTime, shiftDown);
+	if (keyBuffer[VK_CONTROL] & 0x80)
+		m_pCamera->Move(2, fElapsedTime, shiftDown);
+}
 
+void CRaytracingTestScene::UpdateObject(float fElapsedTime)
+{
+	// compute shader & rootSignature set
+	g_DxResource.cmdList->SetPipelineState(m_pAnimationComputeShader.Get());
+	g_DxResource.cmdList->SetComputeRootSignature(m_pComputeRootSignature.Get());
+
+	m_pResourceManager->UpdateSkinningMesh(fElapsedTime);
+	// particle update
+	// SetRootSignature
+	// particle update
+
+	Flush();
+	// Skinning Object BLAS ReBuild
+	m_pResourceManager->ReBuildBLAS();
+
+	m_pResourceManager->UpdateWorldMatrix();
+
+	if (m_pCamera->getThirdPersonState()) {
+		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
+		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
+		if (EYE.z >= -500.0f) {
+			if (cHeight < 10.5f)
+				cHeight = 10.5f;
+		}
+		if (EYE.y < cHeight + 0.5f) {
+			m_pCamera->UpdateViewMatrix(cHeight + 0.5f);
+		}
+		else
+			m_pCamera->UpdateViewMatrix();
+	}
+	else
+		m_pCamera->UpdateViewMatrix();
+	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 }
 
 // ==============================================================================

@@ -154,11 +154,13 @@ protected:
 
 class CRaytracingTestScene : public CRaytracingScene {
 public:
-	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
+
+	void UpdateObject(float fElapsedTime);
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 };
 

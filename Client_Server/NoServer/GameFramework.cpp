@@ -441,10 +441,10 @@ void CGameFramework::ChangeFullScreenState()
 
 void CGameFramework::InitScene()
 {
-	m_pScene = std::make_unique<TitleScene>();
+	m_pScene = std::make_unique<CRaytracingTestScene>();
 	m_pScene->SetCamera(m_pCamera);
 	m_pScene->SetUp(m_pd3dOutputBuffer, m_pRaytracingPipeline);
-	//bIngame = true;
+	bIngame = true;
 }
 
 LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
