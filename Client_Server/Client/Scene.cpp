@@ -1,5 +1,6 @@
 ﻿#include "Scene.h"
 #include "C_Socket.h"
+
 #include "protocol.h"
 extern C_Socket Client;
 extern std::unordered_map<int, Player> Players;
@@ -389,7 +390,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		if (Client.getstart()) {
 			wOpacity = 0.0f;
 			g_state = GoLoading;		// change g_state
-			//m_nNextScene = SCENE_WINTERLAND;	// 한번만 테스트 성공 해봤지만 계속 터져서 이거 넣어봄
+			
 		}
 		break;
 	}
@@ -1407,7 +1408,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 
 	
-	//Client.SendPlayerReady();
+	Client.SendPlayerReady();
 
 }
 
@@ -1605,16 +1606,22 @@ void CRaytracingWinterLandScene::CreateMonsterSet()
 		m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
 			m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 			m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
-		auto& monster = Monsters[num];
+		auto newMonster = std::make_unique<Monster>(num, MonsterType::Feroptere);		//몬스터 생성 
+		
+		//auto& monster = Monsters[num];
 
-		monster->setRenderingObject(m_vMonsters.back()->getObject());
-		monster->setAnimationManager(m_vMonsters.back()->getAniManager());
+		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
+		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 
 		m_vMonsters[num]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 		//m_vMonsters[num]->getObject()->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
 		m_vMonsters[num]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 
+
+
+		Monsters[num] = std::move(newMonster);
 		num++;
+
 	}
 
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Pistriptere.bin", "src\\texture\\Pistriptere\\", MONSTER);	// 5마리
@@ -1623,15 +1630,16 @@ void CRaytracingWinterLandScene::CreateMonsterSet()
 		m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
 			m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 			m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
-		auto& monster = Monsters[num];
+		auto newMonster = std::make_unique<Monster>(num, MonsterType::Pistiripere);		//몬스터 생성 
+		//auto& monster = Monsters[num];
 
-		monster->setRenderingObject(m_vMonsters.back()->getObject());
-		monster->setAnimationManager(m_vMonsters.back()->getAniManager());
+		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
+		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 
 		m_vMonsters[num]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 		//m_vMonsters[num]->getObject()->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
 		m_vMonsters[num]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
-
+		Monsters[num] = std::move(newMonster);
 		num++;
 	}
 
@@ -1641,14 +1649,16 @@ void CRaytracingWinterLandScene::CreateMonsterSet()
 		m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
 			m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 			m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), false));
-		auto& monster = Monsters[num];
+		auto newMonster = std::make_unique<Monster>(num, MonsterType::RostrokarackLarvae);		//몬스터 생성 
+		
 
-		monster->setRenderingObject(m_vMonsters.back()->getObject());
-		monster->setAnimationManager(m_vMonsters.back()->getAniManager());
+		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
+		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 
 		m_vMonsters[num]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
 		//m_vMonsters[num]->getObject()->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
 		m_vMonsters[num]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+		Monsters[num] = std::move(newMonster);
 
 		num++;
 	}
@@ -1657,14 +1667,17 @@ void CRaytracingWinterLandScene::CreateMonsterSet()
 	m_vMonsters.emplace_back(std::make_unique<Stage1_Monster>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), true));
-	auto& monster = Monsters[num];
 
-	monster->setRenderingObject(m_vMonsters.back()->getObject());
-	monster->setAnimationManager(m_vMonsters.back()->getAniManager());
+	auto newMonster = std::make_unique<Monster>(num, MonsterType::XenokarceBoss);		//몬스터 생성 
+
+	newMonster->setRenderingObject(m_vMonsters.back()->getObject());
+	newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 
 	m_vMonsters[num]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	//m_vMonsters[num]->getObject()->SetPosition(XMFLOAT3(-28.0f + 5.0f * skinnedIndex, 0.0f, -245.0f));
 	m_vMonsters[num]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	Monsters[num] = std::move(newMonster);
+
 }
 
 void CRaytracingWinterLandScene::PrepareTerrainTexture()

@@ -144,10 +144,10 @@ void SESSION::process_packet(char* p) {
             sp.room_number = static_cast<char>(room_num);
 
 			g_server.rooms[room_num].setStage(Stage1);      // Set Stage to Stage1
-            myMutex.lock();
+            //myMutex.lock();
 			g_server.rooms[room_num].SpawnMonsters();       //Monster Spawn
-			g_server.rooms[room_num].StartGame();           //Start Game
-            myMutex.unlock();
+			//g_server.rooms[room_num].StartGame();           //Start Game
+           // myMutex.unlock();
 
             for (int id : g_server.rooms[room_num].id)
                 g_server.users[id]->do_send(&sp);
@@ -157,8 +157,8 @@ void SESSION::process_packet(char* p) {
 
     case C2S_P_READYINGAME: {
         auto* pkt = reinterpret_cast<cs_packet_readytoIngame*>(p);
-        int room_num = pkt->room_number;
-        int local_id = pkt->local_id;
+		int room_num = player->room_num; // 이미 player에 room_num이 설정되어 있음
+		int local_id = player->local_id; // 로컬 ID
 
         Room& room = g_server.rooms[room_num];
         room.setReady(local_id, true);  // ✅ 이 로컬 ID를 true로 표시

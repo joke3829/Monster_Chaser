@@ -12,6 +12,7 @@
 
 extern DXResources g_DxResource;
 
+class Monster;
 class CScene {
 public:
 	virtual ~CScene() {}

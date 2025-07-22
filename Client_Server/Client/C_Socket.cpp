@@ -80,9 +80,11 @@ void C_Socket::SendPickCharacter(const short RoomNum, const short Job)
 
 void C_Socket::SendPlayerReady()
 {
-	cs_packet_ready pkt;
+	cs_packet_readytoIngame pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_READYINGAME;
+	/*pkt.room_number = room_num;
+	pkt.local_id = local_id;*/
 	Client.send_packet(&pkt);
 }
 
@@ -232,23 +234,9 @@ void C_Socket::process_packet(char* ptr)
 		MonsterType type = pkt->monster_type;
 
 		auto& monster = Monsters[pkt->monster_id];
-		if (monster) {
-			//monster->setHP(pkt->hp);
-			monster->setMonsterType(pkt->monster_type);
-			// monster->playIdleAnim(); // 준비됐다면
-		}
-		break;
 		// 이미 있으면 덮어쓰기 방지
-		if (Monsters.find(id) == Monsters.end()) {
-			auto newMonster = std::make_unique<Monster>(id,type);
-			newMonster->setPosition(pkt->pos);			// doyoung's turn
-			newMonster->setMonsterType(pkt->monster_type);
-			//newMonster->setVisible(true);										 // doyoung's turn 보이게 하는거
-			//newMonster->playIdleAnim();											 // doyoung's turn
-
-			Monsters[id] = std::move(newMonster);
-
-
+		if (Monsters.find(id) != Monsters.end()) {
+			Monsters[pkt->monster_id]->setPosition(pkt->pos);
 		}
 		else {
 
@@ -256,6 +244,8 @@ void C_Socket::process_packet(char* ptr)
 		}
 		break;
 	}
+	
+
 	case S2C_P_MONSTER_DIE: {
 		sc_packet_monster_die* pkt = reinterpret_cast<sc_packet_monster_die*>(ptr);
 		int monster_id = pkt->monster_id;
