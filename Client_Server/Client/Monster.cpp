@@ -35,6 +35,26 @@ void Stage1_Monster::Skill2()
 	}
 }
 
+void Stage1_Monster::UpdateObject(float fElapsedTime)
+{
+	bool test = false;
+	if (m_AManager->IsAnimationFinished()) {
+		if (IsBoss()) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
+		}
+		else {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
+		}
+		test = true;
+		m_bSkillActive = false;
+		m_CurrentSkill = 0;
+	}
+
+	if (test) {
+		m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+	}
+}
+
 // ==============================================================
 
 Stage2_Monster::Stage2_Monster(CSkinningObject* obj, CAnimationManager* aManager, bool isBoss)
