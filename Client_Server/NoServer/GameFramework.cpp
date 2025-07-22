@@ -579,17 +579,6 @@ void CGameFramework::Render()
 	m_pScene->Render();
 	// ===========================================
 
-	// Undetermined =============================================================
-	m_pd3dCommandList->Close();
-	m_pd3dCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(m_pd3dCommandList.GetAddressOf()));
-
-	Flush();
-	//m_pScene->TextRender();
-
-	m_pd3dCommandAllocator->Reset();
-	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
-
-	// ==========================================================================
 
 	ID3D12Resource* backBuffer{};
 	m_pdxgiSwapChain->GetBuffer(m_pdxgiSwapChain->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&backBuffer));

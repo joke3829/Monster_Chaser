@@ -12,6 +12,7 @@ struct CB_CAMERA_INFO {
 	float fElapsedTime;
 	int bNormalMapping;	// front 2byte normal, back 2byte albedo
 	int bReflection;
+	int nMapNumber;
 };
 
 class CCamera {
@@ -35,6 +36,8 @@ public:
 	void SetCameraLength(float fLength) { m_fCameraLength = fLength; }
 	void SetHOffset(float height) { m_xmf3hOffset.y = height; }
 	void SetElapsedTimeAndShader(float fElapsedTime, UINT rootParameter);
+
+	void SetMapNumber(int num);
 
 	void toggleNormalMapping()
 	{
