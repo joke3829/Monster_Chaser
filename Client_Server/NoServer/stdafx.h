@@ -26,7 +26,6 @@
 #include <random>
 #include <numeric>
 #include <cmath>
-#include <format>
 
 #include <d3d12.h>
 #include <dxgi1_6.h>

@@ -28,12 +28,9 @@ public:
 
 	// device의 RayTracing 지원 확인
 	void CheckRayTracingSupport();
-	void CreateRootSignature();
-	void SetUpRayTracingPipeline();
 
 	void InitScene();
 
-	void ChangeScreenStateWindow();
 	void ChangeFullScreenState();
 
 	LRESULT CALLBACK WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
@@ -76,19 +73,12 @@ private:
 	ComPtr<ID3D12Resource> m_pd3dOutputBuffer{};
 	ComPtr<ID3D12DescriptorHeap> m_pd3dOutputBufferView{};
 
-	//ComPtr<ID3D12Resource> m_pTextRenderTarget{};
-
 	_TCHAR m_pszFrameRate[50];
 	CGameTimer m_Timer;
 
 	std::unique_ptr<CScene> m_pScene{};
 
 	std::shared_ptr<CCamera> m_pCamera{};
-	//std::shared_ptr<CTextManager> m_pTextManager{};
-
-	ComPtr<ID3D12RootSignature> m_pGlobalRootSignature;
-	ComPtr<ID3D12RootSignature> m_pLocalRootSignature;
-	std::shared_ptr<CRayTracingPipeline> m_pRaytracingPipeline;
 
 	bool bIngame = false;
 };

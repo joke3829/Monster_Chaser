@@ -16,16 +16,10 @@ public:
 
 class CTextManager {
 public:
-	//~CTextManager() { m_pd2d1DeviceContext->SetTarget(nullptr); }
 	void InitManager(ComPtr<ID3D12Resource>& renderTarget);
 
 	//void AddFont(const wchar_t* filePath);
 	void AddText(const wchar_t* fontName, float fontsize, D2D1::ColorF color, const wchar_t* str, float x, float y);
-	size_t getTextListSize() { return m_TextList.size(); }
-
-	void UpdateText(size_t index, const wchar_t* str, float x, float y, bool render);
-	
-	void ResetTextList() { m_TextList.clear(); }
 
 	void Render();
 protected:
@@ -38,8 +32,6 @@ protected:
 	ComPtr<ID2D1Bitmap1>	m_RenderTarget{};
 
 	ComPtr<IDWriteFactory>	m_pdwFactory{};
-
-	ComPtr<ID3D12CommandQueue> m_pTextCmdQuque;
 	std::vector<std::shared_ptr<CTextLayer>>	m_TextList{};
 
 	std::vector<std::wstring>	m_UserFont{};

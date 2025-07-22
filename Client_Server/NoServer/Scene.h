@@ -14,7 +14,7 @@ extern DXResources g_DxResource;
 class CScene {
 public:
 	virtual ~CScene() {}
-	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr) { m_pOutputBuffer = outputBuffer; }
+	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) { m_pOutputBuffer = outputBuffer; }
 	virtual void SetCamera(std::shared_ptr<CCamera>& pCamera) { m_pCamera = pCamera; }
 	virtual void CreateRTVDSV();
 	virtual void CreateOrthoMatrixBuffer();
@@ -29,7 +29,7 @@ public:
 	virtual void Render() {}
 	virtual void PostProcess() {}
 
-	//virtual void TextRender() {}
+	virtual void TextRender() {}
 
 	short getNextSceneNumber() const { return m_nNextScene; }
 
@@ -46,7 +46,7 @@ protected:
 	std::shared_ptr<CCamera>			m_pCamera{};
 
 	ComPtr<ID3D12Resource>					m_cameraCB{};
-	//std::shared_ptr<CTextManager>			m_pTextManager{};
+	std::shared_ptr<CTextManager>			m_pTextManager{};
 	short m_nNextScene = -1;
 };
 
@@ -54,7 +54,7 @@ enum TitleState{Title, RoomSelect, InRoom, SelectC, GoLoading};
 
 class TitleScene : public CScene {
 public:
-	void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr);
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
 
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
@@ -109,7 +109,7 @@ concept HasSkinningObjectInterface = requires(T t) {
 
 class CRaytracingScene : public CScene {
 public:
-	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr) {}
+	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer) {}
 	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
 	virtual void ProcessInput(float fElapsedTime) {};
@@ -122,27 +122,27 @@ public:
 
 	template<typename T, typename U>
 	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
-	bool CheckSphereCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector < std::unique_ptr<U>>& obejct2); 
+	bool CheckSphereCollision(const std::vector<std::unique_ptr<T>>& object1, const std::vector < std::unique_ptr<U>>& obejct2); //1차체??
 
 	template<typename T, typename U>
 	requires (HasGameObjectInterface<T> || HasSkinningObjectInterface<T>) && HasSkinningObjectInterface<U>
-	void CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2); 
+	void CheckOBBCollisions(const std::vector<std::unique_ptr<T>>& object1, const std::vector<std::unique_ptr<U>>& object2); //?��?체크
 
 	void TestCollision(const std::vector<std::unique_ptr<CGameObject>>& mapObjects, const std::vector<std::unique_ptr<CSkinningObject>>& characters);
 	void TestShootCollision(const std::vector<std::unique_ptr<CProjectile>>& Objects, const std::vector<std::unique_ptr<CSkinningObject>>& characters);
 
-	XMFLOAT3 CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere);
-	float CalculateDepth(const BoundingOrientedBox& obb, const BoundingSphere& sphere);
+	XMFLOAT3 CalculateCollisionNormal(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //법선 벡터 구하�?
+	float CalculateDepth(const BoundingOrientedBox& obb, const BoundingSphere& sphere); //침투 깊이 구하�?
 
-	//void CreateRootSignature();
+	void CreateRootSignature();
 	void CreateComputeRootSignature();
 	void CreateComputeShader();
 
 	virtual void PrepareTerrainTexture() {}
 protected:
 
-	//ComPtr<ID3D12RootSignature>							m_pLocalRootSignature{};
-	std::shared_ptr<CRayTracingPipeline>				m_pRaytracingPipeline{};
+	ComPtr<ID3D12RootSignature>							m_pLocalRootSignature{};
+	std::unique_ptr<CRayTracingPipeline>				m_pRaytracingPipeline{};
 	std::unique_ptr<CResourceManager>					m_pResourceManager{};
 	std::unique_ptr<CShaderBindingTableManager>			m_pShaderBindingTable{};
 	std::unique_ptr<CAccelerationStructureManager>		m_pAccelerationStructureManager{};
@@ -177,7 +177,7 @@ enum InGameState{IS_LOADING, IS_GAMING, IS_FINISH};
 // real use scene
 class CRaytracingWinterLandScene : public CRaytracingScene {
 public:
-	void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr);
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
@@ -191,10 +191,7 @@ public:
 	void Render();
 	void PrepareTerrainTexture();
 
-	//void TextRender();
-
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
-	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
 protected:
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};
@@ -211,174 +208,6 @@ protected:
 	// terrainDescriptor
 	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
 	ComPtr<ID3D12Resource>								m_pTerrainCB{};
-
-	// InGame UI ====================================================================
-	std::array<std::vector<std::unique_ptr<UIObject>>, 3>	m_vStatusUIs{};
-	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
-	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
-	std::unique_ptr<UIObject>				m_pShopUI;
-
-	short m_numUser = 1;						// replace
-	std::array<size_t, 3>				m_buffpixelHeight{};
-	std::array<std::array<bool, 3>, 3>	m_BuffState{};	// replace
-	std::array<float, 3> maxHPs;		// replace
-	std::array<float, 3> cHPs;			// replace
-
-	short cItem = 0;		// replace server var
-	bool itemUse{};			// replace server var
-
-	std::array<float, 3> coolTime{};
-	std::array<float, 3> curCTime{};
-
-	float maxMP = 100;			// replace
-	float cMP = 100;			// replace
-
-	UINT m_nGold = 1500;
-
-	size_t ItemNumTextIndex;
-	size_t GoldTextIndex;
-	size_t itemNum[4] = {10, 10, 10, 10};
-
-	bool m_bOpenShop = false;
-
-	void PlayerUISetup(short job);		// player job need
-	// ===============================================================================
-};
-
-// real use scene
-class CRaytracingCaveScene : public CRaytracingScene {
-public:
-	void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr);
-	void ProcessInput(float fElapsedTime);
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-
-	void CreateUIRootSignature();
-	void CreateUIPipelineState();
-
-	void CreateMageCharacter();
-
-	void UpdateObject(float fElapsedTime);
-	void Render();
-
-	//void TextRender();
-
-	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
-	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
-protected:
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
-	std::unique_ptr<CPlayer>							m_pPlayer{};
-
-	unsigned int								m_nSkyboxIndex{};
-
-	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
-	InGameState									m_nState{};
-
-	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
-	float										startTime{};
-	float										wOpacity = 1.0f;
-
-	// InGame UI ====================================================================
-	std::array<std::vector<std::unique_ptr<UIObject>>, 3>	m_vStatusUIs{};
-	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
-	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
-	std::unique_ptr<UIObject>				m_pShopUI;
-
-	short m_numUser = 1;						// replace
-	std::array<size_t, 3>				m_buffpixelHeight{};
-	std::array<std::array<bool, 3>, 3>	m_BuffState{};	// replace
-	std::array<float, 3> maxHPs;		// replace
-	std::array<float, 3> cHPs;			// replace
-
-	short cItem = 0;		// replace server var
-	bool itemUse{};			// replace server var
-
-	std::array<float, 3> coolTime{};
-	std::array<float, 3> curCTime{};
-
-	float maxMP = 100;			// replace
-	float cMP = 100;			// replace
-
-	UINT m_nGold = 1500;
-
-	size_t ItemNumTextIndex;
-	size_t GoldTextIndex;
-	size_t itemNum[4] = { 10, 10, 10, 10 };
-
-	bool m_bOpenShop = false;
-
-	void PlayerUISetup(short job);		// player job need
-	// ===============================================================================
-};
-
-// real use scene
-class CRaytracingETPScene : public CRaytracingScene {
-public:
-	void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr);
-	void ProcessInput(float fElapsedTime);
-	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-
-	void CreateUIRootSignature();
-	void CreateUIPipelineState();
-
-	void CreateMageCharacter();
-
-	void UpdateObject(float fElapsedTime);
-	void Render();
-	void PrepareTerrainTexture();
-
-	//void TextRender();
-
-	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
-protected:
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
-	std::unique_ptr<CPlayer>							m_pPlayer{};
-
-	unsigned int								m_nSkyboxIndex{};
-
-	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
-	InGameState									m_nState{};
-
-	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
-	float										startTime{};
-	float										wOpacity = 1.0f;
-
-	// terrainDescriptor
-	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
-	ComPtr<ID3D12Resource>								m_pTerrainCB{};
-
-	// InGame UI ====================================================================
-	std::array<std::vector<std::unique_ptr<UIObject>>, 3>	m_vStatusUIs{};
-	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
-	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
-	std::unique_ptr<UIObject>				m_pShopUI;
-
-	short m_numUser = 1;						// replace
-	std::array<size_t, 3>				m_buffpixelHeight{};
-	std::array<std::array<bool, 3>, 3>	m_BuffState{};	// replace
-	std::array<float, 3> maxHPs;		// replace
-	std::array<float, 3> cHPs;			// replace
-
-	short cItem = 0;		// replace server var
-	bool itemUse{};			// replace server var
-
-	std::array<float, 3> coolTime{};
-	std::array<float, 3> curCTime{};
-
-	float maxMP = 100;			// replace
-	float cMP = 100;			// replace
-
-	UINT m_nGold = 1500;
-
-	size_t ItemNumTextIndex;
-	size_t GoldTextIndex;
-	size_t itemNum[4] = { 10, 10, 10, 10 };
-
-	bool m_bOpenShop = false;
-
-	void PlayerUISetup(short job);		// player job need
-	// ===============================================================================
 };
 
 

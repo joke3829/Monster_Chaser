@@ -5,8 +5,6 @@
 
 #include "GameFramework.h"
 
-constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
-
 CGameFramework::~CGameFramework()
 {
 	::CloseHandle(m_hFenceHandle);
@@ -32,21 +30,19 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 
 	// RTV, DSV
 	//InitRTVDSV();
+
+	// UAV Buffer
+	if (m_bRayTracingSupport)
+		InitOutputBuffer();
+
+	// Global Variable & Scene Ready
+	
 	g_DxResource.device = m_pd3dDevice.Get();
 	g_DxResource.cmdAlloc = m_pd3dCommandAllocator.Get();
 	g_DxResource.cmdList = m_pd3dCommandList.Get();
 	g_DxResource.cmdQueue = m_pd3dCommandQueue.Get();
 	g_DxResource.fence = m_pd3dFence.Get();
 	g_DxResource.pFenceHandle = &m_hFenceHandle;
-
-	// UAV Buffer
-	if (m_bRayTracingSupport) {
-		InitOutputBuffer();
-		SetUpRayTracingPipeline();
-	}
-
-	// Global Variable & Scene Ready
-	
 
 	// Ready NullResource
 	auto desc = BASIC_BUFFER_DESC;
@@ -99,220 +95,6 @@ void CGameFramework::CheckRayTracingSupport()
 		m_bRayTracingSupport = true;
 		m_bRaster = false;
 	}
-}
-
-void CGameFramework::CreateRootSignature()
-{
-	{
-		// Global Root Signature
-		D3D12_DESCRIPTOR_RANGE rootRange{};								// u0
-		rootRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-		rootRange.NumDescriptors = 1;
-		rootRange.BaseShaderRegister = 0;
-		rootRange.RegisterSpace = 0;
-
-		D3D12_DESCRIPTOR_RANGE cubeMapRange{};							// t3
-		cubeMapRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		cubeMapRange.NumDescriptors = 1;
-		cubeMapRange.BaseShaderRegister = 3;
-		cubeMapRange.RegisterSpace = 0;
-
-		D3D12_DESCRIPTOR_RANGE terrainTRange[2]{};						// b0, space2
-		terrainTRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-		terrainTRange[0].NumDescriptors = 1;
-		terrainTRange[0].BaseShaderRegister = 2;
-		terrainTRange[0].RegisterSpace = 0;
-
-		terrainTRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		terrainTRange[1].NumDescriptors = 13;
-		terrainTRange[1].BaseShaderRegister = 4;
-		terrainTRange[1].RegisterSpace = 0;
-		terrainTRange[1].OffsetInDescriptorsFromTableStart = 1;
-
-		// 0. uavBuffer, 1. AS, 2. camera, 3. Lights, 4. Enviorment(cubeMap), 5. TerrainInfo
-		D3D12_ROOT_PARAMETER params[NUM_G_ROOTPARAMETER] = {};
-		params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;	// u0
-		params[0].DescriptorTable.NumDescriptorRanges = 1;
-		params[0].DescriptorTable.pDescriptorRanges = &rootRange;
-
-		params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;				// t0
-		params[1].Descriptor.RegisterSpace = 0;
-		params[1].Descriptor.ShaderRegister = 0;
-
-		params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;				// b0, space0
-		params[2].Descriptor.RegisterSpace = 0;
-		params[2].Descriptor.ShaderRegister = 0;
-
-		params[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;				// b0, space1
-		params[3].Descriptor.RegisterSpace = 1;
-		params[3].Descriptor.ShaderRegister = 0;
-
-		params[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[4].DescriptorTable.NumDescriptorRanges = 1;
-		params[4].DescriptorTable.pDescriptorRanges = &cubeMapRange;
-
-		params[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[5].DescriptorTable.NumDescriptorRanges = 2;
-		params[5].DescriptorTable.pDescriptorRanges = terrainTRange;
-
-		D3D12_STATIC_SAMPLER_DESC samplerDesc{};								// s0
-		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
-		samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-		samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-		samplerDesc.RegisterSpace = 0;
-		samplerDesc.ShaderRegister = 0;
-		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-		D3D12_ROOT_SIGNATURE_DESC rtDesc{};
-		rtDesc.NumParameters = NUM_G_ROOTPARAMETER;
-		rtDesc.NumStaticSamplers = 1;
-		rtDesc.pParameters = params;
-		rtDesc.pStaticSamplers = &samplerDesc;
-
-		ID3DBlob* pBlob{};
-		D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
-		m_pd3dDevice->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pGlobalRootSignature.GetAddressOf()));
-		pBlob->Release();
-	}
-	{
-		// LocalRootSignature
-		D3D12_DESCRIPTOR_RANGE srvRange[7] = {};
-		srvRange[0].BaseShaderRegister = 2;		// t2, space0
-		srvRange[0].NumDescriptors = 1;
-		srvRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[0].RegisterSpace = 0;
-
-		srvRange[1].BaseShaderRegister = 2;		// t2, space1
-		srvRange[1].NumDescriptors = 1;
-		srvRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[1].RegisterSpace = 1;
-
-		srvRange[2].BaseShaderRegister = 2;		// t2, space2
-		srvRange[2].NumDescriptors = 1;
-		srvRange[2].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[2].RegisterSpace = 2;
-
-		srvRange[3].BaseShaderRegister = 2;		// t2, space3
-		srvRange[3].NumDescriptors = 1;
-		srvRange[3].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[3].RegisterSpace = 3;
-
-		srvRange[4].BaseShaderRegister = 2;		// t2, space4
-		srvRange[4].NumDescriptors = 1;
-		srvRange[4].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[4].RegisterSpace = 4;
-
-		srvRange[5].BaseShaderRegister = 2;		// t2, space5
-		srvRange[5].NumDescriptors = 1;
-		srvRange[5].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[5].RegisterSpace = 5;
-
-		srvRange[6].BaseShaderRegister = 2;		// t2, space6
-		srvRange[6].NumDescriptors = 1;
-		srvRange[6].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		srvRange[6].RegisterSpace = 6;
-
-		D3D12_ROOT_PARAMETER params[17] = {};
-		params[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	// b1, space0
-		params[0].Descriptor.RegisterSpace = 0;
-		params[0].Descriptor.ShaderRegister = 1;
-
-		params[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;	// b1, spcae1
-		params[1].Descriptor.RegisterSpace = 1;
-		params[1].Descriptor.ShaderRegister = 1;
-
-		params[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space0
-		params[2].Descriptor.RegisterSpace = 0;
-		params[2].Descriptor.ShaderRegister = 1;
-
-		params[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space1
-		params[3].Descriptor.RegisterSpace = 1;
-		params[3].Descriptor.ShaderRegister = 1;
-
-		params[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space2
-		params[4].Descriptor.RegisterSpace = 2;
-		params[4].Descriptor.ShaderRegister = 1;
-
-		params[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space3
-		params[5].Descriptor.RegisterSpace = 3;
-		params[5].Descriptor.ShaderRegister = 1;
-
-		params[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space4
-		params[6].Descriptor.RegisterSpace = 4;
-		params[6].Descriptor.ShaderRegister = 1;
-
-		params[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space5
-		params[7].Descriptor.RegisterSpace = 5;
-		params[7].Descriptor.ShaderRegister = 1;
-
-		params[8].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space6
-		params[8].Descriptor.RegisterSpace = 6;
-		params[8].Descriptor.ShaderRegister = 1;
-
-		params[9].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;	// t1, space7
-		params[9].Descriptor.RegisterSpace = 7;
-		params[9].Descriptor.ShaderRegister = 1;
-
-		// texture
-		params[10].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[10].DescriptorTable.NumDescriptorRanges = 1;
-		params[10].DescriptorTable.pDescriptorRanges = &srvRange[0];
-
-		params[11].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[11].DescriptorTable.NumDescriptorRanges = 1;
-		params[11].DescriptorTable.pDescriptorRanges = &srvRange[1];
-
-		params[12].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[12].DescriptorTable.NumDescriptorRanges = 1;
-		params[12].DescriptorTable.pDescriptorRanges = &srvRange[2];
-
-		params[13].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[13].DescriptorTable.NumDescriptorRanges = 1;
-		params[13].DescriptorTable.pDescriptorRanges = &srvRange[3];
-
-		params[14].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[14].DescriptorTable.NumDescriptorRanges = 1;
-		params[14].DescriptorTable.pDescriptorRanges = &srvRange[4];
-
-		params[15].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[15].DescriptorTable.NumDescriptorRanges = 1;
-		params[15].DescriptorTable.pDescriptorRanges = &srvRange[5];
-
-		params[16].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		params[16].DescriptorTable.NumDescriptorRanges = 1;
-		params[16].DescriptorTable.pDescriptorRanges = &srvRange[6];
-
-		D3D12_ROOT_SIGNATURE_DESC rtDesc{};
-		rtDesc.NumParameters = 17;
-		rtDesc.NumStaticSamplers = 0;
-		rtDesc.pParameters = params;
-		rtDesc.pStaticSamplers = nullptr;
-		rtDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE;
-
-		ID3DBlob* pBlob{};
-		D3D12SerializeRootSignature(&rtDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
-		m_pd3dDevice->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_pLocalRootSignature.GetAddressOf()));
-		pBlob->Release();
-	}
-}
-
-void CGameFramework::SetUpRayTracingPipeline()
-{
-	CreateRootSignature();
-
-	m_pRaytracingPipeline = std::make_unique<CRayTracingPipeline>();
-	m_pRaytracingPipeline->Setup(1 + 2 + 1 + 2 + 1 + 1);
-	m_pRaytracingPipeline->AddLibrarySubObject(compiledShader, std::size(compiledShader));
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"HitGroup", L"RadianceClosestHit", L"RadianceAnyHit");
-	m_pRaytracingPipeline->AddHitGroupSubObject(L"ShadowHit", L"ShadowClosestHit", L"ShadowAnyHit");
-	m_pRaytracingPipeline->AddShaderConfigSubObject(8, 20);
-	m_pRaytracingPipeline->AddLocalRootAndAsoociationSubObject(m_pLocalRootSignature.Get());
-	m_pRaytracingPipeline->AddGlobalRootSignatureSubObject(m_pGlobalRootSignature.Get());
-	m_pRaytracingPipeline->AddPipelineConfigSubObject(6);
-	m_pRaytracingPipeline->MakePipelineState();
 }
 
 void CGameFramework::InitCommand()
@@ -403,22 +185,12 @@ void CGameFramework::InitOutputBuffer()
 
 	m_pd3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, nullptr, IID_PPV_ARGS(&m_pd3dOutputBuffer));
 
-	//m_pd3dDevice->CreateCommittedResource(&DEFAULT_HEAP, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_RENDER_TARGET, nullptr, IID_PPV_ARGS(m_pTextRenderTarget.GetAddressOf()));
-
 	D3D12_UNORDERED_ACCESS_VIEW_DESC viewDesc{};
 	viewDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 	viewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	m_pd3dDevice->CreateUnorderedAccessView(m_pd3dOutputBuffer.Get(), nullptr, &viewDesc, m_pd3dOutputBufferView->GetCPUDescriptorHandleForHeapStart());
 
-}
-
-void CGameFramework::ChangeScreenStateWindow()
-{
-	BOOL fullScreenState{};
-	m_pdxgiSwapChain->GetFullscreenState(&fullScreenState, nullptr);
-	if (fullScreenState)
-		ChangeFullScreenState();
 }
 
 void CGameFramework::ChangeFullScreenState()
@@ -441,10 +213,10 @@ void CGameFramework::ChangeFullScreenState()
 
 void CGameFramework::InitScene()
 {
-	m_pScene = std::make_unique<TitleScene>();
+	m_pScene = std::make_unique<CRaytracingParticleTestScene>();
 	m_pScene->SetCamera(m_pCamera);
-	m_pScene->SetUp(m_pd3dOutputBuffer, m_pRaytracingPipeline);
-	//bIngame = true;
+	m_pScene->SetUp(m_pd3dOutputBuffer);
+	bIngame = true;
 }
 
 LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -471,12 +243,20 @@ void CGameFramework::KeyboardProcessing(HWND hWnd, UINT nMessage, WPARAM wParam,
 	case WM_KEYDOWN:
 		switch (wParam) {
 		case VK_ESCAPE: {
-			ChangeScreenStateWindow();
+			BOOL fullScreenState{};
+			m_pdxgiSwapChain->GetFullscreenState(&fullScreenState, nullptr);
+			if (fullScreenState)
+				ChangeFullScreenState();
 			PostQuitMessage(0);
 			break;
 		}
 		case VK_F9:
 			ChangeFullScreenState();
+			break;
+		case 'P':	// Not used
+			if (m_bRayTracingSupport) {
+				m_bRaster = !m_bRaster;
+			}
 			break;
 		default:
 			m_pScene->OnProcessingKeyboardMessage(hWnd, nMessage, wParam, lParam);
@@ -514,25 +294,13 @@ void CGameFramework::ChangeScene(short definedScene)
 		bIngame = false;
 		m_pScene = std::make_unique<TitleScene>();
 		m_pScene->SetCamera(m_pCamera);
-		m_pScene->SetUp(m_pd3dOutputBuffer, m_pRaytracingPipeline);
-		break;
-	case SCENE_PLAIN:
-		bIngame = true;
-		m_pScene = std::make_unique<CRaytracingETPScene>();
-		m_pScene->SetCamera(m_pCamera);
-		m_pScene->SetUp(m_pd3dOutputBuffer, m_pRaytracingPipeline);
+		m_pScene->SetUp(m_pd3dOutputBuffer);
 		break;
 	case SCENE_WINTERLAND:
 		bIngame = true;
 		m_pScene = std::make_unique<CRaytracingWinterLandScene>();
 		m_pScene->SetCamera(m_pCamera);
-		m_pScene->SetUp(m_pd3dOutputBuffer, m_pRaytracingPipeline);
-		break;
-	case SCENE_CAVE:
-		bIngame = true;
-		m_pScene = std::make_unique<CRaytracingCaveScene>();
-		m_pScene->SetCamera(m_pCamera);
-		m_pScene->SetUp(m_pd3dOutputBuffer, m_pRaytracingPipeline);
+		m_pScene->SetUp(m_pd3dOutputBuffer);
 		break;
 	}
 
@@ -569,16 +337,26 @@ void CGameFramework::Render()
 
 	m_pScene->UpdateObject(m_Timer.GetTimeElapsed());
 
-	if (bIngame) {
-		m_pd3dCommandList->SetPipelineState1(m_pRaytracingPipeline->getPipelineState());
-		m_pd3dCommandList->SetComputeRootSignature(m_pGlobalRootSignature.Get());
+	m_pScene->PrepareRender();
 
+	if (bIngame) {
 		m_pd3dCommandList->SetDescriptorHeaps(1, m_pd3dOutputBufferView.GetAddressOf());
 		m_pd3dCommandList->SetComputeRootDescriptorTable(0, m_pd3dOutputBufferView->GetGPUDescriptorHandleForHeapStart());
 	}
 	m_pScene->Render();
 	// ===========================================
 
+	// Undetermined =============================================================
+	m_pd3dCommandList->Close();
+	m_pd3dCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(m_pd3dCommandList.GetAddressOf()));
+
+	Flush();
+	m_pScene->TextRender();
+
+	m_pd3dCommandAllocator->Reset();
+	m_pd3dCommandList->Reset(m_pd3dCommandAllocator.Get(), nullptr);
+
+	// ==========================================================================
 
 	ID3D12Resource* backBuffer{};
 	m_pdxgiSwapChain->GetBuffer(m_pdxgiSwapChain->GetCurrentBackBufferIndex(), IID_PPV_ARGS(&backBuffer));
@@ -590,16 +368,11 @@ void CGameFramework::Render()
 
 	barrier(m_pd3dOutputBuffer.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	barrier(backBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
-	
+
 	backBuffer->Release();
 
 	m_pd3dCommandList->Close();
 	m_pd3dCommandQueue->ExecuteCommandLists(1, reinterpret_cast<ID3D12CommandList**>(m_pd3dCommandList.GetAddressOf()));
-
-	HRESULT hResult = m_pd3dDevice->GetDeviceRemovedReason();
-	if (hResult != S_OK) {
-		hResult = m_pd3dDevice->GetDeviceRemovedReason();
-	}
 
 	Flush();
 
