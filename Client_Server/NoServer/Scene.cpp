@@ -3364,9 +3364,9 @@ void CRaytracingCollisionTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 
 	//Create1StageMinion();
 	//Create1StageBoss();
-	Create2StageMinion();
+	//Create2StageMinion();
 	//Create2StageBoss();
-	//Create3StageBoss();
+	Create3StageBoss();
 	m_pMonster = std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get());
 
 	// Light Read
