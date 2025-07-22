@@ -3365,8 +3365,8 @@ void CRaytracingCollisionTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	//Create1StageMinion();
 	//Create1StageBoss();
 	//Create2StageMinion();
-	//Create2StageBoss();
-	Create3StageBoss();
+	Create2StageBoss();
+	//Create3StageBoss();
 	m_pMonster = std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get());
 
 	// Light Read
@@ -3387,6 +3387,16 @@ void CRaytracingCollisionTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 		for (auto& ma : o->getMaterials())
 			ma.m_bHasEmissiveColor = false;
 	}
+
+	//for (auto& o : skinned[2]->getObjects()) {
+	//	for (auto& ma : o->getMaterials())
+	//		ma.m_bHasEmissiveColor = false;
+	//}
+
+	//for (auto& o : skinned[3]->getObjects()) {
+	//	for (auto& ma : o->getMaterials())
+	//		ma.m_bHasEmissiveColor = false;
+	//}
 
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
@@ -3765,12 +3775,12 @@ void CRaytracingCollisionTestScene::Create2StageMinion()
 
 void CRaytracingCollisionTestScene::Create2StageBoss()
 {
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Rostrokarck.bin", "src\\texture\\Rostrokarck\\", MONSTER);
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Crassorrid.bin", "src\\texture\\Crassorrid\\", MONSTER);
 	m_vMonsters.emplace_back(std::make_unique<Stage2_Monster>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get(), true));
 
-	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[0]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
 	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
