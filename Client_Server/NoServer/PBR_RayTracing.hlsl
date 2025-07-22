@@ -19,6 +19,7 @@
 #define SPOT_LIGHT                  2
 
 
+
 struct RadiancePayload
 {
     float4 RayColor;
@@ -38,6 +39,7 @@ struct CameraInfo
     float fElapsedTime;
     int bNormalMapping;
     int bReflection;
+    int nMapNumber;         // 0 title(No Used), 1 ETP, 2. Cave, 3. WinterLand
 };
 
 // 0 == false, 1 == true
@@ -344,8 +346,9 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
     float NdotV = saturate(dot(N, V));
     float3 Wpos = GetWorldPosition();
     float3 finalColor = float3(0.0, 0.0, 0.0);
-    float F;
+    float F; //= GetFresnelusingSchlick(R0, NdotV);
     float metallic;
+    bool checkFirst = true;
     bool isShadow = false;
     float shadowFactor;
     float s;
@@ -367,7 +370,16 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                         shadowRay.TMax = 500.0f;
                         isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
                         if (0 != g_CameraInfo.bReflection)
-                            shadowFactor = isShadow ? 0.0f : 1.0f;
+                        {
+                            switch(g_CameraInfo.nMapNumber){
+                            case 2:
+                                shadowFactor = isShadow ? 0.5f : 1.0f;
+                                break;
+                            default:
+                                shadowFactor = isShadow ? 0.25f : 1.0f;
+                                break;
+                            }
+                        }
                         else
                             shadowFactor = isShadow ? 0.25f : 1.0f;
                         //float intense = (g_Lights.lights[i].Intensity > 2.5f) ? 2.5f : g_Lights.lights[i].Intensity;
@@ -412,7 +424,17 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                             shadowRay.TMax = dis;
                             isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
                             if (0 != g_CameraInfo.bReflection)
-                                shadowFactor = isShadow ? 0.0f : 1.0f;
+                            {
+                                switch (g_CameraInfo.nMapNumber)
+                                {
+                                    case 2:
+                                        shadowFactor = isShadow ? 0.5f : 1.0f;
+                                        break;
+                                    default:
+                                        shadowFactor = isShadow ? 0.25f : 1.0f;
+                                        break;
+                                }
+                            }
                             else
                                 shadowFactor = isShadow ? 0.25f : 1.0f;
                             float3 rs = float3(0.0, 0.0, 0.0);
@@ -462,7 +484,17 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
                             shadowRay.TMax = dis;
                             isShadow = CheckTheShadow(shadowRay, payload.RayDepth);
                             if (0 != g_CameraInfo.bReflection)
-                                shadowFactor = isShadow ? 0.0f : 1.0f;
+                            {
+                                switch (g_CameraInfo.nMapNumber)
+                                {
+                                    case 2:
+                                        shadowFactor = isShadow ? 0.5f : 1.0f;
+                                        break;
+                                    default:
+                                        shadowFactor = isShadow ? 0.25f : 1.0f;
+                                        break;
+                                }
+                            }
                             else
                                 shadowFactor = isShadow ? 0.25f : 1.0f;
                             float3 rs = float3(0.0, 0.0, 0.0);
@@ -485,19 +517,22 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N,in float rou
     if (g_CameraInfo.bReflection)
     {
         float4 ReflectColor = float4(0.0, 0.0, 0.0, 0.0);
-        if (payload.RayDepth <= 1)
+        float reflectWeight = saturate(F * (1.0 - roughness) + 0.05);
+        float distanceFalloff = saturate(1.0 - (RayTCurrent() / 200.0) + 0.05);
+        reflectWeight *= distanceFalloff;
+        if (payload.RayDepth <= 1 && reflectWeight >= 0.5)
         {
             RayDesc rRay;
             rRay.Direction = reflect(WorldRayDirection(), N);
             rRay.Origin = GetWorldPosition();
             rRay.TMin = 0.001f;
-            rRay.TMax = 600.0f;
+            rRay.TMax = 300.0f;
     
             ReflectColor = TraceRadianceRay(rRay, payload.RayDepth);
         }
         
         if (g_CameraInfo.bNormalMapping & 0x0000FFFF)
-            return finalColor + (ReflectColor.rgb * F);
+            return finalColor + (ReflectColor.rgb * reflectWeight);
         else
             return (float3(0.6, 0.6, 0.6) * 0.2) + finalColor;
     }
