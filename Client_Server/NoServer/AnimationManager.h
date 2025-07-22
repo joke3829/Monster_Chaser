@@ -91,7 +91,7 @@ protected:
 class CPlayableCharacterAnimationManager : public CAnimationManager {
 public:
 	CPlayableCharacterAnimationManager(std::ifstream& inFile) : CAnimationManager(inFile) {}
-	CPlayableCharacterAnimationManager(const CPlayableCharacterAnimationManager& other) {}
+	CPlayableCharacterAnimationManager(const CPlayableCharacterAnimationManager& other) : CAnimationManager(other){}
 
 	virtual void StartCombo() {}
 	virtual void OnAttackInput() {}
@@ -169,7 +169,7 @@ public:
 class CMonsterManager : public CPlayableCharacterAnimationManager {
 public:
 	CMonsterManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile) {}
-	CMonsterManager(const CMonsterManager& other) {}
+	CMonsterManager(const CMonsterManager& other) : CPlayableCharacterAnimationManager(other){}
 
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
 	{
