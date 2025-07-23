@@ -678,26 +678,38 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 
 void CPlayerMage::MakeBullet(float speed, int skill)
 {
-	XMFLOAT3 cameraDir = m_pCamera->getDir();
-	if (!bullet.empty()) {
-		CProjectile* projectile = bullet[currentBullet].get();
-		if (projectile && !projectile->getActive()) {
-			if (skill == 1) {
-				projectile->setPosition(m_Object->getPosition());
-				projectile->setMoveDirection(XMFLOAT3(cameraDir.x, 0.0f, cameraDir.z));
-			}
-			else if (skill == 2) {
-				XMFLOAT3 pos = m_Object->getPosition();
-				pos.y += 50.0f;
-				projectile->setPosition(pos,2);
-				projectile->setMoveDirection(XMFLOAT3(cameraDir.x, -0.4f, cameraDir.z));
-				projectile->getObjects().SetScale(XMFLOAT3(10.0f, 10.0f, 10.0f));
-			}
-			projectile->setSpeed(speed);
-			projectile->setActive(true);
-			currentBullet = (currentBullet + 1) % bullet.size();
-		}
+	if (bullet.empty()) {
+		return;
 	}
+
+	size_t startIndex = currentBullet;
+	CProjectile* projectile = nullptr;
+	do {
+		projectile = bullet[currentBullet].get();
+		if (!projectile->getActive()) {
+			break;
+		}
+	} while (currentBullet != startIndex);
+
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	projectile->setSpeed(speed);
+	projectile->setLifetime(0.0f);
+	projectile->setTime(0.0f);
+
+	if (skill == 1) {
+		projectile->setPosition(m_Object->getPosition());
+		projectile->setMoveDirection({ cameraDir.x, 0.0f, cameraDir.z });
+		projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
+	}
+	else if (skill == 2) {
+		DirectX::XMFLOAT3 pos = m_Object->getPosition();
+		pos.y += 40.0f;
+		projectile->setPosition(pos, 2);
+		projectile->setMoveDirection({ cameraDir.x, -0.4f, cameraDir.z });
+		projectile->getObjects().SetScale({ 10.0f, 10.0f, 10.0f });
+	}
+	projectile->setActive(true);
+	currentBullet = (currentBullet + 1) % bullet.size();
 }
 
 // =======================================================================================
@@ -2354,17 +2366,30 @@ void CPlayerPriest::UpdateObject(float fElapsedTime)
 
 void CPlayerPriest::MakeBullet(float speed, int skill)
 {
-	XMFLOAT3 cameraDir = m_pCamera->getDir();
-	if (!bullet.empty()) {
-		CProjectile* projectile = bullet[currentBullet].get();
-		if (projectile && !projectile->getActive()) {
-			projectile->setPosition(m_Object->getPosition());
-			projectile->setMoveDirection(XMFLOAT3(cameraDir.x, 0.0f, cameraDir.z));
-			projectile->setSpeed(speed);
-			projectile->setActive(true);
-			currentBullet = (currentBullet + 1) % bullet.size();
-		}
+	if (bullet.empty()) {
+		return;
 	}
+
+	size_t startIndex = currentBullet;
+	CProjectile* projectile = nullptr;
+	do {
+		projectile = bullet[currentBullet].get();
+		if (!projectile->getActive()) {
+			break;
+		}
+		currentBullet = (currentBullet + 1) % bullet.size();
+	} while (currentBullet != startIndex);
+
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	projectile->setSpeed(speed);
+	projectile->setLifetime(0.0f);
+	projectile->setTime(0.0f);
+	projectile->setPosition(m_Object->getPosition());
+	projectile->setMoveDirection({ cameraDir.x, 0.0f, cameraDir.z });
+	projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
+	projectile->setActive(true);
+
+	currentBullet = (currentBullet + 1) % bullet.size();
 }
 
 // =======================================================================================

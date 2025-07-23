@@ -2340,6 +2340,22 @@ void CRaytracingWinterLandScene::CreatePriestCharacter()
 	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	CPlayerPriest* mage = dynamic_cast<CPlayerPriest*>(m_vPlayers.back().get());
+	Material sharedMaterial;
+
+	for (int i = 0; i < 20; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		mage->GetBullets().push_back(std::move(projectile));
+	}
 }
 
 void CRaytracingWinterLandScene::Create_Gorhorrid()
@@ -3338,6 +3354,22 @@ void CRaytracingCaveScene::CreatePriestCharacter()
 	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	CPlayerPriest* mage = dynamic_cast<CPlayerPriest*>(m_vPlayers.back().get());
+	Material sharedMaterial;
+
+	for (int i = 0; i < 20; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		mage->GetBullets().push_back(std::move(projectile));
+	}
 }
 
 void CRaytracingCaveScene::Create_Limadon()
@@ -4202,6 +4234,22 @@ void CRaytracingETPScene::CreatePriestCharacter()
 	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	CPlayerPriest* mage = dynamic_cast<CPlayerPriest*>(m_vPlayers.back().get());
+	Material sharedMaterial;
+
+	for (int i = 0; i < 20; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		mage->GetBullets().push_back(std::move(projectile));
+	}
 }
 
 void CRaytracingETPScene::Create_Feroptere()
