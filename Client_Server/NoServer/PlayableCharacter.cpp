@@ -745,14 +745,14 @@ void CPlayerWarrior::Skill3()
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 characterDir = cameraDir;
 	characterDir.y = 0.0f; // delete y value
-	//m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL3_1), true);
-	m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL3_2), true);
+	m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL3_1), true);
+	//m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL3_2), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
 	m_CurrentSkill = 3;
-	//m_Damage = 3200.0f; //1
-	m_Damage = 600.0f; //2
+	m_Damage = 3200.0f; //1
+	//m_Damage = 600.0f; //2
 }
 
 void CPlayerWarrior::Attacked(float damage)
