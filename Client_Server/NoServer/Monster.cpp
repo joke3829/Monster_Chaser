@@ -939,26 +939,51 @@ void CMonster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 	m_pMonsterObject->ProcessInput(keyBuffer, fElapsedTime);
 }
 
-void CMonster::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime)
+void CMonster::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum)
 {
-	CSkinningObject* p = m_pMonsterObject->getObject();
-	XMFLOAT4X4& playerWorld = p->getWorldMatrix();
-	XMFLOAT4X4& playerPreWorld = p->getPreWorldMatrix();
-	XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
+	CSkinningObject* m = m_pMonsterObject->getObject();
+	XMFLOAT4X4& monsterWorld = m->getWorldMatrix();
+	XMFLOAT4X4& monsterPreWorld = m->getPreWorldMatrix();
+	XMFLOAT4X4& objectWorld = m->getObjects()[0]->getWorldMatrix();
 	float fy = objectWorld._42 - (30 * fElapsedTime);
 
-	float terrainHeight = heightmap->GetHeightinWorldSpace(objectWorld._41 + 1024.0f, objectWorld._43 + 1024.0f);
-	if (objectWorld._43 >= -500.0f) {
-		if (terrainHeight < 10.0f) {
-			terrainHeight = 10.0f;
+	float terrainHeight = heightmap->GetHeightinWorldSpace(objectWorld._41 - offsetx, objectWorld._43 - offsetz);
+	switch (mapNum) {
+	case SCENE_WINTERLAND:
+		if (objectWorld._43 >= -500.0f) {
+			if (terrainHeight < 10.0f) {
+				terrainHeight = 10.0f;
+			}
 		}
+		break;
 	}
-	if (fy < terrainHeight)
-		playerWorld._42 = terrainHeight;
+	if (fy < terrainHeight + offsety)
+		monsterWorld._42 = terrainHeight + offsety;
 	else
-		playerWorld._42 -= (30 * fElapsedTime);
-	p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
-	playerPreWorld._42 = playerWorld._42;
+		monsterWorld._42 -= (30 * fElapsedTime);
+	m->SetPosition(XMFLOAT3(monsterWorld._41, monsterWorld._42, monsterWorld._43));
+	monsterPreWorld._42 = monsterWorld._42;
+}
+
+void CMonster::CollisionCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum)
+{
+	CSkinningObject* m = m_pMonsterObject->getObject();
+	XMFLOAT4X4& monsterWorld = m->getWorldMatrix();
+	XMFLOAT4X4& monsterPreWorld = m->getPreWorldMatrix();
+	XMFLOAT4X4& objectWorld = m->getObjects()[0]->getWorldMatrix();
+
+	float terrainHeight = heightmap->GetHeightinWorldSpace(objectWorld._41 - offsetx, objectWorld._43 - offsetz);
+
+	if (terrainHeight > 0.0) {
+		XMFLOAT3 pushdir(m_xmf2PrevPos.x - objectWorld._41, 0.0, m_xmf2PrevPos.y - objectWorld._43);
+		monsterWorld._41 += pushdir.x; monsterWorld._43 += pushdir.z;
+		monsterPreWorld._41 += pushdir.x; monsterPreWorld._43 += pushdir.z;
+		objectWorld._41 += pushdir.x; objectWorld._43 += pushdir.z;
+	}
+	else
+		m_xmf2PrevPos.x = objectWorld._41; m_xmf2PrevPos.y = objectWorld._43;
+
+	m->SetPosition(XMFLOAT3(monsterWorld._41, monsterWorld._42, monsterWorld._43));
 }
 
 // ==================================================

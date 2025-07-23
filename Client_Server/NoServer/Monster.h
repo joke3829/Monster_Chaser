@@ -265,8 +265,10 @@ public:
 	CAnimationManager* getAniManager() { return m_pMonsterObject->getAniManager(); }
 
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
-	void HeightCheck(CHeightMapImage* heightmap, float fElapsedTime);
+
+	void HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
+	void CollisionCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
 protected:
 	CPlayableCharacter* m_pMonsterObject{};
-
+	XMFLOAT2 m_xmf2PrevPos{};
 };

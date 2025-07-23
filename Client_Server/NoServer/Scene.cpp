@@ -2373,6 +2373,8 @@ void CRaytracingWinterLandScene::Create_Gorhorrid()
 	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
 	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
 	for (auto& s : m_vMonsters[0]->getObject()->getObjects())
 	{
 		if (s->getFrameName() == "Gorhorrid_Tongue_8")
@@ -2611,6 +2613,10 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	}
 
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+
+	m_pMonsters[0]->HeightCheck(m_pHeightMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	m_pMonsters[0]->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 	
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
@@ -3048,7 +3054,7 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	// Copy(normalObject) & SetPreMatrix ===============================
 
 	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 0.0f));
+	skinned[0]->SetPosition(XMFLOAT3(94.0f, 0.0f, 84.0f));
 
 	// ==============================================================================
 
@@ -3384,8 +3390,36 @@ void CRaytracingCaveScene::Create_Limadon()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 0.0f));
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-18.0f, 0.0f, -15.5f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(00.0f, 70.0f, 00.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	auto& newSkinningObject = m_pResourceManager->getSkinningObjectList().back();
+	newSkinningObject->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
+
+	auto* sourceManager = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
+	auto* monsterManager = dynamic_cast<CMonsterManager*>(sourceManager);
+	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager));
+	auto& newAnimationManager = m_pResourceManager->getAnimationManagers().back();
+
+	newAnimationManager->SetFramesPointerFromSkinningObject(newSkinningObject->getObjects());
+	newAnimationManager->MakeAnimationMatrixIndex(newSkinningObject.get());
+
+	m_vMonsters.emplace_back(std::make_unique<Limadon>(newSkinningObject.get(), newAnimationManager.get()));
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-152.1f, 0.0f, 246.3f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 130.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	for (auto& o : newSkinningObject->getObjects()) {
+		for (auto& ma : o->getMaterials()) {
+			ma.m_bHasEmissiveColor = false;
+		}
+	}
 }
 
 void CRaytracingCaveScene::Create_Fulgurodonte()
@@ -3401,8 +3435,10 @@ void CRaytracingCaveScene::Create_Fulgurodonte()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(2.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-20.0f, 0.0f, 0.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-160.0f, 0.0f, 78.6f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 
 	auto& mon = m_vMonsters[m_vMonsters.size() - 1];
 
@@ -3430,6 +3466,88 @@ void CRaytracingCaveScene::Create_Fulgurodonte()
 
 		monster->GetBullets().push_back(std::move(projectile));
 	}
+
+	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	auto& newSkinningObject = m_pResourceManager->getSkinningObjectList().back();
+	newSkinningObject->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
+
+	auto* sourceManager = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
+	auto* monsterManager = dynamic_cast<CMonsterManager*>(sourceManager);
+	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager));
+	auto& newAnimationManager = m_pResourceManager->getAnimationManagers().back();
+
+	newAnimationManager->SetFramesPointerFromSkinningObject(newSkinningObject->getObjects());
+	newAnimationManager->MakeAnimationMatrixIndex(newSkinningObject.get());
+
+	m_vMonsters.emplace_back(std::make_unique<Fulgurodonte>(newSkinningObject.get(), newAnimationManager.get()));
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(2.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-128.6f, 0.0f, 272.8f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 220.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	for (auto& o : newSkinningObject->getObjects()) {
+		for (auto& ma : o->getMaterials()) {
+			ma.m_bHasEmissiveColor = false;
+		}
+	}
+
+	//m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.4f, "sphere"));
+	meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	monster = dynamic_cast<Fulgurodonte*>(m_vMonsters.back().get());
+
+	for (int i = 0; i < 9; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		monster->GetBullets().push_back(std::move(projectile));
+	}
+
+	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	auto& newSkinningObject1 = m_pResourceManager->getSkinningObjectList().back();
+	newSkinningObject1->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
+
+	auto* sourceManager1 = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
+	auto* monsterManager1 = dynamic_cast<CMonsterManager*>(sourceManager1);
+	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager1));
+	auto& newAnimationManager1 = m_pResourceManager->getAnimationManagers().back();
+
+	newAnimationManager1->SetFramesPointerFromSkinningObject(newSkinningObject1->getObjects());
+	newAnimationManager1->MakeAnimationMatrixIndex(newSkinningObject1.get());
+
+	m_vMonsters.emplace_back(std::make_unique<Fulgurodonte>(newSkinningObject1.get(), newAnimationManager1.get()));
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(2.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-92.0f, 0.0f, 376.5f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	for (auto& o : newSkinningObject1->getObjects()) {
+		for (auto& ma : o->getMaterials()) {
+			ma.m_bHasEmissiveColor = false;
+		}
+	}
+
+	//m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.4f, "sphere"));
+	meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	monster = dynamic_cast<Fulgurodonte*>(m_vMonsters.back().get());
+
+	for (int i = 0; i < 9; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		monster->GetBullets().push_back(std::move(projectile));
+	}
 }
 
 void CRaytracingCaveScene::Create_Occisodonte()
@@ -3445,8 +3563,36 @@ void CRaytracingCaveScene::Create_Occisodonte()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-10.0f, 0.0f, 00.0f));
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 21.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 110.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	auto& newSkinningObject = m_pResourceManager->getSkinningObjectList().back();
+	newSkinningObject->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
+
+	auto* sourceManager = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
+	auto* monsterManager = dynamic_cast<CMonsterManager*>(sourceManager);
+	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager));
+	auto& newAnimationManager = m_pResourceManager->getAnimationManagers().back();
+
+	newAnimationManager->SetFramesPointerFromSkinningObject(newSkinningObject->getObjects());
+	newAnimationManager->MakeAnimationMatrixIndex(newSkinningObject.get());
+
+	m_vMonsters.emplace_back(std::make_unique<Occisodonte>(newSkinningObject.get(), newAnimationManager.get()));
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-97.0f, 0.0f, 315.3f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 270.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	for (auto& o : newSkinningObject->getObjects()) {
+		for (auto& ma : o->getMaterials()) {
+			ma.m_bHasEmissiveColor = false;
+		}
+	}
 }
 
 void CRaytracingCaveScene::Create_Crassorrid()
@@ -3462,8 +3608,10 @@ void CRaytracingCaveScene::Create_Crassorrid()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(4.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 20.0f));
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(0.5f, 0.0f, 362.8f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 270.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 }
 
 void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
@@ -3513,6 +3661,12 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 
 	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
+
+	for (auto& m : m_pMonsters)
+	{
+		m->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
+		m->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
+	}
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
@@ -4263,22 +4417,38 @@ void CRaytracingETPScene::Create_Feroptere()
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
 	for (auto& o : m_pResourceManager->getSkinningObjectList().back()->getObjects()) {
 		for (auto& ma : o->getMaterials())
 			ma.m_bHasEmissiveColor = false;
 	}
 
-	//m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	//m_pResourceManager->getSkinningObjectList()[2]->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[1].get());
-	//m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CAnimationManager>(*m_pResourceManager->getAnimationManagers()[1].get()));
-	//m_pResourceManager->getAnimationManagers()[2]->SetFramesPointerFromSkinningObject(m_pResourceManager->getSkinningObjectList()[2]->getObjects());
-	//m_pResourceManager->getAnimationManagers()[2]->MakeAnimationMatrixIndex(m_pResourceManager->getSkinningObjectList()[2].get());
-	//
-	//m_vMonsters.emplace_back(std::make_unique<Feroptere>(m_vMonsters.back()->getObject(), m_vMonsters.back()->getAniManager()));
-	//
-	//m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	//m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-48.0f, 0.0f, -245.0f));
-	//m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	auto& newSkinningObject = m_pResourceManager->getSkinningObjectList().back();
+	newSkinningObject->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
+
+	auto* sourceManager = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
+	auto* monsterManager = dynamic_cast<CMonsterManager*>(sourceManager);
+	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager));
+	auto& newAnimationManager = m_pResourceManager->getAnimationManagers().back();
+
+	newAnimationManager->SetFramesPointerFromSkinningObject(newSkinningObject->getObjects());
+	newAnimationManager->MakeAnimationMatrixIndex(newSkinningObject.get());
+
+	m_vMonsters.emplace_back(std::make_unique<Feroptere>(newSkinningObject.get(), newAnimationManager.get()));
+
+	m_vMonsters.back()->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters.back()->getObject()->SetPosition(XMFLOAT3(-50.0f, 0.0f, 50.0f));
+	m_vMonsters.back()->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	for (auto& o : newSkinningObject->getObjects()) {
+		for (auto& ma : o->getMaterials()) {
+			ma.m_bHasEmissiveColor = false;
+		}
+	}
 }
 
 void CRaytracingETPScene::Create_Pistriptere()
@@ -4296,6 +4466,8 @@ void CRaytracingETPScene::Create_Pistriptere()
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(30.0f, 0.0f, 0.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 }
 
 void CRaytracingETPScene::Create_RostrokarckLarvae()
@@ -4313,6 +4485,8 @@ void CRaytracingETPScene::Create_RostrokarckLarvae()
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 0.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 }
 
 void CRaytracingETPScene::Create_Xenokarce()
@@ -4330,6 +4504,8 @@ void CRaytracingETPScene::Create_Xenokarce()
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-40.0f, 0.0f, 40.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 }
 
 void CRaytracingETPScene::PrepareTerrainTexture()
@@ -4545,6 +4721,12 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 	}
 
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+
+	for (auto& m : m_pMonsters)
+	{
+		//m->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
+		m->HeightCheck(m_pHeightMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+	}
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();

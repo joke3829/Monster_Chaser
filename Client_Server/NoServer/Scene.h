@@ -148,7 +148,7 @@ protected:
 	std::unique_ptr<CPlayer>							m_pPlayer{};
 
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
-	std::unique_ptr<CMonster>							m_pMonster{};
+	std::vector<std::unique_ptr<CMonster>>							m_pMonsters{};
 
 	//ComPtr<ID3D12RootSignature>							m_pLocalRootSignature{};
 	std::shared_ptr<CRayTracingPipeline>				m_pRaytracingPipeline{};
