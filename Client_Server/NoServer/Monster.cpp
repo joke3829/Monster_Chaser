@@ -383,6 +383,9 @@ void Fulgurodonte::Skill2()
 					XMFLOAT3 spreadDirection(lookDirection.x * cos(rad) - lookDirection.z * sin(rad), -0.10f, lookDirection.x * sin(rad) + lookDirection.z * cos(rad));
 
 					projectile->setMoveDirection(spreadDirection);
+					projectile->setLifetime(3.0f);
+					projectile->setTime(0.0f);
+					projectile->getObjects().SetRenderState(true);
 					projectile->setActive(true);
 					currentBullet = (currentBullet + 1) % bullet.size();
 				}
@@ -839,6 +842,9 @@ void Gorhorrid::Skill3()
 					XMFLOAT3 spreadDirection(lookDirection.x * cos(rad) - lookDirection.z * sin(rad), -0.15f , lookDirection.x * sin(rad) + lookDirection.z * cos(rad));
 
 					projectile->setMoveDirection(spreadDirection);
+					projectile->setLifetime(3.0f);
+					projectile->setTime(0.0f);
+					projectile->getObjects().SetRenderState(true);
 					projectile->setActive(true);
 					currentBullet = (currentBullet + 1) % bullet.size();
 				}

@@ -693,7 +693,7 @@ void CPlayerMage::MakeBullet(float speed, int skill)
 
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	projectile->setSpeed(speed);
-	projectile->setLifetime(0.0f);
+	projectile->setLifetime(3.0f);
 	projectile->setTime(0.0f);
 
 	if (skill == 1) {
@@ -709,6 +709,7 @@ void CPlayerMage::MakeBullet(float speed, int skill)
 		projectile->getObjects().SetScale({ 10.0f, 10.0f, 10.0f });
 	}
 	projectile->setActive(true);
+	projectile->getObjects().SetRenderState(true);
 	currentBullet = (currentBullet + 1) % bullet.size();
 }
 
@@ -2382,12 +2383,13 @@ void CPlayerPriest::MakeBullet(float speed, int skill)
 
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	projectile->setSpeed(speed);
-	projectile->setLifetime(0.0f);
+	projectile->setLifetime(3.0f);
 	projectile->setTime(0.0f);
 	projectile->setPosition(m_Object->getPosition());
 	projectile->setMoveDirection({ cameraDir.x, 0.0f, cameraDir.z });
 	projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
 	projectile->setActive(true);
+	projectile->getObjects().SetRenderState(true);
 
 	currentBullet = (currentBullet + 1) % bullet.size();
 }
