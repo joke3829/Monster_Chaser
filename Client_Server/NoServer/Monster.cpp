@@ -3,8 +3,9 @@
 Feroptere::Feroptere(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
-	m_HP = 5000;
+	m_HP = 15000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
+	m_Damage = 100.0f;
 }
 
 void Feroptere::Skill1()
@@ -52,7 +53,7 @@ void Feroptere::UpdateObject(float fElapsedTime)
 		switch (getCurrentSkill())
 		{
 		case 1:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			if (getAniManager()->IsAnimationInTimeRange(0.4f, 0.6f))
 			{
 				m_bCheckAC = true;
 			}
@@ -61,13 +62,29 @@ void Feroptere::UpdateObject(float fElapsedTime)
 	}
 }
 
+void Feroptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_bSkillActive) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_bSkillActive) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
 // ==================================================
 
 Pistriptere::Pistriptere(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
-	m_HP = 5000;
+	m_HP = 15000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
+	m_Damage = 100.0f;
 }
 
 void Pistriptere::Skill1()
@@ -115,7 +132,7 @@ void Pistriptere::UpdateObject(float fElapsedTime)
 		switch (getCurrentSkill())
 		{
 		case 1:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			if (getAniManager()->IsAnimationInTimeRange(0.4f, 0.6f) || getAniManager()->IsAnimationInTimeRange(1.1f, 1.3f))
 			{
 				m_bCheckAC = true;
 			}
@@ -124,13 +141,29 @@ void Pistriptere::UpdateObject(float fElapsedTime)
 	}
 }
 
+void Pistriptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_bSkillActive) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_bSkillActive) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
 // ==================================================
 
 RostrokarckLarvae::RostrokarckLarvae(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
-	m_HP = 5000;
+	m_HP = 15000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
+	m_Damage = 100.0f;
 }
 
 void RostrokarckLarvae::Skill1()
@@ -178,7 +211,7 @@ void RostrokarckLarvae::UpdateObject(float fElapsedTime)
 		switch (getCurrentSkill())
 		{
 		case 1:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			if (getAniManager()->IsAnimationInTimeRange(0.1f, 0.3f))
 			{
 				m_bCheckAC = true;
 			}
@@ -187,12 +220,27 @@ void RostrokarckLarvae::UpdateObject(float fElapsedTime)
 	}
 }
 
+void RostrokarckLarvae::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_bSkillActive) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_bSkillActive) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
 // ==================================================
 
 Xenokarce::Xenokarce(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
-	m_HP = 15000;
+	m_HP = 40000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
 }
 
@@ -214,7 +262,7 @@ void Xenokarce::Skill2()
 		//m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f)); //어디 보는지
 		m_AManager->UpdateAniPosition(0.0f, m_Object);
 		m_bSkillActive = true;
-		m_CurrentSkill = 1;
+		m_CurrentSkill = 2;
 	}
 }
 
@@ -252,12 +300,15 @@ void Xenokarce::UpdateObject(float fElapsedTime)
 		switch (getCurrentSkill())
 		{
 		case 1:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			m_Damage = 200.0f;
+			if (getAniManager()->IsAnimationInTimeRange(0.4f, 0.6f) || getAniManager()->IsAnimationInTimeRange(1.0f, 1.2f))
 			{
 				m_bCheckAC = true;
 			}
+			break;
 		case 2:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			m_Damage = 230.0f;
+			if (getAniManager()->IsAnimationInTimeRange(0.7f, 0.9f))
 			{
 				m_bCheckAC = true;
 			}
@@ -266,13 +317,32 @@ void Xenokarce::UpdateObject(float fElapsedTime)
 	}
 }
 
+void Xenokarce::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_bSkillActive) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_bSkillActive) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+		if ((keyBuffer['X'] & 0x80) && !(m_PrevKeyBuffer['X'] & 0x80)) {
+			Skill2();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
 // ==================================================
 
 Fulgurodonte::Fulgurodonte(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
-	m_HP = 7000;
+	m_HP = 30000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
+	m_Damage = 150.0f;
 }
 
 void Fulgurodonte::Skill1()
@@ -294,6 +364,30 @@ void Fulgurodonte::Skill2()
 		m_AManager->UpdateAniPosition(0.0f, m_Object);
 		m_bSkillActive = true;
 		m_CurrentSkill = 2;
+		if (!bullet.empty()) {
+			const int numProjectiles = 3;
+			const float spreadAngle = 15.0f;
+			float startAngle = -spreadAngle / 2.0f;
+			float angleStep = spreadAngle / (numProjectiles - 1);
+			XMFLOAT3 pos = XMFLOAT3(m_Head->getWorldMatrix()._41, m_Head->getWorldMatrix()._42, m_Head->getWorldMatrix()._43);
+
+			for (int i = 0; i < numProjectiles && !bullet.empty(); ++i) {
+				CProjectile* projectile = bullet[currentBullet].get();
+				projectile->getObjects().SetScale(XMFLOAT3(2.5f, 2.5f, 2.5f));
+				if (projectile && !projectile->getActive()) {
+					projectile->setPosition(pos, 2);
+
+					XMFLOAT3 lookDirection = m_Object->getLook();
+					float angle = startAngle + (i * angleStep);
+					float rad = angle * (3.14159265359f / 180.0f);
+					XMFLOAT3 spreadDirection(lookDirection.x * cos(rad) - lookDirection.z * sin(rad), -0.10f, lookDirection.x * sin(rad) + lookDirection.z * cos(rad));
+
+					projectile->setMoveDirection(spreadDirection);
+					projectile->setActive(true);
+					currentBullet = (currentBullet + 1) % bullet.size();
+				}
+			}
+		}
 	}
 }
 
@@ -328,15 +422,17 @@ void Fulgurodonte::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
+		for (auto& bulletPtr : bullet) {
+			if (bulletPtr->getActive()) {
+				bulletPtr->IsMoving(fElapsedTime);
+			}
+		}
+
 		switch (getCurrentSkill())
 		{
 		case 1:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
-			{
-				m_bCheckAC = true;
-			}
-		case 2:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			m_Damage = 160.0f;
+			if (getAniManager()->IsAnimationInTimeRange(0.4f, 0.6f) || getAniManager()->IsAnimationInTimeRange(1.2f, 1.4f))
 			{
 				m_bCheckAC = true;
 			}
@@ -345,13 +441,32 @@ void Fulgurodonte::UpdateObject(float fElapsedTime)
 	}
 }
 
+void Fulgurodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_bSkillActive) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_bSkillActive) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+		if ((keyBuffer['X'] & 0x80) && !(m_PrevKeyBuffer['X'] & 0x80)) {
+			Skill2();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
 // ==================================================
 
 Limadon::Limadon(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
-	m_HP = 7000;
+	m_HP = 30000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
+	m_Damage = 150.0f;
 }
 
 void Limadon::Skill1()
@@ -410,12 +525,13 @@ void Limadon::UpdateObject(float fElapsedTime)
 		switch (getCurrentSkill())
 		{
 		case 1:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			if (getAniManager()->IsAnimationInTimeRange(0.4f, 0.6f) || getAniManager()->IsAnimationInTimeRange(1.0f, 1.2f))
 			{
 				m_bCheckAC = true;
 			}
+			break;
 		case 2:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.7f))
 			{
 				m_bCheckAC = true;
 			}
@@ -424,13 +540,32 @@ void Limadon::UpdateObject(float fElapsedTime)
 	}
 }
 
+void Limadon::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_bSkillActive) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_bSkillActive) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+		if ((keyBuffer['X'] & 0x80) && !(m_PrevKeyBuffer['X'] & 0x80)) {
+			Skill2();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
 // ==================================================
 
 Occisodonte::Occisodonte(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
-	m_HP = 7000;
+	m_HP = 30000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
+	m_Damage = 150.0f;
 }
 
 void Occisodonte::Skill1()
@@ -489,12 +624,13 @@ void Occisodonte::UpdateObject(float fElapsedTime)
 		switch (getCurrentSkill())
 		{
 		case 1:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.7f))
 			{
 				m_bCheckAC = true;
 			}
+			break;
 		case 2:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.7f))
 			{
 				m_bCheckAC = true;
 			}
@@ -503,12 +639,30 @@ void Occisodonte::UpdateObject(float fElapsedTime)
 	}
 }
 
+void Occisodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_bSkillActive) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_bSkillActive) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+		if ((keyBuffer['X'] & 0x80) && !(m_PrevKeyBuffer['X'] & 0x80)) {
+			Skill2();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
 // ==================================================
 
 Crassorrid::Crassorrid(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
-	m_HP = 25000;
+	m_HP = 80000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
 }
 
@@ -579,17 +733,22 @@ void Crassorrid::UpdateObject(float fElapsedTime)
 		switch (getCurrentSkill())
 		{
 		case 1:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			m_Damage = 200.0f;
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.7f) || getAniManager()->IsAnimationInTimeRange(1.1f, 1.3f))
 			{
 				m_bCheckAC = true;
 			}
+			break;
 		case 2:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			m_Damage = 200.0f;
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.7f) || getAniManager()->IsAnimationInTimeRange(1.2f, 1.4f))
 			{
 				m_bCheckAC = true;
 			}
+			break;
 		case 3:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
+			m_Damage = 250.0f;
+			if (getAniManager()->IsAnimationInTimeRange(0.6f, 0.8f))
 			{
 				m_bCheckAC = true;
 			}
@@ -598,12 +757,33 @@ void Crassorrid::UpdateObject(float fElapsedTime)
 	}
 }
 
+void Crassorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+{
+	if (m_bSkillActive) {
+		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
+		return;
+	}
+
+	if (!m_bSkillActive) {
+		if ((keyBuffer['Z'] & 0x80) && !(m_PrevKeyBuffer['Z'] & 0x80)) {
+			Skill1();
+		}
+		if ((keyBuffer['X'] & 0x80) && !(m_PrevKeyBuffer['X'] & 0x80)) {
+			Skill2();
+		}
+		if ((keyBuffer['C'] & 0x80) && !(m_PrevKeyBuffer['C'] & 0x80)) {
+			Skill3();
+		}
+	}
+	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+}
+
 // ==============================================================
 
 Gorhorrid::Gorhorrid(CSkinningObject* obj, CAnimationManager* aManager)
 	: CPlayableCharacter(obj, aManager)
 {
-	m_HP = 40000;
+	m_HP = 200000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
 }
 
@@ -729,12 +909,14 @@ void Gorhorrid::UpdateObject(float fElapsedTime)
 		switch (getCurrentSkill())
 		{
 		case 1:
+			m_Damage = 250.0f;
 			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
 			{
 				m_bCheckAC = true;
 			}
 			break;
 		case 2:
+			m_Damage = 300.0f;
 			if (getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
 			{
 				m_bCheckAC = true;

@@ -21,6 +21,7 @@ public:
 	virtual void Attacked(float damage);
 
 	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class Pistriptere : public CPlayableCharacter
@@ -42,6 +43,7 @@ public:
 	virtual void Attacked(float damage);
 
 	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class RostrokarckLarvae : public CPlayableCharacter
@@ -63,6 +65,7 @@ public:
 	virtual void Attacked(float damage);
 
 	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class Xenokarce : public CPlayableCharacter
@@ -86,6 +89,7 @@ public:
 	virtual void Attacked(float damage);
 
 	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 // ==========================================================================
@@ -111,6 +115,25 @@ public:
 	virtual void Attacked(float damage);
 
 	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	virtual bool HasActiveBullet() const
+	{
+		for (const auto& bullet : bullet)
+		{
+			if (bullet && bullet->getActive())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
+	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
+protected:
+	// personal Resource(bullet, particle etc.)
+	std::vector<std::unique_ptr<CProjectile>> bullet;
+	int currentBullet = 0;
 };
 
 class Limadon : public CPlayableCharacter
@@ -134,6 +157,7 @@ public:
 	virtual void Attacked(float damage);
 
 	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class Occisodonte : public CPlayableCharacter
@@ -157,6 +181,7 @@ public:
 	virtual void Attacked(float damage);
 
 	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class Crassorrid : public CPlayableCharacter
@@ -182,6 +207,7 @@ public:
 	virtual void Attacked(float damage);
 
 	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class Gorhorrid : public CPlayableCharacter

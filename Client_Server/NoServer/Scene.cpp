@@ -1249,12 +1249,7 @@ void CRaytracingScene::AttackCollision(const std::vector<std::unique_ptr<CPlayab
 					attackerSphere.Transform(transformedAttackerSphere, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
 					if (transformedAttackerSphere.Intersects(transformedTargetSphere)) {
 						float damage = 0.0f;
-						switch (attacker->getCurrentSkill()) {
-						case 1: damage = 200.0f; break;
-						case 2: damage = 400.0f; break;
-						case 3: damage = 300.0f; break;
-						default: damage = 100.0f; break;
-						}
+						damage = attacker->getCurrentDamage();
 						target->Attacked(damage);
 						return;
 					}
@@ -1281,7 +1276,8 @@ void CRaytracingScene::ShootCollision(const std::vector<std::unique_ptr<CPlayabl
 					BoundingOrientedBox transformedBulletBox;
 					bulletSphere.Transform(transformedBulletBox, XMLoadFloat4x4(&bullet->getObjects().getWorldMatrix()));
 					if (transformedBulletBox.Intersects(transformedTargetSphere)) {
-						target->Attacked(10000.0f);
+						float damage = attack->getCurrentDamage();
+						target->Attacked(damage);
 						bullet->getObjects().SetPosition(attack->getObject()->getPosition());
 						bullet->setActive(false);
 					}
@@ -2192,6 +2188,9 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 		}
 		else {
 			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			for (auto& m : m_vMonsters) {
+				m->ProcessInput(keyBuffer, fElapsedTime);
+			}
 		}
 	}
 }
@@ -2959,6 +2958,10 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	CreateMageCharacter();
 	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 
+	Create_Limadon();
+	Create_Fulgurodonte();
+	Create_Occisodonte();
+	Create_Crassorrid();
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\Light_Cave.bin");
@@ -3183,6 +3186,9 @@ void CRaytracingCaveScene::ProcessInput(float fElapsedTime)
 		}
 		else {
 			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			for (auto& m : m_vMonsters) {
+				m->ProcessInput(keyBuffer, fElapsedTime);
+			}
 		}
 	}
 }
@@ -3346,8 +3352,8 @@ void CRaytracingCaveScene::Create_Limadon()
 			ma.m_bHasEmissiveColor = false;
 	}
 
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-58.0f, 0.0f, -245.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(4.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 0.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
@@ -3363,9 +3369,36 @@ void CRaytracingCaveScene::Create_Fulgurodonte()
 			ma.m_bHasEmissiveColor = false;
 	}
 
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-38.0f, 0.0f, -245.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(2.7f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 20.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+
+	auto& mon = m_vMonsters[m_vMonsters.size() - 1];
+
+	for (auto& s : mon->getObject()->getObjects())
+	{
+		if (s->getFrameName() == "Fulgurodonte_BeakLowerLeft")
+		{
+			mon->SetHead(s.get());
+			break;
+		}
+	}
+
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.4f, "sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	Fulgurodonte* monster = dynamic_cast<Fulgurodonte*>(m_vMonsters.back().get());
+	Material sharedMaterial;
+
+	for (int i = 0; i < 9; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		monster->GetBullets().push_back(std::move(projectile));
+	}
 }
 
 void CRaytracingCaveScene::Create_Occisodonte()
@@ -3380,8 +3413,8 @@ void CRaytracingCaveScene::Create_Occisodonte()
 			ma.m_bHasEmissiveColor = false;
 	}
 
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-18.0f, 0.0f, -245.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(4.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 20.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
@@ -3398,7 +3431,7 @@ void CRaytracingCaveScene::Create_Crassorrid()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 20.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
@@ -4017,6 +4050,9 @@ void CRaytracingETPScene::ProcessInput(float fElapsedTime)
 		}
 		else {
 			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			for (auto& m : m_vMonsters) {
+				m->ProcessInput(keyBuffer, fElapsedTime);
+			}
 		}
 	}
 }

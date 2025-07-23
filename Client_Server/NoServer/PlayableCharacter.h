@@ -23,6 +23,7 @@ public:
 	bool CheckAC() const { return m_bCheckAC; }
 
 	int getCurrentSkill() const { return m_CurrentSkill; }
+	float getCurrentDamage()const { return m_Damage; }
 	CSkinningObject* getObject() { return m_Object; }
 	CPlayableCharacterAnimationManager* getAniManager() { return m_AManager; }
 
@@ -44,6 +45,7 @@ protected:
 	float m_HP{};
 	float m_MP{};
 	int m_CurrentSkill = 0;
+	float m_Damage{};
 
 	CSkinningObject* m_Object{};
 	CPlayableCharacterAnimationManager* m_AManager{};

@@ -18,6 +18,7 @@ void CPlayerMage::Skill1()
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
 	m_CurrentSkill = 1;
+	m_Damage = 1200.0f;
 }
 
 void CPlayerMage::Skill2()
@@ -30,6 +31,7 @@ void CPlayerMage::Skill2()
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
 	m_CurrentSkill = 2;
+	m_Damage = 2000.0f;
 }
 
 void CPlayerMage::Skill3()
@@ -42,6 +44,7 @@ void CPlayerMage::Skill3()
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
 	m_CurrentSkill = 3;
+	m_Damage = 4000.0f;
 }
 
 void CPlayerMage::Attacked(float damage)
@@ -93,6 +96,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
+			m_Damage = 800.0f;
 			MakeBullet();
 		}
 		break;
@@ -708,6 +712,7 @@ void CPlayerWarrior::Skill1()
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
 	m_CurrentSkill = 1;
+	m_Damage = 1800.0f;
 }
 
 void CPlayerWarrior::Skill2()
@@ -720,6 +725,7 @@ void CPlayerWarrior::Skill2()
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
 	m_CurrentSkill = 2;
+	m_Damage = 2000.0f;
 }
 
 void CPlayerWarrior::Skill3()
@@ -733,6 +739,8 @@ void CPlayerWarrior::Skill3()
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
 	m_CurrentSkill = 3;
+	//m_Damage = 2200.0f; //1
+	m_Damage = 1200.0f; //2
 }
 
 void CPlayerWarrior::Attacked(float damage)
@@ -785,6 +793,7 @@ void CPlayerWarrior::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARA
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
+			m_Damage = 1000.0f;
 		}
 		break;
 	}
@@ -1783,6 +1792,7 @@ CPlayerPriest::CPlayerPriest(CSkinningObject* object, CAnimationManager* aManage
 {
 	m_HP = 1000.0f;
 	m_MP = 100.0f;
+	m_Damage = 800.0f;
 }
 
 void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
