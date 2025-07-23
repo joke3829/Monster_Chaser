@@ -197,6 +197,7 @@ public:
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
+	std::unique_ptr<CHeightMapImage> m_pRoadTerrain{};
 protected:
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};
@@ -333,6 +334,8 @@ public:
 	//void TextRender();
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+	std::unique_ptr<CHeightMapImage> m_TerrainRoad{};
+	std::unique_ptr<CHeightMapImage> m_CollisionHMap{};
 protected:
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};

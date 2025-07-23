@@ -1896,15 +1896,14 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);
 	// Object File Read ========================================	! !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\Environment.bin", "src\\texture\\Map\\");
-
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\Map\\WinterLand\\WinterLand_Final.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	CreateMageCharacter();
 	m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
 
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Gorhorrid.bin", "src\\texture\\Gorhorrid\\");
 	// Light Read
-	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
+	m_pResourceManager->AddLightsFromFile(L"src\\Light\\WinterLand_Light_Final.bin");
 	m_pResourceManager->ReadyLightBufferContent();
 	m_pResourceManager->LightTest();
 	// =========================================================
@@ -1925,7 +1924,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	UINT finalmesh = meshes.size();
 
 	// terrian
-	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\WinterLand\\Terrain_Final.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
@@ -1933,8 +1932,17 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	normalObjects[normalObjects.size() - 1]->SetInstanceID(10);
 	normalObjects[normalObjects.size() - 1]->getMaterials().emplace_back();
 	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
+	m_pRoadTerrain = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\WinterLand\\Terrain_Road.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	m_pCollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\WinterLand\\Terrain_Collision.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
 
-	//m_pCollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\terrain.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	/*meshes.emplace_back(std::make_unique<Mesh>(m_pCollisionHMap.get(), "terrain2"));
+	normalObjects.emplace_back(std::make_unique<CGameObject>());
+	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
+
+	normalObjects[normalObjects.size() - 1]->getMaterials().emplace_back();
+	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_bHasAlbedoColor = true;
+	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_xmf4AlbedoColor = XMFLOAT4(0.5, 0.5, 0.5, 0.5);
+	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));*/
 
 
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));
@@ -2448,11 +2456,12 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
-	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 	
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
-		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
+		float cHeight = m_pRoadTerrain->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
 		if (EYE.z >= -500.0f) {
 			if (cHeight < 10.5f)
 				cHeight = 10.5f;
@@ -2805,7 +2814,7 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);
 	// Object File Read ========================================	! !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\Cave.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\Map\\Cave\\Cave.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	CreateMageCharacter();
@@ -2834,8 +2843,8 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	UINT finalmesh = meshes.size();
 
 	// terrian
-	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\CaveHeightMap.raw", 512, 512, XMFLOAT3(500.0f / 512.0f, 0.0092f, 500.0f / 512.0f));
-	m_pCollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\CaveCollisionHMap.raw", 512, 512, XMFLOAT3(500.0f / 512.0f, 1.0f, 500.0f / 512.0f));
+	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\Cave\\CaveHeightMap.raw", 512, 512, XMFLOAT3(500.0f / 512.0f, 0.0092f, 500.0f / 512.0f));
+	m_pCollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\Cave\\CaveCollisionHMap.raw", 512, 512, XMFLOAT3(500.0f / 512.0f, 1.0f, 500.0f / 512.0f));
 	/*meshes.emplace_back(std::make_unique<Mesh>(m_pCollisionHMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
@@ -3527,7 +3536,8 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);
 	// Object File Read ========================================	! !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\Map\\ETP\\ETP.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\Map\\ETP\\Water.bin", "src\\texture\\Map\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	CreateMageCharacter();
@@ -3551,10 +3561,27 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 			ma.m_bHasEmissiveColor = false;
 	}
 
-	UINT finalindex = normalObjects.size();
-	UINT finalmesh = meshes.size();
+	{		// Water
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\WaterTurbulent00_NORM.dds"));
+		auto p = normalObjects[normalObjects.size() - 1].get();
+		p->SetInstanceID(2);
+		p->getMaterials().emplace_back();
+		Material& mt = p->getMaterials()[0];
+		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
+		//mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
+		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 1;
 
-	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\ETPTerrain2.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
+		/*void* tempptr{};
+		std::vector<XMFLOAT2> tex0 = meshes[p->getMeshIndex()]->getTex0();
+		for (XMFLOAT2& xmf : tex0) {
+			xmf.x *= 10.0f; xmf.y *= 10.0f;
+		}
+		meshes[p->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
+		memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
+		meshes[p->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);*/
+	}
+
+	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\ETP_Terrain.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
@@ -3566,6 +3593,8 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_fGlossiness = 0.0f;
 	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-512.0, 0.0, -512.0));
 
+	m_TerrainRoad = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\ETP_Terrain_Road.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
+	m_CollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\TEst.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
 	PrepareTerrainTexture();
 
 	// cubeMap Ready
@@ -3584,7 +3613,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	// Copy(normalObject) & SetPreMatrix ===============================
 
 	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-	skinned[0]->SetPosition(XMFLOAT3(0.0, 0.0, 0.0));
+	skinned[0]->SetPosition(XMFLOAT3(-312.0, 0.0, -112.0));
 
 
 	// ==============================================================================
@@ -4049,11 +4078,12 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
-	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+	m_pPlayer->CollisionCheck(m_TerrainRoad.get(), m_CollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+	m_pPlayer->HeightCheck(m_TerrainRoad.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
-		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 512.0f, EYE.z + 512.0f);
+		float cHeight = m_TerrainRoad->GetHeightinWorldSpace(EYE.x + 512.0f, EYE.z + 512.0f);
 		if (EYE.y < cHeight + 0.5f) {
 			m_pCamera->UpdateViewMatrix(cHeight + 0.5f);
 		}

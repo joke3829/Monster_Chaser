@@ -476,34 +476,19 @@ std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 
 void CResourceManager::LightTest()
 {
-	Lights testLight{};
-	testLight.numLights = 1;
-	testLight.lights[0].Type = DIRECTIONAL_LIGHT;
-	testLight.lights[0].Intensity =  1.0f;
-	testLight.lights[0].Color = XMFLOAT4(1.0f, 0.9568627, 0.8392157, 1.0f);
-	//testLight.lights[0].Color = XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f);
-	testLight.lights[0].Direction = XMFLOAT3(0.7527212, -0.6549893, -0.06633252);
-	//testLight.lights[0].Direction = XMFLOAT3(1.0, -1.0, 0.0);
-
-	///*testLight.lights[0].Type = SPOT_LIGHT;
-	//testLight.lights[0].Intensity = 5.0f;
-	//testLight.lights[0].Color = XMFLOAT4(1.0f, 1.0f ,1.0f, 1.0f);
-	//testLight.lights[0].Position = XMFLOAT3(0.0, 10.0f, 0.0f);
-	//testLight.lights[0].Direction = XMFLOAT3(0.0, -1.0, 0.0);
-	//testLight.lights[0].SpotAngle = 85.5f;
-	//testLight.lights[0].Range = 12.0f;*/
-
-	///*testLight.lights[0].Type = POINT_LIGHT;
-	//testLight.lights[0].Intensity = 5.0f;
-	//testLight.lights[0].Color = XMFLOAT4(.0f, 1.0f, 1.0f, 1.0f);
-	//testLight.lights[0].Position = XMFLOAT3(0.0, 20.0f, 15.0f);
-	//testLight.lights[0].Range = 60.0f;*/
-
 	Lights* mapptr{};
 	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
 	//memcpy(mapptr, &testLight, sizeof(Lights));
-	mapptr->lights[22].Intensity = 1.0f;
-	mapptr->lights[23].Intensity = 0.6f;
+	
+	mapptr->lights[2].Intensity = 1.0f;
+	mapptr->lights[12].Intensity = 1.0f;
+	mapptr->lights[13].Intensity = 1.0f;
+	mapptr->lights[14].Intensity = 0.5f;
+	mapptr->lights[14].Range = 60;
+	mapptr->lights[15].Intensity = 1.0f;
+	mapptr->lights[15].Range = 60;
+	mapptr->lights[16].Intensity = 1.0f;
+	mapptr->lights[17].Intensity = 0.6f;
 	m_pLights->Unmap(0, nullptr);
 }
 
