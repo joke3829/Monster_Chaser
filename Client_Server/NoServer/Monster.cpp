@@ -431,7 +431,6 @@ void Fulgurodonte::UpdateObject(float fElapsedTime)
 		switch (getCurrentSkill())
 		{
 		case 1:
-			m_Damage = 160.0f;
 			if (getAniManager()->IsAnimationInTimeRange(0.4f, 0.6f) || getAniManager()->IsAnimationInTimeRange(1.2f, 1.4f))
 			{
 				m_bCheckAC = true;
@@ -820,6 +819,7 @@ void Gorhorrid::Skill3()
 		m_AManager->UpdateAniPosition(0.0f, m_Object);
 		m_bSkillActive = true;
 		m_CurrentSkill = 3;
+		m_Damage = 300.0f;
 		if (!bullet.empty()) {
 			const int numProjectiles = 5;
 			const float spreadAngle = 30.0f;
@@ -909,14 +909,14 @@ void Gorhorrid::UpdateObject(float fElapsedTime)
 		switch (getCurrentSkill())
 		{
 		case 1:
-			m_Damage = 250.0f;
+			m_Damage = 300.0f;
 			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.6f))
 			{
 				m_bCheckAC = true;
 			}
 			break;
 		case 2:
-			m_Damage = 300.0f;
+			m_Damage = 350.0f;
 			if (getAniManager()->IsAnimationInTimeRange(0.3f, 0.6f))
 			{
 				m_bCheckAC = true;

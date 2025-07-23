@@ -3384,7 +3384,7 @@ void CRaytracingCaveScene::Create_Limadon()
 			ma.m_bHasEmissiveColor = false;
 	}
 
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(4.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 0.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
@@ -3401,8 +3401,8 @@ void CRaytracingCaveScene::Create_Fulgurodonte()
 			ma.m_bHasEmissiveColor = false;
 	}
 
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(2.7f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 20.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(2.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-20.0f, 0.0f, 0.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 
 	auto& mon = m_vMonsters[m_vMonsters.size() - 1];
@@ -3445,8 +3445,8 @@ void CRaytracingCaveScene::Create_Occisodonte()
 			ma.m_bHasEmissiveColor = false;
 	}
 
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(4.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 20.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-10.0f, 0.0f, 00.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
 
@@ -3462,7 +3462,7 @@ void CRaytracingCaveScene::Create_Crassorrid()
 			ma.m_bHasEmissiveColor = false;
 	}
 
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(4.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-30.0f, 0.0f, 20.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
 }
