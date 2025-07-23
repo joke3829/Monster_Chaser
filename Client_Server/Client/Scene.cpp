@@ -1093,14 +1093,14 @@ inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique
 
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x1100) { 
+				if (bone1->getBoundingInfo() & 0x1100) {
 					DirectX::BoundingSphere boneSphere1 = bone1->getObjectSphere();
 					bone1->getObjectSphere().Transform(boneSphere1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
-						if (obj1 != character) { 
+						if (obj1 != character) {
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x1100) { 
+								if (bone2->getBoundingInfo() & 0x1100) {
 									DirectX::BoundingSphere boneSphere2 = bone2->getObjectSphere();
 									bone2->getObjectSphere().Transform(boneSphere2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneSphere1.Intersects(boneSphere2)) {
@@ -1132,7 +1132,7 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 				for (const auto& character : object2) {
 					for (const auto& bone : character->getObjects()) {
-						if (bone->getBoundingInfo() & 0x0011) { 
+						if (bone->getBoundingInfo() & 0x0011) {
 							DirectX::BoundingOrientedBox boneOBB;
 							bone->getObjectOBB().Transform(boneOBB, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
 							if (mapOBB.Intersects(boneOBB)) {
@@ -1145,14 +1145,14 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x0011) { 
+				if (bone1->getBoundingInfo() & 0x0011) {
 					DirectX::BoundingOrientedBox boneOBB1;
 					bone1->getObjectOBB().Transform(boneOBB1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
 						if (obj1 != character) {
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x0011) { 
+								if (bone2->getBoundingInfo() & 0x0011) {
 									DirectX::BoundingOrientedBox boneOBB2;
 									bone2->getObjectOBB().Transform(boneOBB2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneOBB1.Intersects(boneOBB2)) {
@@ -1207,7 +1207,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 
 		if (!collisions.empty()) {
 
-			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
+			auto maxCollision = std::max_element(collisions.begin(), collisions.end(), [](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
 
 			XMFLOAT3 norm = maxCollision->normal;
 			float depth = maxCollision->depth;
@@ -1216,7 +1216,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 			XMVECTOR moveDir = XMLoadFloat3(&character->getMoveDirection());
 			XMVECTOR normal = XMLoadFloat3(&norm);
 			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
-			if (dotProduct < 0.0f) { 
+			if (dotProduct < 0.0f) {
 				character->sliding(depth, norm, meshHeight);
 			}
 		}
@@ -1540,6 +1540,9 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 				startTime = 0.0f;
 				m_nState = IS_FINISH;
 			}
+			break;
+		case 'k':
+			Client.SendHPitem(ItemType::HP_POTION);
 			break;
 		}
 		break;

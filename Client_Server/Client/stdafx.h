@@ -85,6 +85,16 @@ enum class MonsterType {
 	RostrokarckBoss,
 	GorhorridBoss,
 };
+
+
+
+enum class ItemType : unsigned char {
+	HP_POTION = 0,
+	MP_POTION,
+	ATK_BUFF,
+	DEF_BUFF,
+	ITEM_COUNT
+};
 enum TitleState { Title, RoomSelect, InRoom, SelectC, GoLoading };
 
 //========================================================================================

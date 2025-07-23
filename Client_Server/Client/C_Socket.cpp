@@ -88,6 +88,15 @@ void C_Socket::SendPlayerReady()
 	Client.send_packet(&pkt);
 }
 
+void C_Socket::SendHPitem(ItemType type)
+{
+	cs_packet_use_item pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_USE_ITEM;
+	pkt.item_type = static_cast<unsigned char>(type);
+	Client.send_packet(&pkt);
+}
+
 void C_Socket::SendsetReady(const bool isReady, const int room_num)
 {
 	cs_packet_getready rp;

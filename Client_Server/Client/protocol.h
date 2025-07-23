@@ -13,14 +13,32 @@ constexpr char MAX_ID_LEN = 20;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Server to Client packets
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 constexpr char S2C_P_ENTER = 1;
+constexpr char S2C_P_CREATEUSER = 2;
+constexpr char S2C_P_SELECT_ROOM = 3;
+constexpr char S2C_P_ALLREADY = 4;
+constexpr char S2C_P_UPDATEROOM = 5;
+constexpr char S2C_P_SETREADY = 6;
+constexpr char S2C_P_MOVE = 7;
+constexpr char S2C_P_PICKCHARACTER = 8;
+constexpr char S2C_P_INGAME_START = 9;
+constexpr char S2C_P_MONSTER_SPAWN = 10;
+constexpr char S2C_P_MONSTER_HIT = 11;
+constexpr char S2C_P_MONSTER_DIE = 12;
+constexpr char S2C_P_MONSTER_RESPAWN = 13;
+constexpr char S2C_P_MONSTER_MOVE = 14;
+constexpr char S2C_P_PLAYER_HIT = 15;  // 플레이어가 공격해서 몬스터가 맞았을 때
+constexpr char S2C_P_NEXTSTAGE = 16;  //  보스몬스터 처치 후 다음 스테이지로 넘어갈 때
+constexpr char S2C_P_APPLY_HPITEM = 17;  // HP 아이템 사용 시
+constexpr char S2C_P_APPLY_MPITEM = 18;  // MP 아이템 사용 시
+constexpr char S2C_P_APPLY_ATKITEM = 19; // 공격력 아이템 사용 시
+constexpr char S2C_P_APPLY_DEFITEM = 20; // 방어력 아이템 사용 시
+constexpr char S2C_P_LEAVE = 49; // 플레이어가 방을 나갈 때
 struct sc_packet_enter {
     unsigned char size;
     char type;
 };
 
-constexpr char S2C_P_CREATEUSER = 2;
 struct sc_packet_createUser {
     unsigned char size;
     char type;
@@ -29,7 +47,6 @@ struct sc_packet_createUser {
     bool loginSuccess = false;
 };
 
-constexpr char S2C_P_SELECT_ROOM = 3;
 struct sc_packet_select_room {
     unsigned char size;
     char type;
@@ -38,7 +55,6 @@ struct sc_packet_select_room {
     bool is_self;
 };
 
-constexpr char S2C_P_ALLREADY = 4;
 struct sc_packet_Ingame_start {
     unsigned char size;
     char type;
@@ -46,14 +62,12 @@ struct sc_packet_Ingame_start {
     char room_number;
 };
 
-constexpr char S2C_P_UPDATEROOM = 5;
 struct sc_packet_room_info {
     unsigned char size;
     char type;
     short room_info[10];
 };
 
-constexpr char S2C_P_SETREADY = 6;
 struct sc_packet_set_ready {
     unsigned char size;
     char type;
@@ -62,7 +76,6 @@ struct sc_packet_set_ready {
     bool is_ready;
 };
 
-constexpr char S2C_P_MOVE = 7;
 struct sc_packet_move {
     unsigned char size;
     char type;
@@ -73,7 +86,6 @@ struct sc_packet_move {
     UINT pingTime;
 };
 
-constexpr char S2C_P_PICKCHARACTER = 8;
 struct sc_packet_pickcharacter {
     unsigned char size;
     char type;
@@ -81,13 +93,11 @@ struct sc_packet_pickcharacter {
     short C_type;
 };
 
-constexpr char S2C_P_INGAME_START = 9;
 struct sc_packet_ingame_start {
     unsigned char size;
     char type;
 };
 
-constexpr char S2C_P_MONSTER_SPAWN = 10;
 struct sc_packet_monster_spawn {
     unsigned char size;
     char type;
@@ -96,7 +106,6 @@ struct sc_packet_monster_spawn {
     XMFLOAT4X4 pos;
 };
 
-constexpr char S2C_P_MONSTER_HIT = 11;
 struct sc_packet_monster_hit {
     unsigned char size;
     char type;
@@ -104,7 +113,6 @@ struct sc_packet_monster_hit {
     int current_hp;
 };
 
-constexpr char S2C_P_MONSTER_DIE = 12;
 struct sc_packet_monster_die {
     unsigned char size;
     char type;
@@ -112,7 +120,6 @@ struct sc_packet_monster_die {
     int gold;
 };
 
-constexpr char S2C_P_MONSTER_RESPAWN = 13;
 struct sc_packet_monster_respawn {
     unsigned char size;
     char type;
@@ -120,8 +127,6 @@ struct sc_packet_monster_respawn {
     XMFLOAT4X4 pos;
 };
 
-
-constexpr char S2C_P_MONSTER_MOVE = 14;
 struct sc_packet_monster_move {
     unsigned char size;
     char type;
@@ -130,9 +135,6 @@ struct sc_packet_monster_move {
     int state;  // MonsterState (Idle, Chase, Attack, Return, Dead)
 };
 
-
-
-constexpr char S2C_P_PLAYER_HIT = 15;  // 예: 15
 struct sc_packet_player_hit {
     unsigned char size;
     char type;
@@ -140,18 +142,58 @@ struct sc_packet_player_hit {
     int current_hp;
 };
 
-constexpr char S2C_P_LEAVE = 49;
+struct sc_packet_NextStage {
+    unsigned char size;
+    char type;
+};
+
 struct sc_packet_leave {
     unsigned char size;
     char type;
     int Local_id;
 };
 
+struct sc_packet_apply_hpitem {
+    unsigned char size;
+    char type;
+    int hp;
+    char local_id;
+};
+struct sc_packet_apply_mpitem {
+    unsigned char size;
+    char type;
+    int mp;
+    char local_id;
+};
+struct sc_packet_apply_atkitem {
+    unsigned char size;
+    char type;
+    float attack;
+    char local_id;
+};
+struct sc_packet_apply_defitem {
+    unsigned char size;
+    char type;
+    float defense;
+    char local_id;
+};
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Client to Server packets
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 constexpr char C2S_P_LOGIN = 51;
+constexpr char C2S_P_CREATEUSER = 52;
+constexpr char C2S_P_ENTER_ROOM = 53;
+constexpr char C2S_P_ROOM_UPDATE = 54;
+constexpr char C2S_P_PICKCHARACTER = 55;
+constexpr char C2S_P_GETREADY = 56;
+constexpr char C2S_P_READYINGAME = 57;
+constexpr char C2S_P_MOVE = 58;
+constexpr char C2S_P_PLAYERATTACK = 59;
+constexpr char C2S_P_MONSTER_HIT = 60;
+constexpr char C2S_P_USE_ITEM = 61;
+
 struct cs_packet_login {
     unsigned char size;
     char type;
@@ -159,7 +201,6 @@ struct cs_packet_login {
     char Userpassword[MAX_ID_LEN];
 };
 
-constexpr char C2S_P_CREATEUSER = 52;
 struct cs_packet_createuser {
     unsigned char size;
     char type;
@@ -168,14 +209,23 @@ struct cs_packet_createuser {
     char UserNickName[MAX_ID_LEN];
 };
 
-constexpr char C2S_P_ENTER_ROOM = 53;
 struct cs_packet_enter_room {
     unsigned char size;
     char type;
     char room_number;
 };
+struct cs_packet_room_refresh
+{
+    unsigned char size;
+    char type;
+};
 
-constexpr char C2S_P_GETREADY = 54;
+struct cs_packet_pickcharacter {
+    unsigned char size;
+    char type;
+    char room_number;
+    short C_type;
+};
 struct cs_packet_getready {
     unsigned char size;
     char type;
@@ -183,13 +233,13 @@ struct cs_packet_getready {
     bool isReady;
 };
 
-constexpr char C2S_P_ROOM_UPDATE = 56;
-struct cs_packet_room_refresh {
+struct cs_packet_readytoIngame {
     unsigned char size;
     char type;
+    //int local_id; // 로컬 ID
+    //int room_number; // 방 번호
 };
 
-constexpr char C2S_P_MOVE = 57;
 struct cs_packet_move {
     unsigned char size;
     char type;
@@ -198,36 +248,27 @@ struct cs_packet_move {
     UINT state;
 };
 
-constexpr char C2S_P_PICKCHARACTER = 58;
-struct cs_packet_pickcharacter {
-    unsigned char size;
-    char type;
-    char room_number;
-    short C_type;
-};
 
-constexpr char C2S_P_READYINGAME = 59;
-struct cs_packet_readytoIngame {
-    unsigned char size;
-    char type;
-    //int local_id; // 로컬 ID
-    //int room_number; // 방 번호
-};
-
-constexpr char C2S_P_PLAYERATTACK = 60;
 struct cs_packet_player_attack {
     unsigned char size;
     char type;
     int target_monster_id;
+    float AtkCalculation; // 공격력 계수
+    int attack_type; // Attacktype
 };
 
-
-constexpr char C2S_P_MONSTER_HIT = 61;
 struct cs_packet_monster_hit {
     unsigned char size;
     char type;
     int attacker_id;  // 몬스터 ID
     int target_player_id;
-    int attack_power; // 공격력
+    int attack_type; // Attacktype
+    float attack_power; // 공격력
+};
+
+struct cs_packet_use_item {
+    unsigned char size;
+    char type;
+    unsigned char item_type;   // enum ItemType
 };
 #pragma pack(pop)

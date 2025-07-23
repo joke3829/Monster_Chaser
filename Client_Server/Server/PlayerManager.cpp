@@ -13,15 +13,19 @@ void PlayerManager::RemovePlayer(int id) {
     players.erase(id);
 }
 
-void PlayerManager::ApplyDamage(int id, int dmg) {
-    std::lock_guard<std::mutex> lock(managerMutex);
-    auto it = players.find(id);
-    if (it != players.end()) {
-        std::lock_guard<std::mutex> playerLock(it->second->playerMutex);
-        it->second->hp -= dmg;
-        if (it->second->hp < 0) it->second->hp = 0;
-    }
-}
+void PlayerManager::ApplyDamage(int id, int dmg) {  
+    std::lock_guard<std::mutex> lock(managerMutex);  
+    auto it = players.find(id);  
+    if (it != players.end()) {  
+        std::lock_guard<std::mutex> playerLock(it->second->playerMutex);  
+        int currentHP = it->second->GetHP(); // Use a temporary variable to store HP  
+        currentHP -= dmg;  
+        if (currentHP < 0) currentHP = 0;  
+        it->second->SetHP(currentHP); // Add a setter method to update HP  
+    }  
+}      
+           
+
 
 void PlayerManager::SetPosition(int id, const XMFLOAT4X4& pos) {
     std::lock_guard<std::mutex> lock(managerMutex);

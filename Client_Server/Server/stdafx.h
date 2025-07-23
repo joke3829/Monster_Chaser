@@ -59,7 +59,8 @@ enum MoveAnimationState
 	RUN_RIGHT_DOWN = 20,
 };
 enum Character:char {
-	Wizard=0,
+	None = 0,
+	Wizard,
 	Warrior,
 	Priest
 };
@@ -76,4 +77,12 @@ enum class MonsterType {
 	Fulgurodonte,
 	RostrokarckBoss,
 	GorhorridBoss,
+};
+
+enum class ItemType : unsigned char {
+	HP_POTION = 0,
+	MP_POTION,
+	ATK_BUFF,
+	DEF_BUFF,
+	ITEM_COUNT
 };

@@ -1,11 +1,6 @@
 #pragma once
 
-enum ItemType : char {
-	Hppotion = 0,
-	Mppotion,
-	Atkbuf,
-	Defbuf
-};
+
 class ITEM
 {
 	ITEM(ItemType type);
