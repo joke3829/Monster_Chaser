@@ -133,6 +133,7 @@ struct sc_packet_monster_move {
     int monster_id;
     XMFLOAT4X4 pos;
     int state;  // MonsterState (Idle, Chase, Attack, Return, Dead)
+    
 };
 
 struct sc_packet_player_hit {

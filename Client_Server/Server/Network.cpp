@@ -305,7 +305,7 @@ void SESSION::process_packet(char* p) {
 		}
 		case ItemType::ATK_BUFF:
 		{
-
+			int attack = player->GetATK();
 			float buff_amount = 100.f;
 			float duration = 60.f; // 1분
 

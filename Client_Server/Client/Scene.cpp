@@ -1527,6 +1527,7 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			m_pCamera->toggleAlbedoColor();
 			break;
 		case 'B':
+			//Client.SendHPitem(ItemType::HP_POTION);
 			m_pCamera->toggleReflection();
 			break;
 		case '9':
@@ -1541,8 +1542,12 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 				m_nState = IS_FINISH;
 			}
 			break;
-		case 'k':
-			Client.SendHPitem(ItemType::HP_POTION);
+		case 'K':
+			//Client.SendHPitem(ItemType::HP_POTION);
+			//Client.SendHPitem(ItemType::MP_POTION);
+			Client.SendHPitem(ItemType::ATK_BUFF);
+			//Client.SendHPitem(ItemType::DEF_BUFF);
+
 			break;
 		}
 		break;
@@ -1583,6 +1588,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
 			CAnimationManager* myManager = m_pPlayer->getAniManager();
 			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());
+
 		}
 	}
 }

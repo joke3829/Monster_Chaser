@@ -59,6 +59,7 @@ public:
 			def_buff = 0; // 버프 만료 처리
 		return defense + def_buff;
 	}
+
 private:
 	Player() = default; // 기본 생성자는 private로 설정하여 사용하지 못하게 함
 

@@ -174,9 +174,6 @@
     <ClInclude Include="PlayableCharacter.h">
       <Filter>Resource\Character</Filter>
     </ClInclude>
-    <ClInclude Include="Monster.h">
-      <Filter>Resource\Monster</Filter>
-    </ClInclude>
     <ClInclude Include="Particle.h">
       <Filter>Resource\Particle</Filter>
     </ClInclude>
@@ -185,6 +182,9 @@
     </ClInclude>
     <ClInclude Include="C_Socket.h">
       <Filter>SERVER</Filter>
+    </ClInclude>
+    <ClInclude Include="Monster.h">
+      <Filter>Resource\Particle</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
