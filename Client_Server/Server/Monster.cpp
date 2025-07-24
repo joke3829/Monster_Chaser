@@ -4,11 +4,11 @@
 #include <random>
 
 #define MONSTER_CHASE_DISTANCE 100.0f
-#define MONSTER_ATTACK_RANGE 30.0f
+#define MONSTER_ATTACK_RANGE 20.0f
 constexpr float MONSTER_ATTACK_COOLDOWN = 2.0f;   // 공격 쿨타임 2초
 constexpr float MONSTER_RETURN_SPEED = 80.0f;     // 귀환 속도
 std::random_device rd;
-
+std::mt19937 gen(rd());
 
 extern Network g_server;
 
@@ -34,15 +34,56 @@ int FindClosestPlayerInRoom(const Room& room, const DirectX::XMFLOAT3& monsterPo
 
     return closestId;
 }
+float Monster::DistanceFromSpawnToPlayer(const PlayerManager& playerManager) const {
+    auto player = playerManager.GetPlayer(target_id);
+    if (!player) return std::numeric_limits<float>::max();
+
+    const auto& p = player->GetPosition();
+    float dx = spawnPoint.x - p._41;
+    float dy = spawnPoint.y - p._42;
+    float dz = spawnPoint.z - p._43;
+    return sqrtf(dx * dx + dy * dy + dz * dz);
+}
 
 Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
     : id(id), hp(100), state(MonsterState::Idle), position(spawnPos), spawnPoint(spawnPos), type(t){
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    
     std::uniform_int_distribution<> dis(30, 50);
 
-    gold = dis(gen);  //  30~50 골드 설정
+        gold = dis(gen);  //  30~50 골드 설정
+
+        switch (type)
+        {
+        case MonsterType::None:
+			Attacktypecount = 0;
+            break;
+        case MonsterType::Feroptere:
+        case MonsterType::Pistiripere:
+        case MonsterType::RostrokarackLarvae:
+            Attacktypecount = 1;
+            break;
+
+        case MonsterType::XenokarceBoss:
+            Attacktypecount = 2;
+            break;
+
+        case MonsterType::Occisodonte:
+        case MonsterType::Limadon:
+        case MonsterType::Fulgurodonte:
+            Attacktypecount = 2;
+            break;
+
+        case MonsterType::RostrokarckBoss:
+            Attacktypecount = 3;
+            break;
+
+        case MonsterType::GorhorridBoss:
+            Attacktypecount = 3;
+            break;
+        default:
+            break;
+        }
 }
 
 void Monster::Update(float deltaTime, const Room& room, const PlayerManager& playerManager) {
@@ -60,7 +101,7 @@ void Monster::Update(float deltaTime, const Room& room, const PlayerManager& pla
     case MonsterState::Dead:    HandleDead(room); return; // 죽으면 패킷 보내지 않음
     }
 
-    SendSyncPacket(room); //  매 업데이트마다 위치+상태 전송
+    SendSyncPacket(room); //  매 업데이트마다 위치+상태 전송         //추적 귀환일떄만 보내면 되지 않을까?
 }
 
 bool Monster::TakeDamage(int dmg) {
@@ -132,19 +173,24 @@ void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room)
         TransitionTo(MonsterState::Chase);
         return;
     }
-
+    
+		char attackCount = 0; // 공격 타입 랜덤 선택
+    if(Attacktypecount > 1) {
+        std::uniform_int_distribution<> dis(1, GetAttackTypeCount());
+         attackCount = dis(gen); // 공격 타입 랜덤 선택
+	}
+    
     auto now = std::chrono::steady_clock::now();
     float elapsed = std::chrono::duration<float>(now - lastAttackTime).count();
 
     if (elapsed >= MONSTER_ATTACK_COOLDOWN) {
         lastAttackTime = now;
-
-        cs_packet_monster_hit pkt;
+        sc_packet_monster_attack pkt;
+       // cs_packet_monster_hit pkt;
         pkt.size = sizeof(pkt);
-		pkt.type = C2S_P_MONSTER_HIT;
-		pkt.attacker_id = id;
-		pkt.target_player_id = target_id;
-		pkt.attack_power = 10; // 예시: 공격력 10
+		pkt.type = S2C_P_MONSTER_ATTACK;
+        pkt.monster_id = id;
+		pkt.attack_type = attackCount; // 공격 타입 설정
         //  방의 유저 목록을 직접 사용
         for (int pid : room.id) {
             g_server.users[pid]->do_send(&pkt);
@@ -220,7 +266,7 @@ float Monster::DistanceToPlayer(const PlayerManager& playerManager) const {
 }
 
 bool Monster::IsPlayerNear(const PlayerManager& playerManager) const {
-    return DistanceToPlayer(playerManager) <= MONSTER_CHASE_DISTANCE;
+    return DistanceFromSpawnToPlayer(playerManager) <= MONSTER_CHASE_DISTANCE;
 }
 
 bool Monster::IsPlayerInAttackRange(const PlayerManager& playerManager) const {

@@ -14,6 +14,12 @@ enum class MonsterState {
     Dead
 };
 
+enum class Stage {
+    Stage1,
+    Stage2,
+    Stage3
+};
+
 
 class Room;
 
@@ -30,7 +36,6 @@ public:
     XMFLOAT3 GetPosition() const { return position; }
     int GetGold() const { return gold; }
 
-private:
     void TransitionTo(MonsterState nextState);
     void HandleIdle(const Room& room, const PlayerManager& playerManager);
     void HandleChase(const PlayerManager& playerManager, const Room& room);
@@ -38,11 +43,13 @@ private:
     void HandleReturn(const Room& room);
     void HandleDead(const Room& room);
     float DistanceToPlayer(const PlayerManager& playerManager) const;
-
+    float DistanceFromSpawnToPlayer(const PlayerManager& playerManager) const;
     bool IsPlayerNear(const PlayerManager& playerManager) const;
     bool IsPlayerInAttackRange(const PlayerManager& playerManager) const;
+    int GetAttackTypeCount() const { return Attacktypecount; }
 
     void SendSyncPacket(const Room& room);
+private:
 
     int id;
     MonsterType type;
@@ -57,6 +64,10 @@ private:
     int gold = 0; // 몬스터가 죽었을 때 드랍하는 골드
 
     bool isRespawning = false;
+	char Attacktypecount = 0; // 공격 종류 카운트
+
+
+
     std::chrono::steady_clock::time_point respawnTime;
     std::chrono::steady_clock::time_point lastAttackTime;
     std::mutex mtx;

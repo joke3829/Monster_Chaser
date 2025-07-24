@@ -61,11 +61,34 @@ public:
     void Plusgold(int amount) {
         gold += amount;
 	}
+    void SetHP(int newHP) {
+        hp = newHP;
+        if (hp > maxHP) hp = maxHP; // HP가 최대치를 넘지 않도록
+	}
+    void SetMaxHP(int newMaxHP) {
+        maxHP = newMaxHP;
+        if (hp > maxHP) hp = maxHP; // 현재 HP가 최대치보다 크면 최대치로 설정
+    }
+
+    void SetMP(int newMP) {
+        mp = newMP;
+        if (mp > maxMP) mp = maxMP; // MP가 최대치를 넘지 않도록
+	}
+    void SetMaxMP(int newMaxMP) {
+        maxMP = newMaxMP;
+        if (mp > maxMP) mp = maxMP; // 현재 MP가 최대치보다 크면 최대치로 설정
+    }
 
 private:
     bool readyToStart = false;
-    int hp = 100;
+    int hp = 0;
+	int maxHP = 100; // 최대 HP
+
+    int mp = 100; // 플레이어가 가진 MP
+    int maxMP = 100; // 최대 MP
+
 	int gold = 0; // 플레이어가 가진 골드    
+
     short type{ JOB_NOTHING };
 };
 

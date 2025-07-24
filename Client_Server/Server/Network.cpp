@@ -111,6 +111,8 @@ void SESSION::process_packet(char* p) {
 		cp.size = sizeof(cp);
 		cp.type = S2C_P_PICKCHARACTER;
 		cp.Local_id = player->local_id;
+		cp.Max_HP = player->GetHP();
+		cp.Max_MP = player->GetMP();
 		cp.C_type = static_cast<short>(Character_type);
 
 		for (auto& id : g_server.rooms[room_num].id)
@@ -205,7 +207,7 @@ void SESSION::process_packet(char* p) {
 	}
 
 	case C2S_P_PLAYERATTACK: {
-		cs_packet_player_attack* pkt = reinterpret_cast<cs_packet_player_attack*>(p);
+		cs_packet_player_attack_monster* pkt = reinterpret_cast<cs_packet_player_attack_monster*>(p);
 		int monster_id = pkt->target_monster_id;
 
 		Room& room = g_server.rooms[player->room_num];
@@ -220,7 +222,7 @@ void SESSION::process_packet(char* p) {
 		hit.size = sizeof(hit);
 		hit.type = S2C_P_MONSTER_HIT;
 		hit.monster_id = monster_id;
-		hit.current_hp = monster->GetHP(); // 새로 만들면 좋음
+		hit.hp = monster->GetHP(); // 새로 만들면 좋음
 
 		for (int pid : room.id)
 			g_server.users[pid]->do_send(&hit);
@@ -292,12 +294,12 @@ void SESSION::process_packet(char* p) {
 		}
 		case ItemType::MP_POTION:
 		{
-			player->PlusSkillCost(5); // 예시로 5만큼 MP 회복
+			player->PlusMP(5); // 예시로 5만큼 MP 회복
 			sc_packet_apply_mpitem mp;
 			mp.size = sizeof(mp);
 			mp.type = S2C_P_APPLY_MPITEM;
 			mp.local_id = player->local_id;
-			mp.mp = player->GetSkillCost();
+			mp.mp = player->GetMP();
 			for (int id : g_server.rooms[room_num].id) {
 				g_server.users[id]->do_send(&mp);
 			}

@@ -20,25 +20,32 @@ public:
 	const XMFLOAT4X4& GetPosition() const;
 
 	bool  TakeDamage(int dmg);
-	void Move(float dx, float dy, float dz); // 이동처리 예시
-
-	int GetHP() { return hp; }
-	void SetHP(int newHP) { hp = newHP; } // Add a setter method for HP
-	int GetSkillCost() { return skill_cost; }
-	void PlusHP(int new_hp) {
-		std::lock_guard<std::mutex> lock(playerMutex);
-		hp += new_hp;
-	}
 	void GetDamage(int dmg) {
 		std::lock_guard<std::mutex> lock(playerMutex);
 		int damage = dmg - GetDEF(); // 방어력 적용
 		hp -= damage;
 		if (hp < 0) hp = 0; // HP가 0 이하로 떨어지지 않도록 처리
 	}
-	void PlusSkillCost(int new_mp) {
+
+	void Move(float dx, float dy, float dz); // 이동처리 예시
+
+	int GetHP() { return hp; }
+	void SetHP(int newHP) { hp = newHP; } // Add a setter method for HP
+
+	void PlusHP(int new_hp) {
+		std::lock_guard<std::mutex> lock(playerMutex);
+		hp += new_hp;
+	}
+
+
+	int GetMP() { return skill_cost; } // 스킬 사용 비용 반환
+	void SetMP(int newMP) { skill_cost = newMP; } // Add a setter method for MP
+	void PlusMP(int new_mp) {
 		std::lock_guard<std::mutex> lock(playerMutex);
 		skill_cost += new_mp;
 	}
+
+	
 
 	void Updatestatus(Character t);
 
