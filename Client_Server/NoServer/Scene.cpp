@@ -2613,11 +2613,11 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 
 	m_pMonsters[0]->HeightCheck(m_pHeightMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-	m_pMonsters[0]->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	m_pMonsters[0]->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);	// 이거 player처럼 두개 받는 코드로 바꿔
 	
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
@@ -4744,7 +4744,7 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-	//m_pPlayer->CollisionCheck(m_TerrainRoad.get(), m_CollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+	m_pPlayer->CollisionCheck(m_TerrainRoad.get(), m_CollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 	m_pPlayer->HeightCheck(m_TerrainRoad.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 
 	for (auto& m : m_pMonsters)

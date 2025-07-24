@@ -2431,7 +2431,7 @@ void CPlayer::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float 
 		break;
 	}
 	if (fy < terrainHeight + offsety)
-		playerWorld._42 = terrainHeight  + offsety;
+		playerWorld._42 = terrainHeight + offsety;
 	else
 		playerWorld._42 -= (30 * fElapsedTime);
 	p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
@@ -2446,8 +2446,30 @@ void CPlayer::CollisionCheck(CHeightMapImage* heightmap, float fElapsedTime, flo
 	XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
 
 	float terrainHeight = heightmap->GetHeightinWorldSpace(objectWorld._41 - offsetx, objectWorld._43 - offsetz);
-	
+
 	if (terrainHeight > 0.0) {
+		XMFLOAT3 pushdir(m_xmf2PrevPos.x - objectWorld._41, 0.0, m_xmf2PrevPos.y - objectWorld._43);
+		playerWorld._41 += pushdir.x; playerWorld._43 += pushdir.z;
+		playerPreWorld._41 += pushdir.x; playerPreWorld._43 += pushdir.z;
+		objectWorld._41 += pushdir.x; objectWorld._43 += pushdir.z;
+	}
+	else
+		m_xmf2PrevPos.x = objectWorld._41; m_xmf2PrevPos.y = objectWorld._43;
+
+	p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
+}
+
+void CPlayer::CollisionCheck(CHeightMapImage* heightmap, CHeightMapImage* CollisionMap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum)
+{
+	CSkinningObject* p = m_pPlayerObject->getObject();
+	XMFLOAT4X4& playerWorld = p->getWorldMatrix();
+	XMFLOAT4X4& playerPreWorld = p->getPreWorldMatrix();
+	XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
+
+	float colHeight = CollisionMap->GetHeightinWorldSpace(objectWorld._41 - offsetx, objectWorld._43 - offsetz);
+	float terrainHeight = heightmap->GetHeightinWorldSpace(objectWorld._41 - offsetx, objectWorld._43 - offsetz);
+
+	if (colHeight - terrainHeight >= 0.1f) {
 		XMFLOAT3 pushdir(m_xmf2PrevPos.x - objectWorld._41, 0.0, m_xmf2PrevPos.y - objectWorld._43);
 		playerWorld._41 += pushdir.x; playerWorld._43 += pushdir.z;
 		playerPreWorld._41 += pushdir.x; playerPreWorld._43 += pushdir.z;
