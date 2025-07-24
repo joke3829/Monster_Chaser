@@ -33,6 +33,7 @@ struct CameraInfo
     float fElapsedTime;
     int bNormalMapping;
     int bReflection;
+    int intMapNumber;
 };
 
 ConstantBuffer<CameraInfo> g_camera : register(b0, space0);
