@@ -1372,23 +1372,23 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 		case '3':
 			break;
 		case '4':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(22);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '5':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(21);
-			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
-			break;
-		case '6':
 			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(26);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
-		case '7':
+		case '5':
 			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(27);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
+		case '6':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(28);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
+		case '7':
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(29);
+			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
+			break;
 		case '8':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(7);
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(30);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
 		case 'N':
@@ -3605,7 +3605,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 
-	PlayerUISetup(JOB_MAGE);
+	PlayerUISetup(user_job[m_local_id]);
 }
 
 void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -3654,7 +3654,7 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 			m_BuffState[2] = !m_BuffState[2];
 			break;
 		case '4':
-			cMP = 100;
+			cMPs[m_local_id] = 100;
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -3677,30 +3677,25 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 			}
 			break;
 		case 'Q':
-			if (cMP >= 30 && curCTime[0] <= 0) {
-				cMP -= 30;
+			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
+				cMPs[m_local_id] -= 30;
 				curCTime[0] = coolTime[0];
 			}
 			break;
 		case 'E':
-			if (cMP >= 40 && curCTime[1] <= 0) {
-				cMP -= 40;
+			if (cMPs[m_local_id] >= 40 && curCTime[1] <= 0) {
+				cMPs[m_local_id] -= 40;
 				curCTime[1] = coolTime[1];
 			}
 			break;
 		case 'R':
-			if (cMP >= 60 && curCTime[2] <= 0) {
-				cMP -= 60;
+			if (cMPs[m_local_id] >= 60 && curCTime[2] <= 0) {
+				cMPs[m_local_id] -= 60;
 				curCTime[2] = coolTime[2];
 			}
 			break;
 		case 'P':
-			if (m_nState == IS_GAMING) {
-				m_bOpenShop = !m_bOpenShop;
-				ShowCursor(m_bOpenShop);
-				m_pShopUI->setRenderState(m_bOpenShop);
-				//m_pTextManager->UpdateText(GoldTextIndex, std::to_wstring(m_nGold).c_str(), 840, 500, m_bOpenShop);
-			}
+			m_bUIOnOff = !m_bUIOnOff;
 			break;
 		}
 		break;
@@ -4089,39 +4084,38 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 
 	// Player UI ==================================================
 	int buffstart = 20; int bstride = 40;
+
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		m_vStatusUIs[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
-		if (i == 0) {
-			m_vStatusUIs[i][3]->setScaleXWithUV(cMP / maxMP);
-		}
-		if (i == 0) {
+		m_vPlayersStatUI[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
+		m_vPlayersStatUI[i][3]->setScaleXWithUV(cMPs[i] / maxMPs[i]);
+		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
 				if (m_BuffState[j]) {
-					m_vStatusUIs[i][j + 4]->setRenderState(true);
-					m_vStatusUIs[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), m_buffpixelHeight[i]);
+					m_vPlayersStatUI[i][j + 4]->setRenderState(true);
+					m_vPlayersStatUI[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), 100);
 					++t;
 				}
 				else {
-					m_vStatusUIs[i][j + 4]->setRenderState(false);
+					m_vPlayersStatUI[i][j + 4]->setRenderState(false);
 				}
 			}
 		}
 	}
 
 	{
-		if (cMP < 30)
+		if (cMPs[m_local_id] < 30)
 			m_vSkillUIs[6]->setRenderState(true);
 		else
 			m_vSkillUIs[6]->setRenderState(false);
 
-		if (cMP < 40)
+		if (cMPs[m_local_id] < 40)
 			m_vSkillUIs[7]->setRenderState(true);
 		else
 			m_vSkillUIs[7]->setRenderState(false);
 
-		if (cMP < 60)
+		if (cMPs[m_local_id] < 60)
 			m_vSkillUIs[8]->setRenderState(true);
 		else
 			m_vSkillUIs[8]->setRenderState(false);
@@ -4191,17 +4185,18 @@ void CRaytracingETPScene::Render()
 	cmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// player UI ====================================
-	for (short i = 0; i < m_numUser; ++i) {
-		for (auto& p : m_vStatusUIs[i])
+	if (m_bUIOnOff) {
+		for (int i = 0; i < m_numUser; ++i) {
+			for (auto& p : m_vPlayersStatUI[i])
+				p->Render();
+		}
+
+		for (auto& p : m_vItemUIs)
+			p->Render();
+
+		for (auto& p : m_vSkillUIs)
 			p->Render();
 	}
-	for (auto& p : m_vItemUIs)
-		p->Render();
-
-	for (auto& p : m_vSkillUIs)
-		p->Render();
-
-	m_pShopUI->Render();
 	// ===============================================
 
 
@@ -4213,9 +4208,6 @@ void CRaytracingETPScene::Render()
 
 void CRaytracingETPScene::PlayerUISetup(short job)
 {
-	/*m_pTextManager = std::make_unique<CTextManager>();
-	m_pTextManager->InitManager(m_pOutputBuffer);*/
-
 	size_t mindex{};
 	size_t tindex{};
 	size_t uindex{};
@@ -4232,7 +4224,8 @@ void CRaytracingETPScene::PlayerUISetup(short job)
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 340, 28));		// hp/mp bar
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 330, 18));		// hp/mp
 
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 255, 12));		// coop hp/mp
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 264, 14.4));		// coop hp/mp 
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 60, 60));		// coop player face
 
 	tindex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_HPbar.dds"));	// HPbar
@@ -4242,61 +4235,68 @@ void CRaytracingETPScene::PlayerUISetup(short job)
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff0.dds"));	// buff0
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff1.dds"));	// buff1
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff2.dds"));	// buff2
-	{
-		uindex = m_vStatusUIs[0].size();			// 0 - hpbar
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex].get()));
-		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 20);
 
-		uindex = m_vStatusUIs[0].size();			// 1 - hp
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get()));
-		m_vStatusUIs[0][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
-		m_vStatusUIs[0][uindex]->setPositionInViewport(25, 25);
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MiniPlayer0.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MiniPlayer1.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MiniPlayer2.dds"));
 
-		uindex = m_vStatusUIs[0].size();			// 2 - mp bar
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex + 1].get()));
-		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 60);
+	int otherPlayer = 0;
+	for (int i = 0; i < m_numUser; ++i) {
+		if (i == m_local_id) {
+			uindex = m_vPlayersStatUI[i].size();			// 0 - hpbar
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex].get()));
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(20, 20);
 
-		uindex = m_vStatusUIs[0].size();			// 2 - mp
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get(), textures[tindex + 2].get()));
-		m_vStatusUIs[0][uindex]->setPositionInViewport(25, 65);
+			uindex = m_vPlayersStatUI[i].size();			// 1 - hp
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get()));
+			m_vPlayersStatUI[i][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(25, 25);
 
-		m_buffpixelHeight[0] = 100;
-		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
-		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
-		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 4].get()));
-		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
-		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 5].get()));
-		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
+			uindex = m_vPlayersStatUI[i].size();			// 2 - mp bar
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex + 1].get()));
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(20, 60);
+
+			uindex = m_vPlayersStatUI[i].size();			// 2 - mp
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 2].get(), textures[tindex + 2].get()));
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(25, 65);
+
+			uindex = m_vPlayersStatUI[i].size();			// 3 ~ 5 buff
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(20, 100);
+			uindex = m_vPlayersStatUI[i].size();			// 3 ~ 5 buff
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 4].get()));
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(20, 100);
+			uindex = m_vPlayersStatUI[i].size();			// 3 ~ 5 buff
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 5].get()));
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(20, 100);
+		}
+		else {
+			uindex = m_vPlayersStatUI[i].size();			// 0 - hpbar
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex].get()));
+			m_vPlayersStatUI[i][uindex]->setScale(0.8);
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(88, 100 + 50 + (otherPlayer * 80));
+
+			uindex = m_vPlayersStatUI[i].size();			// 1 - hp
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 3].get()));
+			m_vPlayersStatUI[i][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(92, 100 + 50 + (otherPlayer * 80) + 4);
+
+			uindex = m_vPlayersStatUI[i].size();			// 2 - mp bar
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex + 1].get()));
+			m_vPlayersStatUI[i][uindex]->setScale(0.8);
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(88, 138 + 50 + (otherPlayer * 80));
+
+			uindex = m_vPlayersStatUI[i].size();			// 2 - mp
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 3].get(), textures[tindex + 2].get()));
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(92, 138 + 50 + (otherPlayer * 80) + 4);
+
+			uindex = m_vPlayersStatUI[i].size();
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 4].get(), textures[tindex + user_job[i] + 5].get()));
+			m_vPlayersStatUI[i][uindex]->setPositionInViewport(20, 100 + 50 + (otherPlayer * 80));
+			m_vPlayersStatUI[i][uindex]->setColor(1.0, 1.0, 1.0, 0.5);
+			++otherPlayer;
+		}
 	}
-
-	//for (int i = 0; i < 2; ++i) {
-	//	uindex = m_vStatusUIs[i + 1].size();			// 1 - hp
-	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
-	//	m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15);
-	//	m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.0, 0.0, 1.0);
-
-	//	uindex = m_vStatusUIs[i + 1].size();			// 2 - mp
-	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get()));
-	//	m_vStatusUIs[i + 1][uindex]->setPositionInViewport(15, (i * 115) + 150 + 15 + 30);
-	//	m_vStatusUIs[i + 1][uindex]->setColor(0.0, 0.0, 1.0, 1.0);
-
-	//	m_buffpixelHeight[i + 1] = (i * 115) + 150 + 15 + 30 + 30;
-	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
-	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
-	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
-	//	m_vStatusUIs[i + 1][uindex]->setColor(0.0, 1.0, 1.0, 1.0);
-	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
-	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
-	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
-	//	m_vStatusUIs[i + 1][uindex]->setColor(1.0, 0.5, 1.0, 1.0);
-	//	uindex = m_vStatusUIs[i + 1].size();			// 3 ~ 5 buff
-	//	m_vStatusUIs[i + 1].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
-	//	m_vStatusUIs[i + 1][uindex]->setScale(0.75);
-	//	m_vStatusUIs[i + 1][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
-	//}
 	// =============================================================================
 
 	// item ========================================================================
@@ -4318,9 +4318,6 @@ void CRaytracingETPScene::PlayerUISetup(short job)
 	}
 	m_vItemUIs[0]->setRenderState(true);
 
-	//ItemNumTextIndex = m_pTextManager->getTextListSize();
-	//m_pTextManager->AddText(L"바탕", 24, D2D1::ColorF::White, std::to_wstring(itemNum[0]).c_str(), 125, 665);
-
 	// =============================================================================
 
 	// skills ======================================================================
@@ -4337,12 +4334,21 @@ void CRaytracingETPScene::PlayerUISetup(short job)
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician2.dds"));
 		break;
+	case JOB_WARRIOR:
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior0.dds"));
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior1.dds"));
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior2.dds"));
+		break;
+	case JOB_HEALER:
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer0.dds"));
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer1.dds"));
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer2.dds"));
+		break;
 	}
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_MP_Less.dds"));
 	for (int i = 0; i < 3; ++i) {
 		uindex = m_vSkillUIs.size();
 		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
-		//m_vSkillUIs[uindex]->setColor(1.0, 0.5, 0.5, 1.0);
 		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
 	}
 
@@ -4358,18 +4364,6 @@ void CRaytracingETPScene::PlayerUISetup(short job)
 		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
 		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
 	}
-
-	// Shop ============================================================================
-	mindex = meshes.size();
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 400, 500));
-	tindex = textures.size();
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Shop.dds"));
-	m_pShopUI = std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex].get());
-	m_pShopUI->setPositionInViewport(780, 50);
-	m_pShopUI->setRenderState(false);
-
-	//GoldTextIndex = m_pTextManager->getTextListSize();
-	//m_pTextManager->AddText(L"바탕", 24, D2D1::ColorF::White, L"", 840, 500);
 }
 
 // ==========================================================================
