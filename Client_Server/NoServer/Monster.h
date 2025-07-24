@@ -267,6 +267,7 @@ public:
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
+	void CollisionCheck(CHeightMapImage* heightmap, CHeightMapImage* CollisionMap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
 	void CollisionCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
 protected:
 	CPlayableCharacter* m_pMonsterObject{};
