@@ -72,8 +72,32 @@ using Microsoft::WRL::ComPtr;
 enum MaterialIndex {	// 사용할지 고민중, 안쓰는게 더 편할지도...?
 	ALBEDO_COLOR, EMISSIVE_COLOR, SPECULAR_COLOR, GLOSSINESS
 };
+enum class MonsterType {
+	None = 0,
+	Feroptere,
+	Pistiripere,
+	RostrokarackLarvae,
+	XenokarceBoss,
+	Occisodonte,
+	Limadon,
+	Fulgurodonte,
+	CrassorridBoss,
+	GorhorridBoss,
+};
+
+
+
+enum class ItemType : unsigned char {
+	HP_POTION = 0,
+	MP_POTION,
+	ATK_BUFF,
+	DEF_BUFF,
+	ITEM_COUNT
+};
 
 enum TitleState { Title, RoomSelect, InRoom, SelectC, GoLoading };
+
+enum InGameState { IS_LOADING, IS_GAMING, IS_FINISH };
 //========================================================================================
 
 // 상수 정의 ===========================================================================

@@ -1,4 +1,4 @@
-// Room.cpp
+ï»¿// Room.cpp
 #include "stdafx.h"
 #include "Room.h"
 #include "Network.h"
@@ -7,7 +7,7 @@
 extern Network g_server;
 int Room::room_num = 0;
 Room::Room() : room_number(room_num++) {
-	// ÇÊ¿ä ½Ã ÃÊ±âÈ­ ÄÚµå Ãß°¡
+	// í•„ìš” ì‹œ ì´ˆê¸°í™” ì½”ë“œ ì¶”ê°€
 }
 
 
@@ -36,7 +36,7 @@ void Room::AddPlayer(const int& enter_id)
 
 
 
-void Room::SendRoomInfo() {        //¹æ ÇöÈ² º¸³»ÁÖ±â
+void Room::SendRoomInfo() {        //ë°© í˜„í™© ë³´ë‚´ì£¼ê¸°
 	sc_packet_room_info pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = S2C_P_UPDATEROOM;
@@ -57,7 +57,7 @@ void Room::BroadCast_Room()
 
 
 	//for (auto& player : g_server.users) {							//send other player to broadcast room update
-	//	//if (player.second->m_uniqueNo == this->m_uniqueNo)  // ³ª ÀÚ½ÅÀº Á¦¿Ü
+	//	//if (player.second->m_uniqueNo == this->m_uniqueNo)  // ë‚˜ ìì‹ ì€ ì œì™¸
 	//	//	continue;	
 	//	player.second->do_send(&rp);								//if come UI Not to send me
 	//}
@@ -68,13 +68,13 @@ void Room::StartGame()
 {
 	is_started = true;
 
-	// ±âÁ¸ StartGame ·ÎÁ÷ÀÌ ÀÖ´Ù¸é À¯ÁöÇÏ°í...
+	// ê¸°ì¡´ StartGame ë¡œì§ì´ ìˆë‹¤ë©´ ìœ ì§€í•˜ê³ ...
 	for (auto& [id, monster] : monsters) {
 		sc_packet_monster_spawn sp;
 		sp.size = sizeof(sp);
 		sp.type = S2C_P_MONSTER_SPAWN;
 		sp.monster_id = id;
-		sp.monster_type = 0; // Å¸ÀÔ ³ªÁß¿¡ Ãß°¡ °¡´É
+		sp.monster_type = monster->GetType(); // íƒ€ì… ë‚˜ì¤‘ì— ì¶”ê°€ ê°€ëŠ¥
 		XMStoreFloat4x4(&sp.pos, XMMatrixTranslation(
 			monster->GetPosition().x, 
 			monster->GetPosition().y, 
@@ -84,25 +84,76 @@ void Room::StartGame()
 		for (int pid : this->id)
 			g_server.users[pid]->do_send(&sp);
 
-		std::cout << "[¸ó½ºÅÍ " << id << "] ÃÊ±â ½ºÆù Àü¼Û ¿Ï·á\n";
+		std::cout << "[ëª¬ìŠ¤í„° " << id << "] ì´ˆê¸° ìŠ¤í° ì „ì†¡ ì™„ë£Œ\n";
 	}
-
-	std::thread([this]() {
-		while (is_started) {
-			for (auto& [id, monster] : this->monsters) {
-				monster->Update(0.016f, *this,g_server.playerManager);
+	if (monsters.size() > 0) {
+		std::thread([this]() {
+			while (is_started) {
+				for (auto& [id, monster] : this->monsters) {
+					monster->Update(0.016f, *this, g_server.playerManager);
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(16));
 			}
-			std::this_thread::sleep_for(std::chrono::milliseconds(16));
-		}
-		}).detach();
+			}).detach();
+	}
+	
 }
 
 void Room::SpawnMonsters()
 {
-	// ¿¹½Ã·Î 1¸¶¸® »ı¼º
+	// ì˜ˆì‹œë¡œ 1ë§ˆë¦¬ ìƒì„±
 	int new_id = 0;
-	XMFLOAT3 spawnPos = { -28.0f, 0.0f, -245.0f };
-	monsters[new_id] = std::make_shared<Monster>(new_id, spawnPos);
+	/*XMFLOAT3 spawnPos = { -28.0f, 0.0f, -245.0f };
+	monsters[new_id] = std::make_shared<Monster>(new_id, spawnPos);*/
+
+	if (!monsters.empty()) return;
+
+	// ì˜ˆ: 1ìŠ¤í…Œì´ì§€ ê¸°ì¤€
+	switch (stage)
+	{
+	case 1:
+		//for(int i = 0; i < 5; ++i) {
+		//	monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 40.0f, -235.0f), MonsterType::Feroptere); // Feroptere ëª¬ìŠ¤í„° 5ë§ˆë¦¬
+		//	new_id++;
+		//}
+		//for (int i = 0; i < 5; ++i) {
+		//	monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 20.0f, -225.0f), MonsterType::Pistiripere); // Feroptere ëª¬ìŠ¤í„° 5ë§ˆë¦¬
+		//	new_id++;
+		//}
+		//for (int i = 0; i < 5; ++i) {
+		//	monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 80.0f, -275.0f), MonsterType::RostrokarackLarvae); // Feroptere ëª¬ìŠ¤í„° 5ë§ˆë¦¬
+		//	new_id++;
+		//}
+		
+		monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-86.3f, 0.0f, -301.1f), MonsterType::GorhorridBoss); // ë³´ìŠ¤
+		new_id++;
+		break;
+	case 2:
+		break; // 2ìŠ¤í…Œì´ì§€ ëª¬ìŠ¤í„°ëŠ” ì•„ì§ ì •ì˜ë˜ì§€ ì•ŠìŒ
+	case 3:
+		break; // 3ìŠ¤í…Œì´ì§€ ëª¬ìŠ¤í„°ëŠ” ì•„ì§ ì •ì˜ë˜ì§€ ì•ŠìŒ
+	default:
+		break;
+	}
+	
+
+}
+
+void Room::setReady(int local_id, bool ready)
+{
+	if (local_id >= 0 && local_id < 3)
+		player_readytoPlaygame[local_id] = ready;
+}
+
+bool Room::isAllGameStartReady() const
+{
+	int activePlayerCount = id.size();
+	int readyCount = 0;
+	for (int i = 0; i < activePlayerCount; ++i) {
+		if (player_readytoPlaygame[i]) ++readyCount;
+	}
+	return readyCount == activePlayerCount;
+	
 }
 
 

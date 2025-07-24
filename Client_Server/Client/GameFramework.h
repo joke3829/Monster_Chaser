@@ -9,6 +9,7 @@
 #include "Camera.h"
 
 extern DXResources g_DxResource;
+extern InGameState g_InGameState;
 
 class CGameFramework {
 public:

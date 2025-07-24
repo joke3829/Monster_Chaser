@@ -27,6 +27,14 @@ using namespace std;
 using namespace concurrency;
 using namespace chrono;
 
+
+
+
+constexpr int NotStart = 0; // 게임 시작 전 상태
+constexpr int Stage1 = 1;  // 스테이지1	
+constexpr int Stage2 = 2;  // 스테이지2
+constexpr int Stage3 = 2;  // 스테이지3
+
 #define MAX_USER 5000
 
 
@@ -51,18 +59,30 @@ enum MoveAnimationState
 	RUN_RIGHT_DOWN = 20,
 };
 enum Character:char {
-	Wizard=0,
+	None = 0,
+	Wizard,
 	Warrior,
 	Priest
 };
 
-struct vec3 {
-	float x;
-	float y;
-	float z;
+
+enum class MonsterType {
+	None = 0,
+	Feroptere,
+	Pistiripere,
+	RostrokarackLarvae,
+	XenokarceBoss,
+	Occisodonte,
+	Limadon,
+	Fulgurodonte,
+	RostrokarckBoss,
+	GorhorridBoss,
 };
-struct vec2 {
-	float x;
-	float y;
-	
+
+enum class ItemType : unsigned char {
+	HP_POTION = 0,
+	MP_POTION,
+	ATK_BUFF,
+	DEF_BUFF,
+	ITEM_COUNT
 };
