@@ -4018,8 +4018,8 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);
 	// Object File Read ========================================	! !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
-
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\ETP.bin", "src\\texture\\Map\\");
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\Water.bin", "src\\texture\\Map\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
 	CreateMageCharacter();
 	//CreateWarriorCharacter();
@@ -4047,10 +4047,30 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 			ma.m_bHasEmissiveColor = false;
 	}
 
+	{		// Water
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\WaterTurbulent00_NORM.dds"));
+		auto p = normalObjects[normalObjects.size() - 1].get();
+		p->SetInstanceID(2);
+		p->getMaterials().emplace_back();
+		Material& mt = p->getMaterials()[0];
+		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
+		//mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
+		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 1;
+
+		/*void* tempptr{};
+		std::vector<XMFLOAT2> tex0 = meshes[p->getMeshIndex()]->getTex0();
+		for (XMFLOAT2& xmf : tex0) {
+			xmf.x *= 10.0f; xmf.y *= 10.0f;
+		}
+		meshes[p->getMeshIndex()]->getTexCoord0Buffer()->Map(0, nullptr, &tempptr);
+		memcpy(tempptr, tex0.data(), sizeof(XMFLOAT2) * tex0.size());
+		meshes[p->getMeshIndex()]->getTexCoord0Buffer()->Unmap(0, nullptr);*/
+	}
+
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
 
-	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\ETPTerrain2.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
+	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\ETP_Terrain.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
@@ -4062,6 +4082,8 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_fGlossiness = 0.0f;
 	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-512.0, 0.0, -512.0));
 
+	m_TerrainRoad = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\ETP_Terrain_Road.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
+	m_CollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\ETP_CollisionMap.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
 	PrepareTerrainTexture();
 
 	// cubeMap Ready
@@ -4722,7 +4744,8 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+	//m_pPlayer->CollisionCheck(m_TerrainRoad.get(), m_CollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+	m_pPlayer->HeightCheck(m_TerrainRoad.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 
 	for (auto& m : m_pMonsters)
 	{

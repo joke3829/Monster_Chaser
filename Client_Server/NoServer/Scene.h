@@ -355,6 +355,8 @@ public:
 	//void TextRender();
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+	std::unique_ptr<CHeightMapImage> m_TerrainRoad{};
+	std::unique_ptr<CHeightMapImage> m_CollisionHMap{};
 protected:
 	unsigned int								m_nSkyboxIndex{};
 
