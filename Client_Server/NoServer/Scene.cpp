@@ -2024,11 +2024,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	// Copy(normalObject) & SetPreMatrix ===============================
 
 	skinned[0]->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
-	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -998.0f));
-	skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
-	skinned[1]->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	skinned[1]->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
-	skinned[1]->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	skinned[0]->SetPosition(XMFLOAT3(-71.7f,0.0f,-987.8f));
+	//skinned[0]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -500.0f));
 
 	// ==============================================================================
 
@@ -2371,8 +2368,8 @@ void CRaytracingWinterLandScene::Create_Gorhorrid()
 	}
 
 	m_vMonsters[0]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-28.0f, 0.0f, -245.0f));
-	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 180.0f, 0.0f));
+	m_vMonsters[0]->getObject()->SetPosition(XMFLOAT3(-86.3f, 0.0f, -301.1f));
+	m_vMonsters[0]->getObject()->Rotate(XMFLOAT3(0.0f, 170.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 
@@ -2616,8 +2613,8 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 
-	m_pMonsters[0]->HeightCheck(m_pHeightMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-	m_pMonsters[0]->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);	// 이거 player처럼 두개 받는 코드로 바꿔
+	m_pMonsters[0]->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	m_pMonsters[0]->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);	// 이거 player처럼 두개 받는 코드로 바꿔
 	
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
@@ -4084,17 +4081,6 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 
 	m_TerrainRoad = std::make_unique<CHeightMapImage>(L"src\\model\\ETP_Terrain_Road.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
 	m_CollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\ETP_CollisionMap.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
-
-	meshes.emplace_back(std::make_unique<Mesh>(m_CollisionHMap.get(), "terrain2"));
-	normalObjects.emplace_back(std::make_unique<CGameObject>());
-	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
-
-	normalObjects[normalObjects.size() - 1]->SetInstanceID(10);
-	normalObjects[normalObjects.size() - 1]->getMaterials().emplace_back();
-	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_bHasMetallic = true;
-	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_bHasGlossiness = true;
-	normalObjects[normalObjects.size() - 1]->getMaterials()[0].m_fGlossiness = 0.0f;
-	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-512.0, 0.0, -512.0));
 	PrepareTerrainTexture();
 
 	// cubeMap Ready
