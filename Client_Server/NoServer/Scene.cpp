@@ -1971,7 +1971,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	UINT finalmesh = meshes.size();
 
 	// terrian
-	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Terrain_Road.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Terrain_Final.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[normalObjects.size() - 1]->SetMeshIndex(meshes.size() - 1);
@@ -1979,8 +1979,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	normalObjects[normalObjects.size() - 1]->SetInstanceID(10);
 	normalObjects[normalObjects.size() - 1]->getMaterials().emplace_back();
 	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-1024.0, 0.0, -1024.0));
-
-	m_pCollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\Terrain_Collision.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	m_pRoadTerrain = std::make_unique<CHeightMapImage>(L"src\\model\\Terrain_Road.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
+	m_pCollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\\Terrain_Collision.raw", 2049, 2049, XMFLOAT3(1.0f, 0.0312f, 1.0f));
 
 
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\FrozenWater02_NORM.dds"));

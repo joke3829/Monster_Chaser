@@ -208,6 +208,7 @@ public:
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
+	std::unique_ptr<CHeightMapImage> m_pRoadTerrain;
 protected:
 	
 	unsigned int								m_nSkyboxIndex{};
