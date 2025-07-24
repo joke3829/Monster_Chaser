@@ -3,8 +3,7 @@ extern std::mutex mtx;
 extern std::unordered_map<int, Player> Players;
 
 ObjectManager::ObjectManager(int id)
-	: my_id(id) {
-}
+	: my_id(id) {}
 
 int ObjectManager::getID() const {
 	return my_id;
@@ -19,12 +18,12 @@ XMFLOAT3 ObjectManager::getPosition() const {
 	return pos;
 }
 
-Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
+Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t) 
 {
 
 	switch (type)
 	{
-
+		
 	case MonsterType::Feroptere:
 		hp = 100;
 		break;
@@ -42,7 +41,7 @@ Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
 		break;
 	case MonsterType::Fulgurodonte:
 		break;
-	case MonsterType::RostrokarckBoss:
+	case MonsterType::CrassorridBoss:
 		break;
 	case MonsterType::GorhorridBoss:
 		break;

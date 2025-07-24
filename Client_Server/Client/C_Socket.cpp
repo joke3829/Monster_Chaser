@@ -186,6 +186,12 @@ void C_Socket::process_packet(char* ptr)
 		short CT = p->C_type;
 		int loacl_id = p->Local_id;
 		Players[loacl_id].setCharacterType(CT);
+
+		Players[loacl_id].SetMaxHP(p->Max_HP);
+		Players[loacl_id].SetHP(p->Max_HP);
+
+		Players[loacl_id].SetMaxMP(p->Max_HP);
+		Players[loacl_id].SetMP(p->Max_HP);
 		break;
 	}
 	case S2C_P_SETREADY:

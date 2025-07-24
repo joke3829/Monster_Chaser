@@ -6,248 +6,372 @@ extern Network g_server;
 extern mutex myMutex;
 
 EXP_OVER::EXP_OVER(IO_OP op) : io_op(op) {
-    ZeroMemory(&over, sizeof(over));
-    wsabuf[0].buf = buffer;
-    wsabuf[0].len = BUF_SIZE;
-    accept_socket = INVALID_SOCKET;
+	ZeroMemory(&over, sizeof(over));
+	wsabuf[0].buf = buffer;
+	wsabuf[0].len = BUF_SIZE;
+	accept_socket = INVALID_SOCKET;
 }
 
 SESSION::SESSION(int Num, SOCKET s) : m_uniqueNo(Num), socket(s) {
-    recv_over = std::make_unique<EXP_OVER>(IO_RECV);
-    player = std::make_shared<Player>(-1, "", -1); // 기본 생성
-    g_server.playerManager.AddPlayer(m_uniqueNo, player); 
-    do_recv();
+	recv_over = std::make_unique<EXP_OVER>(IO_RECV);
+	player = std::make_shared<Player>(-1, "", -1); // 기본 생성
+	g_server.playerManager.AddPlayer(m_uniqueNo, player);
+	do_recv();
 }
 
 SESSION::~SESSION() {
-    g_server.playerManager.RemovePlayer(m_uniqueNo);
-    closesocket(socket);
+	g_server.playerManager.RemovePlayer(m_uniqueNo);
+	closesocket(socket);
 }
 
 void SESSION::do_recv() {
-    DWORD flags = 0;
-    recv_over->wsabuf[0].buf = recv_over->buffer + remained;
-    recv_over->wsabuf[0].len = BUF_SIZE - remained;
-    WSARecv(socket, recv_over->wsabuf, 1, nullptr, &flags, &recv_over->over, nullptr);
+	DWORD flags = 0;
+	recv_over->wsabuf[0].buf = recv_over->buffer + remained;
+	recv_over->wsabuf[0].len = BUF_SIZE - remained;
+	WSARecv(socket, recv_over->wsabuf, 1, nullptr, &flags, &recv_over->over, nullptr);
 }
 
 void SESSION::do_send(void* packet) {
-    EXP_OVER* over = new EXP_OVER(IO_SEND);
-    int len = reinterpret_cast<unsigned char*>(packet)[0];
-    memcpy(over->buffer, packet, len);
-    over->wsabuf[0].len = len;
-    WSASend(socket, over->wsabuf, 1, nullptr, 0, &over->over, nullptr);
+	EXP_OVER* over = new EXP_OVER(IO_SEND);
+	int len = reinterpret_cast<unsigned char*>(packet)[0];
+	memcpy(over->buffer, packet, len);
+	over->wsabuf[0].len = len;
+	WSASend(socket, over->wsabuf, 1, nullptr, 0, &over->over, nullptr);
 }
 
 void SESSION::process_packet(char* p) {
-    char type = p[1];
-    switch (type) {
-    case C2S_P_LOGIN: {
-        break;
-    }
-    case C2S_P_ENTER_ROOM: {
-        cs_packet_enter_room* pkt = reinterpret_cast<cs_packet_enter_room*>(p);
-        int room_Num = static_cast<int>(pkt->room_number);
-        lock_guard<mutex> lock(g_server.rooms[room_Num].RoomMutex);
+	char type = p[1];
+	switch (type) {
+	case C2S_P_LOGIN: {
+		break;
+	}
+	case C2S_P_ENTER_ROOM: {
+		cs_packet_enter_room* pkt = reinterpret_cast<cs_packet_enter_room*>(p);
+		int room_Num = static_cast<int>(pkt->room_number);
+		lock_guard<mutex> lock(g_server.rooms[room_Num].RoomMutex);
 
-        if (!g_server.rooms[room_Num].IsAddPlayer()) break;
+		if (!g_server.rooms[room_Num].IsAddPlayer()) break;
 
-        player->local_id = g_server.rooms[room_Num].GetPlayerCount();
-        player->room_num = room_Num;
-        g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
+		player->local_id = g_server.rooms[room_Num].GetPlayerCount();
+		player->room_num = room_Num;
+		g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
 
-        for (auto& id : g_server.rooms[room_Num].id) {
-            sc_packet_select_room sp;
-            sp.size = sizeof(sp);
-            sp.type = S2C_P_SELECT_ROOM;
-            sp.Local_id = player->local_id;
-            sp.room_number = static_cast<char>(room_Num);
-            sp.is_self = (id == m_uniqueNo);
-            g_server.users[id]->do_send(&sp);
-        }
+		for (auto& id : g_server.rooms[room_Num].id) {
+			sc_packet_select_room sp;
+			sp.size = sizeof(sp);
+			sp.type = S2C_P_SELECT_ROOM;
+			sp.Local_id = player->local_id;
+			sp.room_number = static_cast<char>(room_Num);
+			sp.is_self = (id == m_uniqueNo);
+			g_server.users[id]->do_send(&sp);
+		}
 
-        for (int existing_id : g_server.rooms[room_Num].id) {
-            if (existing_id == m_uniqueNo) continue;
-            sc_packet_select_room sp_existing;
-            sp_existing.size = sizeof(sp_existing);
-            sp_existing.type = S2C_P_SELECT_ROOM;
-            sp_existing.Local_id = g_server.users[existing_id]->player->local_id;
-            sp_existing.room_number = static_cast<char>(room_Num);
-            sp_existing.is_self = false;
-            g_server.users[m_uniqueNo]->do_send(&sp_existing);
-        }
+		for (int existing_id : g_server.rooms[room_Num].id) {
+			if (existing_id == m_uniqueNo) continue;
+			sc_packet_select_room sp_existing;
+			sp_existing.size = sizeof(sp_existing);
+			sp_existing.type = S2C_P_SELECT_ROOM;
+			sp_existing.Local_id = g_server.users[existing_id]->player->local_id;
+			sp_existing.room_number = static_cast<char>(room_Num);
+			sp_existing.is_self = false;
+			g_server.users[m_uniqueNo]->do_send(&sp_existing);
+		}
 
-        for (const auto& [existing_id, char_type] : g_server.rooms[room_Num].selected_characters) {
-            sc_packet_pickcharacter cp;
-            cp.size = sizeof(cp);
-            cp.type = S2C_P_PICKCHARACTER;
-            cp.C_type = char_type;
-            cp.Local_id = g_server.users[existing_id]->player->local_id;
-            g_server.users[m_uniqueNo]->do_send(&cp);
-        }
+		for (const auto& [existing_id, char_type] : g_server.rooms[room_Num].selected_characters) {
+			sc_packet_pickcharacter cp;
+			cp.size = sizeof(cp);
+			cp.type = S2C_P_PICKCHARACTER;
+			cp.C_type = char_type;
+			cp.Local_id = g_server.users[existing_id]->player->local_id;
+			g_server.users[m_uniqueNo]->do_send(&cp);
+		}
 
-        sc_packet_room_info rp;
-        rp.size = sizeof(rp);
-        rp.type = S2C_P_UPDATEROOM;
-        for (int i = 0; i < g_server.rooms.size(); ++i)
-            rp.room_info[i] = g_server.rooms[i].GetPlayerCount();
+		sc_packet_room_info rp;
+		rp.size = sizeof(rp);
+		rp.type = S2C_P_UPDATEROOM;
+		for (int i = 0; i < g_server.rooms.size(); ++i)
+			rp.room_info[i] = g_server.rooms[i].GetPlayerCount();
 
-        for (auto& player : g_server.users)
-            player.second->do_send(&rp);
+		for (auto& player : g_server.users)
+			player.second->do_send(&rp);
 
-        std::cout << "[로컬아이디 " << player->local_id << "을 가진 클라이언트 " << m_uniqueNo
-            << "]이 " << (int)room_Num << "번 방에 입장했습니다." << std::endl;
-        break;
-    }
-    case C2S_P_PICKCHARACTER: {
-        cs_packet_pickcharacter* pkt = reinterpret_cast<cs_packet_pickcharacter*>(p);
-        short Character_type = pkt->C_type;
-        int room_num = static_cast<int>(pkt->room_number);
+		std::cout << "[로컬아이디 " << player->local_id << "을 가진 클라이언트 " << m_uniqueNo
+			<< "]이 " << (int)room_Num << "번 방에 입장했습니다." << std::endl;
+		break;
+	}
+	case C2S_P_PICKCHARACTER: {
+		cs_packet_pickcharacter* pkt = reinterpret_cast<cs_packet_pickcharacter*>(p);
+		Character Character_type = static_cast<Character>(pkt->C_type);
+		int room_num = static_cast<int>(pkt->room_number);
 
-        g_server.rooms[room_num].selected_characters[m_uniqueNo] = Character_type;
+		g_server.rooms[room_num].selected_characters[m_uniqueNo] = Character_type;
+		//player->type = static_cast<Character> (Character_type); // 플레이어의 직업 설정
+		player->Updatestatus(Character_type); // 플레이어 상태 업데이트
+		sc_packet_pickcharacter cp;
+		cp.size = sizeof(cp);
+		cp.type = S2C_P_PICKCHARACTER;
+		cp.Local_id = player->local_id;
+		cp.Max_HP = player->GetHP();
+		cp.Max_MP = player->GetMP();
+		cp.C_type = static_cast<short>(Character_type);
 
-        sc_packet_pickcharacter cp;
-        cp.size = sizeof(cp);
-        cp.type = S2C_P_PICKCHARACTER;
-        cp.Local_id = player->local_id;
-        cp.C_type = Character_type;
+		for (auto& id : g_server.rooms[room_num].id)
+			g_server.users[id]->do_send(&cp);
+		break;
+	}
+	case C2S_P_GETREADY: {
+		cs_packet_getready* pkt = reinterpret_cast<cs_packet_getready*>(p);
+		int room_num = player->room_num;
+		player->isReady = pkt->isReady;
 
-        for (auto& id : g_server.rooms[room_num].id)
-            g_server.users[id]->do_send(&cp);
-        break;
-    }
-    case C2S_P_GETREADY: {
-        cs_packet_getready* pkt = reinterpret_cast<cs_packet_getready*>(p);
-        int room_num = player->room_num;
-        player->isReady = pkt->isReady;
+		if (player->isReady)
+			g_server.rooms[room_num].setReadyUser(1);
+		else
+			g_server.rooms[room_num].setReadyUser(-1);
 
-        if (player->isReady)
-            g_server.rooms[room_num].setReadyUser(1);
-        else
-            g_server.rooms[room_num].setReadyUser(-1);
+		sc_packet_set_ready rp;
+		rp.size = sizeof(rp);
+		rp.type = S2C_P_SETREADY;
+		rp.Local_id = player->local_id;
+		rp.room_number = static_cast<char>(room_num);
+		rp.is_ready = player->isReady;
 
-        sc_packet_set_ready rp;
-        rp.size = sizeof(rp);
-        rp.type = S2C_P_SETREADY;
-        rp.Local_id = player->local_id;
-        rp.room_number = static_cast<char>(room_num);
-        rp.is_ready = player->isReady;
+		for (int id : g_server.rooms[room_num].id)
+			if (id != m_uniqueNo)
+				g_server.users[id]->do_send(&rp);
 
-        for (int id : g_server.rooms[room_num].id)
-            if (id != m_uniqueNo)
-                g_server.users[id]->do_send(&rp);
+		if (g_server.rooms[room_num].GetReadyUser() == g_server.rooms[room_num].id.size()) {
+			sc_packet_Ingame_start sp;
+			sp.size = sizeof(sp);
+			sp.type = S2C_P_ALLREADY;
+			sp.room_number = static_cast<char>(room_num);
 
-        if (g_server.rooms[room_num].GetReadyUser() == g_server.rooms[room_num].id.size()) {
-            sc_packet_Ingame_start sp;
-            sp.size = sizeof(sp);
-            sp.type = S2C_P_ALLREADY;
-            sp.room_number = static_cast<char>(room_num);
-
+			g_server.rooms[room_num].setStage(Stage1);      // Set Stage to Stage1
+			//myMutex.lock();
 			g_server.rooms[room_num].SpawnMonsters();       //Monster Spawn
-			g_server.rooms[room_num].StartGame();           //Start Game
+			//g_server.rooms[room_num].StartGame();           //Start Game
+		   // myMutex.unlock();
+
+			for (int id : g_server.rooms[room_num].id)
+				g_server.users[id]->do_send(&sp);
+		}
+		break;
+	}
+
+	case C2S_P_READYINGAME: {
+		auto* pkt = reinterpret_cast<cs_packet_readytoIngame*>(p);
+		int room_num = player->room_num; // 이미 player에 room_num이 설정되어 있음
+		int local_id = player->local_id; // 로컬 ID
+
+		Room& room = g_server.rooms[room_num];
+		room.setReady(local_id, true);  // ✅ 이 로컬 ID를 true로 표시
+
+		if (room.isAllGameStartReady()) {
+			room.StartGame();  // 몬스터 스레드 시작
+		}
+
+		std::cout << "[Ingame Ready] room: " << room_num << ", local_id: " << local_id << "\n";
+
+		break;
+	}
+	case C2S_P_ROOM_UPDATE: {
+		sc_packet_room_info pkt;
+		pkt.size = sizeof(pkt);
+		pkt.type = S2C_P_UPDATEROOM;
+		for (int i = 0; i < g_server.rooms.size(); ++i)
+			pkt.room_info[i] = g_server.rooms[i].GetPlayerCount();
+
+		for (auto& player : g_server.users)
+			player.second->do_send(&pkt);
+		break;
+	}
+	case C2S_P_MOVE: {
+		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
+
+		g_server.playerManager.SetPosition(m_uniqueNo, pkt->pos);
+
+		sc_packet_move mp;
+		mp.size = sizeof(mp);
+		mp.type = S2C_P_MOVE;
+		mp.Local_id = player->local_id;
+		mp.pos = pkt->pos;
+		mp.time = pkt->time;
+		mp.state = pkt->state;
+
+		auto duration = 3; // 간단 예시 (ping 시간 계산은 생략)
+		mp.pingTime = static_cast<UINT>(duration);
+
+		for (int id : g_server.rooms[player->room_num].id)
+			g_server.users[id]->do_send(&mp);
+		break;
+	}
+
+	case C2S_P_PLAYERATTACK: {
+		cs_packet_player_attack_monster* pkt = reinterpret_cast<cs_packet_player_attack_monster*>(p);
+		int monster_id = pkt->target_monster_id;
+
+		Room& room = g_server.rooms[player->room_num];
+		auto it = room.monsters.find(monster_id);
+		if (it == room.monsters.end()) break;
+
+		auto& monster = it->second;
+		bool isDead = monster->TakeDamage(player->GetATK()); // 나중에 10은 플레이어 직업 공격력으로 체크 
+
+		// 모두에게 히트 패킷 전송
+		sc_packet_monster_hit hit;
+		hit.size = sizeof(hit);
+		hit.type = S2C_P_MONSTER_HIT;
+		hit.monster_id = monster_id;
+		hit.hp = monster->GetHP(); // 새로 만들면 좋음
+
+		for (int pid : room.id)
+			g_server.users[pid]->do_send(&hit);
+
+		if (isDead) {
+			sc_packet_monster_die die{};
+			die.size = sizeof(die);
+			die.type = S2C_P_MONSTER_DIE;
+			die.monster_id = monster_id;
+			die.gold = monster->GetGold(); // 몬스터가 죽었을 때 골드 전송
+			//die.player_id = player->local_id; // 플레이어 ID 추가
+			for (int pid : room.id)
+				g_server.users[pid]->do_send(&die);
+		}
+
+		break;
+	}
+
+	case C2S_P_MONSTER_HIT: {
+
+		auto* pkt = reinterpret_cast<cs_packet_monster_hit*>(p);
+
+		Room& room = g_server.rooms[player->room_num];
+		auto monster = room.monsters[pkt->attacker_id];
+		auto target = g_server.playerManager.GetPlayer(pkt->target_player_id);
+
+		target->GetDamage(pkt->attack_power); // HP 감소 적용
 
 
-            for (int id : g_server.rooms[room_num].id)
-                g_server.users[id]->do_send(&sp);
-        }
-        break;
-    }
-    case C2S_P_ROOM_UPDATE: {
-        sc_packet_room_info pkt;
-        pkt.size = sizeof(pkt);
-        pkt.type = S2C_P_UPDATEROOM;
-        for (int i = 0; i < g_server.rooms.size(); ++i)
-            pkt.room_info[i] = g_server.rooms[i].GetPlayerCount();
+		if (monster && target) {
+			// bool dead = target->TakeDamage(10); // 예시: 10 데미지
 
-        for (auto& player : g_server.users)
-            player.second->do_send(&pkt);
-        break;
-    }
-    case C2S_P_MOVE: {
-        cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
+			 // 클라에 피격 정보 전송
+			sc_packet_player_hit hpkt;
+			hpkt.size = sizeof(hpkt);
+			hpkt.type = S2C_P_PLAYER_HIT;
+			hpkt.target_id = pkt->target_player_id;
+			hpkt.current_hp = target->GetHP();
 
-        g_server.playerManager.SetPosition(m_uniqueNo, pkt->pos);
+			for (int pid : room.id)
+				g_server.users[pid]->do_send(&hpkt);
 
-        sc_packet_move mp;
-        mp.size = sizeof(mp);
-        mp.type = S2C_P_MOVE;
-        mp.Local_id = player->local_id;
-        mp.pos = pkt->pos;
-        mp.time = pkt->time;
-        mp.state = pkt->state;
+			//if (dead) {
+			//    // 죽었을 경우 처리 추가 가능
+			//}
+		}
+		break;
+	}
 
-        auto duration = 3; // 간단 예시 (ping 시간 계산은 생략)
-        mp.pingTime = static_cast<UINT>(duration);
+	case C2S_P_USE_ITEM: {
+		auto* pkt = reinterpret_cast<cs_packet_use_item*>(p);
+		int room_num = player->room_num;
+		ItemType type = static_cast<ItemType>(pkt->item_type);
 
-        for (int id : g_server.rooms[player->room_num].id)
-            g_server.users[id]->do_send(&mp);
-        break;
-    }
+		switch (type)
+		{
+		case ItemType::HP_POTION:
+		{
+			player->PlusHP(300); // 예시로 50만큼 HP 회복
+			sc_packet_apply_hpitem ap;
+			ap.size = sizeof(ap);
+			ap.type = S2C_P_APPLY_HPITEM;
+			ap.local_id = player->local_id;
+			ap.hp = player->GetHP();
+			for (int id : g_server.rooms[room_num].id) {
+				g_server.users[id]->do_send(&ap);
+			}
+			break;
+		}
+		case ItemType::MP_POTION:
+		{
+			player->PlusMP(5); // 예시로 5만큼 MP 회복
+			sc_packet_apply_mpitem mp;
+			mp.size = sizeof(mp);
+			mp.type = S2C_P_APPLY_MPITEM;
+			mp.local_id = player->local_id;
+			mp.mp = player->GetMP();
+			for (int id : g_server.rooms[room_num].id) {
+				g_server.users[id]->do_send(&mp);
+			}
+			break;
+		}
+		case ItemType::ATK_BUFF:
+		{
+			int attack = player->GetATK();
+			float buff_amount = 100.f;
+			float duration = 60.f; // 1분
 
-    case C2S_P_PLAYERATTACK: {
-        cs_packet_player_attack* pkt = reinterpret_cast<cs_packet_player_attack*>(p);
-        int monster_id = pkt->target_monster_id;
+			player->AddATKBuff(buff_amount, duration);
 
-        Room& room = g_server.rooms[player->room_num];
-        auto it = room.monsters.find(monster_id);
-        if (it == room.monsters.end()) break;
+			//sc_packet_apply_atkitem atk;								//굳이 창에 띄울것도 아닌데 패킷을 보낼 필요가 있나?
+			//atk.size = sizeof(atk);
+			//atk.type = S2C_P_APPLY_ATKITEM;
+			//atk.local_id = player->local_id;
+			//atk.attack = player->GetATK();  // 현재 적용된 총 공격력
+			//for (int id : g_server.rooms[room_num].id) {
+			//	g_server.users[id]->do_send(&atk);
+			//}
 
-        auto& monster = it->second;
-        bool isDead = monster->TakeDamage(10); // ✅ 데미지만 주고 결과만 받아옴
+			break;
+		}
+		case ItemType::DEF_BUFF:
+		{
+			float buff_amount = 50.f;
+			float duration = 60.f;
 
-        // 모두에게 히트 패킷 전송
-        sc_packet_monster_hit hit{};
-        hit.size = sizeof(hit);
-        hit.type = S2C_P_MONSTER_HIT;
-        hit.monster_id = monster_id;
-        hit.current_hp = std::max(0, monster->GetHP()); // 새로 만들면 좋음
-      
-        for (int pid : room.id)
-            g_server.users[pid]->do_send(&hit);
+			player->AddDEFBuff(buff_amount, duration);
+			break;
+		}
+		default:
+			break;
+		}
 
-        if (isDead) {
-            sc_packet_monster_die die{};
-            die.size = sizeof(die);
-            die.type = S2C_P_MONSTER_DIE;
-            die.monster_id = monster_id;
 
-            for (int pid : room.id)
-                g_server.users[pid]->do_send(&die);
-        }
 
-        break;
-    }
 
-                        
 
-    }
+
+		std::cout << "[아이템 획득] 클라: " << m_uniqueNo << ", 아이템 타입: " << (int)type << std::endl;
+		break;
+	}
+	}
 }
 
 void SESSION::BroadCasting_position(const int& size) {
-    for (int i = 0; i < size; ++i) {
-        int num = g_server.rooms[player->room_num].getID(i);
-        auto& pos = g_server.users[num]->player->GetPosition();
-        std::cout << "=== [객체" << num << " position] === x: "
-            << pos._41 << " y: " << pos._42 << " z: " << pos._43 << std::endl;
-    }
+	for (int i = 0; i < size; ++i) {
+		int num = g_server.rooms[player->room_num].getID(i);
+		auto& pos = g_server.users[num]->player->GetPosition();
+		std::cout << "=== [객체" << num << " position] === x: "
+			<< pos._41 << " y: " << pos._42 << " z: " << pos._43 << std::endl;
+	}
 }
 
 Network::Network() : rooms(10) {}
 
 void Network::Init() {
-    WSAData wsa;
-    WSAStartup(MAKEWORD(2, 2), &wsa);
+	WSAData wsa;
+	WSAStartup(MAKEWORD(2, 2), &wsa);
 
-    listen_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
-    SOCKADDR_IN addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(SERVER_PORT);
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    bind(listen_socket, (sockaddr*)&addr, sizeof(addr));
-    listen(listen_socket, SOMAXCONN);
+	listen_socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 0, 0, WSA_FLAG_OVERLAPPED);
+	SOCKADDR_IN addr{};
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(SERVER_PORT);
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	bind(listen_socket, (sockaddr*)&addr, sizeof(addr));
+	listen(listen_socket, SOMAXCONN);
 
-    iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-    CreateIoCompletionPort(reinterpret_cast<HANDLE>(listen_socket), iocp, 0, 0);
+	iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+	CreateIoCompletionPort(reinterpret_cast<HANDLE>(listen_socket), iocp, 0, 0);
 
-    std::cout << "[서버 초기화 완료]" << std::endl;
+	std::cout << "[서버 초기화 완료]" << std::endl;
 }

@@ -1185,6 +1185,18 @@ void CRaytracingGameScene::CreateWarriorCharacter()
 	m_vPlayers.emplace_back(std::make_unique<CPlayerWarrior>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	auto& sv = m_pResourceManager->getSkinningObjectList(); 
+	sv.back()->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Swordman\\@Dex Studio_soullike_style.dds"));
+	for (auto& p : sv.back()->getObjects()) {
+		auto& v = p->getMaterials();
+		if (v.size()) {
+			v[0].m_bHasAlbedoMap = true;
+			v[0].m_nAlbedoMapIndex = 0;
+		}
+	}
+
+	sv.back()->setPreTransform(2.8f, XMFLOAT3(), XMFLOAT3());
 }
 void CRaytracingGameScene::CreatePriestCharacter()
 {
@@ -1192,6 +1204,9 @@ void CRaytracingGameScene::CreatePriestCharacter()
 	m_vPlayers.emplace_back(std::make_unique<CPlayerPriest>(
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
+
+	auto& sv = m_pResourceManager->getSkinningObjectList();
+	sv.back()->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
 }
 
 void CRaytracingGameScene::PostProcess()
@@ -1877,11 +1892,11 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		p->UpdateObject(fElapsedTime);
 
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -024.0f, SCENE_WINTERLAND);
+	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 
 	for (auto& p : m_pMonsters) {
 		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -024.0f, SCENE_WINTERLAND);
+		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 	}
 
 	if (m_pCamera->getThirdPersonState()) {
@@ -2018,7 +2033,7 @@ void CRaytracingWinterLandScene::Render()
 	barrier(m_pOutputBuffer.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
 	D3D12_VIEWPORT vv{};
-	vv.Width = DEFINED_GAME_WINDOW_WIDTH; vv.Height = DEFINED_GAME_WINDOW_HEIGHT; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
+	vv.Width = DEFINED_UAV_BUFFER_WIDTH; vv.Height = DEFINED_UAV_BUFFER_HEIGHT; vv.MinDepth = 0.0f; vv.MaxDepth = 1.0f;
 	cmdList->RSSetViewports(1, &vv);
 	D3D12_RECT ss{ 0, 0, DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT };
 	cmdList->RSSetScissorRects(1, &ss);
