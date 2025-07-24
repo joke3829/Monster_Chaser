@@ -149,7 +149,6 @@ void SESSION::process_packet(char* p) {
 			g_server.rooms[room_num].setStage(Stage1);      // Set Stage to Stage1
 			//myMutex.lock();
 			g_server.rooms[room_num].SpawnMonsters();       //Monster Spawn
-			//g_server.rooms[room_num].StartGame();           //Start Game
 		   // myMutex.unlock();
 
 			for (int id : g_server.rooms[room_num].id)

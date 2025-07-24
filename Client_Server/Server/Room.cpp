@@ -112,26 +112,45 @@ void Room::SpawnMonsters()
 	switch (stage)
 	{
 	case 1:
-		for(int i = 0; i < 5; ++i) {
-			monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 40.0f, -235.0f), MonsterType::Feroptere); // Feroptere 몬스터 5마리
-			new_id++;
-		}
-		for (int i = 0; i < 5; ++i) {
-			monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 20.0f, -225.0f), MonsterType::Pistiripere); // Feroptere 몬스터 5마리
-			new_id++;
-		}
-		for (int i = 0; i < 5; ++i) {
-			monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f + 5.0f * i, 80.0f, -275.0f), MonsterType::RostrokarackLarvae); // Feroptere 몬스터 5마리
-			new_id++;
-		}
-		
-		monsters[new_id] = std::make_shared<Monster>(new_id, XMFLOAT3(-28.0f, 0.0f, -265.0f), MonsterType::XenokarceBoss); // 보스
-		new_id++;
+	{
+		// Feroptere - 3마리
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(208.8f, 0.0f, 352.0f), MonsterType::Feroptere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(120.0f, 0.0f, 127.0f), MonsterType::Feroptere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(264.0f, 0.0f, -13.0f), MonsterType::Feroptere);
+
+		// Pistiripere - 3마리
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(142.0f, 0.0f, 262.0f), MonsterType::Pistiripere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(220.0f, 0.0f, -1.6f), MonsterType::Pistiripere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-37.0f, 0.0f, 37.0f), MonsterType::Pistiripere);
+
+		// RostrokarackLarvae - 4마리
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(256.0f, 0.0f, 228.0f), MonsterType::RostrokarackLarvae);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(287.5f, 0.0f, -124.0f), MonsterType::RostrokarackLarvae);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(130.0f, 0.0f, -45.5f), MonsterType::RostrokarackLarvae);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(274.3f, 0.0f, 192.7f), MonsterType::RostrokarackLarvae);
+
+		// Boss - Xenokarce
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(185.0f, 0.0f, -304.0f), MonsterType::XenokarceBoss);
+
 		break;
+	}
 	case 2:
-		break; // 2스테이지 몬스터는 아직 정의되지 않음
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-18.0f, -0.14f, -15.5f), MonsterType::Limadon);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-30.0f, 0.0f, 21.0f), MonsterType::Occisodonte);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-160.0f, 1.3f, 78.6f), MonsterType::Fulgurodonte);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-152.1f, 2.0f, 246.3f), MonsterType::Limadon);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-128.6f, 2.2f, 272.8f), MonsterType::Fulgurodonte);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-97.0f, 3.1f, 315.3f), MonsterType::Occisodonte);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-92.0f, 4.2f, 376.5f), MonsterType::Fulgurodonte);
+
+		// Boss: Crassorrid (추가 MonsterType 필요 시 정의해둬야 함)
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(0.5f, 5.2f, 362.8f), MonsterType::RostrokarckBoss);
+
+		break;
 	case 3:
-		break; // 3스테이지 몬스터는 아직 정의되지 않음
+		// Final Boss: Gorhorrid
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-86.3f, 0.0f, -301.1f), MonsterType::GorhorridBoss);
+		break;
 	default:
 		break;
 	}

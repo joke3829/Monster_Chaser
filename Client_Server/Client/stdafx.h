@@ -16,6 +16,7 @@
 
 // 필요한 헤더 및 라이브러리를 여기에 추가한다 =================================================
 #include <unordered_map>
+#include <concurrent_unordered_map.h>
 #include <WinSock2.h>
 #include <thread>
 

@@ -92,8 +92,8 @@ struct sc_packet_pickcharacter {
 	unsigned char size;
 	char type;
 	int Local_id;
-	int Max_HP;
-	int Max_MP;
+	float Max_HP;
+	float Max_MP;
 	short C_type;
 };
 
@@ -122,7 +122,7 @@ struct sc_packet_monster_hit  //몬스터가 공격 상태일 떄
 	unsigned char size;
 	char type;
 	int monster_id;
-	int hp;
+	float hp;
 };
 struct sc_packet_monster_die  //몬스터가 죽었을때
 {
@@ -152,7 +152,7 @@ struct sc_packet_player_hit {
 	unsigned char size;
 	char type;
 	int target_id;
-	int current_hp;
+	float current_hp;
 };
 
 struct sc_packet_NextStage {
@@ -169,13 +169,13 @@ struct sc_packet_leave {
 struct sc_packet_apply_hpitem {
 	unsigned char size;
 	char type;
-	int hp;
+	float hp;
 	char local_id;
 };
 struct sc_packet_apply_mpitem {
 	unsigned char size;
 	char type;
-	int mp;
+	float mp;
 	char local_id;
 };
 struct sc_packet_apply_atkitem {

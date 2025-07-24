@@ -231,6 +231,7 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 		case RoomSelect:
 			switch (wParam) {
 			case 'R':
+
 				++userPerRoom[1];
 
 				break;
@@ -262,61 +263,6 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 		break;
 	}
 }
-//void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
-//{
-//	switch (nMessage) {
-//	case WM_LBUTTONDOWN: {
-//		int mx = LOWORD(lParam);
-//		int my = HIWORD(lParam);
-//
-//		switch (g_state) {
-//		case Title:
-//			g_state = RoomSelect;
-//			Client.SendBroadCastRoom();
-//			break;
-//		case RoomSelect:			
-//			for (int i = 0; i < 10; ++i) {
-//				int j = i % 2;
-//				if (j == 0) {
-//					int x1 = 20, x2 = 460;
-//					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
-//					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
-//						if (userPerRoom[i] < 3) {
-//							local_uid = userPerRoom[i]++;
-//							currentRoom = i;				
-//							Client.SendEnterRoom(currentRoom);
-//							break;
-//						}
-//					}
-//				}
-//				else {
-//					int x1 = 500, x2 = 940;
-//					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
-//					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
-//						if (userPerRoom[i] < 3) {
-//							local_uid = userPerRoom[i]++;
-//							currentRoom = i;
-//							Client.SendEnterRoom(currentRoom);
-//							break;
-//						}
-//					}
-//				}
-//			}
-//			
-//			break;
-//		case InRoom:
-//			break;
-//		}
-//		break;
-//	}
-//	case WM_LBUTTONUP: {
-//		break;
-//	}
-//	case WM_MOUSEMOVE: {
-//		break;
-//	}
-//	}
-//}
 
 void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
