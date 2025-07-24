@@ -4039,11 +4039,6 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// Create Normal Object & skinning Object Copy ========================================
 
-	for (auto& o : skinned[1]->getObjects()) {
-		for (auto& ma : o->getMaterials())
-			ma.m_bHasEmissiveColor = false;
-	}
-
 	{		// Water
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\WaterTurbulent00_NORM.dds"));
 		auto p = normalObjects[normalObjects.size() - 1].get();
