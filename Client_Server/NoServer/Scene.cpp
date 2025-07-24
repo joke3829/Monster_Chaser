@@ -61,18 +61,18 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRa
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\Title\\title.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\Title\\title1.dds"));
 	m_vTitleUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vTitleUIs[m_vTitleUIs.size() - 1]->setPositionInViewport(0, 0);
 
 	m_vTitleUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
 	m_vTitleUIs[m_vTitleUIs.size() - 1]->setPositionInViewport(0, 0);
-	m_vTitleUIs[m_vTitleUIs.size() - 1]->setColor(1.0, 1.0, 1.0, 1.0);
+	m_vTitleUIs[m_vTitleUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 
-	// =======================================================================================
+	// Room Select =======================================================================================
 
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background1.dds"));
 	m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(0, 0);
 
@@ -82,13 +82,13 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRa
 		int j = i % 2;
 		if (j == 0) {
 			m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
-			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(20, i / 2 * 100 + 20);
-			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(20 + 160, i / 2 * 100 + 20 + 180);
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setColor(1.0, 1.0, 1.0, 0.5);
 		}
 		else {
 			m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
-			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(500, i / 2 * 100 + 20);
-			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(500 + 160, i / 2 * 100 + 20 + 180);
+			m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setColor(1.0, 1.0, 1.0, 0.5);
 		}
 	}
 	peopleindex = m_vRoomSelectUIs.size();
@@ -100,21 +100,26 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRa
 			int k = i % 2;
 			if (k == 0) {
 				m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
-				m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(350 + (j * 40), i / 2 * 100 + 20);
+				m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(350 + (j * 40) + 160, i / 2 * 100 + 20 + 180);
 			}
 			else {
 				m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
-				m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(830 + (j * 40), i / 2 * 100 + 20);
+				m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(830 + (j * 40) + 160, i / 2 * 100 + 20 + 180);
 			}
 		}
 	}
 
-	// =============================================================================================
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\SelectRoomText.dds"));
+	m_vRoomSelectUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
+	m_vRoomSelectUIs[m_vRoomSelectUIs.size() - 1]->setPositionInViewport(0, 0);
+
+	// InRoom=======================================================================================
 
 	int tempIndex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), DEFINED_UAV_BUFFER_WIDTH, DEFINED_UAV_BUFFER_HEIGHT));
 	int temptxt = textures.size();
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\RoomSelect\\background1.dds"));
 	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(0, 0);
 
@@ -122,7 +127,7 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRa
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 296, 484));
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 3; ++j) {
-			textures.emplace_back(std::make_unique<CTexture>(std::format(L"src\\texture\\UI\\SelectC\\CharacterInfo{}.dds", j + 1).data()));
+			textures.emplace_back(std::make_unique<CTexture>(std::format(L"src\\texture\\UI\\InRoom\\CharacterStanding{}.dds", j).data()));
 			m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 			m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport((i * 296) + (18 * (i + 1)), 18);
 			//m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
@@ -139,9 +144,9 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRa
 
 	// select button
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 300, 90));
-	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InRoom\\SelectJobText.dds"));
+	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size()- 1].get()));
 	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setPositionInViewport(18, 610);
-	m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
 
 	// curtain
 	m_vInRoomUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[tempIndex].get()));
@@ -155,37 +160,37 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRa
 
 	// arrow
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 100, 100));
-	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
-	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setColor(0.5, 1.0, 1.0, 0.5);
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\ArrowLeft.dds"));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\ArrowRight.dds"));
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 2].get()));
 	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(20, 310);
-	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
-	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setColor(0.5, 1.0, 1.0, 0.5);
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(1150, 310);
 
 	// back
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 300, 90));
-	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\BackText.dds"));
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(18, 610);
-	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
 
 	// ok
-	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\SelectText.dds"));
+	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(962, 610);
-	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 0.5);
 
 	CUIindex = m_vSelectCUIs.size();
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 500, 500));
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0, 0.0, 0.0), 800, 550));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\CharacterInfo1.dds"));
 	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
-	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(390, 110);
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(240, 40);
 
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\CharacterInfo2.dds"));
 	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
-	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(390, 110);
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(240, 40);
 
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\CharacterInfo3.dds"));
 	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
-	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(390, 110);
+	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(240, 40);
 }
 
 void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -237,8 +242,8 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 			for (int i = 0; i < 10; ++i) {
 				int j = i % 2;
 				if (j == 0) {
-					int x1 = 20, x2 = 460;
-					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
+					int x1 = 20 + 160, x2 = 460 + 160;
+					int y1 = i / 2 * 100 + 20 + 180, y2 = i / 2 * 100 + 20 + 84 + 180;
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
@@ -249,8 +254,8 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					}
 				}
 				else {
-					int x1 = 500, x2 = 940;
-					int y1 = i / 2 * 100 + 20, y2 = i / 2 * 100 + 20 + 84;
+					int x1 = 500 + 160, x2 = 940 + 160;
+					int y1 = i / 2 * 100 + 20 + 180, y2 = i / 2 * 100 + 20 + 84 + 180;
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
 							local_uid = userPerRoom[i]++;
@@ -414,14 +419,14 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		if (startTime < 3.0f)
 			startTime += fElapsedTime;
 		else {
-			wOpacity -= 0.3f * fElapsedTime;
+			wOpacity -= 0.1f * fElapsedTime;
 			if (wOpacity < 0.0f)
 				wOpacity = 0.0f;
-			m_vTitleUIs[1]->setColor(1.0, 1.0, 1.0, wOpacity);
+			m_vTitleUIs[1]->setColor(0.0, 0.0, 0.0, wOpacity);
 		}
 		break;
 	case RoomSelect: {
-		m_vRoomSelectUIs[0]->Animation(fElapsedTime);
+		//m_vRoomSelectUIs[0]->Animation(fElapsedTime);
 		for (int i = 0; i < 10; ++i) {
 			for (int j = 0; j < 3; ++j) {
 				if (j < userPerRoom[i]) {
@@ -434,7 +439,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		break;
 	}
 	case InRoom: {
-		m_vInRoomUIs[0]->Animation(fElapsedTime);
+		//m_vInRoomUIs[0]->Animation(fElapsedTime);
 		bool allready = true;
 		for (int i = 0; i < 3; ++i) {
 			if (i < userPerRoom[currentRoom]) {
@@ -473,7 +478,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		break;
 	}
 	case SelectC: {
-		m_vSelectCUIs[0]->Animation(fElapsedTime);
+		//m_vSelectCUIs[0]->Animation(fElapsedTime);
 		for (int i = CUIindex; i < CUIindex + 3; ++i) {
 			if (userJob[local_uid] == i - CUIindex + 1)
 				m_vSelectCUIs[i]->setRenderState(true);
@@ -1237,16 +1242,16 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	m_pResourceManager = std::make_unique<CResourceManager>();
 	m_pResourceManager->SetUp(3);								// LightBufferReady
 	// Read File Here ========================================	! All Files Are Read Once !
-	m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
+	//m_pResourceManager->AddResourceFromFile(L"src\\model\\City.bin", "src\\texture\\City\\");
 	//m_pResourceManager->AddResourceFromFile(L"src\\model\\WinterLand.bin", "src\\texture\\Map\\");
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
-	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\swordman_lv1.bin", "src\\texture\\Luna\\");
+	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Luna_Firemantle_33.bin", "src\\texture\\Luna\\");
+	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Feroptere.bin", "src\\texture\\Feroptere\\");
 
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Xenokarce.bin", "src\\texture\\Xenokarce\\");
 	//m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Lion.bin", "src\\texture\\Lion\\");
-	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
+	m_pResourceManager->AddLightsFromFile(L"src\\Light\\Light_ETP.bin");
 	m_pResourceManager->ReadyLightBufferContent();
-	m_pResourceManager->LightTest();
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
@@ -1256,21 +1261,32 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// Create new Objects, Copy SkinningObject here ========================================
 
-	skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	/*skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
 	skinned[2]->CopyFromOtherObject(skinned[1].get());
 	aManagers.emplace_back(std::make_unique<CAnimationManager>(*aManagers[1].get()));
 	aManagers[2]->SetFramesPointerFromSkinningObject(skinned[2]->getObjects());
-	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());
+	aManagers[2]->MakeAnimationMatrixIndex(skinned[2].get());*/
 
 
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
 
+	/*skinned[0]->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Swordman\\@Dex Studio_soullike_style.dds"));
+	for (auto& p : skinned[0]->getObjects()) {
+		auto& v = p->getMaterials();
+		if (v.size()) {
+			v[0].m_bHasAlbedoMap = true;
+			v[0].m_nAlbedoMapIndex = 0;
+		}
+	}*/
 
-	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(1.0f, 1.0f, 1.0f), "box"));
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3(300.0f, 50.0f, 1.0f), "box"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
 	normalObjects[finalindex]->SetMeshIndex(finalmesh);
 	normalObjects[finalindex]->getMaterials().emplace_back();
+	normalObjects[finalindex]->getMaterials()[0].m_bHasAlbedoColor = true;
+	normalObjects[finalindex]->getMaterials()[0].m_xmf4AlbedoColor = XMFLOAT4(0.0, 1.0, 0.0, 1.0);
+	normalObjects[finalindex]->SetPosition(XMFLOAT3(0.0, 0.0, 20.0));
 
 	// Copy Example
 	//skinned.emplace_back(std::make_unique<CRayTracingSkinningObject>());
@@ -1315,7 +1331,7 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	skinned[0]->getObjects()[98]->getMaterials()[0].m_nEmissionMapIndex = skinned[0]->getTextures().size();
 	skinned[0]->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Gorhorrid\\T_Gorhorrid_Emissive.dds"));*/
 
-	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\WinterLandSky2.dds", true));
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\ETPSky.dds", true));
 	// ===========================================================================================
 	m_pResourceManager->InitializeGameObjectCBuffer();	// CBV RAII
 	m_pResourceManager->PrepareObject();	// Ready OutputBuffer to  SkinningObject
@@ -1327,18 +1343,12 @@ void CRaytracingTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	m_pShaderBindingTable->CreateSBT();
 
 	// Normal Object Copy & Manipulation Matrix Here ================================
-	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 50.0f));
-	skinned[1]->setPreTransform(1.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-	skinned[1]->SetPosition(XMFLOAT3(0.0f, 0.0f, 70.0f));
-	//skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
-
-	skinned[2]->setPreTransform(2.0f, XMFLOAT3(), XMFLOAT3());
-	skinned[2]->SetPosition(XMFLOAT3(0.0, 0.0, 30.0));
+	skinned[0]->SetPosition(XMFLOAT3(0.0f, 0.0f, 10.0f));
+	skinned[0]->setPreTransform(2.0, XMFLOAT3(0.0f, 0.0f, 0.0f), XMFLOAT3());
+	skinned[0]->Rotate(XMFLOAT3(0.0, 135.0, 0.0));
 	// ==============================================================================
 
 	m_pResourceManager->PrepareObject();
-	m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(0);
-	m_pResourceManager->getAnimationManagers()[1]->setCurrnetSet(3);
 
 	// Setting Camera ==============================================================
 	//m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
@@ -1362,19 +1372,19 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 		case '3':
 			break;
 		case '4':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(3);
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(22);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
 		case '5':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(4);
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(21);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
 		case '6':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(5);
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(26);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
 		case '7':
-			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(6);
+			m_pResourceManager->getAnimationManagers()[0]->setCurrnetSet(27);
 			m_pResourceManager->getAnimationManagers()[0]->setTimeZero();
 			break;
 		case '8':
@@ -1403,66 +1413,25 @@ void CRaytracingTestScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 
 void CRaytracingTestScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
-	//if (!mouseIsInitialize) {
-	//	ShowCursor(FALSE);  // hide cursor
-	//	RECT clientRect;
-	//	GetClientRect(hWnd, &clientRect);
-	//	POINT center;
-	//	center.x = (clientRect.right - clientRect.left) / 2;
-	//	center.y = (clientRect.bottom - clientRect.top) / 2;
-	//	oldCursor = center;
-	//	ClientToScreen(hWnd, &oldCursor);
-	//	SetCursorPos(oldCursor.x, oldCursor.y);
-	//	mouseIsInitialize = true;
-	//}
-	//POINT currentPos;
-	//GetCursorPos(&currentPos);
-	//XMFLOAT3 cameraDir = m_pCamera->getDir();
-	//switch (nMessage) {
-	//case WM_LBUTTONDOWN:
-	//{
-	//	if (!m_bLockAnimation && !m_bLockAnimation1) {
-	//		auto& animationManagers = m_pResourceManager->getAnimationManagers();
-	//		for (auto& animationManager : animationManagers) {
-	//			XMFLOAT3 characterDir = cameraDir;
-	//			characterDir.y = 0.0f; // delete y value
-	//			m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f,1.0f,0.0f));
-	//			m_pResourceManager->UpdatePosition(m_fElapsedtime); // 수상
-	//			animationManager->OnAttackInput();
-	//			m_pResourceManager->getProjectileList()[0]->setPosition(m_pResourceManager->getSkinningObjectList()[0]->getPosition());
-	//			m_pResourceManager->getProjectileList()[0]->setMoveDirection(characterDir);
-	//			m_pResourceManager->getProjectileList()[0]->setActive(true);
-	//			m_pResourceManager->getProjectileList()[0]->setTime(0.0f);
-	//			m_bDoingCombo = true;
-	//		}
-	//	}
-	//	break;
-	//}
-	//case WM_MOUSEMOVE:
-	//{
-	//	// mouse moving amount
-	//	float deltaX = static_cast<float>(currentPos.x - oldCursor.x);
-	//	float deltaY = static_cast<float>(currentPos.y - oldCursor.y);
-
-	//	if (deltaX != 0.0f || deltaY != 0.0f) {
-	//		m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
-
-	//		auto* animationManager = m_pResourceManager->getAnimationManagers()[0].get();
-	//		if (animationManager && !animationManager->getFrame().empty()) {
-	//			CGameObject* frame = animationManager->getFrame()[0];
-	//			if (!m_bLockAnimation && !m_bLockAnimation1 && !m_bDoingCombo && !animationManager->IsInCombo() && !animationManager->IsAnimationFinished()) {
-	//				m_pResourceManager->getSkinningObjectList()[0]->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
-	//				XMFLOAT3 characterDir = cameraDir;
-	//				characterDir.y = 0.0f; // delete y value
-	//				m_pResourceManager->getSkinningObjectList()[0]->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-	//			}
-	//		}
-
-	//		SetCursorPos(oldCursor.x, oldCursor.y);
-	//	}
-	//	break;
-	//}
-	//}
+	switch (nMessage) {
+	case WM_LBUTTONDOWN:
+		m_bHold = true;
+		GetCursorPos(&oldCursor);
+		break;
+	case WM_LBUTTONUP:
+		m_bHold = false;
+		break;
+	case WM_MOUSEMOVE:
+	{
+		POINT cursorpos;
+		if (m_bHold) {
+			GetCursorPos(&cursorpos);
+			m_pCamera->Rotate(cursorpos.x - oldCursor.x, cursorpos.y - oldCursor.y);
+			SetCursorPos(oldCursor.x, oldCursor.y);
+		}
+		break;
+	}
+	}
 }
 
 void CRaytracingTestScene::ProcessInput(float fElapsedTime)
@@ -1560,7 +1529,6 @@ void CRaytracingMaterialTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// ���� �߰�
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
 	m_pResourceManager->ReadyLightBufferContent();
-	m_pResourceManager->LightTest();
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
@@ -1905,7 +1873,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\WinterLand_Light_Final.bin");
 	m_pResourceManager->ReadyLightBufferContent();
-	m_pResourceManager->LightTest();
+	m_pResourceManager->WinterLand_LightSetup();
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
@@ -3594,7 +3562,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	normalObjects[normalObjects.size() - 1]->SetPosition(XMFLOAT3(-512.0, 0.0, -512.0));
 
 	m_TerrainRoad = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\ETP_Terrain_Road.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
-	m_CollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\TEst.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
+	m_CollisionHMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\ETP_CollisionMap.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
 	PrepareTerrainTexture();
 
 	// cubeMap Ready
@@ -3677,13 +3645,13 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 				cHPs[0] = 0;
 			break;
 		case '1':
-			m_BuffState[0][0] = !m_BuffState[0][0];
+			m_BuffState[0] = !m_BuffState[0];
 			break;
 		case '2':
-			m_BuffState[0][1] = !m_BuffState[0][1];
+			m_BuffState[1] = !m_BuffState[1];
 			break;
 		case '3':
-			m_BuffState[0][2] = !m_BuffState[0][2];
+			m_BuffState[2] = !m_BuffState[2];
 			break;
 		case '4':
 			cMP = 100;
@@ -4128,17 +4096,16 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		if (i == 0) {
 			m_vStatusUIs[i][3]->setScaleXWithUV(cMP / maxMP);
 		}
-		if (i > 0) {
-			buffstart = 15; bstride = 30;
-		}
-		for (int j = 0; j < 3; ++j) {
-			if (m_BuffState[i][j]) {
-				m_vStatusUIs[i][j + 4]->setRenderState(true);
-				m_vStatusUIs[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), m_buffpixelHeight[i]);
-				++t;
-			}
-			else {
-				m_vStatusUIs[i][j + 4]->setRenderState(false);
+		if (i == 0) {
+			for (int j = 0; j < 3; ++j) {
+				if (m_BuffState[j]) {
+					m_vStatusUIs[i][j + 4]->setRenderState(true);
+					m_vStatusUIs[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), m_buffpixelHeight[i]);
+					++t;
+				}
+				else {
+					m_vStatusUIs[i][j + 4]->setRenderState(false);
+				}
 			}
 		}
 	}
@@ -4274,6 +4241,7 @@ void CRaytracingETPScene::PlayerUISetup(short job)
 
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff0.dds"));	// buff0
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff1.dds"));	// buff1
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Buff2.dds"));	// buff2
 	{
 		uindex = m_vStatusUIs[0].size();			// 0 - hpbar
 		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 1].get(), textures[tindex].get()));
@@ -4300,9 +4268,8 @@ void CRaytracingETPScene::PlayerUISetup(short job)
 		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 4].get()));
 		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
 		uindex = m_vStatusUIs[0].size();			// 3 ~ 5 buff
-		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+		m_vStatusUIs[0].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 5].get()));
 		m_vStatusUIs[0][uindex]->setPositionInViewport(20, 100);
-		m_vStatusUIs[0][uindex]->setColor(0.7, 1.0, 0.0, 1.0);
 	}
 
 	//for (int i = 0; i < 2; ++i) {
@@ -4445,7 +4412,6 @@ void CRaytracingParticleTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	// Light Read
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
 	m_pResourceManager->ReadyLightBufferContent();
-	m_pResourceManager->LightTest();
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();
@@ -5317,7 +5283,6 @@ void CRaytracingCollisionTestScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer)
 	m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingV2.bin");
 	//m_pResourceManager->AddLightsFromFile(L"src\\Light\\LightingCave.bin");
 	m_pResourceManager->ReadyLightBufferContent();
-	m_pResourceManager->LightTest();
 	// =========================================================
 
 	std::vector<std::unique_ptr<CGameObject>>& normalObjects = m_pResourceManager->getGameObjectList();

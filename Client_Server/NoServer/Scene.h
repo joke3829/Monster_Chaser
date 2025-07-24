@@ -162,6 +162,9 @@ public:
 
 	void UpdateObject(float fElapsedTime);
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+
+	bool m_bHold = false;
+	POINT oldCursor;
 };
 
 class CRaytracingMaterialTestScene : public CRaytracingScene {
@@ -361,7 +364,7 @@ protected:
 
 	short m_numUser = 1;						// replace
 	std::array<size_t, 3>				m_buffpixelHeight{};
-	std::array<std::array<bool, 3>, 3>	m_BuffState{};	// replace
+	std::array<bool, 3>	m_BuffState{};	// replace
 	std::array<float, 3> maxHPs;		// replace
 	std::array<float, 3> cHPs;			// replace
 

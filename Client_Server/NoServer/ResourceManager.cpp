@@ -474,7 +474,7 @@ std::vector<std::unique_ptr<CTexture>>& CResourceManager::getTextureList()
 	return m_vTextureList;
 }
 
-void CResourceManager::LightTest()
+void CResourceManager::WinterLand_LightSetup()
 {
 	Lights* mapptr{};
 	m_pLights->Map(0, nullptr, reinterpret_cast<void**>(&mapptr));
