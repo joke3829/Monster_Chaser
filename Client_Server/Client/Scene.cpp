@@ -1150,6 +1150,144 @@ void CRaytracingGameScene::CreateUIPipelineState()
 		pd3dPBlob->Release();
 }
 
+void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
+{
+	//스피어-박스
+	/*for (const auto& target : targets) {
+		if (target->IsOnceAttacked()) continue;
+		for (const auto& targetBone : target->getObject()->getObjects()) {
+			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+			BoundingSphere targetSphere = targetBone->getObjectSphere();
+			BoundingSphere transformedTargetSphere;
+			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+			for (const auto& attacker : attackers) {
+				if (!attacker->IsAttacking()) continue;
+				for (const auto& attackerBone : attacker->getObject()->getObjects()) {
+					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
+					BoundingOrientedBox attackerOBB = attackerBone->getObjectOBB();
+					BoundingOrientedBox transformedAttackerOBB;
+					attackerOBB.Transform(transformedAttackerOBB, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
+					if (transformedAttackerOBB.Intersects(transformedTargetSphere)) {
+						float damage = 0.0f;
+						switch (attacker->getCurrentSkill()) {
+						case 1: damage = 200.0f; break;
+						case 2: damage = 400.0f; break;
+						case 3: damage = 300.0f; break;
+						}
+						if (damage > 0.0f) {
+							target->Attacked(damage);
+						}
+						return;
+					}
+				}
+			}
+		}
+	}*/
+	//스피어-스피어
+	for (const auto& target : targets) {
+		if (target->IsOnceAttacked()) continue;
+		for (const auto& targetBone : target->getObject()->getObjects()) {
+			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+			BoundingSphere targetSphere = targetBone->getObjectSphere();
+			BoundingSphere transformedTargetSphere;
+			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+			for (const auto& attacker : attackers) {
+				if (!attacker->IsAttacking() && !attacker->IsCombo()) continue;
+				for (const auto& attackerBone : attacker->getObject()->getObjects()) {
+					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
+					BoundingSphere attackerSphere = attackerBone->getObjectSphere();
+					BoundingSphere transformedAttackerSphere;
+					attackerSphere.Transform(transformedAttackerSphere, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
+					if (transformedAttackerSphere.Intersects(transformedTargetSphere)) {
+						float damage = 0.0f;
+						damage = attacker->getCurrentDamage();
+						target->Attacked(damage);
+						return;
+					}
+				}
+			}
+		}
+	}
+
+}
+
+void CRaytracingGameScene::ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
+{
+	for (const auto& target : targets) {
+		for (const auto& targetBone : target->getObject()->getObjects()) {
+			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+			BoundingSphere targetSphere = targetBone->getObjectSphere();
+			BoundingSphere transformedTargetSphere;
+			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+			for (const auto& attack : attackers) {
+				auto& bullets = attack->GetBullets();
+				if (bullets.empty()) continue;
+				for (const auto& bullet : bullets) {
+					if (!bullet || !bullet->getActive()) continue;
+					BoundingOrientedBox bulletSphere = bullet->getObjects().getObjectOBB();
+					BoundingOrientedBox transformedBulletBox;
+					bulletSphere.Transform(transformedBulletBox, XMLoadFloat4x4(&bullet->getObjects().getWorldMatrix()));
+					if (transformedBulletBox.Intersects(transformedTargetSphere)) {
+						float damage = attack->getCurrentDamage();
+						target->Attacked(damage);
+						bullet->getObjects().SetPosition(attack->getObject()->getPosition());
+						bullet->getObjects().SetRenderState(false);
+						bullet->setActive(false);
+					}
+				}
+			}
+		}
+	}
+
+}
+
+void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlayableCharacter>>& attacker, const std::vector<std::unique_ptr<CPlayableCharacter>>& targets)
+{
+	if (attacker.empty() || targets.empty()) {
+		return;
+	}
+
+	CPlayableCharacter* attackerPtr = attacker[0].get();
+	XMFLOAT3 attackerPos = attackerPtr->getObject()->getPosition();
+	XMFLOAT3 attackerDir = attackerPtr->getObject()->getLook();
+	float fov = 90.0f * (3.14159f / 180.0f);
+	float cosFov = std::cos(fov / 2.0f);
+	float maxDistance = 150.0f;
+	float minDistance = 150.0f;
+	XMFLOAT3 directionToTarget = { 0.0f, 0.0f, 0.0f };
+	bool targetFound = false;
+	XMVECTOR vAttackerDir = XMLoadFloat3(&attackerDir);
+	XMVECTOR vAttackerPos = XMLoadFloat3(&attackerPos);
+	for (const auto& target : targets) {
+		if (!target) continue;
+		XMFLOAT3 targetPos = target->getObject()->getPosition();
+		XMVECTOR vTargetPos = XMLoadFloat3(&targetPos);
+		XMVECTOR vRelativeDir = XMVectorSubtract(vTargetPos, vAttackerPos);
+		XMVECTOR vDistance = XMVector3Length(vRelativeDir);
+		float distance;
+		XMStoreFloat(&distance, vDistance);
+		if (distance > 0.0f && distance <= maxDistance) {
+			XMVECTOR vNormRelativeDir = XMVector3Normalize(vRelativeDir);
+			XMVECTOR vDot = XMVector3Dot(vAttackerDir, vNormRelativeDir);
+			float dot;
+			XMStoreFloat(&dot, vDot);
+			if (dot >= cosFov && distance < minDistance) {
+				minDistance = distance;
+				XMStoreFloat3(&directionToTarget, vNormRelativeDir);
+				targetFound = true;
+			}
+		}
+	}
+
+	if (targetFound) {
+		attackerPtr->SetAutoDirect(directionToTarget);
+	}
+	else {
+		XMFLOAT3 dir = m_pCamera->getDir();
+		attackerPtr->SetAutoDirect({ dir.x,0.0f,dir.z });
+	}
+}
+
 void CRaytracingGameScene::CreateMageCharacter()
 {
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
@@ -1161,6 +1299,14 @@ void CRaytracingGameScene::CreateMageCharacter()
 	auto& sv = m_pResourceManager->getSkinningObjectList();
 	sv.back()->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
 
+	for (auto& s : m_vPlayers.back()->getObject()->getObjects())
+	{
+		if (s->getFrameName() == "Bip001-Spine1")
+		{
+			m_vPlayers.back()->SetHead(s.get());
+			break;
+		}
+	}
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
 	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
@@ -1207,6 +1353,31 @@ void CRaytracingGameScene::CreatePriestCharacter()
 
 	auto& sv = m_pResourceManager->getSkinningObjectList();
 	sv.back()->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
+
+	for (auto& s : m_vPlayers.back()->getObject()->getObjects())
+	{
+		if (s->getFrameName() == "Bip001-Spine1")
+		{
+			m_vPlayers.back()->SetHead(s.get());
+			break;
+		}
+	}
+
+	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
+	CPlayerPriest* mage = dynamic_cast<CPlayerPriest*>(m_vPlayers.back().get());
+	Material sharedMaterial;
+
+	for (int i = 0; i < 20; ++i) {
+		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
+		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
+		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+
+		auto projectile = std::make_unique<CProjectile>();
+		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+
+		mage->GetBullets().push_back(std::move(projectile));
+	}
 }
 
 void CRaytracingGameScene::PostProcess()
@@ -1702,6 +1873,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 		}
 		else {
 			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			m_vMonsters[0]->ProcessInput(keyBuffer, fElapsedTime);
 			CAnimationManager* myManager = m_pPlayer->getAniManager();
 			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
 		}
@@ -1890,6 +2062,13 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
+
+	for (auto& m : m_vMonsters)
+	{
+		m->UpdateObject(fElapsedTime);
+	}
+
+	AutoDirection(m_vPlayers, m_vMonsters);
 
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);

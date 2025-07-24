@@ -165,6 +165,10 @@ public:
 	void CreateUIRootSignature();
 	void CreateUIPipelineState();
 
+	void AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers);
+	void ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers);
+	void AutoDirection(const std::vector<std::unique_ptr<CPlayableCharacter>>& attacker, const std::vector<std::unique_ptr<CPlayableCharacter>>& targets);
+
 	void CreateMageCharacter();
 	void CreateWarriorCharacter();
 	void CreatePriestCharacter();

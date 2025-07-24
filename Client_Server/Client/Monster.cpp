@@ -375,7 +375,7 @@ void Fulgurodonte::Skill2()
 				CProjectile* projectile = bullet[currentBullet].get();
 				projectile->getObjects().SetScale(XMFLOAT3(2.5f, 2.5f, 2.5f));
 				if (projectile && !projectile->getActive()) {
-					projectile->setPosition(pos, 2);
+					projectile->setPosition(pos);
 
 					XMFLOAT3 lookDirection = m_Object->getLook();
 					float angle = startAngle + (i * angleStep);
@@ -834,7 +834,7 @@ void Gorhorrid::Skill3()
 				CProjectile* projectile = bullet[currentBullet].get();
 				projectile->getObjects().SetScale(XMFLOAT3(2.5f, 2.5f, 2.5f));
 				if (projectile && !projectile->getActive()) {
-					projectile->setPosition(pos, 2);
+					projectile->setPosition(pos);
 
 					XMFLOAT3 lookDirection = m_Object->getLook();
 					float angle = startAngle + (i * angleStep);

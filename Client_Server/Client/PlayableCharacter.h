@@ -29,6 +29,7 @@ public:
 
 	void SetCamera(std::shared_ptr<CCamera>& camera) { m_pCamera = camera; }
 	void SetHead(CGameObject* h) { m_Head = h; }
+	void SetAutoDirect(XMFLOAT3 dir) { m_AutoDirect = dir; }
 
 	virtual bool HasActiveBullet() const { return false; }
 
@@ -50,6 +51,7 @@ protected:
 	CSkinningObject* m_Object{};
 	CPlayableCharacterAnimationManager* m_AManager{};
 	CGameObject* m_Head{};
+	XMFLOAT3 m_AutoDirect{};
 
 	std::shared_ptr<CCamera> m_pCamera;
 
