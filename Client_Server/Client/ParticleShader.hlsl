@@ -33,7 +33,7 @@ struct CameraInfo
     float fElapsedTime;
     int bNormalMapping;
     int bReflection;
-    int nMapNumber;
+    int intMapNumber;
 };
 
 ConstantBuffer<CameraInfo> g_camera : register(b0, space0);
@@ -81,7 +81,7 @@ void GSOnePath(point ParticleVertex input[1], inout PointStream<ParticleVertex> 
 }
 
 [maxvertexcount(252)]
-void GSTwoPath(point ParticleVertex input[1], inout PointStream<BillBoardOutput1> outStream1, 
+void GSTwoPath(point ParticleVertex input[1], inout PointStream<BillBoardOutput1> outStream1,
 inout PointStream<BillBoardOutput2> outStream2, inout PointStream<BillBoardOutput3> outStream3)
 {
     switch (input[0].particleType)
@@ -117,7 +117,7 @@ inout PointStream<BillBoardOutput2> outStream2, inout PointStream<BillBoardOutpu
                 float2 UVs[4] = { float2(0.0, 1.0), float2(0.0, 0.0), float2(1.0, 1.0), float2(1.0, 0.0) };
                 BillBoardOutput1 output1;
                 BillBoardOutput2 output2;
-                BillBoardOutput3 output3; 
+                BillBoardOutput3 output3;
                 output3.color = float4(1.0, 1.0, 1.0, 0.5);
                 for (int i = 0; i < 6; ++i)
                     outStream3.Append(output3);

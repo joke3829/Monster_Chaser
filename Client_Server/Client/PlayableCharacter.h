@@ -4,7 +4,7 @@
 
 class CPlayableCharacter {
 public:
-	CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
+	CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager);
 
 	// example
 	virtual void Skill1() {}
@@ -17,41 +17,54 @@ public:
 
 	virtual void Attacked(float damage) {}
 
-	bool IsBoss() const { return m_bBoss; }
 	bool IsAttacking()const { return m_bSkillActive; }
+	bool IsCombo()const { return m_bDoingCombo; }
 	bool IsOnceAttacked()const { return m_bAttacked; }
+	bool CheckAC() const { return m_bCheckAC; }
 
 	int getCurrentSkill() const { return m_CurrentSkill; }
+	float getCurrentDamage()const { return m_Damage; }
 	CSkinningObject* getObject() { return m_Object; }
 	CPlayableCharacterAnimationManager* getAniManager() { return m_AManager; }
-	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
 
 	void SetCamera(std::shared_ptr<CCamera>& camera) { m_pCamera = camera; }
+	void SetHead(CGameObject* h) { m_Head = h; }
+
+	virtual bool HasActiveBullet() const { return false; }
+
+	virtual std::vector<std::unique_ptr<CProjectile>>& GetBullets() {
+		static std::vector<std::unique_ptr<CProjectile>> empty;
+		return empty;
+	}
+	virtual const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const {
+		static std::vector<std::unique_ptr<CProjectile>> empty;
+		return empty;
+	}
 protected:
 	// stat																																													
 	float m_HP{};
 	float m_MP{};
 	int m_CurrentSkill = 0;
+	float m_Damage{};
 
 	CSkinningObject* m_Object{};
 	CPlayableCharacterAnimationManager* m_AManager{};
-
+	CGameObject* m_Head{};
 
 	std::shared_ptr<CCamera> m_pCamera;
 
-	bool m_bBoss = false;
 	bool m_bSkillActive = false;
 	bool m_bDoingCombo = false;
 	bool m_bMoving = false;
 	bool m_bLive = true;
 	bool m_bAttacked = false;
 
+	bool m_bCheckAC = false;
+
 	bool mouseIsInitialize = false;
 	POINT oldCursor{};
 
 	UCHAR m_PrevKeyBuffer[256]{};
-
-	std::vector<std::unique_ptr<CProjectile>> bullet;
 };
 
 class CPlayerMage : public CPlayableCharacter {
@@ -97,15 +110,36 @@ public:
 
 	virtual void Attacked(float damage);
 
-	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
+	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void UpdateObject(float fElapsedTime);
+
+	void MakeBullet(float speed = 50.0f, int skill = 1);
+
+	virtual bool HasActiveBullet() const
+	{
+		for (const auto& bullet : bullet)
+		{
+			if (bullet && bullet->getActive())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
+	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
 protected:
 	// personal Resource(bullet, particle etc.)
+
+	std::vector<std::unique_ptr<CProjectile>> bullet;
 	int currentBullet = 0;
+
+	bool m_bBulletFired[5] = { false, false, false, false, false };
 };
 
 class CPlayerWarrior : public CPlayableCharacter {
@@ -146,7 +180,7 @@ public:
 
 	virtual void Attacked(float damage);
 
-	CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
+	CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -195,14 +229,32 @@ public:
 
 	virtual void Attacked(float damage);
 
-	CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager, bool isBoss);
+	CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void UpdateObject(float fElapsedTime);
+
+	void MakeBullet(float speed = 50.0f, int skill = 1);
+
+	virtual bool HasActiveBullet() const
+	{
+		for (const auto& bullet : bullet)
+		{
+			if (bullet && bullet->getActive())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
+	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
 protected:
 	std::vector<std::unique_ptr<CProjectile>> bullet;
+	int currentBullet = 0;
 };
 
 // A real controlling player
@@ -218,6 +270,7 @@ public:
 
 	void HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
 	void CollisionCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
+	void CollisionCheck(CHeightMapImage* heightmap, CHeightMapImage* CollisionMap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
 protected:
 	CPlayableCharacter* m_pPlayerObject{};
 	std::shared_ptr<CCamera> m_pCamera{};
