@@ -41,13 +41,13 @@ Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
 		break;
 	case MonsterType::Fulgurodonte:
 		break;
-	case MonsterType::RostrokarckBoss:
+	case MonsterType::CrassorridBoss:
 		break;
 	case MonsterType::GorhorridBoss:
 		break;
 
 	default:
-		hp = 100; // ±âº»°ª
+		hp = 100; // ï¿½âº»ï¿½ï¿½
 		break;
 	}
 }

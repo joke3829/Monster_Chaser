@@ -12,7 +12,6 @@
 
 extern DXResources g_DxResource;
 
-class Monster;
 class CScene {
 public:
 	virtual ~CScene() {}
@@ -154,38 +153,84 @@ protected:
 	ComPtr<ID3D12PipelineState>							m_pAnimationComputeShader{};
 };
 
-enum InGameState{IS_LOADING, IS_GAMING, IS_FINISH};
+class CRaytracingGameScene : public CRaytracingScene {
+public:
+	virtual void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr) {}
+	virtual void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
+	virtual void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
+	virtual void ProcessInput(float fElapsedTime) {};
+
+	virtual void UpdateObject(float fElapsedTime) {}
+
+	void CreateUIRootSignature();
+	void CreateUIPipelineState();
+
+	void CreateMageCharacter();
+	void CreateWarriorCharacter();
+	void CreatePriestCharacter();
+
+	virtual void Render() {}
+	void PostProcess();
+protected:
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
+	std::unique_ptr<CPlayer>							m_pPlayer{};
+
+	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+	std::vector<std::unique_ptr<CMonster>>				m_pMonsters{};
+
+	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
+
+	// InGame UI ====================================================================
+	bool m_bUIOnOff = true;
+
+	unsigned int cItem{};
+
+	std::array<std::vector<std::unique_ptr<UIObject>>, 3> m_vPlayersStatUI{};
+	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
+
+	short m_numUser = 3;						// replace	Player.size()
+	short m_local_id = 0;
+	short user_job[3] = { JOB_MAGE, JOB_WARRIOR, JOB_HEALER };
+
+	std::array<bool, 3>	m_BuffState{};	// replace
+	std::array<float, 3> maxHPs;		// replace
+	std::array<float, 3> cHPs;			// replace
+
+	std::array<float, 3> coolTime{};
+	std::array<float, 3> curCTime{};
+	std::array<float, 3> skillCost{};
+
+	float maxMPs[3] = { 100, 100, 100 };			// replace
+	float cMPs[3] = { 100, 37, 78 };			// replace
+
+	UINT m_nGold = 1500;
+
+	size_t ItemNumTextIndex;
+
+	void PlayerUISetup(short job);		// player job need
+	// ===============================================================================
+};
 
 // real use scene
-class CRaytracingWinterLandScene : public CRaytracingScene {
+class CRaytracingWinterLandScene : public CRaytracingGameScene {
 public:
 	void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
-	void CreateUIRootSignature();
-	void CreateUIPipelineState();
-
-	void CreateMageCharacter();
-	void CreateMonsterSet();
+	void Create_Gorhorrid();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();
 	void PrepareTerrainTexture();
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+	std::unique_ptr<CHeightMapImage> m_pRoadTerrain{};
+	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
 protected:
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
-	std::unique_ptr<CPlayer>							m_pPlayer{};
-
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
-	std::unique_ptr<CMonster>							m_pMonster{};
-
 	unsigned int								m_nSkyboxIndex{};
-
-	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
-	InGameState									m_nState{};
 
 	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
 	float										startTime{};
@@ -194,20 +239,22 @@ protected:
 	// terrainDescriptor
 	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
 	ComPtr<ID3D12Resource>								m_pTerrainCB{};
+
+	int m_nMonsterNum{};
 };
 
 // real use scene
-class CRaytracingCaveScene : public CRaytracingScene {
+class CRaytracingCaveScene : public CRaytracingGameScene {
 public:
 	void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
-	void CreateUIRootSignature();
-	void CreateUIPipelineState();
-
-	void CreateMageCharacter();
+	void Create_Limadon();
+	void Create_Fulgurodonte();
+	void Create_Occisodonte();
+	void Create_Crassorrid();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();
@@ -217,63 +264,29 @@ public:
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
 protected:
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
-	std::unique_ptr<CPlayer>							m_pPlayer{};
-
 	unsigned int								m_nSkyboxIndex{};
 
-	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
 	InGameState									m_nState{};
 
 	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
 	float										startTime{};
 	float										wOpacity = 1.0f;
 
-	// InGame UI ====================================================================
-	std::array<std::vector<std::unique_ptr<UIObject>>, 3>	m_vStatusUIs{};
-	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
-	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
-	std::unique_ptr<UIObject>				m_pShopUI;
-
-	short m_numUser = 1;						// replace
-	std::array<size_t, 3>				m_buffpixelHeight{};
-	std::array<std::array<bool, 3>, 3>	m_BuffState{};	// replace
-	std::array<float, 3> maxHPs;		// replace
-	std::array<float, 3> cHPs;			// replace
-
-	short cItem = 0;		// replace server var
-	bool itemUse{};			// replace server var
-
-	std::array<float, 3> coolTime{};
-	std::array<float, 3> curCTime{};
-
-	float maxMP = 100;			// replace
-	float cMP = 100;			// replace
-
-	UINT m_nGold = 1500;
-
-	size_t ItemNumTextIndex;
-	size_t GoldTextIndex;
-	size_t itemNum[4] = { 10, 10, 10, 10 };
-
-	bool m_bOpenShop = false;
-
-	void PlayerUISetup(short job);		// player job need
-	// ===============================================================================
+	int m_nMonsterNum{};
 };
 
 // real use scene
-class CRaytracingETPScene : public CRaytracingScene {
+class CRaytracingETPScene : public CRaytracingGameScene {
 public:
 	void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
-	void CreateUIRootSignature();
-	void CreateUIPipelineState();
-
-	void CreateMageCharacter();
+	void Create_Feroptere();
+	void Create_Pistriptere();
+	void Create_RostrokarckLarvae();
+	void Create_Xenokarce();
 
 	void UpdateObject(float fElapsedTime);
 	void Render();
@@ -282,13 +295,11 @@ public:
 	//void TextRender();
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+	std::unique_ptr<CHeightMapImage> m_pRoadTerrain{};
+	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
 protected:
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
-	std::unique_ptr<CPlayer>							m_pPlayer{};
-
 	unsigned int								m_nSkyboxIndex{};
 
-	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
 	InGameState									m_nState{};
 
 	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
@@ -299,35 +310,5 @@ protected:
 	ComPtr<ID3D12DescriptorHeap>						m_pTerrainDescriptor{};
 	ComPtr<ID3D12Resource>								m_pTerrainCB{};
 
-	// InGame UI ====================================================================
-	std::array<std::vector<std::unique_ptr<UIObject>>, 3>	m_vStatusUIs{};
-	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
-	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
-	std::unique_ptr<UIObject>				m_pShopUI;
-
-	short m_numUser = 1;						// replace
-	std::array<size_t, 3>				m_buffpixelHeight{};
-	std::array<std::array<bool, 3>, 3>	m_BuffState{};	// replace
-	std::array<float, 3> maxHPs;		// replace
-	std::array<float, 3> cHPs;			// replace
-
-	short cItem = 0;		// replace server var
-	bool itemUse{};			// replace server var
-
-	std::array<float, 3> coolTime{};
-	std::array<float, 3> curCTime{};
-
-	float maxMP = 100;			// replace
-	float cMP = 100;			// replace
-
-	UINT m_nGold = 1500;
-
-	size_t ItemNumTextIndex;
-	size_t GoldTextIndex;
-	size_t itemNum[4] = { 10, 10, 10, 10 };
-
-	bool m_bOpenShop = false;
-
-	void PlayerUISetup(short job);		// player job need
-	// ===============================================================================
+	int m_nMonsterNum{};
 };

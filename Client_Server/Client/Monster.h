@@ -2,7 +2,7 @@
 #include "ResourceManager.h"
 #include "PlayableCharacter.h"
 
-class Stage1_Monster : public CPlayableCharacter
+class Feroptere : public CPlayableCharacter
 {
 public:
 	enum class Minion {
@@ -15,6 +15,62 @@ public:
 		ANI_BACK
 	};
 
+	Feroptere(CSkinningObject* obj, CAnimationManager* aManager);
+	virtual void Skill1();
+
+	virtual void Attacked(float damage);
+
+	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+};
+
+class Pistriptere : public CPlayableCharacter
+{
+public:
+	enum class Minion {
+		ANI_DEATH,
+		ANI_HIT,
+		ANI_IDLE,
+		ANI_ROAR,
+		ANI_SKILL1,
+		ANI_FRONT,
+		ANI_BACK
+	};
+
+	Pistriptere(CSkinningObject* obj, CAnimationManager* aManager);
+	virtual void Skill1();
+
+	virtual void Attacked(float damage);
+
+	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+};
+
+class RostrokarckLarvae : public CPlayableCharacter
+{
+public:
+	enum class Minion {
+		ANI_DEATH,
+		ANI_HIT,
+		ANI_IDLE,
+		ANI_ROAR,
+		ANI_SKILL1,
+		ANI_FRONT,
+		ANI_BACK
+	};
+
+	RostrokarckLarvae(CSkinningObject* obj, CAnimationManager* aManager);
+	virtual void Skill1();
+
+	virtual void Attacked(float damage);
+
+	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+};
+
+class Xenokarce : public CPlayableCharacter
+{
+public:
 	enum class Boss {
 		ANI_DEATH,
 		ANI_HIT,
@@ -25,15 +81,20 @@ public:
 		ANI_FRONT,
 		ANI_BACK
 	};
-	Stage1_Monster(CSkinningObject* obj, CAnimationManager* aManager, bool isBoss);
 
+	Xenokarce(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 	virtual void Skill2();
 
+	virtual void Attacked(float damage);
+
 	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
-class Stage2_Monster : public CPlayableCharacter
+// ==========================================================================
+
+class Fulgurodonte : public CPlayableCharacter
 {
 public:
 	enum class Minion {
@@ -47,6 +108,85 @@ public:
 		ANI_BACK
 	};
 
+	Fulgurodonte(CSkinningObject* obj, CAnimationManager* aManager);
+	virtual void Skill1();
+	virtual void Skill2();
+
+	virtual void Attacked(float damage);
+
+	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	virtual bool HasActiveBullet() const
+	{
+		for (const auto& bullet : bullet)
+		{
+			if (bullet && bullet->getActive())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
+	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
+protected:
+	// personal Resource(bullet, particle etc.)
+	std::vector<std::unique_ptr<CProjectile>> bullet;
+	int currentBullet = 0;
+};
+
+class Limadon : public CPlayableCharacter
+{
+public:
+	enum class Minion {
+		ANI_DEATH,
+		ANI_HIT,
+		ANI_IDLE,
+		ANI_ROAR,
+		ANI_SKILL1,
+		ANI_SKILL2,
+		ANI_FRONT,
+		ANI_BACK
+	};
+
+	Limadon(CSkinningObject* obj, CAnimationManager* aManager);
+	virtual void Skill1();
+	virtual void Skill2();
+
+	virtual void Attacked(float damage);
+
+	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+};
+
+class Occisodonte : public CPlayableCharacter
+{
+public:
+	enum class Minion {
+		ANI_DEATH,
+		ANI_HIT,
+		ANI_IDLE,
+		ANI_ROAR,
+		ANI_SKILL1,
+		ANI_SKILL2,
+		ANI_FRONT,
+		ANI_BACK
+	};
+
+	Occisodonte(CSkinningObject* obj, CAnimationManager* aManager);
+	virtual void Skill1();
+	virtual void Skill2();
+
+	virtual void Attacked(float damage);
+
+	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+};
+
+class Crassorrid : public CPlayableCharacter
+{
+public:
 	enum class Boss {
 		ANI_DEATH,
 		ANI_HIT,
@@ -58,14 +198,19 @@ public:
 		ANI_FRONT,
 		ANI_BACK
 	};
-	Stage2_Monster(CSkinningObject* obj, CAnimationManager* aManager, bool isBoss);
 
+	Crassorrid(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 	virtual void Skill2();
 	virtual void Skill3();
+
+	virtual void Attacked(float damage);
+
+	virtual void UpdateObject(float fElapsedTime);
+	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
-class Stage3_Monster : public CPlayableCharacter
+class Gorhorrid : public CPlayableCharacter
 {
 public:
 	enum class Boss {
@@ -80,14 +225,35 @@ public:
 		ANI_FRONT,
 		ANI_BACK
 	};
-	Stage3_Monster(CSkinningObject* obj, CAnimationManager* aManager, bool isBoss);
+	Gorhorrid(CSkinningObject* obj, CAnimationManager* aManager);
 
 	virtual void Skill1();
 	virtual void Skill2();
 	virtual void Skill3();
 
+	virtual void Attacked(float damage);
+
 	virtual void UpdateObject(float fElapsedTime);
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+
+	virtual bool HasActiveBullet() const
+	{
+		for (const auto& bullet : bullet)
+		{
+			if (bullet && bullet->getActive())
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	std::vector<std::unique_ptr<CProjectile>>& GetBullets() { return bullet; }
+	const std::vector<std::unique_ptr<CProjectile>>& GetBullets() const { return bullet; }
+protected:
+	// personal Resource(bullet, particle etc.)
+	std::vector<std::unique_ptr<CProjectile>> bullet;
+	int currentBullet = 0;
 };
 
 // A real controlling monster
@@ -99,8 +265,11 @@ public:
 	CAnimationManager* getAniManager() { return m_pMonsterObject->getAniManager(); }
 
 	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
-	void HeightCheck(CHeightMapImage* heightmap, float fElapsedTime);
+
+	void HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
+	void CollisionCheck(CHeightMapImage* heightmap, CHeightMapImage* CollisionMap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
+	void CollisionCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
 protected:
 	CPlayableCharacter* m_pMonsterObject{};
-
+	XMFLOAT2 m_xmf2PrevPos{};
 };

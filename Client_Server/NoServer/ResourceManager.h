@@ -45,7 +45,6 @@ public:
 	void UpdateWorldMatrix();	// UpdateWorldMatrix
 	void UpdateParticles(float fElapsedTime);
 
-	void LightTest();
 	void AddLightsFromFile(wchar_t* FilePath);
 	void AddLightsFromFileRecursion(std::ifstream& inFile);
 	void ReadyLightBufferContent();
@@ -53,6 +52,7 @@ public:
 
 	void PostProcess();
 
+	void WinterLand_LightSetup();
 	// getter
 	std::vector<std::unique_ptr<CGameObject>>& getGameObjectList();
 	std::vector<CGameObject*> getGameObjectPtrList();

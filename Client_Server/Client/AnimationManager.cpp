@@ -294,6 +294,8 @@ void CAnimationManager::ChangeAnimation(UINT nSet, bool playOnce)
 
 // =====================================================================================
 
+// =====================================================================================
+
 void CMageManager::StartCombo()
 {
 	m_bInCombo = true;

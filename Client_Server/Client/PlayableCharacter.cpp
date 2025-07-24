@@ -1,10 +1,9 @@
 #include "PlayableCharacter.h"
 
-CPlayableCharacter::CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
+CPlayableCharacter::CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager)
 	: m_Object(object)
 {
 	m_AManager = dynamic_cast<CPlayableCharacterAnimationManager*>(aManager);
-	m_bBoss = isBoss;
 }
 
 // =======================================================================================
@@ -18,6 +17,8 @@ void CPlayerMage::Skill1()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 1;
+	m_Damage = 500.0f;
 }
 
 void CPlayerMage::Skill2()
@@ -29,6 +30,8 @@ void CPlayerMage::Skill2()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 2;
+	m_Damage = 3000.0f;
 }
 
 void CPlayerMage::Skill3()
@@ -40,6 +43,8 @@ void CPlayerMage::Skill3()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 3;
+	m_Damage = 4000.0f;
 }
 
 void CPlayerMage::Attacked(float damage)
@@ -57,8 +62,8 @@ void CPlayerMage::Attacked(float damage)
 	}
 }
 
-CPlayerMage::CPlayerMage(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
-	: CPlayableCharacter(object, aManager, isBoss)
+CPlayerMage::CPlayerMage(CSkinningObject* object, CAnimationManager* aManager)
+	: CPlayableCharacter(object, aManager)
 {
 	m_HP = 800.0f;
 	m_MP = 100.0f;
@@ -91,6 +96,8 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
+			m_Damage = 800.0f;
+			MakeBullet();
 		}
 		break;
 	}
@@ -596,6 +603,7 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 void CPlayerMage::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
+	m_bCheckAC = false;
 	if (m_bLive) {
 		m_AManager->UpdateCombo(fElapsedTime);
 		if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
@@ -604,6 +612,11 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 			m_bSkillActive = false;
 			m_bDoingCombo = false;
 			m_bAttacked = false;
+			for (int i = 0; i < 5; ++i)
+			{
+				m_bBulletFired[i] = false;
+			}
+			m_CurrentSkill = 0;
 		}
 		if (m_AManager->IsComboInterrupted()) {
 			test = true;
@@ -616,13 +629,88 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
+
+		for (auto& bulletPtr : bullet) {
+			if (bulletPtr->getActive()) {
+				bulletPtr->IsMoving(fElapsedTime);
+			}
+		}
+
+		switch (getCurrentSkill())
+		{
+		case 1: //0.5~0.6, 1.2~1.3, 2.0~2.1, 2.2~2.3, 3.1~3.2
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f) && !m_bBulletFired[0])
+			{
+				MakeBullet(80.0f);
+				m_bBulletFired[0] = true;
+			}
+			else if (getAniManager()->IsAnimationInTimeRange(1.2f, 1.3f) && !m_bBulletFired[1])
+			{
+				MakeBullet(80.0f);
+				m_bBulletFired[1] = true;
+			}
+			else if (getAniManager()->IsAnimationInTimeRange(2.0f, 2.1f) && !m_bBulletFired[2])
+			{
+				MakeBullet(80.0f);
+				m_bBulletFired[2] = true;
+			}
+			else if (getAniManager()->IsAnimationInTimeRange(2.2f, 2.3f) && !m_bBulletFired[3])
+			{
+				MakeBullet(80.0f);
+				m_bBulletFired[3] = true;
+			}
+			else if (getAniManager()->IsAnimationInTimeRange(3.1f, 3.2f) && !m_bBulletFired[4])
+			{
+				MakeBullet(80.0f);
+				m_bBulletFired[4] = true;
+			}
+			break;
+		case 2:
+			if (!m_bBulletFired[0]) {
+				MakeBullet(80.0f, 2);
+				m_bBulletFired[0] = true;
+			}
+			break;
+		}
 	}
 
-	/*for (auto& bulletPtr : bullet) {
-		if (bulletPtr->getActive()) {
-			bulletPtr->IsMoving(fElapsedTime);
+}
+
+void CPlayerMage::MakeBullet(float speed, int skill)
+{
+	if (bullet.empty()) {
+		return;
+	}
+
+	size_t startIndex = currentBullet;
+	CProjectile* projectile = nullptr;
+	do {
+		projectile = bullet[currentBullet].get();
+		if (!projectile->getActive()) {
+			break;
 		}
-	}*/
+	} while (currentBullet != startIndex);
+
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	projectile->setSpeed(speed);
+	projectile->setLifetime(3.0f);
+	projectile->setTime(0.0f);
+
+	if (skill == 1) {
+		projectile->setPosition(m_Object->getPosition());
+		projectile->setMoveDirection({ cameraDir.x, 0.0f, cameraDir.z });
+		projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
+	}
+	else if (skill == 2) {
+		DirectX::XMFLOAT3 pos = m_Object->getPosition();
+		pos.y += 40.0f;
+		projectile->setPosition(pos, 2);
+		projectile->setMoveDirection({ cameraDir.x, -0.4f, cameraDir.z });
+		projectile->getObjects().SetScale({ 10.0f, 10.0f, 10.0f });
+	}
+	projectile->setActive(true);
+	projectile->getObjects().SetRenderState(true);
+	currentBullet = (currentBullet + 1) % bullet.size();
 }
 
 // =======================================================================================
@@ -636,6 +724,8 @@ void CPlayerWarrior::Skill1()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 1;
+	m_Damage = 1800.0f;
 }
 
 void CPlayerWarrior::Skill2()
@@ -647,6 +737,8 @@ void CPlayerWarrior::Skill2()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 2;
+	m_Damage = 2000.0f;
 }
 
 void CPlayerWarrior::Skill3()
@@ -654,11 +746,14 @@ void CPlayerWarrior::Skill3()
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 characterDir = cameraDir;
 	characterDir.y = 0.0f; // delete y value
-	//m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL3_1), true);
-	m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL3_2), true);
+	m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL3_1), true);
+	//m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_SKILL3_2), true);
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 3;
+	m_Damage = 3200.0f; //1
+	//m_Damage = 600.0f; //2
 }
 
 void CPlayerWarrior::Attacked(float damage)
@@ -677,8 +772,8 @@ void CPlayerWarrior::Attacked(float damage)
 	}
 }
 
-CPlayerWarrior::CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
-	: CPlayableCharacter(object, aManager, isBoss)
+CPlayerWarrior::CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager)
+	: CPlayableCharacter(object, aManager)
 {
 	m_HP = 1200.0f;
 	m_MP = 100.0f;
@@ -711,6 +806,7 @@ void CPlayerWarrior::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARA
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
+			m_Damage = 600.0f;
 		}
 		break;
 	}
@@ -1591,6 +1687,7 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 void CPlayerWarrior::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
+	m_bCheckAC = false;
 	if (m_bLive) {
 		m_AManager->UpdateCombo(fElapsedTime);
 		if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {
@@ -1599,6 +1696,7 @@ void CPlayerWarrior::UpdateObject(float fElapsedTime)
 			m_bSkillActive = false;
 			m_bDoingCombo = false;
 			m_bAttacked = false;
+			m_CurrentSkill = 0;
 		}
 		if (m_AManager->IsComboInterrupted()) {
 			test = true;
@@ -1606,10 +1704,45 @@ void CPlayerWarrior::UpdateObject(float fElapsedTime)
 			m_bSkillActive = false;
 			m_bDoingCombo = false;
 			m_bAttacked = false;
+			m_CurrentSkill = 0;
 		}
 
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+
+		if (m_bDoingCombo)
+		{
+			m_bCheckAC = true;
+		}
+
+		switch (getCurrentSkill())
+		{
+		case 1:
+			if (getAniManager()->IsAnimationInTimeRange(0.4f, 0.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		case 2:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
+		case 3:
+			// 스킬-1
+			/*if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f))
+			{
+				m_bCheckAC = true;
+			}*/
+
+			// 스킬-2
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f) || getAniManager()->IsAnimationInTimeRange(0.7f, 0.8f) || getAniManager()->IsAnimationInTimeRange(1.3f, 1.4f) || getAniManager()->IsAnimationInTimeRange(1.5f, 1.6f) || getAniManager()->IsAnimationInTimeRange(2.0f, 2.1f))
+			{
+				m_bCheckAC = true;
+			}
+			break;
 		}
 	}
 }
@@ -1625,6 +1758,7 @@ void CPlayerPriest::Skill1()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 1;
 }
 
 void CPlayerPriest::Skill2()
@@ -1636,6 +1770,7 @@ void CPlayerPriest::Skill2()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 2;
 }
 
 void CPlayerPriest::Skill3()
@@ -1647,6 +1782,7 @@ void CPlayerPriest::Skill3()
 	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 	m_AManager->UpdateAniPosition(0.0f, m_Object);
 	m_bSkillActive = true;
+	m_CurrentSkill = 3;
 }
 
 void CPlayerPriest::Attacked(float damage)
@@ -1664,11 +1800,12 @@ void CPlayerPriest::Attacked(float damage)
 	}
 }
 
-CPlayerPriest::CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager, bool isBoss)
-	: CPlayableCharacter(object, aManager, isBoss)
+CPlayerPriest::CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager)
+	: CPlayableCharacter(object, aManager)
 {
 	m_HP = 1000.0f;
 	m_MP = 100.0f;
+	m_Damage = 800.0f;
 }
 
 void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -1698,6 +1835,7 @@ void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
+			MakeBullet();
 		}
 		break;
 	}
@@ -2211,6 +2349,7 @@ void CPlayerPriest::UpdateObject(float fElapsedTime)
 			m_bSkillActive = false;
 			m_bDoingCombo = false;
 			m_bAttacked = false;
+			m_CurrentSkill = 0;
 		}
 		if (m_AManager->IsComboInterrupted()) {
 			test = true;
@@ -2224,6 +2363,35 @@ void CPlayerPriest::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 	}
+}
+
+void CPlayerPriest::MakeBullet(float speed, int skill)
+{
+	if (bullet.empty()) {
+		return;
+	}
+
+	size_t startIndex = currentBullet;
+	CProjectile* projectile = nullptr;
+	do {
+		projectile = bullet[currentBullet].get();
+		if (!projectile->getActive()) {
+			break;
+		}
+		currentBullet = (currentBullet + 1) % bullet.size();
+	} while (currentBullet != startIndex);
+
+	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	projectile->setSpeed(speed);
+	projectile->setLifetime(3.0f);
+	projectile->setTime(0.0f);
+	projectile->setPosition(m_Object->getPosition());
+	projectile->setMoveDirection({ cameraDir.x, 0.0f, cameraDir.z });
+	projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
+	projectile->setActive(true);
+	projectile->getObjects().SetRenderState(true);
+
+	currentBullet = (currentBullet + 1) % bullet.size();
 }
 
 // =======================================================================================
@@ -2280,6 +2448,28 @@ void CPlayer::CollisionCheck(CHeightMapImage* heightmap, float fElapsedTime, flo
 	float terrainHeight = heightmap->GetHeightinWorldSpace(objectWorld._41 - offsetx, objectWorld._43 - offsetz);
 
 	if (terrainHeight > 0.0) {
+		XMFLOAT3 pushdir(m_xmf2PrevPos.x - objectWorld._41, 0.0, m_xmf2PrevPos.y - objectWorld._43);
+		playerWorld._41 += pushdir.x; playerWorld._43 += pushdir.z;
+		playerPreWorld._41 += pushdir.x; playerPreWorld._43 += pushdir.z;
+		objectWorld._41 += pushdir.x; objectWorld._43 += pushdir.z;
+	}
+	else
+		m_xmf2PrevPos.x = objectWorld._41; m_xmf2PrevPos.y = objectWorld._43;
+
+	p->SetPosition(XMFLOAT3(playerWorld._41, playerWorld._42, playerWorld._43));
+}
+
+void CPlayer::CollisionCheck(CHeightMapImage* heightmap, CHeightMapImage* CollisionMap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum)
+{
+	CSkinningObject* p = m_pPlayerObject->getObject();
+	XMFLOAT4X4& playerWorld = p->getWorldMatrix();
+	XMFLOAT4X4& playerPreWorld = p->getPreWorldMatrix();
+	XMFLOAT4X4& objectWorld = p->getObjects()[0]->getWorldMatrix();
+
+	float colHeight = CollisionMap->GetHeightinWorldSpace(objectWorld._41 - offsetx, objectWorld._43 - offsetz);
+	float terrainHeight = heightmap->GetHeightinWorldSpace(objectWorld._41 - offsetx, objectWorld._43 - offsetz);
+
+	if (colHeight - terrainHeight >= 0.1f) {
 		XMFLOAT3 pushdir(m_xmf2PrevPos.x - objectWorld._41, 0.0, m_xmf2PrevPos.y - objectWorld._43);
 		playerWorld._41 += pushdir.x; playerWorld._43 += pushdir.z;
 		playerPreWorld._41 += pushdir.x; playerPreWorld._43 += pushdir.z;

@@ -154,12 +154,17 @@ protected:
 
 class CRaytracingTestScene : public CRaytracingScene {
 public:
-	void SetUp(ComPtr<ID3D12Resource>& outputBuffer);
+	void SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline = nullptr);
 	void ProcessInput(float fElapsedTime);
 	void OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 	void OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
 
+
+	void UpdateObject(float fElapsedTime);
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+
+	bool m_bHold = false;
+	POINT oldCursor;
 };
 
 class CRaytracingMaterialTestScene : public CRaytracingScene {
@@ -195,6 +200,7 @@ public:
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
 	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
+	std::unique_ptr<CHeightMapImage> m_pRoadTerrain{};
 protected:
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};
@@ -331,6 +337,8 @@ public:
 	//void TextRender();
 
 	std::unique_ptr<CHeightMapImage> m_pHeightMap{};
+	std::unique_ptr<CHeightMapImage> m_TerrainRoad{};
+	std::unique_ptr<CHeightMapImage> m_CollisionHMap{};
 protected:
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};
@@ -349,33 +357,30 @@ protected:
 	ComPtr<ID3D12Resource>								m_pTerrainCB{};
 
 	// InGame UI ====================================================================
-	std::array<std::vector<std::unique_ptr<UIObject>>, 3>	m_vStatusUIs{};
+	bool m_bUIOnOff = true;
+	
+	std::array<std::vector<std::unique_ptr<UIObject>>, 3> m_vPlayersStatUI{};
 	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
-	std::unique_ptr<UIObject>				m_pShopUI;
 
-	short m_numUser = 1;						// replace
-	std::array<size_t, 3>				m_buffpixelHeight{};
-	std::array<std::array<bool, 3>, 3>	m_BuffState{};	// replace
+	short m_numUser = 3;						// replace	Player.size()
+	short m_local_id = 0;
+	short user_job[3] = { JOB_MAGE, JOB_WARRIOR, JOB_HEALER };
+
+	std::array<bool, 3>	m_BuffState{};	// replace
 	std::array<float, 3> maxHPs;		// replace
 	std::array<float, 3> cHPs;			// replace
 
-	short cItem = 0;		// replace server var
-	bool itemUse{};			// replace server var
-
 	std::array<float, 3> coolTime{};
 	std::array<float, 3> curCTime{};
+	std::array<float, 3> skillCost{};
 
-	float maxMP = 100;			// replace
-	float cMP = 100;			// replace
+	float maxMPs[3] = {100, 100, 100};			// replace
+	float cMPs[3] = {100, 37, 78};			// replace
 
 	UINT m_nGold = 1500;
 
 	size_t ItemNumTextIndex;
-	size_t GoldTextIndex;
-	size_t itemNum[4] = { 10, 10, 10, 10 };
-
-	bool m_bOpenShop = false;
 
 	void PlayerUISetup(short job);		// player job need
 	// ===============================================================================
