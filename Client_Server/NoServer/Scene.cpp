@@ -1962,11 +1962,6 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	std::vector<std::unique_ptr<CAnimationManager>>& aManagers = m_pResourceManager->getAnimationManagers();
 	// Create Normal Object & skinning Object Copy ========================================
 
-	for (auto& o : skinned[1]->getObjects()) {
-		for (auto& ma : o->getMaterials())
-			ma.m_bHasEmissiveColor = false;
-	}
-
 	UINT finalindex = normalObjects.size();
 	UINT finalmesh = meshes.size();
 
