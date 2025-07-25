@@ -52,6 +52,8 @@ void Feroptere::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -133,6 +135,8 @@ void Pistriptere::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -213,6 +217,8 @@ void RostrokarckLarvae::UpdateObject(float fElapsedTime)
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
+
+		m_CurrentSkill = m_AManager->getSkillnum();
 
 		switch (getCurrentSkill())
 		{
@@ -304,6 +310,8 @@ void Xenokarce::UpdateObject(float fElapsedTime)
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
+
+		m_CurrentSkill = m_AManager->getSkillnum();
 
 		switch (getCurrentSkill())
 		{
@@ -441,6 +449,8 @@ void Fulgurodonte::UpdateObject(float fElapsedTime)
 			}
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -535,6 +545,8 @@ void Limadon::UpdateObject(float fElapsedTime)
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
+
+		m_CurrentSkill = m_AManager->getSkillnum();
 
 		switch (getCurrentSkill())
 		{
@@ -636,6 +648,8 @@ void Occisodonte::UpdateObject(float fElapsedTime)
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
+
+		m_CurrentSkill = m_AManager->getSkillnum();
 
 		switch (getCurrentSkill())
 		{
@@ -747,6 +761,8 @@ void Crassorrid::UpdateObject(float fElapsedTime)
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
+
+		m_CurrentSkill = m_AManager->getSkillnum();
 
 		switch (getCurrentSkill())
 		{
