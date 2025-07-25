@@ -5,7 +5,7 @@
 class Feroptere : public CPlayableCharacter
 {
 public:
-	enum class Minion {
+	enum class Minion  {
 		ANI_DEATH = 0,
 		ANI_HIT,
 		ANI_IDLE,
