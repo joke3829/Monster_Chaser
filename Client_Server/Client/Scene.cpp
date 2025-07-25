@@ -1364,7 +1364,8 @@ void CRaytracingGameScene::CreatePriestCharacter()
 		}
 	}
 
-	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	//m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\ETP_Rock_Small03.bin", "src\\texture\\Map\\");
 	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
 	CPlayerPriest* mage = dynamic_cast<CPlayerPriest*>(m_vPlayers.back().get());
 	Material sharedMaterial;
@@ -1832,7 +1833,8 @@ void CRaytracingWinterLandScene::Create_Gorhorrid()
 		}
 	}
 
-	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	//m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\ETP_Rock_Small03.bin", "src\\texture\\Map\\");
 	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
 	Gorhorrid* monster = dynamic_cast<Gorhorrid*>(m_vMonsters.back().get());
 	Material sharedMaterial;
@@ -2604,7 +2606,8 @@ void CRaytracingCaveScene::Create_Fulgurodonte()
 		}
 	}
 
-	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.4f, "sphere"));
+	//m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 0.4f, "sphere"));
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\ETP_Rock_Small03.bin", "src\\texture\\Map\\");
 	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
 	Fulgurodonte* monster = dynamic_cast<Fulgurodonte*>(m_vMonsters.back().get());
 	Material sharedMaterial;
