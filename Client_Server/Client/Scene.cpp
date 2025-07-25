@@ -1310,6 +1310,7 @@ void CRaytracingGameScene::CreateMageCharacter()
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
 	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	//m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(L"src\\model\\ETP_Rock_Small03.bin", "sphere"));
 	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
 	CPlayerMage* mage = dynamic_cast<CPlayerMage*>(m_vPlayers.back().get());
 	Material sharedMaterial;
