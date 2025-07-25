@@ -1250,10 +1250,10 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 	CPlayableCharacter* attackerPtr = attacker[0].get();
 	XMFLOAT3 attackerPos = attackerPtr->getObject()->getPosition();
 	XMFLOAT3 attackerDir = attackerPtr->getObject()->getLook();
-	float fov = 90.0f * (3.14159f / 180.0f);
+	float fov = 75.0f * (3.14159f / 180.0f);
 	float cosFov = std::cos(fov / 2.0f);
-	float maxDistance = 150.0f;
-	float minDistance = 150.0f;
+	float maxDistance = 130.0f;
+	float minDistance = 130.0f;
 	XMFLOAT3 directionToTarget = { 0.0f, 0.0f, 0.0f };
 	bool targetFound = false;
 	XMVECTOR vAttackerDir = XMLoadFloat3(&attackerDir);
