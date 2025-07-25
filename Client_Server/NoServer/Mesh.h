@@ -80,6 +80,8 @@ public:
 	UINT getSubMeshCount() const;
 	
 	std::vector<XMFLOAT2>& getTex0() { return m_vTex0; }
+	std::vector<XMFLOAT3> getPositions() const { return m_vPositions; }
+	std::vector<UINT> getIndices() const { return m_vIndexs; }
 	void setSkinning(bool bSkinning) { m_bSkinningMesh = bSkinning; }
 protected:
 private:
@@ -123,4 +125,9 @@ private:
 	bool m_bHasSubMeshes = false;
 
 	bool m_bSkinningMesh = false;
+
+	std::vector<XMFLOAT3> m_vPositions;
+	std::vector<UINT> m_vIndexs;
 };
+
+// ===============================================================================================

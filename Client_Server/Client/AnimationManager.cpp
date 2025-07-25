@@ -488,7 +488,7 @@ void CWarriorManager::UpdateCombo(float fElapsedTime)
 
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 23) {
 		if (m_bNextAttack && m_bWaitingForNextInput) {
-			const float fComboCooldown = 0.4f;
+			const float fComboCooldown = 0.1f;
 			if (m_fComboTimer >= fComboCooldown) {
 				m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
 				ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);

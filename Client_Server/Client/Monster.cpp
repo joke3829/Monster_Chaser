@@ -25,7 +25,9 @@ void Feroptere::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		}
 	}
 	else {
 		m_bLive = false;
@@ -104,7 +106,9 @@ void Pistriptere::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		}
 	}
 	else {
 		m_bLive = false;
@@ -183,7 +187,9 @@ void RostrokarckLarvae::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		}
 	}
 	else {
 		m_bLive = false;
@@ -272,7 +278,9 @@ void Xenokarce::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+		}
 	}
 	else {
 		m_bLive = false;
@@ -375,7 +383,7 @@ void Fulgurodonte::Skill2()
 				CProjectile* projectile = bullet[currentBullet].get();
 				projectile->getObjects().SetScale(XMFLOAT3(2.5f, 2.5f, 2.5f));
 				if (projectile && !projectile->getActive()) {
-					projectile->setPosition(pos, 2);
+					projectile->setPosition(pos);
 
 					XMFLOAT3 lookDirection = m_Object->getLook();
 					float angle = startAngle + (i * angleStep);
@@ -400,7 +408,9 @@ void Fulgurodonte::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		}
 	}
 	else {
 		m_bLive = false;
@@ -499,7 +509,9 @@ void Limadon::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		}
 	}
 	else {
 		m_bLive = false;
@@ -598,7 +610,9 @@ void Occisodonte::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
+		}
 	}
 	else {
 		m_bLive = false;
@@ -707,7 +721,9 @@ void Crassorrid::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+		}
 	}
 	else {
 		m_bLive = false;
@@ -834,7 +850,7 @@ void Gorhorrid::Skill3()
 				CProjectile* projectile = bullet[currentBullet].get();
 				projectile->getObjects().SetScale(XMFLOAT3(2.5f, 2.5f, 2.5f));
 				if (projectile && !projectile->getActive()) {
-					projectile->setPosition(pos, 2);
+					projectile->setPosition(pos);
 
 					XMFLOAT3 lookDirection = m_Object->getLook();
 					float angle = startAngle + (i * angleStep);
@@ -859,7 +875,9 @@ void Gorhorrid::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+		if (!m_bSkillActive) {
+			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
+		}
 	}
 	else
 	{

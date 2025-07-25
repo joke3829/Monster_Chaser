@@ -53,7 +53,9 @@ void CPlayerMage::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
+		if (!m_bSkillActive && !m_bDoingCombo) {
+			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
+		}
 	}
 	else
 	{
@@ -691,21 +693,20 @@ void CPlayerMage::MakeBullet(float speed, int skill)
 		}
 	} while (currentBullet != startIndex);
 
-	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	projectile->setSpeed(speed);
 	projectile->setLifetime(3.0f);
 	projectile->setTime(0.0f);
+	XMFLOAT3 pos = XMFLOAT3(m_Head->getWorldMatrix()._41, m_Head->getWorldMatrix()._42, m_Head->getWorldMatrix()._43);
 
 	if (skill == 1) {
-		projectile->setPosition(m_Object->getPosition());
-		projectile->setMoveDirection({ cameraDir.x, 0.0f, cameraDir.z });
+		projectile->setPosition(pos);
+		projectile->setMoveDirection(m_AutoDirect);
 		projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
 	}
 	else if (skill == 2) {
-		DirectX::XMFLOAT3 pos = m_Object->getPosition();
 		pos.y += 40.0f;
-		projectile->setPosition(pos, 2);
-		projectile->setMoveDirection({ cameraDir.x, -0.4f, cameraDir.z });
+		projectile->setPosition(pos);
+		projectile->setMoveDirection(m_AutoDirect);
 		projectile->getObjects().SetScale({ 10.0f, 10.0f, 10.0f });
 	}
 	projectile->setActive(true);
@@ -758,12 +759,17 @@ void CPlayerWarrior::Skill3()
 
 void CPlayerWarrior::Attacked(float damage)
 {
+	if (m_bSkillActive && m_CurrentSkill == 2)
+	{
+		return;
+	}
 	m_HP -= damage;
 	m_bAttacked = true;
-	m_bSkillActive = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
+		if (!m_bSkillActive && !m_bDoingCombo) {
+			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
+		}
 	}
 	else
 	{
@@ -1791,7 +1797,9 @@ void CPlayerPriest::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
+		if (!m_bSkillActive && !m_bDoingCombo) {
+			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
+		}
 	}
 	else
 	{
@@ -2362,6 +2370,12 @@ void CPlayerPriest::UpdateObject(float fElapsedTime)
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
+
+		for (auto& bulletPtr : bullet) {
+			if (bulletPtr->getActive()) {
+				bulletPtr->IsMoving(fElapsedTime);
+			}
+		}
 	}
 }
 
@@ -2373,7 +2387,7 @@ void CPlayerPriest::MakeBullet(float speed, int skill)
 
 	size_t startIndex = currentBullet;
 	CProjectile* projectile = nullptr;
-	do {
+	do {  
 		projectile = bullet[currentBullet].get();
 		if (!projectile->getActive()) {
 			break;
@@ -2381,13 +2395,12 @@ void CPlayerPriest::MakeBullet(float speed, int skill)
 		currentBullet = (currentBullet + 1) % bullet.size();
 	} while (currentBullet != startIndex);
 
-	XMFLOAT3 cameraDir = m_pCamera->getDir();
+	XMFLOAT3 pos = XMFLOAT3(m_Head->getWorldMatrix()._41, m_Head->getWorldMatrix()._42, m_Head->getWorldMatrix()._43);
 	projectile->setSpeed(speed);
 	projectile->setLifetime(3.0f);
 	projectile->setTime(0.0f);
-	projectile->setPosition(m_Object->getPosition());
-	projectile->setMoveDirection({ cameraDir.x, 0.0f, cameraDir.z });
-	projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
+	projectile->setPosition(pos);
+	projectile->setMoveDirection(m_AutoDirect);
 	projectile->setActive(true);
 	projectile->getObjects().SetRenderState(true);
 

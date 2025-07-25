@@ -545,9 +545,12 @@ void Mesh::GetPositionFromFile(std::ifstream& inFile)
 	if (m_nVertexCount > 0) {
 		m_bHasVertex = true;
 
-		std::vector<XMFLOAT3> vPositions;
-		vPositions.assign(m_nVertexCount, XMFLOAT3(0.0, 0.0, 0.0));
-		inFile.read((char*)vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
+		m_vPositions.resize(m_nVertexCount);
+		inFile.read((char*)m_vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
+
+		//std::vector<XMFLOAT3> vPositions;
+		//vPositions.assign(m_nVertexCount, XMFLOAT3(0.0, 0.0, 0.0));
+		//inFile.read((char*)vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
 
 		// vertex buffer ����
 		auto desc = BASIC_BUFFER_DESC;
@@ -558,7 +561,7 @@ void Mesh::GetPositionFromFile(std::ifstream& inFile)
 
 		void* ptr;
 		m_pd3dVertexBuffer->Map(0, nullptr, &ptr);
-		memcpy(ptr, vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
+		memcpy(ptr, m_vPositions.data(), sizeof(XMFLOAT3) * m_nVertexCount);
 		m_pd3dVertexBuffer->Unmap(0, nullptr);
 	}
 }
@@ -732,6 +735,7 @@ void Mesh::MakeSubMesh(std::ifstream& inFile)
 
 	inFile.read((char*)&indices, sizeof(int));
 	m_vIndices.emplace_back(indices);
+	m_vIndexs.emplace_back(indices);
 
 	if (indices > 0) {
 		std::vector<UINT> index{};
