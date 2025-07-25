@@ -147,6 +147,8 @@ public:
 	virtual void UpdateCombo(float fElapsedTime);
 	virtual void ResetCombo();
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
+protected:
+	const float m_fComboWaitTime = 0.7f;
 };
 
 class CPriestManager : public CPlayableCharacterAnimationManager {
