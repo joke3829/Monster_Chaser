@@ -79,13 +79,12 @@ void C_Socket::SendPickCharacter(const short RoomNum, const short Job)
 	Client.send_packet(&p);
 }
 
-void C_Socket::SendPlayerReady()
+void C_Socket::SendPlayerReady(const short Map)
 {
 	cs_packet_readytoIngame pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_READYINGAME;
-	/*pkt.room_number = room_num;
-	pkt.local_id = local_id;*/
+	pkt.Map = Map;			//어떤 맵 준비완료됐는지
 	Client.send_packet(&pkt);
 }
 

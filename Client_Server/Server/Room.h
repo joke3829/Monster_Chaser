@@ -43,6 +43,7 @@ public:
 	void setStage(short new_stage) { stage = new_stage; }
 	short getStage() const { return stage; }
 	bool isAllGameStartReady() const;
+	void InitailizeReadyingame();
 	concurrent_unordered_map<int, shared_ptr<Monster>> monsters;
 	std::vector<int>id;        //해당 방에 들어온 id 관리 -> 락이 필요함 
 	concurrency::concurrent_unordered_map<int, short> selected_characters; // 캐릭터 선택 정보 (추가)

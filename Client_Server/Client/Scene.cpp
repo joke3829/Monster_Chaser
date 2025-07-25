@@ -1722,7 +1722,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
-	Client.SendPlayerReady();
+	Client.SendPlayerReady(SCENE_WINTERLAND);
 }
 
 void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -2405,7 +2405,7 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 
 	PlayerUISetup(JOB_MAGE);
 
-	Client.SendPlayerReady();
+	Client.SendPlayerReady(SCENE_CAVE);
 }
 
 void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -3177,7 +3177,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 
 	PlayerUISetup(JOB_MAGE);
 
-	Client.SendPlayerReady();
+	Client.SendPlayerReady(SCENE_PLAIN);
 }
 
 void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)

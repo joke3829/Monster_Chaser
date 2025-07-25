@@ -146,9 +146,9 @@ void SESSION::process_packet(char* p) {
 			sp.type = S2C_P_ALLREADY;
 			sp.room_number = static_cast<char>(room_num);
 
-			g_server.rooms[room_num].setStage(SCENE_PLAIN);      // Set Stage to Stage1
+			//g_server.rooms[room_num].setStage(SCENE_PLAIN);      // Set Stage to Stage1
 			//myMutex.lock();
-			g_server.rooms[room_num].SpawnMonsters();       //Monster Spawn
+			//g_server.rooms[room_num].SpawnMonsters();       //Monster Spawn
 		   // myMutex.unlock();
 
 			for (int id : g_server.rooms[room_num].id)
@@ -165,9 +165,18 @@ void SESSION::process_packet(char* p) {
 		Room& room = g_server.rooms[room_num];
 		room.setReady(local_id, true);  // ✅ 이 로컬 ID를 true로 표시
 
+
+
 		if (room.isAllGameStartReady()) {
+			room.RoomMutex.lock();
+			room.setStage(pkt->Map); // 맵 설정
+			room.monsters.clear(); // 몬스터 초기화
+			room.SpawnMonsters(); // 몬스터 스폰
+			room.RoomMutex.unlock();
 			room.bStageActive = true; // 게임 시작 준비 완료
 			room.StartGame();  // 몬스터 스레드 시작
+			room.InitailizeReadyingame();		//다시	player_readytoPlaygame 다 False로 초기화
+			std::cout << "[서버] room " << room_num << " → 스테이지 " << pkt->Map << " 시작" << std::endl;
 		}
 
 		std::cout << "[Ingame Ready] room: " << room_num << ", local_id: " << local_id << "\n";

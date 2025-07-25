@@ -176,6 +176,11 @@ bool Room::isAllGameStartReady() const
 	
 }
 
+void Room::InitailizeReadyingame()
+{
+	player_readytoPlaygame = { false, false, false }; // 3명의 플레이어가 준비 상태를 나타내는 벡터 초기화
+}
+
 
 
 

@@ -254,8 +254,7 @@ struct cs_packet_getready {
 struct cs_packet_readytoIngame {
 	unsigned char size;
 	char type;
-	//int local_id; // 로컬 ID
-	//int room_number; // 방 번호
+	short Map;
 };
 
 struct cs_packet_move {
