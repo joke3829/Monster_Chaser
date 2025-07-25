@@ -2,15 +2,18 @@
 #include "ResourceManager.h"
 #include "Camera.h"
 
+class C_Socket;
+class Player;
 // 07.25 ===========================================
-extern std::array<bool, 3>	g_PlayerBuffState{};
+extern std::unordered_map<int, Player> Players;
+extern C_Socket Client;
+
+extern std::array<bool, 3>	g_PlayerBuffState;
 extern std::array<float, 3> g_maxHPs;
-extern std::array<float, 3> g_curHPs;
 extern std::array<float, 3> g_maxMPs;
-extern std::array<float, 3> g_curMPs;
-extern std::array<float, 3> g_SkillCoolTime{};
-extern std::array<float, 3> g_SkillCurCTime{};
-extern std::array<float, 3> g_SkillCost{};
+extern std::array<float, 3> g_SkillCoolTime;
+extern std::array<float, 3> g_SkillCurCTime;
+extern std::array<float, 3> g_SkillCost;
 // =================================================
 
 class CPlayableCharacter {
@@ -23,7 +26,7 @@ public:
 	virtual void Skill3() {}
 
 	virtual void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
-	virtual KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime) {}
+	virtual KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime) { return KEY_NOTHING; }
 	virtual void UpdateObject(float fElapsedTime) {}
 
 	virtual void Attacked(float damage) {}

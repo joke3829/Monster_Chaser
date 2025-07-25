@@ -7,6 +7,7 @@ extern DXResources g_DxResource;
 extern std::default_random_engine g_dre;
 extern std::uniform_real_distribution<float> g_unorm;
 
+
 struct Material {
 	Material() = default;
 	bool m_bHasAlbedoColor = false;

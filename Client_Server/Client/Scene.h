@@ -9,18 +9,18 @@
 #include "stdfxh.h"
 #include "Monster.h"
 #include "ObjectManager.h"
+#include "SoundManager.h"
 
 extern DXResources g_DxResource;
+extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
 
 // 07.25 ===========================================
-extern std::array<bool, 3>	g_PlayerBuffState{};
+extern std::array<bool, 3>	g_PlayerBuffState;
 extern std::array<float, 3> g_maxHPs;
-extern std::array<float, 3> g_curHPs;
 extern std::array<float, 3> g_maxMPs;
-extern std::array<float, 3> g_curMPs;
-extern std::array<float, 3> g_SkillCoolTime{};
-extern std::array<float, 3> g_SkillCurCTime{};
-extern std::array<float, 3> g_SkillCost{};
+extern std::array<float, 3> g_SkillCoolTime;
+extern std::array<float, 3> g_SkillCurCTime;
+extern std::array<float, 3> g_SkillCost;
 // =================================================
 
 class CScene {
@@ -193,15 +193,17 @@ protected:
 
 	// InGame UI ====================================================================
 	bool m_bUIOnOff = true;
+	bool m_bBossBattle = false;
 
-	unsigned int cItem{};
+	int cItem{};
 
 	std::array<std::vector<std::unique_ptr<UIObject>>, 3> m_vPlayersStatUI{};
 	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vBossUIs;
 
-	short m_numUser = 3;						// replace	Player.size()
-	short m_local_id = 0;
+	short m_numUser;						// replace	Player.size()
+	short m_local_id;
 
 	float m_fItemCoolTime = 30.0f;
 	float m_fItemCurTime{};

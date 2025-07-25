@@ -91,6 +91,9 @@
     <Filter Include="SERVER\플레이어객체\플레이어 정보">
       <UniqueIdentifier>{5a8a0fd5-210e-4d8d-ace9-d690a08eea57}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource\SoundManager">
+      <UniqueIdentifier>{4404b1cc-be7e-47c9-ba3e-4674a17890f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -186,6 +189,9 @@
     <ClInclude Include="C_Socket.h">
       <Filter>SERVER</Filter>
     </ClInclude>
+    <ClInclude Include="SoundManager.h">
+      <Filter>Resource\SoundManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -268,6 +274,9 @@
     </ClCompile>
     <ClCompile Include="C_Socket.cpp">
       <Filter>SERVER</Filter>
+    </ClCompile>
+    <ClCompile Include="SoundManager.cpp">
+      <Filter>Resource\SoundManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

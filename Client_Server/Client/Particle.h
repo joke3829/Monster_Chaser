@@ -23,7 +23,7 @@ public:
 	BoundingSphere& getBoundingSphere() { return m_Sphere; }
 	XMFLOAT4X4& getWorldMatrix() { return m_WorldMatrix; }
 
-	
+	void setTarget(CGameObject* target) { m_pTarget = target; }
 	void setPosition(XMFLOAT3& pos);
 	virtual void setMaterial(Material& material) { m_material = material; }
 	virtual void setNotUseLightCalurate() {}
@@ -66,6 +66,7 @@ protected:
 	Material m_material;
 
 	BoundingSphere m_Sphere{};
+	CGameObject* m_pTarget{};
 
 	float m_fElapsedTime{};
 	float m_fEndTime{};

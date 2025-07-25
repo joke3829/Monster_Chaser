@@ -27,11 +27,9 @@ TitleState g_state = Title;
 InGameState g_InGameState;
 
 // 07.25 ======================================
-std::array<bool, 3>	g_PlayerBuffState{};	
-std::array<float, 3> g_maxHPs;	
-std::array<float, 3> g_curHPs;		
+std::array<bool, 3>	g_PlayerBuffState{};
+std::array<float, 3> g_maxHPs;
 std::array<float, 3> g_maxMPs;
-std::array<float, 3> g_curMPs;
 std::array<float, 3> g_SkillCoolTime{};
 std::array<float, 3> g_SkillCurCTime{};
 std::array<float, 3> g_SkillCost{};
@@ -221,6 +219,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_RBUTTONUP:
 	case WM_MOUSEMOVE:
+	case WM_MOUSEWHEEL:
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 		gGameFramework.WMMessageProcessing(hWnd, message, wParam, lParam);

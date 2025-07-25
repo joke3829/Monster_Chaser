@@ -1,4 +1,6 @@
 #include "PlayableCharacter.h"
+#include "ObjectManager.h"
+#include "C_Socket.h"
 
 CPlayableCharacter::CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager)
 	: m_Object(object)

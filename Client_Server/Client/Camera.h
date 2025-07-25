@@ -58,6 +58,8 @@ public:
 	void toggleReflection() { m_pCameraInfo->bReflection = ~m_pCameraInfo->bReflection; }
 	XMFLOAT3 getDir() const { return m_xmf3Dir; }
 	XMFLOAT3 getUp() const { return m_xmf3Up; }
+
+	void ChangeLength(short arrow);		// 0: closer, 1: far
 protected:
 	bool m_bThirdPerson = false;
 	CGameObject* m_pTarget = nullptr;

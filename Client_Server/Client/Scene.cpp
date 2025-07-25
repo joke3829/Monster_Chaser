@@ -9,6 +9,8 @@ extern TitleState g_state;
 extern InGameState g_InGameState;
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
+
+
 void CScene::CreateRTVDSV()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC desc{};
@@ -197,6 +199,8 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRa
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\CharacterInfo3.dds"));
 	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(240, 40);
+
+	g_pSoundManager->StartBGM(ESOUND::SOUND_TITLE_BGM);
 }
 
 void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -217,6 +221,8 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 				if (Players[local_uid].getCharacterType() != JOB_NOTHING)	//if pick non character
 				{
 					bool currentReady = Players[Client.get_id()].getReady();
+					if (!currentReady)
+						g_pSoundManager->StartFx(ESOUND::SOUND_READY);
 					Players[Client.get_id()].setReady(!currentReady);
 					Client.SendsetReady(Players[Client.get_id()].getReady(), currentRoom);
 				}
@@ -243,7 +249,8 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 	case WM_LBUTTONDOWN: {
 		int mx = LOWORD(lParam);
 		int my = HIWORD(lParam);
-
+		if (g_state != GoLoading)
+			g_pSoundManager->StartFx(ESOUND::SOUND_CLICK);
 		switch (g_state) {
 		case Title:
 			g_state = RoomSelect;
@@ -282,45 +289,47 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 
 			break;
 		case InRoom:
-			if (mx >= 0 && mx < 960) {
-
-				if (!Players[Client.get_id()].getReady()) {
-					g_state = SelectC;			// change g_state
+			if (mx >= 18 && mx < 318) {
+				if (my >= 610 && my < 700) {
+					if (!Players[Client.get_id()].getReady()) {
+						g_state = SelectC;			// change g_state
+					}
+					//prevJob = userJob[local_uid];
+					//	Players[local_uid].getCharacterType()
+					//	Players[local_uid].setCharacterType(prevJob);
+					prevJob = Players[local_uid].getCharacterType();
 				}
-				//prevJob = userJob[local_uid];
-				//	Players[local_uid].getCharacterType()
-				//	Players[local_uid].setCharacterType(prevJob);
-				prevJob = Players[local_uid].getCharacterType();
 			}
 			break;
 		case SelectC:
 			short currentJob = Players[local_uid].getCharacterType();
-
-			if (mx >= 0 && mx < 960) {
-				if (my >= 400) {
+			if (mx >= 18 && mx < 318) {
+				if (my >= 610 && my < 700) {
 					Players[local_uid].setCharacterType(prevJob);
 					g_state = InRoom;		// change g_state
 					Client.SendPickCharacter(currentRoom, (int)Players[local_uid].getCharacterType());
 				}
-				else {
+			}
+			if (mx >= 20 && mx < 120) {
+				if (my >= 310 && my < 410) {
 					int newJob = (int)currentJob - 1;
 					if (newJob < 1)
 						newJob = 3;
 					Players[local_uid].setCharacterType(newJob);
-
 				}
 			}
-			else {
-				if (my >= 400)
-				{
-					Client.SendPickCharacter(currentRoom, (int)Players[local_uid].getCharacterType());
-					g_state = InRoom;		// change g_state
-				}
-				else {
+			if (mx >= 1150 && mx < 1250) {
+				if (my >= 310 && my < 410) {
 					int newJob = (int)currentJob + 1;
 					if (newJob > 3)
 						newJob = 1;
 					Players[local_uid].setCharacterType(newJob);
+				}
+			}
+			if (mx >= 962 && mx < 1262) {
+				if (my >= 610 && my < 700) {
+					Client.SendPickCharacter(currentRoom, (int)Players[local_uid].getCharacterType());
+					g_state = InRoom;		// change g_state
 				}
 			}
 			break;
@@ -1224,8 +1233,6 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 
 	// status UI ===================================================================
-	maxHPs[0] = 1200; maxHPs[1] = 1000; maxHPs[2] = 800;
-	cHPs[0] = 1200; cHPs[1] = 800; cHPs[2] = 730;
 
 	m_numUser = Players.size();
 	m_local_id = Client.get_id();
@@ -1237,6 +1244,9 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 264, 14.4));		// coop hp/mp 
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 60, 60));		// coop player face
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 520, 35));
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 510, 25));
 
 	tindex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_HPbar.dds"));	// HPbar
@@ -1250,6 +1260,8 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MiniPlayer0.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MiniPlayer1.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MiniPlayer2.dds"));
+
+	for (auto& p : g_PlayerBuffState) p = false;
 
 	int otherPlayer = 0;
 	for (int i = 0; i < m_numUser; ++i) {
@@ -1308,6 +1320,13 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 			++otherPlayer;
 		}
 	}
+
+	m_vBossUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 5].get(), textures[tindex].get()));
+	m_vBossUIs[0]->setPositionInViewport(380, 10);
+
+	m_vBossUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 6].get()));
+	m_vBossUIs[1]->setColor(1.0, 0.0, 0.0, 1.0);
+	m_vBossUIs[1]->setPositionInViewport(385, 15);
 	// =============================================================================
 
 	// item ========================================================================
@@ -1341,8 +1360,6 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 
 	// skills ======================================================================
 
-	coolTime[0] = 5.0f; coolTime[1] = 10.0f; coolTime[2] = 20.0f;
-
 	mindex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 100, 100));
 
@@ -1352,18 +1369,26 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician2.dds"));
+		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 20.0f; g_SkillCoolTime[2] = 40.0f;
+		g_SkillCost[0] = 30.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 70.0f;
 		break;
 	case JOB_WARRIOR:
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior2.dds"));
+		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 5.0f; g_SkillCoolTime[2] = 20.0f;
+		g_SkillCost[0] = 25.0f; g_SkillCost[1] = 5.0f; g_SkillCost[2] = 40.0f;
 		break;
 	case JOB_HEALER:
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer2.dds"));
+		g_SkillCoolTime[0] = 15.0f; g_SkillCoolTime[1] = 30.0f; g_SkillCoolTime[2] = 60.0f;
+		g_SkillCost[0] = 20.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 80.0f;
 		break;
 	}
+	for (auto& p : g_SkillCurCTime) p = 0;
+	
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_MP_Less.dds"));
 	for (int i = 0; i < 3; ++i) {
 		uindex = m_vSkillUIs.size();
@@ -1389,33 +1414,18 @@ void CRaytracingGameScene::UIUseSkill(KeyInputRet input)
 {
 	switch(input) {
 	case KEY_SKILL1:
-
+		g_SkillCurCTime[0] = g_SkillCoolTime[0];
+		// Send Skill use Packet
 		break;
 	case KEY_SKILL2:
-
+		g_SkillCurCTime[1] = g_SkillCoolTime[1];
+		// Send Skill use Packet
 		break;
 	case KEY_SKILL3:
-
+		g_SkillCurCTime[2] = g_SkillCoolTime[2];
+		// Send Skill use Packet
 		break;
 	}
-	case 'Q':
-		if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
-			cMPs[m_local_id] -= 30;
-			curCTime[0] = coolTime[0];
-		}
-		break;
-	case 'E':
-		if (cMPs[m_local_id] >= 40 && curCTime[1] <= 0) {
-			cMPs[m_local_id] -= 40;
-			curCTime[1] = coolTime[1];
-		}
-		break;
-	case 'R':
-		if (cMPs[m_local_id] >= 60 && curCTime[2] <= 0) {
-			cMPs[m_local_id] -= 60;
-			curCTime[2] = coolTime[2];
-		}
-		break;
 }
 
 // =====================================================================================
@@ -1594,27 +1604,14 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 				g_InGameState = IS_FINISH;
 			}
 			break;
-		case 'U':
-			cHPs[0] += 10;
-			if (maxHPs[0] < cHPs[0])
-				cHPs[0] = maxHPs[0];
-			break;
-		case 'J':
-			cHPs[0] -= 10;
-			if (0 > cHPs[0])
-				cHPs[0] = 0;
-			break;
 		case '1':			// 1~4 test
-			m_BuffState[0] = !m_BuffState[0];
+			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
 			break;
 		case '2':
-			m_BuffState[1] = !m_BuffState[1];
+			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
 			break;
 		case '3':
-			m_BuffState[2] = !m_BuffState[2];
-			break;
-		case '4':
-			cMPs[m_local_id] = 100;
+			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -1629,10 +1626,13 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			//Client.SendHPitem(ItemType::HP_POTION);
-			//Client.SendHPitem(ItemType::MP_POTION);
-			Client.SendHPitem(ItemType::ATK_BUFF);
-			//Client.SendHPitem(ItemType::DEF_BUFF);
+			if (m_fItemCurTime <= 0.0f) {
+				//Client.SendHPitem(ItemType::HP_POTION);
+				//Client.SendHPitem(ItemType::MP_POTION);
+				Client.SendHPitem(ItemType::ATK_BUFF);
+				//Client.SendHPitem(ItemType::DEF_BUFF);
+				m_fItemCurTime = m_fItemCoolTime;
+			}
 			break;
 		case 'P':
 			m_bUIOnOff = !m_bUIOnOff;
@@ -1647,6 +1647,15 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 void CRaytracingWinterLandScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	m_pPlayer->MouseProcess(hWnd, nMessage, wParam, lParam);
+	switch (nMessage) {
+	case WM_MOUSEWHEEL:
+		short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		if (delta > 0)
+			m_pCamera->ChangeLength(1);
+		else if (delta < 0)
+			m_pCamera->ChangeLength(0);
+		break;
+	}
 }
 
 void CRaytracingWinterLandScene::Create_Gorhorrid()
@@ -1970,15 +1979,18 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 
 	// Player UI ==================================================
 	int buffstart = 20; int bstride = 40;
+	float cMP = Players[m_local_id].GetMP();
 
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		m_vPlayersStatUI[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
-		m_vPlayersStatUI[i][3]->setScaleXWithUV(cMPs[i] / maxMPs[i]);
+		float tge = static_cast<float>(Players[i].GetHP());
+		float tt = g_maxHPs[i];
+		m_vPlayersStatUI[i][1]->setScaleX(static_cast<float>(Players[i].GetHP()) / g_maxHPs[i]);
+		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
-				if (m_BuffState[j]) {
+				if (g_PlayerBuffState[j]) {
 					m_vPlayersStatUI[i][j + 4]->setRenderState(true);
 					m_vPlayersStatUI[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), 100);
 					++t;
@@ -1987,29 +1999,40 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 					m_vPlayersStatUI[i][j + 4]->setRenderState(false);
 				}
 			}
+			XMFLOAT3 mpos = m_pMonsters[0]->getObject()->getObject()->getPosition(); mpos.y = 0;
+			XMFLOAT3 ppos = Players[m_local_id].getRenderingObject()->getPosition(); ppos.y = 0;
+			float distance;
+			XMStoreFloat(&distance, XMVector3Length(XMLoadFloat3(&mpos) - XMLoadFloat3(&ppos)));
+			if (distance <= 100.0f)
+				m_bBossBattle = true;
 		}
 	}
 
+	m_fItemCurTime -= fElapsedTime;
+	if (m_fItemCurTime < 0.0)
+		m_fItemCurTime = 0.0f;
+	m_vItemUIs[4]->setScaleY(m_fItemCurTime / m_fItemCoolTime);
+
 	{
-		if (cMPs[m_local_id] < 30)
+		if (cMP < g_SkillCost[0])
 			m_vSkillUIs[6]->setRenderState(true);
 		else
 			m_vSkillUIs[6]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 40)
+		if (cMP < g_SkillCost[1])
 			m_vSkillUIs[7]->setRenderState(true);
 		else
 			m_vSkillUIs[7]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 60)
+		if (cMP < g_SkillCost[2])
 			m_vSkillUIs[8]->setRenderState(true);
 		else
 			m_vSkillUIs[8]->setRenderState(false);
 
 		for (int i = 0; i < 3; ++i) {
-			curCTime[i] -= fElapsedTime;
-			if (curCTime[i] < 0) curCTime[i] = 0.0f;
-			m_vSkillUIs[i + 3]->setScaleY(curCTime[i] / coolTime[i]);
+			g_SkillCurCTime[i] -= fElapsedTime;
+			if (g_SkillCurCTime[i] < 0) g_SkillCurCTime[i] = 0.0f;
+			m_vSkillUIs[i + 3]->setScaleY(g_SkillCurCTime[i] / g_SkillCoolTime[i]);
 		}
 	}
 	// =================================================================
@@ -2076,6 +2099,10 @@ void CRaytracingWinterLandScene::Render()
 			for (auto& p : m_vPlayersStatUI[i])
 				p->Render();
 		}
+
+		if (m_bBossBattle)
+			for (auto& p : m_vBossUIs)
+				p->Render();
 
 		for (auto& p : m_vItemUIs)
 			p->Render();
@@ -2206,7 +2233,7 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	// ==============================================================================
 
 	// Camera Setting ==============================================================
-	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetTarget(m_pPlayer->getObject()->getObject()->getObjects()[0].get());
 	m_pCamera->SetHOffset(3.5f);
 	m_pCamera->SetCameraLength(15.0f);
 	m_pCamera->SetMapNumber(SCENE_CAVE);
@@ -2224,9 +2251,11 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 
-	PlayerUISetup(JOB_MAGE);
+	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
 	Client.SendPlayerReady();
+
+	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE2_AMB);
 }
 
 void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -2255,27 +2284,14 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 				g_InGameState = IS_FINISH;
 			}
 			break;
-		case 'U':
-			cHPs[0] += 10;
-			if (maxHPs[0] < cHPs[0])
-				cHPs[0] = maxHPs[0];
-			break;
-		case 'J':
-			cHPs[0] -= 10;
-			if (0 > cHPs[0])
-				cHPs[0] = 0;
-			break;
 		case '1':			// 1~4 test
-			m_BuffState[0] = !m_BuffState[0];
+			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
 			break;
 		case '2':
-			m_BuffState[1] = !m_BuffState[1];
+			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
 			break;
 		case '3':
-			m_BuffState[2] = !m_BuffState[2];
-			break;
-		case '4':
-			cMPs[m_local_id] = 100;
+			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -2290,27 +2306,12 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			//Client.SendHPitem(ItemType::HP_POTION);
-			//Client.SendHPitem(ItemType::MP_POTION);
-			Client.SendHPitem(ItemType::ATK_BUFF);
-			//Client.SendHPitem(ItemType::DEF_BUFF);
-			break;
-		case 'Q':
-			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
-				cMPs[m_local_id] -= 30;
-				curCTime[0] = coolTime[0];
-			}
-			break;
-		case 'E':
-			if (cMPs[m_local_id] >= 40 && curCTime[1] <= 0) {
-				cMPs[m_local_id] -= 40;
-				curCTime[1] = coolTime[1];
-			}
-			break;
-		case 'R':
-			if (cMPs[m_local_id] >= 60 && curCTime[2] <= 0) {
-				cMPs[m_local_id] -= 60;
-				curCTime[2] = coolTime[2];
+			if (m_fItemCurTime <= 0.0f) {
+				//Client.SendHPitem(ItemType::HP_POTION);
+				//Client.SendHPitem(ItemType::MP_POTION);
+				Client.SendHPitem(ItemType::ATK_BUFF);
+				//Client.SendHPitem(ItemType::DEF_BUFF);
+				m_fItemCurTime = m_fItemCoolTime;
 			}
 			break;
 		case 'P':
@@ -2326,6 +2327,15 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 void CRaytracingCaveScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	m_pPlayer->MouseProcess(hWnd, nMessage, wParam, lParam);
+	switch (nMessage) {
+	case WM_MOUSEWHEEL:
+		short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		if (delta > 0)
+			m_pCamera->ChangeLength(1);
+		else if (delta < 0)
+			m_pCamera->ChangeLength(0);
+		break;
+	}
 }
 
 void CRaytracingCaveScene::Create_Limadon()
@@ -2661,7 +2671,8 @@ void CRaytracingCaveScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			UIUseSkill(ret);
 			CAnimationManager* myManager = m_pPlayer->getAniManager();
 			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
 		}
@@ -2735,15 +2746,18 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 	}
 	// Player UI ==================================================
 	int buffstart = 20; int bstride = 40;
+	float cMP = Players[m_local_id].GetMP();
 
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		m_vPlayersStatUI[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
-		m_vPlayersStatUI[i][3]->setScaleXWithUV(cMPs[i] / maxMPs[i]);
+		float tge = static_cast<float>(Players[i].GetHP());
+		float tt = g_maxHPs[i];
+		m_vPlayersStatUI[i][1]->setScaleX(static_cast<float>(Players[i].GetHP()) / g_maxHPs[i]);
+		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
-				if (m_BuffState[j]) {
+				if (g_PlayerBuffState[j]) {
 					m_vPlayersStatUI[i][j + 4]->setRenderState(true);
 					m_vPlayersStatUI[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), 100);
 					++t;
@@ -2755,26 +2769,31 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
+	m_fItemCurTime -= fElapsedTime;
+	if (m_fItemCurTime < 0.0)
+		m_fItemCurTime = 0.0f;
+	m_vItemUIs[4]->setScaleY(m_fItemCurTime / m_fItemCoolTime);
+
 	{
-		if (cMPs[m_local_id] < 30)
+		if (cMP < g_SkillCost[0])
 			m_vSkillUIs[6]->setRenderState(true);
 		else
 			m_vSkillUIs[6]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 40)
+		if (cMP < g_SkillCost[1])
 			m_vSkillUIs[7]->setRenderState(true);
 		else
 			m_vSkillUIs[7]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 60)
+		if (cMP < g_SkillCost[2])
 			m_vSkillUIs[8]->setRenderState(true);
 		else
 			m_vSkillUIs[8]->setRenderState(false);
 
 		for (int i = 0; i < 3; ++i) {
-			curCTime[i] -= fElapsedTime;
-			if (curCTime[i] < 0) curCTime[i] = 0.0f;
-			m_vSkillUIs[i + 3]->setScaleY(curCTime[i] / coolTime[i]);
+			g_SkillCurCTime[i] -= fElapsedTime;
+			if (g_SkillCurCTime[i] < 0) g_SkillCurCTime[i] = 0.0f;
+			m_vSkillUIs[i + 3]->setScaleY(g_SkillCurCTime[i] / g_SkillCoolTime[i]);
 		}
 	}
 	// =================================================================
@@ -2891,6 +2910,17 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\Map\\ETP\\ETP.bin", "src\\texture\\Map\\");
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\Map\\ETP\\Water.bin", "src\\texture\\Map\\");
 
+	{		// Water
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\WaterTurbulent00_NORM.dds"));
+		auto p = normalObjects[normalObjects.size() - 1].get();
+		p->SetInstanceID(2);
+		p->getMaterials().emplace_back();
+		Material& mt = p->getMaterials()[0];
+		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
+		//mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
+		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 1;
+	}
+
 	// Players Create ========================================================================
 	for (int i = 0; i < Players.size(); ++i) {
 		// player job check
@@ -2925,17 +2955,6 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	// =========================================================
 
 	// Create Normal Object & skinning Object Copy ========================================
-
-	{		// Water
-		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\WaterTurbulent00_NORM.dds"));
-		auto p = normalObjects[normalObjects.size() - 1].get();
-		p->SetInstanceID(2);
-		p->getMaterials().emplace_back();
-		Material& mt = p->getMaterials()[0];
-		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
-		//mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
-		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 1;
-	}
 
 	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\ETP_Terrain.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
@@ -2976,7 +2995,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	// ==============================================================================
 
 	// Camera Setting ==============================================================
-	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetTarget(m_pPlayer->getObject()->getObject()->getObjects()[0].get());
 	m_pCamera->SetHOffset(3.5f);
 	m_pCamera->SetCameraLength(15.0f);
 	m_pCamera->SetMapNumber(SCENE_PLAIN);
@@ -2994,9 +3013,11 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 
-	PlayerUISetup(JOB_MAGE);
+	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
 	Client.SendPlayerReady();
+
+	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE1_AMB);
 }
 
 void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -3025,27 +3046,14 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 				g_InGameState = IS_FINISH;
 			}
 			break;
-		case 'U':
-			cHPs[0] += 10;
-			if (maxHPs[0] < cHPs[0])
-				cHPs[0] = maxHPs[0];
-			break;
-		case 'J':
-			cHPs[0] -= 10;
-			if (0 > cHPs[0])
-				cHPs[0] = 0;
-			break;
 		case '1':			// 1~4 test
-			m_BuffState[0] = !m_BuffState[0];
+			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
 			break;
 		case '2':
-			m_BuffState[1] = !m_BuffState[1];
+			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
 			break;
 		case '3':
-			m_BuffState[2] = !m_BuffState[2];
-			break;
-		case '4':
-			cMPs[m_local_id] = 100;
+			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -3060,27 +3068,12 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			//Client.SendHPitem(ItemType::HP_POTION);
-			//Client.SendHPitem(ItemType::MP_POTION);
-			Client.SendHPitem(ItemType::ATK_BUFF);
-			//Client.SendHPitem(ItemType::DEF_BUFF);
-			break;
-		case 'Q':
-			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
-				cMPs[m_local_id] -= 30;
-				curCTime[0] = coolTime[0];
-			}
-			break;
-		case 'E':
-			if (cMPs[m_local_id] >= 40 && curCTime[1] <= 0) {
-				cMPs[m_local_id] -= 40;
-				curCTime[1] = coolTime[1];
-			}
-			break;
-		case 'R':
-			if (cMPs[m_local_id] >= 60 && curCTime[2] <= 0) {
-				cMPs[m_local_id] -= 60;
-				curCTime[2] = coolTime[2];
+			if (m_fItemCurTime <= 0.0f) {
+				//Client.SendHPitem(ItemType::HP_POTION);
+				//Client.SendHPitem(ItemType::MP_POTION);
+				Client.SendHPitem(ItemType::ATK_BUFF);
+				//Client.SendHPitem(ItemType::DEF_BUFF);
+				m_fItemCurTime = m_fItemCoolTime;
 			}
 			break;
 		case 'P':
@@ -3096,6 +3089,15 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 void CRaytracingETPScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	m_pPlayer->MouseProcess(hWnd, nMessage, wParam, lParam);
+	switch (nMessage) {
+	case WM_MOUSEWHEEL:
+		short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		if (delta > 0)
+			m_pCamera->ChangeLength(1);
+		else if (delta < 0)
+			m_pCamera->ChangeLength(0);
+		break;
+	}
 }
 
 void CRaytracingETPScene::Create_Feroptere()
@@ -3468,7 +3470,8 @@ void CRaytracingETPScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			UIUseSkill(ret);
 			CAnimationManager* myManager = m_pPlayer->getAniManager();
 			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
 		}
@@ -3710,15 +3713,18 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 
 	// Player UI ==================================================
 	int buffstart = 20; int bstride = 40;
+	float cMP = Players[m_local_id].GetMP();
 
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		m_vPlayersStatUI[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
-		m_vPlayersStatUI[i][3]->setScaleXWithUV(cMPs[i] / maxMPs[i]);
+		float tge = static_cast<float>(Players[i].GetHP());
+		float tt = g_maxHPs[i];
+		m_vPlayersStatUI[i][1]->setScaleX(static_cast<float>(Players[i].GetHP()) / g_maxHPs[i]);
+		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
-				if (m_BuffState[j]) {
+				if (g_PlayerBuffState[j]) {
 					m_vPlayersStatUI[i][j + 4]->setRenderState(true);
 					m_vPlayersStatUI[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), 100);
 					++t;
@@ -3730,26 +3736,31 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
+	m_fItemCurTime -= fElapsedTime;
+	if (m_fItemCurTime < 0.0)
+		m_fItemCurTime = 0.0f;
+	m_vItemUIs[4]->setScaleY(m_fItemCurTime / m_fItemCoolTime);
+
 	{
-		if (cMPs[m_local_id] < 30)
+		if (cMP < g_SkillCost[0])
 			m_vSkillUIs[6]->setRenderState(true);
 		else
 			m_vSkillUIs[6]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 40)
+		if (cMP < g_SkillCost[1])
 			m_vSkillUIs[7]->setRenderState(true);
 		else
 			m_vSkillUIs[7]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 60)
+		if (cMP < g_SkillCost[2])
 			m_vSkillUIs[8]->setRenderState(true);
 		else
 			m_vSkillUIs[8]->setRenderState(false);
 
 		for (int i = 0; i < 3; ++i) {
-			curCTime[i] -= fElapsedTime;
-			if (curCTime[i] < 0) curCTime[i] = 0.0f;
-			m_vSkillUIs[i + 3]->setScaleY(curCTime[i] / coolTime[i]);
+			g_SkillCurCTime[i] -= fElapsedTime;
+			if (g_SkillCurCTime[i] < 0) g_SkillCurCTime[i] = 0.0f;
+			m_vSkillUIs[i + 3]->setScaleY(g_SkillCurCTime[i] / g_SkillCoolTime[i]);
 		}
 	}
 	// =================================================================

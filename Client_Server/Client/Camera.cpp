@@ -129,3 +129,19 @@ void CCamera::SetMapNumber(int num)
 {
 	m_pCameraInfo->nMapNumber = num;
 }
+
+void CCamera::ChangeLength(short arrow)
+{
+	switch (arrow) {
+	case 0:
+		m_fCameraLength += 1.5f;
+		if (m_fCameraLength >= 30.0f)
+			m_fCameraLength = 30.0f;
+		break;
+	case 1:
+		m_fCameraLength -= 1.5f;
+		if (m_fCameraLength <= 6.0f)
+			m_fCameraLength = 6.0f;
+		break;
+	}
+}
