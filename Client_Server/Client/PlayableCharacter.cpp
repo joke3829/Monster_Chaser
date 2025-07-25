@@ -53,7 +53,9 @@ void CPlayerMage::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
+		if (!m_bSkillActive && !m_bDoingCombo) {
+			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
+		}
 	}
 	else
 	{
@@ -757,12 +759,17 @@ void CPlayerWarrior::Skill3()
 
 void CPlayerWarrior::Attacked(float damage)
 {
+	if (m_bSkillActive && m_CurrentSkill == 2)
+	{
+		return;
+	}
 	m_HP -= damage;
 	m_bAttacked = true;
-	m_bSkillActive = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
+		if (!m_bSkillActive && !m_bDoingCombo) {
+			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
+		}
 	}
 	else
 	{
@@ -1790,7 +1797,9 @@ void CPlayerPriest::Attacked(float damage)
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
-		m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
+		if (!m_bSkillActive && !m_bDoingCombo) {
+			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
+		}
 	}
 	else
 	{
