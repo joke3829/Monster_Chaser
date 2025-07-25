@@ -101,6 +101,7 @@ public:
 
 	virtual void StartSkill3() {};
 	virtual void OnKey3Input() {};
+	virtual int getSkillnum() { return 0; };
 
 	bool IsInCombo() const { return m_bInCombo; }
 	bool IsComboInterrupted() const { return m_bComboEnd; }
@@ -170,8 +171,41 @@ public:
 
 class CMonsterManager : public CPlayableCharacterAnimationManager {
 public:
-	CMonsterManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile) {}
+	CMonsterManager(std::ifstream& inFile) : CPlayableCharacterAnimationManager(inFile){}
 	CMonsterManager(const CMonsterManager& other) : CPlayableCharacterAnimationManager(other) {}
+
+	virtual int getSkillnum() { 
+		if (m_nAnimationSets == 7)
+		{
+			if (m_nCurrentSet == 4) {
+				return 1;
+			}
+			else { return 0; }
+		}
+		else if (m_nAnimationSets == 8)
+		{
+			if (m_nCurrentSet == 6) {
+				return 1;
+			}
+			else if (m_nCurrentSet == 7) {
+				return 2;
+			}
+			else { return 0; }
+		}
+		else if (m_nAnimationSets >= 9)
+		{
+			if (m_nCurrentSet == 6) {
+				return 1;
+			}
+			else if (m_nCurrentSet == 7) {
+				return 2;
+			}
+			else if (m_nCurrentSet == 8) {
+				return 3;
+			}
+			else { return 0; }
+		}
+	}
 
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
 	{

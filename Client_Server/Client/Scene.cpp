@@ -3725,7 +3725,7 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 
 		if (m->CheckAC())
 		{
-				AttackCollision(m_vPlayers, m_vMonsters,0);
+			AttackCollision(m_vPlayers, m_vMonsters,0);
 		}
 		if (m->HasActiveBullet())
 		{
