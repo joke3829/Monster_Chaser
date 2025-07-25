@@ -23,6 +23,7 @@ public:
 	bool CheckAC() const { return m_bCheckAC; }
 
 	int getCurrentSkill() const { return m_CurrentSkill; }
+	
 	float getCurrentDamage()const { return m_Damage; }
 	CSkinningObject* getObject() { return m_Object; }
 	CPlayableCharacterAnimationManager* getAniManager() { return m_AManager; }

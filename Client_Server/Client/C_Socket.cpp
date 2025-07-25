@@ -295,8 +295,11 @@ void C_Socket::process_packet(char* ptr)
 		int monster_id = pkt->monster_id; // 몬스터 ID
 	
 		Monsters[monster_id]->setCurrentAttackType(attack_type); // 몬스터의 현재 공격 타입 설정 attack_type이 1이면 Skill1 , 2면 Skill2
-		
-		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(Monsters[monster_id]->getCurrentAttackType(), true); // 몬스터 애니메이션 변경
+		int a = Monsters[monster_id]->getCurrentAttackType();
+		//Monsters[monster_id]->getAnimationManager()->ChangeAnimation(Monsters[monster_id]->getCurrentAttackType(), true); // 몬스터 애니메이션 변경
+		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(4, true); // 몬스터 애니메이션 변경
+
+
 		//Monsters[monster_id]->getAnimationManager()->
 		//pkt->monster_id; // 몬스터 ID		//이걸로 공격 애니메이션 셋 
 
