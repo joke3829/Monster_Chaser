@@ -1309,8 +1309,8 @@ void CRaytracingGameScene::CreateMageCharacter()
 	}
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
-	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
-	//m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(L"src\\model\\ETP_Rock_Small03.bin", "sphere"));
+	//m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
+	m_pResourceManager->AddResourceFromFile(L"src\\model\\ETP_Rock_Small03.bin", "src\\texture\\Map\\");
 	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
 	CPlayerMage* mage = dynamic_cast<CPlayerMage*>(m_vPlayers.back().get());
 	Material sharedMaterial;
@@ -2062,11 +2062,33 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->UpdateWorldMatrix();
 
 	for (auto& p : m_vPlayers)
+	{
 		p->UpdateObject(fElapsedTime);
+
+		if (p->CheckAC())
+		{
+			AttackCollision(m_vMonsters, m_vPlayers);
+		}
+		if (p->HasActiveBullet())
+		{
+			ShootCollision(m_vMonsters, m_vPlayers);
+		}
+
+	}
 
 	for (auto& m : m_vMonsters)
 	{
 		m->UpdateObject(fElapsedTime);
+
+		if (m->CheckAC())
+		{
+			AttackCollision(m_vPlayers, m_vMonsters);
+		}
+		if (m->HasActiveBullet())
+		{
+			ShootCollision(m_vPlayers, m_vMonsters);
+		}
+
 	}
 
 	AutoDirection(m_vPlayers, m_vMonsters);
@@ -2839,15 +2861,44 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->UpdateWorldMatrix();
 
 	for (auto& p : m_vPlayers)
+	{
 		p->UpdateObject(fElapsedTime);
+
+		if (p->CheckAC())
+		{
+			AttackCollision(m_vMonsters, m_vPlayers);
+		}
+		if (p->HasActiveBullet())
+		{
+			ShootCollision(m_vMonsters, m_vPlayers);
+		}
+
+	}
 
 	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
+
+	for (auto& m : m_vMonsters)
+	{
+		m->UpdateObject(fElapsedTime);
+
+		if (m->CheckAC())
+		{
+			AttackCollision(m_vPlayers, m_vMonsters);
+		}
+		if (m->HasActiveBullet())
+		{
+			ShootCollision(m_vPlayers, m_vMonsters);
+		}
+
+	}
 
 	for (auto& p : m_pMonsters) {
 		p->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
 		p->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
 	}
+
+	AutoDirection(m_vPlayers, m_vMonsters);
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
@@ -3677,15 +3728,44 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 	m_pResourceManager->UpdateWorldMatrix();
 
 	for (auto& p : m_vPlayers)
+	{
 		p->UpdateObject(fElapsedTime);
+
+		if (p->CheckAC())
+		{
+			AttackCollision(m_vMonsters, m_vPlayers);
+		}
+		if (p->HasActiveBullet())
+		{
+			ShootCollision(m_vMonsters, m_vPlayers);
+		}
+
+	}
 
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 
-	for (auto& p : m_pMonsters) {
-		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
-		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+	for (auto& m : m_vMonsters)
+	{
+		m->UpdateObject(fElapsedTime);
+
+		if (m->CheckAC())
+		{
+			AttackCollision(m_vPlayers, m_vMonsters);
+		}
+		if (m->HasActiveBullet())
+		{
+			ShootCollision(m_vPlayers, m_vMonsters);
+		}
+
 	}
+
+	for (auto& m : m_pMonsters) {
+		m->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+		m->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+	}
+
+	AutoDirection(m_vPlayers, m_vMonsters);
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
