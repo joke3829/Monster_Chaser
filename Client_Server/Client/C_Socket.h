@@ -23,14 +23,17 @@ public:
 	//--------------------------------------------------------------//	
 	void SendLogin(const char* UserID, const char* Userpassword);									//Send LoginPacket
 	void SendCreateUser(const char* UserID, const char* Userpassword, const char* userNickName);	//Send CreateUserPacket
-	void SendEnterRoom(const short RoomNum);															//Send EnterroomPacket
+	void SendEnterRoom(const short RoomNum);														//Send EnterroomPacket
 	void SendsetReady(const bool isReady, const int room_num);										//Send Readypakcet if isReday is true->player set ready
 	void SendBroadCastRoom();																		
-	void SendMovePacket(const float& Time, const UINT State);							//SendMovePacket	
+	void SendMovePacket(const float& Time, const UINT State);										//SendMovePacket	
 	void SendPickCharacter(const short RoomNum, const short Job);
-	void SendPlayerReady();	//Send Player Ready Packet
-	void SendHPitem(const unsigned int type);	//Send HP Item Packet
-
+	void SendPlayerReady();																			//Send Player Ready Packet
+	void SendMonsterAttack(const int monster_id, const int target_id, const int Atktype);								//Send Monster Attack Packet
+	void SendPlayerAttack(const int target_id, const int type);														//Send Player Attack Packet
+	void SendHealerBUFF(const char SkillNumber);
+	void SendUseItem(const unsigned int type);														//Send Item Packet
+	
 	//--------------------------------------------------------------//									
 
 	bool getstart() { return InGameStart; }

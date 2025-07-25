@@ -79,3 +79,24 @@ void Player::AddDEFBuff(float value, float duration_sec)
 
 }
 
+float Player::GetDamage(int type)
+{
+
+	float attack = GetATK();	
+
+	switch (type)
+	{
+	case 0: // 일반 공격
+		return attack;
+	case 1:
+		return attack * 3.0f;
+	case 2:
+		return attack * 3.3f;
+	case 3:
+		return attack * 4.0f;
+	default:
+		break;
+	}
+	return 0.0f;
+}
+

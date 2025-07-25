@@ -1787,7 +1787,7 @@ void CPlayerPriest::Skill3()
 
 void CPlayerPriest::Attacked(float damage)
 {
-	m_HP -= damage;
+	//m_HP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{

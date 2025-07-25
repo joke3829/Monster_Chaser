@@ -117,7 +117,7 @@ struct sc_packet_monster_attack  //몬스터가 공격 상태일 떄
 	int monster_id;
 	char attack_type; // Attacktype
 };
-struct sc_packet_monster_hit  //몬스터가 공격 상태일 떄
+struct sc_packet_monster_hit  //몬스터가 맞았을때
 {
 	unsigned char size;
 	char type;
@@ -208,7 +208,7 @@ constexpr char C2S_P_GETREADY = 56;
 constexpr char C2S_P_READYINGAME = 57;
 constexpr char C2S_P_MOVE = 58;
 constexpr char C2S_P_PLAYERATTACK = 59;
-constexpr char C2S_P_MONSTER_HIT = 60;
+constexpr char C2S_P_MONSTER_ATTACK = 60;
 constexpr char C2S_P_USE_ITEM = 61;
 constexpr char C2S_P_USE_SKILL = 62;
 
@@ -267,21 +267,19 @@ struct cs_packet_move {
 };
 
 
-struct cs_packet_player_attack_monster {
+struct cs_packet_player_attack {
 	unsigned char size;
 	char type;
 	int target_monster_id;
-	float AtkCalculation; // 공격력 계수
 	int attack_type; // Attacktype
 };
 
-struct cs_packet_monster_hit {
+struct cs_packet_monster_attack {
 	unsigned char size;
 	char type;
 	int attacker_id;  // 몬스터 ID
 	int target_player_id;
 	int attack_type; // Attacktype
-	float attack_power; // 공격력
 };
 
 struct cs_packet_item_use {

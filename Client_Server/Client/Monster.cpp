@@ -21,7 +21,7 @@ void Feroptere::Skill1()
 
 void Feroptere::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
@@ -102,7 +102,7 @@ void Pistriptere::Skill1()
 
 void Pistriptere::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
@@ -183,7 +183,7 @@ void RostrokarckLarvae::Skill1()
 
 void RostrokarckLarvae::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
@@ -274,7 +274,7 @@ void Xenokarce::Skill2()
 
 void Xenokarce::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
@@ -404,7 +404,7 @@ void Fulgurodonte::Skill2()
 
 void Fulgurodonte::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
@@ -505,7 +505,7 @@ void Limadon::Skill2()
 
 void Limadon::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
@@ -606,7 +606,7 @@ void Occisodonte::Skill2()
 
 void Occisodonte::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
@@ -717,7 +717,7 @@ void Crassorrid::Skill3()
 
 void Crassorrid::Attacked(float damage)
 {
-	m_HP -= damage;
+	//// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
@@ -871,7 +871,7 @@ void Gorhorrid::Skill3()
 
 void Gorhorrid::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{

@@ -72,12 +72,12 @@ enum class MonsterType {
 	Feroptere,
 	Pistiripere,
 	RostrokarackLarvae,
-	XenokarceBoss,
+	Xenokarce,
 	Occisodonte,
 	Limadon,
 	Fulgurodonte,
-	RostrokarckBoss,
-	GorhorridBoss,
+	Crassorrid,
+	Gorhorrid,
 };
 
 enum class ItemType : unsigned char {

@@ -184,7 +184,7 @@
       <Filter>SERVER</Filter>
     </ClInclude>
     <ClInclude Include="Monster.h">
-      <Filter>Resource\Particle</Filter>
+      <Filter>Resource\Monster</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -811,14 +811,14 @@ inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique
 
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x1100) { 
+				if (bone1->getBoundingInfo() & 0x1100) {
 					DirectX::BoundingSphere boneSphere1 = bone1->getObjectSphere();
 					bone1->getObjectSphere().Transform(boneSphere1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
-						if (obj1 != character) { 
+						if (obj1 != character) {
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x1100) { 
+								if (bone2->getBoundingInfo() & 0x1100) {
 									DirectX::BoundingSphere boneSphere2 = bone2->getObjectSphere();
 									bone2->getObjectSphere().Transform(boneSphere2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneSphere1.Intersects(boneSphere2)) {
@@ -850,7 +850,7 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 				for (const auto& character : object2) {
 					for (const auto& bone : character->getObjects()) {
-						if (bone->getBoundingInfo() & 0x0011) { 
+						if (bone->getBoundingInfo() & 0x0011) {
 							DirectX::BoundingOrientedBox boneOBB;
 							bone->getObjectOBB().Transform(boneOBB, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
 							if (mapOBB.Intersects(boneOBB)) {
@@ -863,14 +863,14 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x0011) { 
+				if (bone1->getBoundingInfo() & 0x0011) {
 					DirectX::BoundingOrientedBox boneOBB1;
 					bone1->getObjectOBB().Transform(boneOBB1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
 						if (obj1 != character) {
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x0011) { 
+								if (bone2->getBoundingInfo() & 0x0011) {
 									DirectX::BoundingOrientedBox boneOBB2;
 									bone2->getObjectOBB().Transform(boneOBB2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneOBB1.Intersects(boneOBB2)) {
@@ -925,7 +925,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 
 		if (!collisions.empty()) {
 
-			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
+			auto maxCollision = std::max_element(collisions.begin(), collisions.end(), [](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
 
 			XMFLOAT3 norm = maxCollision->normal;
 			float depth = maxCollision->depth;
@@ -934,7 +934,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 			XMVECTOR moveDir = XMLoadFloat3(&character->getMoveDirection());
 			XMVECTOR normal = XMLoadFloat3(&norm);
 			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
-			if (dotProduct < 0.0f) { 
+			if (dotProduct < 0.0f) {
 				character->sliding(depth, norm, meshHeight);
 			}
 		}
@@ -1150,7 +1150,7 @@ void CRaytracingGameScene::CreateUIPipelineState()
 		pd3dPBlob->Release();
 }
 
-void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
+void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag)
 {
 	//스피어-박스
 	/*for (const auto& target : targets) {
@@ -1184,24 +1184,41 @@ void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPl
 		}
 	}*/
 	//스피어-스피어
-	for (const auto& target : targets) {
-		if (target->IsOnceAttacked()) continue;
-		for (const auto& targetBone : target->getObject()->getObjects()) {
+	for (int i = 0; i < targets.size(); i++) {
+
+		//for (const auto& target : targets) {
+		if (targets[i]->IsOnceAttacked())
+			continue;
+		for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
 			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
 			BoundingSphere targetSphere = targetBone->getObjectSphere();
 			BoundingSphere transformedTargetSphere;
 			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
-			for (const auto& attacker : attackers) {
-				if (!attacker->IsAttacking() && !attacker->IsCombo()) continue;
-				for (const auto& attackerBone : attacker->getObject()->getObjects()) {
+			for (int attacker_id = 0; attacker_id < attackers.size(); attacker_id++) {
+				//	for (const auto& attacker : attackers) {
+				if (!attackers[attacker_id]->IsAttacking() && !attackers[attacker_id]->IsCombo()) continue;
+				for (const auto& attackerBone : attackers[attacker_id]->getObject()->getObjects()) {
 					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
 					BoundingSphere attackerSphere = attackerBone->getObjectSphere();
 					BoundingSphere transformedAttackerSphere;
 					attackerSphere.Transform(transformedAttackerSphere, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
 					if (transformedAttackerSphere.Intersects(transformedTargetSphere)) {
 						float damage = 0.0f;
-						damage = attacker->getCurrentDamage();
-						target->Attacked(damage);
+						damage = attackers[attacker_id]->getCurrentDamage();
+						targets[i]->Attacked(damage);
+						if (flag == 1)
+						{
+							
+							Client.SendPlayerAttack(i, attackers[attacker_id]->getCurrentSkill());
+							//플레이어가 공격할 때
+						}
+						else
+						{
+							Client.SendMonsterAttack(i, attacker_id, attackers[attacker_id]->getCurrentSkill());
+					
+							//몬스터가 공격할 때
+
+						}
 						return;
 					}
 				}
@@ -1211,16 +1228,19 @@ void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPl
 
 }
 
-void CRaytracingGameScene::ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers)
+void CRaytracingGameScene::ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag)
 {
-	for (const auto& target : targets) {
-		for (const auto& targetBone : target->getObject()->getObjects()) {
+	for (int i = 0; i < targets.size(); i++) {
+
+		//for (const auto& target : targets) {
+		for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
 			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
 			BoundingSphere targetSphere = targetBone->getObjectSphere();
 			BoundingSphere transformedTargetSphere;
 			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
-			for (const auto& attack : attackers) {
-				auto& bullets = attack->GetBullets();
+			for (int attacker_id = 0; attacker_id < attackers.size(); attacker_id++) {
+				//	for (const auto& attacker : attackers) {
+				auto& bullets = attackers[attacker_id]->GetBullets();
 				if (bullets.empty()) continue;
 				for (const auto& bullet : bullets) {
 					if (!bullet || !bullet->getActive()) continue;
@@ -1228,11 +1248,21 @@ void CRaytracingGameScene::ShootCollision(const std::vector<std::unique_ptr<CPla
 					BoundingOrientedBox transformedBulletBox;
 					bulletSphere.Transform(transformedBulletBox, XMLoadFloat4x4(&bullet->getObjects().getWorldMatrix()));
 					if (transformedBulletBox.Intersects(transformedTargetSphere)) {
-						float damage = attack->getCurrentDamage();
-						target->Attacked(damage);
-						bullet->getObjects().SetPosition(attack->getObject()->getPosition());
+						//float damage = attackers[attacker_id]->getCurrentDamage();
+						/*target->Attacked(damage);*/
+						bullet->getObjects().SetPosition(attackers[attacker_id]->getObject()->getPosition());
 						bullet->getObjects().SetRenderState(false);
 						bullet->setActive(false);
+						if (flag == 1)
+						{
+							Client.SendPlayerAttack(i, attackers[attacker_id]->getCurrentSkill());
+							//플레이어가 공격할 때
+						}
+						else
+						{
+							//몬스터가 공격할 때
+
+						}
 					}
 				}
 			}
@@ -1332,7 +1362,7 @@ void CRaytracingGameScene::CreateWarriorCharacter()
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
-	auto& sv = m_pResourceManager->getSkinningObjectList(); 
+	auto& sv = m_pResourceManager->getSkinningObjectList();
 	sv.back()->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Swordman\\@Dex Studio_soullike_style.dds"));
 	for (auto& p : sv.back()->getObjects()) {
 		auto& v = p->getMaterials();
@@ -1756,7 +1786,7 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			Client.SendHPitem(cItem);
+			Client.SendUseItem(cItem);
 			break;
 		case 'Q':
 			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
@@ -1813,7 +1843,7 @@ void CRaytracingWinterLandScene::Create_Gorhorrid()
 
 
 	// server object add ==============================================
-	auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::GorhorridBoss);
+	auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Gorhorrid);
 	newMonster->setRenderingObject(m_vMonsters.back()->getObject());
 	newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 	Monsters[m_nMonsterNum] = std::move(newMonster);
@@ -2272,7 +2302,7 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 
 	// Object File Read ========================================	! !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\Map\\Cave\\Cave.bin", "src\\texture\\Map\\");
-	
+
 	// Players Create ========================================================================
 	for (int i = 0; i < Players.size(); ++i) {
 		// player job check
@@ -2440,9 +2470,9 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			break;
 		case 'X':
 		{
-			Client.SendHPitem(cItem);
+			Client.SendUseItem(cItem);
 		}
-			break;
+		break;
 		case 'Q':
 			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
 				cMPs[m_local_id] -= 30;
@@ -2516,7 +2546,7 @@ void CRaytracingCaveScene::Create_Limadon()
 
 	newAnimationManager->SetFramesPointerFromSkinningObject(newSkinningObject->getObjects());
 	newAnimationManager->MakeAnimationMatrixIndex(newSkinningObject.get());
-	
+
 	m_vMonsters.emplace_back(std::make_unique<Limadon>(newSkinningObject.get(), newAnimationManager.get()));
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
@@ -2778,7 +2808,7 @@ void CRaytracingCaveScene::Create_Crassorrid()
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 
 	{ // server object
-		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::CrassorridBoss);
+		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Crassorrid);
 		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
 		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 		Monsters[m_nMonsterNum] = std::move(newMonster);
@@ -2835,6 +2865,9 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
+
+
+	AutoDirection(m_vPlayers, m_vMonsters);
 
 	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
@@ -3118,7 +3151,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	// Copy(normalObject) & SetPreMatrix ===============================
 
 	for (int i = 0; i < Players.size(); ++i) {
-		skinned[i]->SetPosition(XMFLOAT3(99.0f, 0.0f, 395.0f));
+		skinned[i]->SetPosition(XMFLOAT3(-219.0f, 0.0f, 301.0f));
 	}
 
 	// ==============================================================================
@@ -3208,7 +3241,7 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			Client.SendHPitem(cItem);
+			Client.SendUseItem(cItem);
 			break;
 		case 'Q':
 			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
@@ -3251,7 +3284,7 @@ void CRaytracingETPScene::Create_Feroptere()
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(208.8f, 0.0f, 352.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-280.0f, 0.0f, 215.4f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 290.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3284,7 +3317,7 @@ void CRaytracingETPScene::Create_Feroptere()
 	m_vMonsters.emplace_back(std::make_unique<Feroptere>(newSkinningObject.get(), newAnimationManager.get()));
 
 	m_vMonsters.back()->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters.back()->getObject()->SetPosition(XMFLOAT3(120.0f, 0.0f, 127.0f));
+	m_vMonsters.back()->getObject()->SetPosition(XMFLOAT3(-246.3f, 0.0f, 15.1f));
 	m_vMonsters.back()->getObject()->Rotate(XMFLOAT3(0.0f, 20.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3298,40 +3331,6 @@ void CRaytracingETPScene::Create_Feroptere()
 	}
 
 	for (auto& o : newSkinningObject->getObjects()) {
-		for (auto& ma : o->getMaterials()) {
-			ma.m_bHasEmissiveColor = false;
-		}
-	}
-
-	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	auto& newSkinningObject1 = m_pResourceManager->getSkinningObjectList().back();
-	newSkinningObject1->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
-
-	auto* sourceManager1 = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
-	auto* monsterManager1 = dynamic_cast<CMonsterManager*>(sourceManager1);
-	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager1));
-	auto& newAnimationManager1 = m_pResourceManager->getAnimationManagers().back();
-
-	newAnimationManager1->SetFramesPointerFromSkinningObject(newSkinningObject1->getObjects());
-	newAnimationManager1->MakeAnimationMatrixIndex(newSkinningObject1.get());
-
-	m_vMonsters.emplace_back(std::make_unique<Feroptere>(newSkinningObject1.get(), newAnimationManager1.get()));
-
-	m_vMonsters.back()->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters.back()->getObject()->SetPosition(XMFLOAT3(264.0f, 0.0f, -13.0f));
-	m_vMonsters.back()->getObject()->Rotate(XMFLOAT3(0.0f, 340.0f, 0.0f));
-
-	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
-
-	{ // server object
-		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Feroptere);
-		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
-		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
-		Monsters[m_nMonsterNum] = std::move(newMonster);
-		++m_nMonsterNum;
-	}
-
-	for (auto& o : newSkinningObject1->getObjects()) {
 		for (auto& ma : o->getMaterials()) {
 			ma.m_bHasEmissiveColor = false;
 		}
@@ -3351,7 +3350,7 @@ void CRaytracingETPScene::Create_Pistriptere()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(142.0f, 0.0f, 262.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-240.0f, 0.0f, 149.8f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 20.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3379,7 +3378,7 @@ void CRaytracingETPScene::Create_Pistriptere()
 	m_vMonsters.emplace_back(std::make_unique<Pistriptere>(newSkinningObject.get(), newAnimationManager.get()));
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(220.0f, 0.0f, -1.6f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-351.1f, 0.0f, 26.7f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 350.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3393,40 +3392,6 @@ void CRaytracingETPScene::Create_Pistriptere()
 	}
 
 	for (auto& o : newSkinningObject->getObjects()) {
-		for (auto& ma : o->getMaterials()) {
-			ma.m_bHasEmissiveColor = false;
-		}
-	}
-
-	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	auto& newSkinningObject1 = m_pResourceManager->getSkinningObjectList().back();
-	newSkinningObject1->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
-
-	auto* sourceManager1 = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
-	auto* monsterManager1 = dynamic_cast<CMonsterManager*>(sourceManager1);
-	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager1));
-	auto& newAnimationManager1 = m_pResourceManager->getAnimationManagers().back();
-
-	newAnimationManager1->SetFramesPointerFromSkinningObject(newSkinningObject1->getObjects());
-	newAnimationManager1->MakeAnimationMatrixIndex(newSkinningObject1.get());
-
-	m_vMonsters.emplace_back(std::make_unique<Pistriptere>(newSkinningObject1.get(), newAnimationManager1.get()));
-
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-37.0f, 0.0f, 37.0f));
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 50.0f, 0.0f));
-
-	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
-
-	{ // server object
-		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Pistiripere);
-		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
-		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
-		Monsters[m_nMonsterNum] = std::move(newMonster);
-		++m_nMonsterNum;
-	}
-
-	for (auto& o : newSkinningObject1->getObjects()) {
 		for (auto& ma : o->getMaterials()) {
 			ma.m_bHasEmissiveColor = false;
 		}
@@ -3446,7 +3411,7 @@ void CRaytracingETPScene::Create_RostrokarckLarvae()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(256.0f, 0.0f, 228.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-150.5f, 0.0f, 85.7f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 320.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3474,7 +3439,7 @@ void CRaytracingETPScene::Create_RostrokarckLarvae()
 	m_vMonsters.emplace_back(std::make_unique<RostrokarckLarvae>(newSkinningObject.get(), newAnimationManager.get()));
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(287.5f, 0.0f, -124.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-164.7f, 0.0f, 66.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 320.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3488,74 +3453,6 @@ void CRaytracingETPScene::Create_RostrokarckLarvae()
 	}
 
 	for (auto& o : newSkinningObject->getObjects()) {
-		for (auto& ma : o->getMaterials()) {
-			ma.m_bHasEmissiveColor = false;
-		}
-	}
-
-	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	auto& newSkinningObject1 = m_pResourceManager->getSkinningObjectList().back();
-	newSkinningObject1->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
-
-	auto* sourceManager1 = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
-	auto* monsterManager1 = dynamic_cast<CMonsterManager*>(sourceManager1);
-	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager1));
-	auto& newAnimationManager1 = m_pResourceManager->getAnimationManagers().back();
-
-	newAnimationManager1->SetFramesPointerFromSkinningObject(newSkinningObject1->getObjects());
-	newAnimationManager1->MakeAnimationMatrixIndex(newSkinningObject1.get());
-
-	m_vMonsters.emplace_back(std::make_unique<RostrokarckLarvae>(newSkinningObject1.get(), newAnimationManager1.get()));
-
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(130.0f, 0.0f, -45.5f));
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 330.0f, 0.0f));
-
-	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
-
-	{ // server object
-		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::RostrokarackLarvae);
-		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
-		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
-		Monsters[m_nMonsterNum] = std::move(newMonster);
-		++m_nMonsterNum;
-	}
-
-	for (auto& o : newSkinningObject1->getObjects()) {
-		for (auto& ma : o->getMaterials()) {
-			ma.m_bHasEmissiveColor = false;
-		}
-	}
-
-	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
-	auto& newSkinningObject2 = m_pResourceManager->getSkinningObjectList().back();
-	newSkinningObject2->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
-
-	auto* sourceManager2 = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
-	auto* monsterManager2 = dynamic_cast<CMonsterManager*>(sourceManager2);
-	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager2));
-	auto& newAnimationManager2 = m_pResourceManager->getAnimationManagers().back();
-
-	newAnimationManager2->SetFramesPointerFromSkinningObject(newSkinningObject2->getObjects());
-	newAnimationManager2->MakeAnimationMatrixIndex(newSkinningObject2.get());
-
-	m_vMonsters.emplace_back(std::make_unique<RostrokarckLarvae>(newSkinningObject2.get(), newAnimationManager2.get()));
-
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(274.3f, 0.0f, 192.7f));
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 300.0f, 0.0f));
-
-	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
-
-	{ // server object
-		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::RostrokarackLarvae);
-		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
-		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
-		Monsters[m_nMonsterNum] = std::move(newMonster);
-		++m_nMonsterNum;
-	}
-
-	for (auto& o : newSkinningObject2->getObjects()) {
 		for (auto& ma : o->getMaterials()) {
 			ma.m_bHasEmissiveColor = false;
 		}
@@ -3575,13 +3472,13 @@ void CRaytracingETPScene::Create_Xenokarce()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(185.0f, 0.0f, -304.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-306.7f, 0.0f, -150.8f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 0.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 
 	{ // server object
-		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::XenokarceBoss);
+		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Xenokarce);
 		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
 		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 		Monsters[m_nMonsterNum] = std::move(newMonster);
@@ -3797,15 +3694,48 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 	// particle update
 	// SetRootSignature
 	// particle update
-
+	//for (int i = 0; i < m_vMonsters.size(); ++i)
+	//{
+	//	m_vMonsters[i]->getObject()->SetPosition(Monsters[i]->getPosition());
+	//}
 	Flush();
 	// Skinning Object BLAS ReBuild
 	m_pResourceManager->ReBuildBLAS();
 
 	m_pResourceManager->UpdateWorldMatrix();
 
-	for (auto& p : m_vPlayers)
-		p->UpdateObject(fElapsedTime);
+
+	for (auto& m : m_vPlayers)
+	{
+		m->UpdateObject(fElapsedTime);
+
+		if (m->CheckAC())
+		{
+			AttackCollision(m_vMonsters,m_vPlayers ,1);
+		}
+		if (m->HasActiveBullet())
+		{
+			ShootCollision( m_vMonsters, m_vPlayers,1);
+		}
+	}
+
+	for (auto& m : m_vMonsters)
+	{
+		m->UpdateObject(fElapsedTime);
+
+		if (m->CheckAC())
+		{
+				AttackCollision(m_vPlayers, m_vMonsters,0);
+		}
+		if (m->HasActiveBullet())
+		{
+			ShootCollision(m_vPlayers, m_vMonsters, 0);
+		}
+	}
+
+
+	AutoDirection(m_vPlayers, m_vMonsters);
+
 
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);

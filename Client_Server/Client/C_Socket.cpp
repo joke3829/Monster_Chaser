@@ -89,7 +89,34 @@ void C_Socket::SendPlayerReady()
 	Client.send_packet(&pkt);
 }
 
-void C_Socket::SendHPitem(const unsigned int type)
+void C_Socket::SendMonsterAttack(const int monster_id, const int target_id,const int Atktype)
+{
+	cs_packet_monster_attack pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_MONSTER_ATTACK;
+	pkt.attacker_id = monster_id; // 공격하는 몬스터 ID
+	pkt.target_player_id = target_id; // 공격 대상 플레이어 ID
+	pkt.attack_type = Atktype; // 0: 일반 공격, 1: 스킬 공격
+	Client.send_packet(&pkt);
+}
+
+void C_Socket::SendPlayerAttack(const int target_id,const int type)
+{
+	cs_packet_player_attack pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_PLAYERATTACK;
+	pkt.target_monster_id = target_id; // 공격 대상 몬스터 ID
+	pkt.attack_type = type; // 0: 일반 공격, 1: 스킬 공격
+	Client.send_packet(&pkt);
+	
+}
+
+void C_Socket::SendHealerBUFF(const char SkillNumber)
+{
+
+}
+
+void C_Socket::SendUseItem(const unsigned int type)
 {
 	
 	cs_packet_item_use pkt;
@@ -261,8 +288,20 @@ void C_Socket::process_packet(char* ptr)
 		}
 		break;
 	}
+	case S2C_P_MONSTER_ATTACK://몬스터가 공격 상태일 떄
+	{
+		sc_packet_monster_attack* pkt = reinterpret_cast<sc_packet_monster_attack*>(ptr);
+		int attack_type = pkt->attack_type; // 공격 타입 (0: 1번 공격 모양, 1: 2번 공격모양, 2: 3번 공격모양)	char형태
+		int monster_id = pkt->monster_id; // 몬스터 ID
 	
+		Monsters[monster_id]->setCurrentAttackType(attack_type); // 몬스터의 현재 공격 타입 설정
+		
+		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(Monsters[monster_id]->getCurrentAttackType(), true); // 몬스터 애니메이션 변경
+		//Monsters[monster_id]->getAnimationManager()->
+		//pkt->monster_id; // 몬스터 ID		//이걸로 공격 애니메이션 셋 
 
+		break;
+	}
 	case S2C_P_MONSTER_DIE: {
 		sc_packet_monster_die* pkt = reinterpret_cast<sc_packet_monster_die*>(ptr);
 		int monster_id = pkt->monster_id;
@@ -314,6 +353,7 @@ void C_Socket::process_packet(char* ptr)
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
 			monster->setPosition(pkt->pos);
+			
 			//monster->setVisible(true);
 			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
 		}

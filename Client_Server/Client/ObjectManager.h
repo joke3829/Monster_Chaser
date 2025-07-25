@@ -94,6 +94,20 @@ private:
 
 class Monster : public ObjectManager {
 public:
+
+
+    enum class ANIMATION{
+        ANI_DEATH,
+        ANI_HIT,
+        ANI_IDLE,
+        ANI_ROAR,
+        ANI_FRONT,
+        ANI_BACK,
+        ANI_SKILL1,
+        ANI_SKILL2,
+        ANI_SKILL3,
+        ANI_RUN
+    };
     Monster(int id, MonsterType t);
 
     void setTargetID(int tid) { m_targetID = tid; }
@@ -103,11 +117,19 @@ public:
 	MonsterType getMonsterType  () const { return type; }
 
 	void setSpawnPoint(const XMFLOAT3& point) { spawnPoint = point; }
-	void setHP(int newHP) { hp = newHP; }    
+	void setHP(int newHP) { hp = newHP; } 
+
+    void setCurrentAttackType(int attackType);
+        
+    UINT getCurrentAttackType() { return static_cast<UINT>(currentAttackType); }
+  
+    
 private:
     int m_targetID = -1;
     float hp = -1;
 	
     MonsterType type;
 	XMFLOAT3 spawnPoint; // 몬스터 스폰 위치
+
+    ANIMATION currentAttackType;
 };

@@ -29,7 +29,7 @@ Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
 	case MonsterType::RostrokarackLarvae:
 		hp = 15000;
 		break;
-	case MonsterType::XenokarceBoss:
+	case MonsterType::Xenokarce:
 		hp = 40000;
 		break;
 	case MonsterType::Occisodonte:
@@ -37,10 +37,10 @@ Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
 	case MonsterType::Fulgurodonte:
 		hp = 30000;
 		break;
-	case MonsterType::CrassorridBoss:
+	case MonsterType::Crassorrid:
 		hp = 80000;
 		break;
-	case MonsterType::GorhorridBoss:
+	case MonsterType::Gorhorrid:
 		hp = 200000;
 		break;
 
@@ -48,4 +48,27 @@ Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
 		hp = 100; // �⺻��
 		break;
 	}
+}
+
+
+
+void Monster::setCurrentAttackType(int attackType)
+{
+	
+	switch (attackType)
+	{
+	case 1:
+		currentAttackType = ANIMATION::ANI_SKILL1;
+		break;
+	case 2:
+		currentAttackType = ANIMATION::ANI_SKILL2;
+		break;
+	case 3:
+		currentAttackType = ANIMATION::ANI_SKILL3;
+		break;
+	default:
+		currentAttackType = ANIMATION::ANI_IDLE; // 기본값으로 IDLE 설정
+		break;
+	}
+	
 }

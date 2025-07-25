@@ -207,16 +207,18 @@ void SESSION::process_packet(char* p) {
 	}
 
 	case C2S_P_PLAYERATTACK: {
-		cs_packet_player_attack_monster* pkt = reinterpret_cast<cs_packet_player_attack_monster*>(p);
+		cs_packet_player_attack* pkt = reinterpret_cast<cs_packet_player_attack*>(p);
 		int monster_id = pkt->target_monster_id;
-
+		int AttackType = pkt->attack_type;
 		Room& room = g_server.rooms[player->room_num];
 		auto it = room.monsters.find(monster_id);
 		if (it == room.monsters.end()) break;
 
 		auto& monster = it->second;
-		bool isDead = monster->TakeDamage(player->GetATK()); // 나중에 10은 플레이어 직업 공격력으로 체크 
-
+		bool isDead = monster->TakeDamage(player->GetDamage(AttackType)); // 나중에 10은 플레이어 직업 공격력으로 체크 
+		cout<< "[몬스터 공격] 몬스터 ID: " << monster_id
+			<< ", 공격력: " << player->GetATK()
+			<< ", 남은 HP: " << monster->GetHP() << std::endl;
 		// 모두에게 히트 패킷 전송
 		sc_packet_monster_hit hit;
 		hit.size = sizeof(hit);
@@ -257,19 +259,19 @@ void SESSION::process_packet(char* p) {
 		break;
 	}
 
-	case C2S_P_MONSTER_HIT: {
+	case C2S_P_MONSTER_ATTACK: {
 
-		auto* pkt = reinterpret_cast<cs_packet_monster_hit*>(p);
-
+		auto* pkt = reinterpret_cast<cs_packet_monster_attack*>(p);
+		
 		Room& room = g_server.rooms[player->room_num];
 		auto monster = room.monsters[pkt->attacker_id];
 		auto target = g_server.playerManager.GetPlayer(pkt->target_player_id);
 
-		target->GetDamage(pkt->attack_power); // HP 감소 적용
+		//target->GetDamage(pkt->attack_power); // HP 감소 적용
 
 
 		if (monster && target) {
-			// bool dead = target->TakeDamage(10); // 예시: 10 데미지
+			 bool dead = target->TakeDamage(monster->GetATK()); // 예시: 10 데미지
 
 			 // 클라에 피격 정보 전송
 			sc_packet_player_hit hpkt;

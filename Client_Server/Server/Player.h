@@ -20,12 +20,12 @@ public:
 	const XMFLOAT4X4& GetPosition() const;
 
 	bool  TakeDamage(int dmg);
-	void GetDamage(int dmg) {
-		std::lock_guard<std::mutex> lock(playerMutex);
-		int damage = dmg - GetDEF(); // 방어력 적용
-		hp -= damage;
-		if (hp < 0) hp = 0; // HP가 0 이하로 떨어지지 않도록 처리
-	}
+	//void GetDamage(int dmg) {
+	//	std::lock_guard<std::mutex> lock(playerMutex);
+	//	int damage = dmg - GetDEF(); // 방어력 적용
+	//	hp -= damage;
+	//	if (hp < 0) hp = 0; // HP가 0 이하로 떨어지지 않도록 처리
+	//}
 
 	void Move(float dx, float dy, float dz); // 이동처리 예시
 
@@ -45,7 +45,7 @@ public:
 		skill_cost += new_mp;
 	}
 
-	
+
 
 	void Updatestatus(Character t);
 
@@ -60,6 +60,19 @@ public:
 		return attack + atk_buff;
 	}
 
+	float GetDamage(int type);
+
+	bool TakeDamage(int dmg, int type) {
+		std::lock_guard<std::mutex> lock(playerMutex);
+		int damage = dmg - GetDEF(); // 방어력 적용
+		if (damage < 0) damage = 0; // 방어력으로 인해 피해가 0 이하가 되지 않도록 처리
+		hp -= damage;
+
+		if (hp < 0)
+			hp = 0; // HP가 0 이하로 떨어지지 않도록 처리
+
+		return hp == 0; // HP가 0이 되면 true 반환
+	}
 	float GetDEF()
 	{
 		if (std::chrono::steady_clock::now() >= def_buff_end_time)

@@ -6,13 +6,13 @@ class Feroptere : public CPlayableCharacter
 {
 public:
 	enum class Minion {
-		ANI_DEATH,
+		ANI_DEATH = 0,
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1
 	};
 
 	Feroptere(CSkinningObject* obj, CAnimationManager* aManager);
@@ -28,13 +28,13 @@ class Pistriptere : public CPlayableCharacter
 {
 public:
 	enum class Minion {
-		ANI_DEATH,
+		ANI_DEATH = 0,
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1
 	};
 
 	Pistriptere(CSkinningObject* obj, CAnimationManager* aManager);
@@ -50,13 +50,13 @@ class RostrokarckLarvae : public CPlayableCharacter
 {
 public:
 	enum class Minion {
-		ANI_DEATH,
+		ANI_DEATH = 0,
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1
 	};
 
 	RostrokarckLarvae(CSkinningObject* obj, CAnimationManager* aManager);
@@ -72,14 +72,14 @@ class Xenokarce : public CPlayableCharacter
 {
 public:
 	enum class Boss {
-		ANI_DEATH,
+		ANI_DEATH = 0,
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
-		ANI_SKILL2,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1,
+		ANI_SKILL2
 	};
 
 	Xenokarce(CSkinningObject* obj, CAnimationManager* aManager);
@@ -98,14 +98,14 @@ class Fulgurodonte : public CPlayableCharacter
 {
 public:
 	enum class Minion {
-		ANI_DEATH,
+		ANI_DEATH = 0,
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
-		ANI_SKILL2,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1,
+		ANI_SKILL2
 	};
 
 	Fulgurodonte(CSkinningObject* obj, CAnimationManager* aManager);
@@ -140,14 +140,14 @@ class Limadon : public CPlayableCharacter
 {
 public:
 	enum class Minion {
-		ANI_DEATH,
+		ANI_DEATH = 0,
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
-		ANI_SKILL2,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1,
+		ANI_SKILL2
 	};
 
 	Limadon(CSkinningObject* obj, CAnimationManager* aManager);
@@ -164,14 +164,14 @@ class Occisodonte : public CPlayableCharacter
 {
 public:
 	enum class Minion {
-		ANI_DEATH,
+		ANI_DEATH = 0,
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
-		ANI_SKILL2,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1,
+		ANI_SKILL2
 	};
 
 	Occisodonte(CSkinningObject* obj, CAnimationManager* aManager);
@@ -188,15 +188,15 @@ class Crassorrid : public CPlayableCharacter
 {
 public:
 	enum class Boss {
-		ANI_DEATH,
+		ANI_DEATH = 0,
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
+		ANI_FRONT,
+		ANI_BACK,
 		ANI_SKILL1,
 		ANI_SKILL2,
-		ANI_SKILL3,
-		ANI_FRONT,
-		ANI_BACK
+		ANI_SKILL3
 	};
 
 	Crassorrid(CSkinningObject* obj, CAnimationManager* aManager);
@@ -214,16 +214,16 @@ class Gorhorrid : public CPlayableCharacter
 {
 public:
 	enum class Boss {
-		ANI_DEATH,
+		ANI_DEATH = 0,
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
-		ANI_SKILL2,
-		ANI_SKILL3,
 		ANI_RUN,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1,
+		ANI_SKILL2,
+		ANI_SKILL3
 	};
 	Gorhorrid(CSkinningObject* obj, CAnimationManager* aManager);
 

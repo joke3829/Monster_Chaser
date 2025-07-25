@@ -49,7 +49,7 @@ void CPlayerMage::Skill3()
 
 void CPlayerMage::Attacked(float damage)
 {
-	m_HP -= damage;
+	//// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
@@ -763,7 +763,7 @@ void CPlayerWarrior::Attacked(float damage)
 	{
 		return;
 	}
-	m_HP -= damage;
+	//// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{
@@ -1793,7 +1793,7 @@ void CPlayerPriest::Skill3()
 
 void CPlayerPriest::Attacked(float damage)
 {
-	m_HP -= damage;
+	//// m_JP -= damage;
 	m_bAttacked = true;
 	if (m_HP > 0.0f)
 	{

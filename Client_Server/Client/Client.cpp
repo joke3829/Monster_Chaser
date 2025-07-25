@@ -72,6 +72,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	//  콘솔 종료
 	//FreeConsole();
 	std::thread recvThread(&C_Socket::do_recv, &Client);
+	//recvThread.join();
 	//	std::thread drawThread(RoomListThread);
 
 

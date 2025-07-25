@@ -114,23 +114,20 @@ void Room::SpawnMonsters()
 	case 1:
 	{
 		// Feroptere - 3마리
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(208.8f, 0.0f, 352.0f), MonsterType::Feroptere);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(120.0f, 0.0f, 127.0f), MonsterType::Feroptere);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(264.0f, 0.0f, -13.0f), MonsterType::Feroptere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-280.0f, 0.0f, 215.4f), MonsterType::Feroptere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-246.3, 0, 15.1), MonsterType::Feroptere);
 
 		// Pistiripere - 3마리
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(142.0f, 0.0f, 262.0f), MonsterType::Pistiripere);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(220.0f, 0.0f, -1.6f), MonsterType::Pistiripere);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-37.0f, 0.0f, 37.0f), MonsterType::Pistiripere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-240, 0, 149.8), MonsterType::Pistiripere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-351.1, 0, 26.7), MonsterType::Pistiripere);
 
 		// RostrokarackLarvae - 4마리
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(256.0f, 0.0f, 228.0f), MonsterType::RostrokarackLarvae);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(287.5f, 0.0f, -124.0f), MonsterType::RostrokarackLarvae);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(130.0f, 0.0f, -45.5f), MonsterType::RostrokarackLarvae);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(274.3f, 0.0f, 192.7f), MonsterType::RostrokarackLarvae);
+		
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-150.5, 0, 85.7), MonsterType::RostrokarackLarvae);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-164.7, 0, 66), MonsterType::RostrokarackLarvae);
 
 		// Boss - Xenokarce
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(185.0f, 0.0f, -304.0f), MonsterType::XenokarceBoss);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-306.7, 0, -150.8), MonsterType::Xenokarce);
 
 		break;
 	}
@@ -145,14 +142,14 @@ void Room::SpawnMonsters()
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-92.0f, 4.2f, 376.5f), MonsterType::Fulgurodonte);
 
 		// Boss: Crassorrid (추가 MonsterType 필요 시 정의해둬야 함)
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(0.5f, 5.2f, 362.8f), MonsterType::RostrokarckBoss);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(0.5f, 5.2f, 362.8f), MonsterType::Crassorrid);
 
 		break;
 	}
 	case 3:
 	{
 		// Final Boss: Gorhorrid
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-86.3f, 0.0f, -301.1f), MonsterType::GorhorridBoss);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-86.3f, 0.0f, -301.1f), MonsterType::Gorhorrid);
 		break;
 	}
 	default:
