@@ -25,6 +25,18 @@ std::unordered_map<int, std::unique_ptr<Monster>> Monsters;           // 몬스�
 std::array<short, 10>	 userPerRoom{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			// 방 UI대신 쓸거 
 TitleState g_state = Title;
 InGameState g_InGameState;
+
+// 07.25 ======================================
+std::array<bool, 3>	g_PlayerBuffState{};	
+std::array<float, 3> g_maxHPs;	
+std::array<float, 3> g_curHPs;		
+std::array<float, 3> g_maxMPs;
+std::array<float, 3> g_curMPs;
+std::array<float, 3> g_SkillCoolTime{};
+std::array<float, 3> g_SkillCurCTime{};
+std::array<float, 3> g_SkillCost{};
+// ============================================
+
 C_Socket Client;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다

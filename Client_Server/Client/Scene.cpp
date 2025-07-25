@@ -1227,6 +1227,9 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 	maxHPs[0] = 1200; maxHPs[1] = 1000; maxHPs[2] = 800;
 	cHPs[0] = 1200; cHPs[1] = 800; cHPs[2] = 730;
 
+	m_numUser = Players.size();
+	m_local_id = Client.get_id();
+
 	mindex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 30, 30));		// buff icon
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 340, 28));		// hp/mp bar
@@ -1299,7 +1302,7 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 			m_vPlayersStatUI[i][uindex]->setPositionInViewport(92, 138 + 50 + (otherPlayer * 80) + 4);
 
 			uindex = m_vPlayersStatUI[i].size();
-			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 4].get(), textures[tindex + user_job[i] + 5].get()));
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 4].get(), textures[tindex + Players[i].getCharacterType() + 5].get()));
 			m_vPlayersStatUI[i][uindex]->setPositionInViewport(20, 100 + 50 + (otherPlayer * 80));
 			m_vPlayersStatUI[i][uindex]->setColor(1.0, 1.0, 1.0, 0.5);
 			++otherPlayer;
@@ -1317,12 +1320,20 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item2.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item3.dds"));
 
-	for (int i = 0; i < 4; ++i) {
-		uindex = m_vItemUIs.size();
-		m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
-		m_vItemUIs[uindex]->setColor(0.2 * (i + 1), 0.3, 0.2 * (i + 1), 1.0);
-		m_vItemUIs[uindex]->setPositionInViewport(20, 525);
-		m_vItemUIs[uindex]->setRenderState(false);
+	for (int i = 0; i < 5; ++i) {
+		if (i < 4) {
+			uindex = m_vItemUIs.size();
+			m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
+			m_vItemUIs[uindex]->setPositionInViewport(20, 525);
+			m_vItemUIs[uindex]->setRenderState(false);
+		}
+		else {
+			uindex = m_vItemUIs.size();
+			m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+			m_vItemUIs[uindex]->setColor(0.0, 0.0, 0.0, 0.5);
+			m_vItemUIs[uindex]->setPositionInViewport(20, 525);
+			m_vItemUIs[uindex]->setRenderState(true);
+		}
 	}
 	m_vItemUIs[0]->setRenderState(true);
 
@@ -1372,6 +1383,39 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 		m_vSkillUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + 3].get()));
 		m_vSkillUIs[uindex]->setPositionInViewport(i * 110 + 940, 600);
 	}
+}
+
+void CRaytracingGameScene::UIUseSkill(KeyInputRet input)
+{
+	switch(input) {
+	case KEY_SKILL1:
+
+		break;
+	case KEY_SKILL2:
+
+		break;
+	case KEY_SKILL3:
+
+		break;
+	}
+	case 'Q':
+		if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
+			cMPs[m_local_id] -= 30;
+			curCTime[0] = coolTime[0];
+		}
+		break;
+	case 'E':
+		if (cMPs[m_local_id] >= 40 && curCTime[1] <= 0) {
+			cMPs[m_local_id] -= 40;
+			curCTime[1] = coolTime[1];
+		}
+		break;
+	case 'R':
+		if (cMPs[m_local_id] >= 60 && curCTime[2] <= 0) {
+			cMPs[m_local_id] -= 60;
+			curCTime[2] = coolTime[2];
+		}
+		break;
 }
 
 // =====================================================================================
@@ -1590,24 +1634,6 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			Client.SendHPitem(ItemType::ATK_BUFF);
 			//Client.SendHPitem(ItemType::DEF_BUFF);
 			break;
-		case 'Q':
-			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
-				cMPs[m_local_id] -= 30;
-				curCTime[0] = coolTime[0];
-			}
-			break;
-		case 'E':
-			if (cMPs[m_local_id] >= 40 && curCTime[1] <= 0) {
-				cMPs[m_local_id] -= 40;
-				curCTime[1] = coolTime[1];
-			}
-			break;
-		case 'R':
-			if (cMPs[m_local_id] >= 60 && curCTime[2] <= 0) {
-				cMPs[m_local_id] -= 60;
-				curCTime[2] = coolTime[2];
-			}
-			break;
 		case 'P':
 			m_bUIOnOff = !m_bUIOnOff;
 			break;
@@ -1701,7 +1727,8 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			UIUseSkill(ret);
 			CAnimationManager* myManager = m_pPlayer->getAniManager();
 			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
 		}

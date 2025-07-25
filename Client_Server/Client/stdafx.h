@@ -98,6 +98,7 @@ enum class ItemType : unsigned char {
 enum TitleState { Title, RoomSelect, InRoom, SelectC, GoLoading };
 
 enum InGameState { IS_LOADING, IS_GAMING, IS_FINISH };
+enum KeyInputRet { KEY_NOTHING, KEY_SKILL1, KEY_SKILL2, KEY_SKILL3 };
 //========================================================================================
 
 // 상수 정의 ===========================================================================

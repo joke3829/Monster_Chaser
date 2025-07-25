@@ -12,6 +12,17 @@
 
 extern DXResources g_DxResource;
 
+// 07.25 ===========================================
+extern std::array<bool, 3>	g_PlayerBuffState{};
+extern std::array<float, 3> g_maxHPs;
+extern std::array<float, 3> g_curHPs;
+extern std::array<float, 3> g_maxMPs;
+extern std::array<float, 3> g_curMPs;
+extern std::array<float, 3> g_SkillCoolTime{};
+extern std::array<float, 3> g_SkillCurCTime{};
+extern std::array<float, 3> g_SkillCost{};
+// =================================================
+
 class CScene {
 public:
 	virtual ~CScene() {}
@@ -191,24 +202,12 @@ protected:
 
 	short m_numUser = 3;						// replace	Player.size()
 	short m_local_id = 0;
-	short user_job[3] = { JOB_MAGE, JOB_WARRIOR, JOB_HEALER };
 
-	std::array<bool, 3>	m_BuffState{};	// replace
-	std::array<float, 3> maxHPs;		// replace
-	std::array<float, 3> cHPs;			// replace
-
-	std::array<float, 3> coolTime{};
-	std::array<float, 3> curCTime{};
-	std::array<float, 3> skillCost{};
-
-	float maxMPs[3] = { 100, 100, 100 };			// replace
-	float cMPs[3] = { 100, 37, 78 };			// replace
-
-	UINT m_nGold = 1500;
-
-	size_t ItemNumTextIndex;
+	float m_fItemCoolTime = 30.0f;
+	float m_fItemCurTime{};
 
 	void PlayerUISetup(short job);		// player job need
+	void UIUseSkill(KeyInputRet input);
 	// ===============================================================================
 };
 
