@@ -69,23 +69,23 @@ void Room::StartGame()
 	is_started = true;
 
 	// 기존 StartGame 로직이 있다면 유지하고...
-	for (auto& [id, monster] : monsters) {
-		sc_packet_monster_spawn sp;
-		sp.size = sizeof(sp);
-		sp.type = S2C_P_MONSTER_SPAWN;
-		sp.monster_id = id;
-		sp.monster_type = monster->GetType(); // 타입 나중에 추가 가능
-		XMStoreFloat4x4(&sp.pos, XMMatrixTranslation(
-			monster->GetPosition().x, 
-			monster->GetPosition().y, 
-			monster->GetPosition().z)
-		);
+	//for (auto& [id, monster] : monsters) {
+	//	sc_packet_monster_spawn sp;
+	//	sp.size = sizeof(sp);
+	//	sp.type = S2C_P_MONSTER_SPAWN;
+	//	sp.monster_id = id;
+	//	sp.monster_type = monster->GetType(); // 타입 나중에 추가 가능
+	//	XMStoreFloat4x4(&sp.pos, XMMatrixTranslation(
+	//		monster->GetPosition().x, 
+	//		monster->GetPosition().y, 
+	//		monster->GetPosition().z)
+	//	);
 
-		for (int pid : this->id)
-			g_server.users[pid]->do_send(&sp);
+	//	for (int pid : this->id)
+	//		g_server.users[pid]->do_send(&sp);
 
-		std::cout << "[몬스터 " << id << "] 초기 스폰 전송 완료\n";
-	}
+	//	std::cout << "[몬스터 " << id << "] 초기 스폰 전송 완료\n";
+	//}
 	if (monsters.size() > 0) {
 		std::thread([this]() {
 			while (is_started) {
@@ -135,6 +135,7 @@ void Room::SpawnMonsters()
 		break;
 	}
 	case 2:
+	{
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-18.0f, -0.14f, -15.5f), MonsterType::Limadon);
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-30.0f, 0.0f, 21.0f), MonsterType::Occisodonte);
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-160.0f, 1.3f, 78.6f), MonsterType::Fulgurodonte);
@@ -147,10 +148,13 @@ void Room::SpawnMonsters()
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(0.5f, 5.2f, 362.8f), MonsterType::RostrokarckBoss);
 
 		break;
+	}
 	case 3:
+	{
 		// Final Boss: Gorhorrid
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-86.3f, 0.0f, -301.1f), MonsterType::GorhorridBoss);
 		break;
+	}
 	default:
 		break;
 	}

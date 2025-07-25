@@ -25,25 +25,23 @@ Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
 	{
 		
 	case MonsterType::Feroptere:
-		hp = 100;
-		break;
 	case MonsterType::Pistiripere:
-		hp = 200;
-		break;
 	case MonsterType::RostrokarackLarvae:
-		hp = 300;
+		hp = 15000;
 		break;
 	case MonsterType::XenokarceBoss:
+		hp = 40000;
 		break;
 	case MonsterType::Occisodonte:
-		break;
 	case MonsterType::Limadon:
-		break;
 	case MonsterType::Fulgurodonte:
+		hp = 30000;
 		break;
 	case MonsterType::CrassorridBoss:
+		hp = 80000;
 		break;
 	case MonsterType::GorhorridBoss:
+		hp = 200000;
 		break;
 
 	default:

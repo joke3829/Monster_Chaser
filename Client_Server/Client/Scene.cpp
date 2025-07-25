@@ -501,7 +501,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		wOpacity += 0.35f * fElapsedTime;
 		if (wOpacity > 1.0f) {
 			wOpacity = 1.0f;
-			m_nNextScene = SCENE_WINTERLAND;
+			m_nNextScene = SCENE_PLAIN;
 		}
 		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
@@ -1585,10 +1585,7 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			//Client.SendHPitem(ItemType::HP_POTION);
-			//Client.SendHPitem(ItemType::MP_POTION);
-			Client.SendHPitem(ItemType::ATK_BUFF);
-			//Client.SendHPitem(ItemType::DEF_BUFF);
+			Client.SendHPitem(cItem);
 			break;
 		case 'Q':
 			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
@@ -2179,7 +2176,7 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	// ==============================================================================
 
 	// Camera Setting ==============================================================
-	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetTarget(m_pPlayer->getObject()->getObject()->getObjects()[0].get());
 	m_pCamera->SetHOffset(3.5f);
 	m_pCamera->SetCameraLength(15.0f);
 	m_pCamera->SetMapNumber(SCENE_CAVE);
@@ -2263,10 +2260,9 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			//Client.SendHPitem(ItemType::HP_POTION);
-			//Client.SendHPitem(ItemType::MP_POTION);
-			Client.SendHPitem(ItemType::ATK_BUFF);
-			//Client.SendHPitem(ItemType::DEF_BUFF);
+		{
+			Client.SendHPitem(cItem);
+		}
 			break;
 		case 'Q':
 			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
@@ -2615,7 +2611,7 @@ void CRaytracingCaveScene::ProcessInput(float fElapsedTime)
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
-	if (m_nState == IS_GAMING) {
+	if (g_InGameState == IS_GAMING) {
 		if (!m_pCamera->getThirdPersonState()) {
 			bool shiftDown = false;
 			if (keyBuffer[VK_SHIFT] & 0x80)
@@ -2682,11 +2678,11 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 		m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 
-	switch (m_nState) {
+	switch (g_InGameState) {
 	case IS_LOADING: {
 		wOpacity -= 0.5 * fElapsedTime;
 		if (wOpacity < 0.0f) {
-			m_nState = IS_GAMING;
+			g_InGameState = IS_GAMING;
 			wOpacity = 0.0f;
 		}
 		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
@@ -2949,7 +2945,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	// ==============================================================================
 
 	// Camera Setting ==============================================================
-	m_pCamera->SetTarget(skinned[0]->getObjects()[0].get());
+	m_pCamera->SetTarget(m_pPlayer->getObject()->getObject()->getObjects()[0].get());
 	m_pCamera->SetHOffset(3.5f);
 	m_pCamera->SetCameraLength(15.0f);
 	m_pCamera->SetMapNumber(SCENE_PLAIN);
@@ -3033,10 +3029,7 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			//Client.SendHPitem(ItemType::HP_POTION);
-			//Client.SendHPitem(ItemType::MP_POTION);
-			Client.SendHPitem(ItemType::ATK_BUFF);
-			//Client.SendHPitem(ItemType::DEF_BUFF);
+			Client.SendHPitem(cItem);
 			break;
 		case 'Q':
 			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
@@ -3422,7 +3415,7 @@ void CRaytracingETPScene::ProcessInput(float fElapsedTime)
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
-	if (m_nState == IS_GAMING) {
+	if (g_InGameState == IS_GAMING) {
 		if (!m_pCamera->getThirdPersonState()) {
 			bool shiftDown = false;
 			if (keyBuffer[VK_SHIFT] & 0x80)
@@ -3656,11 +3649,11 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 
-	switch (m_nState) {
+	switch (g_InGameState) {
 	case IS_LOADING: {
 		wOpacity -= 0.5 * fElapsedTime;
 		if (wOpacity < 0.0f) {
-			m_nState = IS_GAMING;
+			g_InGameState = IS_GAMING;
 			wOpacity = 0.0f;
 		}
 		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);

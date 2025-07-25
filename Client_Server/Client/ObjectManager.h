@@ -54,40 +54,40 @@ public:
         return hp == 0;
     }
 
-    int GetHP() const {
+    float GetHP() const {
         return hp;
     }
 
     void Plusgold(int amount) {
         gold += amount;
 	}
-    void SetHP(int newHP) {
+    void SetHP(float newHP) {
         hp = newHP;
         if (hp > maxHP) hp = maxHP; // HP가 최대치를 넘지 않도록
 	}
-    void SetMaxHP(int newMaxHP) {
+    void SetMaxHP(float newMaxHP) {
         maxHP = newMaxHP;
         if (hp > maxHP) hp = maxHP; // 현재 HP가 최대치보다 크면 최대치로 설정
     }
 
-    void SetMP(int newMP) {
+    void SetMP(float newMP) {
         mp = newMP;
         if (mp > maxMP) mp = maxMP; // MP가 최대치를 넘지 않도록
 	}
-    void SetMaxMP(int newMaxMP) {
+    void SetMaxMP(float newMaxMP) {
         maxMP = newMaxMP;
         if (mp > maxMP) mp = maxMP; // 현재 MP가 최대치보다 크면 최대치로 설정
     }
 
 private:
     bool readyToStart = false;
-    int hp = 0;
-	int maxHP = 100; // 최대 HP
+    float hp = 0;
+    float maxHP = 100; // 최대 HP
 
-    int mp = 100; // 플레이어가 가진 MP
-    int maxMP = 100; // 최대 MP
+    float mp = 100; // 플레이어가 가진 MP
+    float maxMP = 100; // 최대 MP
 
-	int gold = 0; // 플레이어가 가진 골드    
+    float gold = 0; // 플레이어가 가진 골드    
 
     short type{ JOB_NOTHING };
 };
@@ -106,7 +106,8 @@ public:
 	void setHP(int newHP) { hp = newHP; }    
 private:
     int m_targetID = -1;
-    int hp = 300;
+    float hp = -1;
+	
     MonsterType type;
 	XMFLOAT3 spawnPoint; // 몬스터 스폰 위치
 };

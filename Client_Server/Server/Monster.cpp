@@ -45,6 +45,7 @@ float Monster::DistanceFromSpawnToPlayer(const PlayerManager& playerManager) con
     return sqrtf(dx * dx + dy * dy + dz * dz);
 }
 
+
 Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
     : id(id), hp(100), state(MonsterState::Idle), position(spawnPos), spawnPoint(spawnPos), type(t){
 
@@ -88,7 +89,7 @@ Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
 
 void Monster::Update(float deltaTime, const Room& room, const PlayerManager& playerManager) {
     std::lock_guard<std::mutex> lock(mtx);
-
+    if (!room.bStageActive) return;
     if (hp <= 0) {
         TransitionTo(MonsterState::Dead);
     }
@@ -97,7 +98,7 @@ void Monster::Update(float deltaTime, const Room& room, const PlayerManager& pla
     case MonsterState::Idle:    HandleIdle(room, playerManager); break;
     case MonsterState::Chase:   HandleChase(playerManager, room); break;
     case MonsterState::Attack:  HandleAttack(playerManager,room); break;
-    case MonsterState::Return:  HandleReturn(room); break;
+    case MonsterState::Return:  HandleReturn(playerManager,room); break;
     case MonsterState::Dead:    HandleDead(room); return; // 죽으면 패킷 보내지 않음
     }
 
@@ -137,6 +138,22 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         TransitionTo(MonsterState::Attack);
         return;
     }
+
+    if (!hasRoared && isBossMonster()) {
+        hasRoared = true;
+
+        sc_packet_boss_roar pkt;
+        pkt.size = sizeof(pkt);
+        pkt.type = S2C_P_BOSS_ROAR;
+        pkt.monster_id = id;
+
+        for (int pid : room.id) {
+            g_server.users[pid]->do_send(&pkt);
+        }
+
+        std::cout << "[보스 몬스터 " << id << "] 울부짖음 패킷 전송!\n";
+    }
+
     target_id = FindClosestPlayerInRoom(room, position, playerManager);
 
     auto player = playerManager.GetPlayer(target_id);
@@ -160,7 +177,7 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         position.y += dy * speed * 0.016f;
         position.z += dz * speed * 0.016f;
     }
-    //SendSyncPacket(room);
+    SendSyncPacket(room);
 }
 
 void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room) {
@@ -204,7 +221,11 @@ void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room)
 }
 
 
-void Monster::HandleReturn(const Room& room) {
+void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room) {
+    if (DistanceFromSpawnToPlayer(playerManager) <= MONSTER_CHASE_DISTANCE) {
+        TransitionTo(MonsterState::Chase);
+        return;
+	}
     float dx = spawnPoint.x - position.x;
     float dy = spawnPoint.y - position.y;
     float dz = spawnPoint.z - position.z;
@@ -283,4 +304,11 @@ void Monster::SendSyncPacket(const Room& room) {
 
     for (int pid : room.id)
         g_server.users[pid]->do_send(&pkt);
+}
+
+bool Monster::isBossMonster()
+{
+    return type == MonsterType::XenokarceBoss ||
+        type == MonsterType::RostrokarckBoss ||
+        type == MonsterType::GorhorridBoss;
 }

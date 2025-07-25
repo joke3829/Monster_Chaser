@@ -30,10 +30,11 @@ using namespace chrono;
 
 
 
-constexpr int NotStart = 0; // 게임 시작 전 상태
-constexpr int Stage1 = 1;  // 스테이지1	
-constexpr int Stage2 = 2;  // 스테이지2
-constexpr int Stage3 = 2;  // 스테이지3
+// define Scene
+constexpr unsigned short SCENE_TITLE = 0;
+constexpr unsigned short SCENE_PLAIN = 1;
+constexpr unsigned short SCENE_CAVE = 2;
+constexpr unsigned short SCENE_WINTERLAND = 3;
 
 #define MAX_USER 5000
 

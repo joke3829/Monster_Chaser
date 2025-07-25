@@ -183,7 +183,7 @@ protected:
 	// InGame UI ====================================================================
 	bool m_bUIOnOff = true;
 
-	unsigned int cItem{};
+	int cItem{};
 
 	std::array<std::vector<std::unique_ptr<UIObject>>, 3> m_vPlayersStatUI{};
 	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;

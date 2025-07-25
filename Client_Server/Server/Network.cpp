@@ -146,7 +146,7 @@ void SESSION::process_packet(char* p) {
 			sp.type = S2C_P_ALLREADY;
 			sp.room_number = static_cast<char>(room_num);
 
-			g_server.rooms[room_num].setStage(Stage1);      // Set Stage to Stage1
+			g_server.rooms[room_num].setStage(SCENE_PLAIN);      // Set Stage to Stage1
 			//myMutex.lock();
 			g_server.rooms[room_num].SpawnMonsters();       //Monster Spawn
 		   // myMutex.unlock();
@@ -166,6 +166,7 @@ void SESSION::process_packet(char* p) {
 		room.setReady(local_id, true);  // ✅ 이 로컬 ID를 true로 표시
 
 		if (room.isAllGameStartReady()) {
+			room.bStageActive = true; // 게임 시작 준비 완료
 			room.StartGame();  // 몬스터 스레드 시작
 		}
 
@@ -227,14 +228,30 @@ void SESSION::process_packet(char* p) {
 			g_server.users[pid]->do_send(&hit);
 
 		if (isDead) {
-			sc_packet_monster_die die{};
-			die.size = sizeof(die);
-			die.type = S2C_P_MONSTER_DIE;
-			die.monster_id = monster_id;
-			die.gold = monster->GetGold(); // 몬스터가 죽었을 때 골드 전송
-			//die.player_id = player->local_id; // 플레이어 ID 추가
-			for (int pid : room.id)
-				g_server.users[pid]->do_send(&die);
+			if (monster->isBossMonster()) {
+				Room& room = g_server.rooms[player->room_num];
+				room.bStageActive = false;
+
+				sc_packet_NextStage next;
+				next.size = sizeof(next);
+				next.type = S2C_P_NEXTSTAGE;
+
+				for (int id : room.id)
+					g_server.users[id]->do_send(&next);
+
+				std::cout << "[서버] 보스 사망 → room " << player->room_num << " 스테이지 종료" << std::endl;
+				break;
+			}
+			else {
+				sc_packet_monster_die die{};
+				die.size = sizeof(die);
+				die.type = S2C_P_MONSTER_DIE;
+				die.monster_id = monster_id;
+				die.gold = monster->GetGold(); // 몬스터가 죽었을 때 골드 전송
+				//die.player_id = player->local_id; // 플레이어 ID 추가
+				for (int pid : room.id)
+					g_server.users[pid]->do_send(&die);
+			}
 		}
 
 		break;
@@ -258,8 +275,8 @@ void SESSION::process_packet(char* p) {
 			sc_packet_player_hit hpkt;
 			hpkt.size = sizeof(hpkt);
 			hpkt.type = S2C_P_PLAYER_HIT;
-			hpkt.target_id = pkt->target_player_id;
-			hpkt.current_hp = target->GetHP();
+			hpkt.local_id = pkt->target_player_id;
+			hpkt.hp = target->GetHP();
 
 			for (int pid : room.id)
 				g_server.users[pid]->do_send(&hpkt);
@@ -272,7 +289,7 @@ void SESSION::process_packet(char* p) {
 	}
 
 	case C2S_P_USE_ITEM: {
-		auto* pkt = reinterpret_cast<cs_packet_use_item*>(p);
+		auto* pkt = reinterpret_cast<cs_packet_item_use*>(p);
 		int room_num = player->room_num;
 		ItemType type = static_cast<ItemType>(pkt->item_type);
 
@@ -335,14 +352,9 @@ void SESSION::process_packet(char* p) {
 			break;
 		}
 
-
-
-
-
-
-		std::cout << "[아이템 획득] 클라: " << m_uniqueNo << ", 아이템 타입: " << (int)type << std::endl;
 		break;
 	}
+					 
 	}
 }
 

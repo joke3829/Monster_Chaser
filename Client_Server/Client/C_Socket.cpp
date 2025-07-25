@@ -4,6 +4,7 @@
 extern C_Socket Client;
 extern std::unordered_map<int, Player> Players;
 extern std::unordered_map<int, std::unique_ptr<Monster>> Monsters;
+extern InGameState g_InGameState;
 extern std::array<short, 10>	 userPerRoom;
 extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
 extern bool allready;
@@ -88,12 +89,13 @@ void C_Socket::SendPlayerReady()
 	Client.send_packet(&pkt);
 }
 
-void C_Socket::SendHPitem(ItemType type)
+void C_Socket::SendHPitem(const unsigned int type)
 {
-	cs_packet_use_item pkt;
+	
+	cs_packet_item_use pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_USE_ITEM;
-	pkt.item_type = static_cast<unsigned char>(type);
+	pkt.item_type = type;
 	Client.send_packet(&pkt);
 }
 
@@ -318,7 +320,36 @@ void C_Socket::process_packet(char* ptr)
 
 		break;
 	}
+	case S2C_P_PLAYER_HIT:
+	{
+		sc_packet_player_hit* pkt = reinterpret_cast<sc_packet_player_hit*>(ptr);
+		Players[pkt->local_id].SetHP(pkt->hp); // 플레이어가 데미지를 받았을 때 HP 감소 처리
+		break;
+	}
+	case S2C_P_NEXTSTAGE:
+	{
 		
+		g_InGameState = IS_FINISH; // 게임 상태를 완료로 변경
+		break;
+	}
+	case S2C_P_APPLY_HPITEM:
+	{
+		break;
+	}
+	case S2C_P_APPLY_MPITEM:
+	{
+		break;
+	}
+	case S2C_P_BOSS_ROAR:
+	{
+		auto* pkt = reinterpret_cast<sc_packet_boss_roar*>(ptr);
+		int boss_id = pkt->monster_id;
+
+		if (Monsters.count(boss_id)) {
+			//Monsters[boss_id]->playRoarAnimation();  //  울부짖는 애니메이션 재생 함수
+		}
+		break;
+	}
 	case S2C_P_LEAVE:
 	{
 		sc_packet_leave* pkt = reinterpret_cast<sc_packet_leave*>(ptr);
@@ -334,6 +365,7 @@ void C_Socket::process_packet(char* ptr)
 		}
 		break;
 	}
+	
 	default:
 		break;
 	}

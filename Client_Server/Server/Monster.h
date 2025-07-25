@@ -40,7 +40,7 @@ public:
     void HandleIdle(const Room& room, const PlayerManager& playerManager);
     void HandleChase(const PlayerManager& playerManager, const Room& room);
     void HandleAttack(const PlayerManager& playerManager, const Room& room);
-    void HandleReturn(const Room& room);
+    void HandleReturn(const PlayerManager& playerManager, const Room& room);
     void HandleDead(const Room& room);
     float DistanceToPlayer(const PlayerManager& playerManager) const;
     float DistanceFromSpawnToPlayer(const PlayerManager& playerManager) const;
@@ -49,6 +49,8 @@ public:
     int GetAttackTypeCount() const { return Attacktypecount; }
 
     void SendSyncPacket(const Room& room);
+    bool isBossMonster();
+
 private:
 
     int id;
@@ -66,7 +68,7 @@ private:
     bool isRespawning = false;
 	char Attacktypecount = 0; // 공격 종류 카운트
 
-
+	bool hasRoared = false; // 몬스터가 울부짖었는지 여부
 
     std::chrono::steady_clock::time_point respawnTime;
     std::chrono::steady_clock::time_point lastAttackTime;
