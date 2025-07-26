@@ -18,34 +18,39 @@ XMFLOAT3 ObjectManager::getPosition() const {
 	return pos;
 }
 
-Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t) 
+Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
 {
 
 	switch (type)
 	{
-		
+
 	case MonsterType::Feroptere:
 	case MonsterType::Pistiripere:
 	case MonsterType::RostrokarackLarvae:
 		hp = 15000;
+		max_hp = hp; // 최대 HP 설정
 		break;
 	case MonsterType::Xenokarce:
 		hp = 40000;
+		max_hp = hp; // 최대 HP 설정
 		break;
 	case MonsterType::Occisodonte:
 	case MonsterType::Limadon:
 	case MonsterType::Fulgurodonte:
 		hp = 30000;
+		max_hp = hp; // 최대 HP 설정
 		break;
 	case MonsterType::Crassorrid:
 		hp = 80000;
+		max_hp = hp; // 최대 HP 설정
 		break;
 	case MonsterType::Gorhorrid:
 		hp = 200000;
+		max_hp = hp; // 최대 HP 설정
 		break;
 
 	default:
-		hp = 100; // �⺻��
+		hp = 100;
 		break;
 	}
 }

@@ -18,7 +18,7 @@ public:
 	Feroptere(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
 	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -40,7 +40,7 @@ public:
 	Pistriptere(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
 	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -62,7 +62,7 @@ public:
 	RostrokarckLarvae(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
 	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -86,7 +86,7 @@ public:
 	virtual void Skill1();
 	virtual void Skill2();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
 	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -112,7 +112,7 @@ public:
 	virtual void Skill1();
 	virtual void Skill2();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
 	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -154,7 +154,7 @@ public:
 	virtual void Skill1();
 	virtual void Skill2();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
 	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -178,7 +178,7 @@ public:
 	virtual void Skill1();
 	virtual void Skill2();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
 	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -204,7 +204,7 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
 	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
@@ -231,7 +231,7 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
 	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);

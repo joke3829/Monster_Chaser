@@ -49,11 +49,11 @@ void CPlayerMage::Skill3()
 	m_Damage = 4000.0f;
 }
 
-void CPlayerMage::Attacked(float damage)
+bool CPlayerMage::Attacked(float damage)
 {
 	//// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive && !m_bDoingCombo) {
 			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
@@ -63,7 +63,8 @@ void CPlayerMage::Attacked(float damage)
 	{
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 CPlayerMage::CPlayerMage(CSkinningObject* object, CAnimationManager* aManager)
@@ -714,7 +715,7 @@ void CPlayerMage::MakeBullet(float speed, int skill)
 	else if (skill == 2) {
 		pos.y += 40.0f;
 		projectile->setPosition(pos);
-		projectile->setMoveDirection(m_AutoDirect);
+		projectile->setMoveDirection({ m_AutoDirect.x, -0.5f, m_AutoDirect.z });
 		projectile->getObjects().SetScale({ 10.0f, 10.0f, 10.0f });
 	}
 	projectile->setActive(true);
@@ -765,15 +766,15 @@ void CPlayerWarrior::Skill3()
 	//m_Damage = 600.0f; //2
 }
 
-void CPlayerWarrior::Attacked(float damage)
+bool CPlayerWarrior::Attacked(float damage)
 {
 	if (m_bSkillActive && m_CurrentSkill == 2)
 	{
-		return;
+		return false;
 	}
 	//// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive && !m_bDoingCombo) {
 			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
@@ -783,7 +784,8 @@ void CPlayerWarrior::Attacked(float damage)
 	{
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 CPlayerWarrior::CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager)
@@ -1805,11 +1807,11 @@ void CPlayerPriest::Skill3()
 	m_CurrentSkill = 3;
 }
 
-void CPlayerPriest::Attacked(float damage)
+bool CPlayerPriest::Attacked(float damage)
 {
 	//// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive && !m_bDoingCombo) {
 			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
@@ -1819,7 +1821,8 @@ void CPlayerPriest::Attacked(float damage)
 	{
 		m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT_DEATH), true);
 		m_bLive = false;
-	}
+	}*/
+	return true;
 }
 
 CPlayerPriest::CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager)

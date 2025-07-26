@@ -279,8 +279,6 @@ public:
 protected:
 	unsigned int								m_nSkyboxIndex{};
 
-	InGameState									m_nState{};
-
 	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
 	float										startTime{};
 	float										wOpacity = 1.0f;
@@ -312,8 +310,6 @@ public:
 	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
 protected:
 	unsigned int								m_nSkyboxIndex{};
-
-	InGameState									m_nState{};
 
 	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
 	float										startTime{};

@@ -138,10 +138,12 @@ public:
         
     UINT getCurrentAttackType() { return static_cast<UINT>(currentAttackType); }
   
-    
+    float getMaxHP() { return max_hp; }
+    float getHP() { return hp; }
 private:
     int m_targetID = -1;
     float hp = -1;
+    float max_hp = -1;
 	
     MonsterType type;
 	XMFLOAT3 spawnPoint; // 몬스터 스폰 위치

@@ -19,11 +19,11 @@ void Feroptere::Skill1()
 	}
 }
 
-void Feroptere::Attacked(float damage)
+bool Feroptere::Attacked(float damage)
 {
 	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -32,7 +32,8 @@ void Feroptere::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Feroptere::UpdateObject(float fElapsedTime)
@@ -109,11 +110,11 @@ void Pistriptere::Skill1()
 	}
 }
 
-void Pistriptere::Attacked(float damage)
+bool Pistriptere::Attacked(float damage)
 {
 	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -122,7 +123,8 @@ void Pistriptere::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Pistriptere::UpdateObject(float fElapsedTime)
@@ -197,11 +199,11 @@ void RostrokarckLarvae::Skill1()
 	}
 }
 
-void RostrokarckLarvae::Attacked(float damage)
+bool RostrokarckLarvae::Attacked(float damage)
 {
 	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -210,7 +212,8 @@ void RostrokarckLarvae::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void RostrokarckLarvae::UpdateObject(float fElapsedTime)
@@ -295,11 +298,11 @@ void Xenokarce::Skill2()
 	}
 }
 
-void Xenokarce::Attacked(float damage)
+bool Xenokarce::Attacked(float damage)
 {
 	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
@@ -308,7 +311,8 @@ void Xenokarce::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Xenokarce::UpdateObject(float fElapsedTime)
@@ -432,11 +436,11 @@ void Fulgurodonte::Skill2()
 	}
 }
 
-void Fulgurodonte::Attacked(float damage)
+bool Fulgurodonte::Attacked(float damage)
 {
 	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -445,7 +449,8 @@ void Fulgurodonte::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Fulgurodonte::UpdateObject(float fElapsedTime)
@@ -540,11 +545,11 @@ void Limadon::Skill2()
 	}
 }
 
-void Limadon::Attacked(float damage)
+bool Limadon::Attacked(float damage)
 {
 	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -553,7 +558,8 @@ void Limadon::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Limadon::UpdateObject(float fElapsedTime)
@@ -648,11 +654,11 @@ void Occisodonte::Skill2()
 	}
 }
 
-void Occisodonte::Attacked(float damage)
+bool Occisodonte::Attacked(float damage)
 {
 	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -661,7 +667,8 @@ void Occisodonte::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Occisodonte::UpdateObject(float fElapsedTime)
@@ -766,11 +773,11 @@ void Crassorrid::Skill3()
 	}
 }
 
-void Crassorrid::Attacked(float damage)
+bool Crassorrid::Attacked(float damage)
 {
 	//// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
@@ -779,7 +786,8 @@ void Crassorrid::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Crassorrid::UpdateObject(float fElapsedTime)
@@ -927,11 +935,11 @@ void Gorhorrid::Skill3()
 	}
 }
 
-void Gorhorrid::Attacked(float damage)
+bool Gorhorrid::Attacked(float damage)
 {
 	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
@@ -941,7 +949,8 @@ void Gorhorrid::Attacked(float damage)
 	{
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 KeyInputRet Gorhorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)

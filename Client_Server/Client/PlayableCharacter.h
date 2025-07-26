@@ -29,7 +29,7 @@ public:
 	virtual KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime) { return KEY_NOTHING; }
 	virtual void UpdateObject(float fElapsedTime) {}
 
-	virtual void Attacked(float damage) {}
+	virtual bool Attacked(float damage = 0.0f) { return true; }
 
 	bool IsAttacking()const { return m_bSkillActive; }
 	bool IsCombo()const { return m_bDoingCombo; }
@@ -125,7 +125,7 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager);
 
@@ -195,7 +195,7 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager);
 
@@ -244,7 +244,7 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager);
 

@@ -325,7 +325,7 @@ void C_Socket::process_packet(char* ptr)
 			// 예시로 그냥 출력
 			std::cout << "몬스터 " << monster_id << "가 죽었습니다. 드랍된 골드: " << gold << std::endl;
 			// 몬스터 제거 로직 추가 가능
-			Monsters.erase(monster_id);
+			//Monsters.erase(monster_id);
 		}
 		break;
 		
@@ -354,6 +354,16 @@ void C_Socket::process_packet(char* ptr)
 			Monsters[id] = std::move(newMonster);*/
 		}
 		break;
+	}
+
+	case S2C_P_MONSTER_HIT:
+	{
+		sc_packet_monster_hit* pkt = reinterpret_cast<sc_packet_monster_hit*>(ptr);
+
+		int id = pkt->monster_id; // 몬스터 ID
+		Monsters[id]->setHP(pkt->hp); // 몬스터 HP 업데이트
+		break;
+
 	}
 
 	case S2C_P_MONSTER_MOVE: {
