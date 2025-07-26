@@ -120,11 +120,13 @@ void Monster::Update(float deltaTime, const Room& room, const PlayerManager& pla
 
 bool Monster::TakeDamage(float dmg) {
     std::lock_guard<std::mutex> lock(mtx);
-    hp -= dmg;
-    if (hp <= 0 && !isRespawning) {
-        hp = 0;
-        TransitionTo(MonsterState::Dead);
-        return true;
+    if (!isRespawning) {
+        hp -= dmg;
+        if (hp <= 0 ) {
+            hp = 0;
+            TransitionTo(MonsterState::Dead);
+            return true;
+        }
     }
     return false;
 }
@@ -271,7 +273,10 @@ void Monster::SendSyncPacket(const Room& room) {
     pkt.monster_id = id;
     pkt.state = static_cast<int>(state);
     XMStoreFloat4x4(&pkt.pos, XMMatrixTranslation(position.x, position.y, position.z));
-    for (int pid : room.id) g_server.users[pid]->do_send(&pkt);
+
+
+    for (int pid : room.id) 
+        g_server.users[pid]->do_send(&pkt);
 }
 
 bool Monster::isBossMonster() {

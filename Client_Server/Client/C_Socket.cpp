@@ -111,10 +111,6 @@ void C_Socket::SendPlayerAttack(const int target_id,const int type)
 	
 }
 
-void C_Socket::SendHealerBUFF(const char SkillNumber)
-{
-
-}
 
 void C_Socket::SendUseItem(const unsigned int type)
 {

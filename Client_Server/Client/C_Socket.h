@@ -31,7 +31,6 @@ public:
 	void SendPlayerReady(const short Map);																			//Send Player Ready Packet
 	void SendMonsterAttack(const int monster_id, const int target_id, const int Atktype);								//Send Monster Attack Packet
 	void SendPlayerAttack(const int target_id, const int type);														//Send Player Attack Packet
-	void SendHealerBUFF(const char SkillNumber);
 	void SendUseItem(const unsigned int type);														//Send Item Packet
 	
 	void SendPriestBUFF(const char SkillNumber);	//Send Priest Buff Packet
