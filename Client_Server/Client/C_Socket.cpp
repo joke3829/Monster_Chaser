@@ -113,7 +113,6 @@ void C_Socket::SendPlayerAttack(const int target_id,const int type)
 	Client.send_packet(&pkt);
 }
 
-
 void C_Socket::SendUseItem(const unsigned int type)
 {
 	
@@ -121,6 +120,15 @@ void C_Socket::SendUseItem(const unsigned int type)
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_USE_ITEM;
 	pkt.item_type = type;
+	Client.send_packet(&pkt);
+}
+
+void C_Socket::SendPriestBUFF(const char SkillNumber)
+{
+	cs_packet_skill_use pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_USE_SKILL;
+	pkt.skillNumber = SkillNumber; // 0이 체력 회복, 1이 공격력 증가 + 방어력 감소, 2가 스킬게이지 최대치
 	Client.send_packet(&pkt);
 }
 
@@ -367,8 +375,7 @@ void C_Socket::process_packet(char* ptr)
 		
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
-			monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
-			//monster->setPosition(pkt->pos);
+			monster->setPosition(pkt->pos);
 			
 			//monster->setVisible(true);
 			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
