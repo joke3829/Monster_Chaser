@@ -103,6 +103,7 @@ Pistriptere::Pistriptere(CSkinningObject* obj, CAnimationManager* aManager)
 	m_HP = 15000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 	m_Damage = 100.0f;
+	m_GameTime = 0.0f;
 }
 
 void Pistriptere::Skill1()
@@ -118,7 +119,11 @@ void Pistriptere::Skill1()
 
 bool Pistriptere::Attacked(float damage)
 {
+	if (!CanBeAttacked()) {
+		return false;
+	}
 	// m_JP -= damage;
+	m_LastHit = m_GameTime;
 	m_bAttacked = true;
 	/*if (m_HP > 0.0f)
 	{
@@ -137,6 +142,7 @@ void Pistriptere::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
+	m_GameTime += fElapsedTime;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
@@ -192,6 +198,7 @@ RostrokarckLarvae::RostrokarckLarvae(CSkinningObject* obj, CAnimationManager* aM
 	m_HP = 15000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 	m_Damage = 100.0f;
+	m_GameTime = 0.0f;
 }
 
 void RostrokarckLarvae::Skill1()
@@ -207,7 +214,11 @@ void RostrokarckLarvae::Skill1()
 
 bool RostrokarckLarvae::Attacked(float damage)
 {
+	if (!CanBeAttacked()) {
+		return false;
+	}
 	// m_JP -= damage;
+	m_LastHit = m_GameTime;
 	m_bAttacked = true;
 	/*if (m_HP > 0.0f)
 	{
@@ -226,6 +237,7 @@ void RostrokarckLarvae::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
+	m_GameTime += fElapsedTime;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
@@ -280,6 +292,7 @@ Xenokarce::Xenokarce(CSkinningObject* obj, CAnimationManager* aManager)
 {
 	m_HP = 40000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
+	m_GameTime = 0.0f;
 	m_GameTime = 0.0f;
 }
 
@@ -397,6 +410,7 @@ Fulgurodonte::Fulgurodonte(CSkinningObject* obj, CAnimationManager* aManager)
 	m_HP = 30000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 	m_Damage = 150.0f;
+	m_GameTime = 0.0f;
 }
 
 void Fulgurodonte::Skill1()
@@ -450,7 +464,11 @@ void Fulgurodonte::Skill2()
 
 bool Fulgurodonte::Attacked(float damage)
 {
+	if (!CanBeAttacked()) {
+		return false;
+	}
 	// m_JP -= damage;
+	m_LastHit = m_GameTime;
 	m_bAttacked = true;
 	/*if (m_HP > 0.0f)
 	{
@@ -469,6 +487,7 @@ void Fulgurodonte::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
+	m_GameTime += fElapsedTime;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
@@ -533,6 +552,7 @@ Limadon::Limadon(CSkinningObject* obj, CAnimationManager* aManager)
 	m_HP = 30000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 	m_Damage = 150.0f;
+	m_GameTime = 0.0f;
 }
 
 void Limadon::Skill1()
@@ -559,7 +579,11 @@ void Limadon::Skill2()
 
 bool Limadon::Attacked(float damage)
 {
+	if (!CanBeAttacked()) {
+		return false;
+	}
 	// m_JP -= damage;
+	m_LastHit = m_GameTime;
 	m_bAttacked = true;
 	/*if (m_HP > 0.0f)
 	{
@@ -578,6 +602,7 @@ void Limadon::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
+	m_GameTime += fElapsedTime;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
@@ -642,6 +667,7 @@ Occisodonte::Occisodonte(CSkinningObject* obj, CAnimationManager* aManager)
 	m_HP = 30000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 	m_Damage = 150.0f;
+	m_GameTime = 0.0f;
 }
 
 void Occisodonte::Skill1()
@@ -668,7 +694,11 @@ void Occisodonte::Skill2()
 
 bool Occisodonte::Attacked(float damage)
 {
+	if (!CanBeAttacked()) {
+		return false;
+	}
 	// m_JP -= damage;
+	m_LastHit = m_GameTime;
 	m_bAttacked = true;
 	/*if (m_HP > 0.0f)
 	{
@@ -687,6 +717,7 @@ void Occisodonte::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
+	m_GameTime += fElapsedTime;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
@@ -750,6 +781,7 @@ Crassorrid::Crassorrid(CSkinningObject* obj, CAnimationManager* aManager)
 {
 	m_HP = 80000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
+	m_GameTime = 0.0f;
 }
 
 void Crassorrid::Skill1()
@@ -787,7 +819,11 @@ void Crassorrid::Skill3()
 
 bool Crassorrid::Attacked(float damage)
 {
-	//// m_JP -= damage;
+	if (!CanBeAttacked()) {
+		return false;
+	}
+	// m_JP -= damage;
+	m_LastHit = m_GameTime;
 	m_bAttacked = true;
 	/*if (m_HP > 0.0f)
 	{
@@ -806,6 +842,7 @@ void Crassorrid::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
+	m_GameTime += fElapsedTime;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
 			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), true);
@@ -881,6 +918,7 @@ Gorhorrid::Gorhorrid(CSkinningObject* obj, CAnimationManager* aManager)
 {
 	m_HP = 200000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
+	m_GameTime = 0.0f;
 }
 
 void Gorhorrid::Skill1()
@@ -949,7 +987,11 @@ void Gorhorrid::Skill3()
 
 bool Gorhorrid::Attacked(float damage)
 {
+	if (!CanBeAttacked()) {
+		return false;
+	}
 	// m_JP -= damage;
+	m_LastHit = m_GameTime;
 	m_bAttacked = true;
 	/*if (m_HP > 0.0f)
 	{
@@ -992,6 +1034,7 @@ void Gorhorrid::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
+	m_GameTime += fElapsedTime;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
 			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
