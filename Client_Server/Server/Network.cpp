@@ -228,9 +228,11 @@ void SESSION::process_packet(char* p) {
 
 		auto& monster = it->second;
 		bool isDead = monster->TakeDamage(player->GetDamage(AttackType)); // 나중에 10은 플레이어 직업 공격력으로 체크 //gGetDamage수정해야됨
-		cout << "[몬스터 공격] 몬스터 ID: " << monster_id
-			<< ", 공격력: " << player->GetATK()
-			<< ", 남은 HP: " << monster->GetHP() << std::endl;
+		if (monster->GetHP() > 0) {
+			cout << "[몬스터 공격] 몬스터 ID: " << monster_id
+				<< ", 공격력: " << player->GetATK()
+				<< ", 남은 HP: " << monster->GetHP() << std::endl;
+		}
 		// 모두에게 히트 패킷 전송
 		sc_packet_monster_hit hit;
 		hit.size = sizeof(hit);

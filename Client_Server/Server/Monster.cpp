@@ -175,10 +175,15 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
     float dz = targetPos.z - position.z;
     float len = sqrtf(dx * dx + dy * dy + dz * dz);
     if (len > 0.001f) {
+
         dx /= len; dy /= len; dz /= len;
+
         position.x += dx * speed * 0.016f;
         position.y += dy * speed * 0.016f;
         position.z += dz * speed * 0.016f;
+
+        // 바라보는 방향 회전 적용 (추적 대상 쪽)
+        lookDir = { dx, 0, dz };
     }
 }
 
@@ -226,6 +231,9 @@ void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room)
     position.x += dx * MONSTER_RETURN_SPEED * 0.016f;
     position.y += dy * MONSTER_RETURN_SPEED * 0.016f;
     position.z += dz * MONSTER_RETURN_SPEED * 0.016f;
+
+    // 귀환 중엔 스폰 위치를 바라보도록 설정
+    lookDir = { dx, 0, dz };
 }
 
 void Monster::HandleDead(const Room& room) {
@@ -272,7 +280,23 @@ void Monster::SendSyncPacket(const Room& room) {
     pkt.type = S2C_P_MONSTER_MOVE;
     pkt.monster_id = id;
     pkt.state = static_cast<int>(state);
-    XMStoreFloat4x4(&pkt.pos, XMMatrixTranslation(position.x, position.y, position.z));
+
+    // 회전 방향 적용된 4x4 행렬 생성
+    XMVECTOR forward = XMVector3Normalize(XMLoadFloat3(&lookDir));      //추적할때는 가장 가까운 플레이어를 바라보게 귀환할떄는 스폰 위치 바라보게
+    XMVECTOR up = XMVectorSet(0, 1, 0, 0);
+    XMVECTOR right = XMVector3Normalize(XMVector3Cross(up, forward));
+    up = XMVector3Cross(forward, right);
+
+    XMMATRIX rotation = XMMATRIX(
+        right,        // X축
+        up,           // Y축
+        forward,      // Z축
+        XMVectorSet(position.x, position.y, position.z, 1.0f) // 위치
+    );
+
+    XMStoreFloat4x4(&pkt.pos, rotation);
+
+   // XMStoreFloat4x4(&pkt.pos, XMMatrixTranslation(position.x, position.y, position.z));
 
 
     for (int pid : room.id) 

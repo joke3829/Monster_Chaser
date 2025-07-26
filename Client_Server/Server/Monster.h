@@ -69,6 +69,7 @@ private:
     MonsterState state;
     XMFLOAT3 position;
     XMFLOAT3 spawnPoint;
+    XMFLOAT3 lookDir = { 0.0f, 0.0f, 1.0f }; // 기본값은 정면 (z축)
 
     int gold = 0; // 몬스터가 죽었을 때 드랍하는 골드
 

@@ -369,7 +369,8 @@ void C_Socket::process_packet(char* ptr)
 		
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
-			monster->setPosition(pkt->pos);
+			monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
+			//monster->setPosition(pkt->pos);
 			
 			//monster->setVisible(true);
 			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
