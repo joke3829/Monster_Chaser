@@ -120,11 +120,13 @@ void Monster::Update(float deltaTime, const Room& room, const PlayerManager& pla
 
 bool Monster::TakeDamage(float dmg) {
     std::lock_guard<std::mutex> lock(mtx);
-    hp -= dmg;
-    if (hp <= 0 && !isRespawning) {
-        hp = 0;
-        TransitionTo(MonsterState::Dead);
-        return true;
+    if (!isRespawning) {
+        hp -= dmg;
+        if (hp <= 0) {
+            hp = 0;
+            TransitionTo(MonsterState::Dead);
+            return true;
+        }
     }
     return false;
 }
