@@ -349,7 +349,7 @@ void C_Socket::process_packet(char* ptr)
 
 		if (Monsters.find(id) != Monsters.end()) {
 			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr  
-			m->setPosition(pkt->pos);													  // doyoung's turn
+			m->getRenderingObject()->SetWorldMatrix(pkt->pos);													
 			//m->setVisible(true);														  // doyoung's turn
 			//m->playIdleAnim();															  // doyoung's turn
 		}
@@ -381,16 +381,15 @@ void C_Socket::process_packet(char* ptr)
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
 			monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
+			monster->getAnimationManager()->ChangeAnimation(4, true); // 상태에 따라 애니메이션 변경
 			
 			//monster->setVisible(true);
-			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
 		}
 
 		break;
 	}
 	case S2C_P_PLAYER_HIT:
-	{
-		sc_packet_player_hit* pkt = reinterpret_cast<sc_packet_player_hit*>(ptr);
+	{		sc_packet_player_hit* pkt = reinterpret_cast<sc_packet_player_hit*>(ptr);
 		Players[pkt->local_id].SetHP(pkt->hp); // 플레이어가 데미지를 받았을 때 HP 감소 처리
 		break;
 	}

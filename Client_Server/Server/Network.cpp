@@ -235,7 +235,7 @@ void SESSION::process_packet(char* p) {
 		cs_packet_player_attack* pkt = reinterpret_cast<cs_packet_player_attack*>(p);
 		int monster_id = pkt->target_monster_id;
 		int AttackType = pkt->attack_type;
-
+		
 		Room& room = g_server.rooms[player->room_num];
 		auto it = room.monsters.find(monster_id);
 		if (it == room.monsters.end()) break;
@@ -246,16 +246,16 @@ void SESSION::process_packet(char* p) {
 			cout << "[몬스터 공격] 몬스터 ID: " << monster_id
 				<< ", 공격력: " << player->GetATK()
 				<< ", 남은 HP: " << monster->GetHP() << std::endl;
-		}
 		// 모두에게 히트 패킷 전송
 		sc_packet_monster_hit hit;
 		hit.size = sizeof(hit);
 		hit.type = S2C_P_MONSTER_HIT;
 		hit.monster_id = monster_id;
 		hit.hp = monster->GetHP(); // 새로 만들면 좋음
-
 		for (int pid : room.id)
 			g_server.users[pid]->do_send(&hit);
+		}
+
 
 		if (isDead) {
 			sc_packet_monster_die die{};
