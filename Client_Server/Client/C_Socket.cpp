@@ -108,10 +108,9 @@ void C_Socket::SendPlayerAttack(const int target_id,const int type)
 	cs_packet_player_attack pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_PLAYERATTACK;
-	pkt.target_monster_id = target_id; // 공격 대상 몬스터 ID
-	pkt.attack_type = type; // 0: 일반 공격, 1: 스킬 공격
+	pkt.target_monster_id = target_id; // 공격 대상 몬스터 ID		// 스킬 쓴거임 -1
+	pkt.attack_type = type; // 0: 일반 공격, 1: 스킬 공격			// 1: 1번 스킬 2 번 3 번
 	Client.send_packet(&pkt);
-	
 }
 
 void C_Socket::SendHealerBUFF(const char SkillNumber)
@@ -395,6 +394,8 @@ void C_Socket::process_packet(char* ptr)
 	{
 		auto* pkt = reinterpret_cast<sc_packet_change_hp*>(ptr);
 		int local_id = static_cast<int>(pkt->local_id);
+		if (Players[local_id].GetHP() < pkt->hp)
+			g_pBuff2->Start();
 		Players[local_id].SetHP(pkt->hp); // 플레이어의 HP 변경 처리
 		break;
 	}
@@ -426,24 +427,32 @@ void C_Socket::process_packet(char* ptr)
 		{
 		case 0: // 공격력 증가
 			if(state == 1) {
+				g_PlayerBuffState[0] = true;
+				g_pBuff0->Start();
 				//공격력 버프 켜짐
 			} else {
+				g_PlayerBuffState[0] = false;
 				//공격력 버프 꺼짐
 			}
 			break;
 		case 1: // 방어력 증가
 			if (state == 1) {
+				g_PlayerBuffState[1] = true;
+				g_pBuff1->Start();
 				//방어력 상승 버프 켜짐
 			}
 			else {
+				g_PlayerBuffState[1] = false;
 				//방어력 상승 버프 꺼짐
 			}
 			break;
 		case 2: // 방어력 감소
 			if (state == 1) {
+				g_PlayerBuffState[2] = true;
 				//방어력 감소 버프 켜짐
 			}
 			else {
+				g_PlayerBuffState[2] = false;
 				//방어력 감소 버프 꺼짐
 			}
 			break;

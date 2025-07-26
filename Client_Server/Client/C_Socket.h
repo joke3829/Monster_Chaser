@@ -43,7 +43,7 @@ public:
 	void SendPlayerAttack(const int target_id, const int type);														//Send Player Attack Packet
 	void SendHealerBUFF(const char SkillNumber);
 	void SendUseItem(const unsigned int type);														//Send Item Packet
-	
+
 	//--------------------------------------------------------------//									
 
 	bool getstart() { return InGameStart; }
