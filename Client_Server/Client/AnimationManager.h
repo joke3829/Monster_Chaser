@@ -38,7 +38,7 @@ public:
 	// Use Skinning Info to create indexes
 	void MakeAnimationMatrixIndex(CSkinningObject* pSkinningObject);
 
-	void TimeIncrease(float fElapsedTime);
+	virtual void TimeIncrease(float fElapsedTime);
 	void UpdateAnimation(float fElapsedTime);
 	void UpdateAnimationMatrix();
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player) {}
@@ -51,7 +51,7 @@ public:
 	UINT getCurrentSet() const { return m_nCurrentSet; }
 
 	void setTimeZero() { m_fElapsedTime = 0.0f; }
-	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
+	virtual bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
 	bool IsAnimationNearEnd(float margin = 0.05f) const
 	{
 		float length = m_vAnimationSets[m_nCurrentSet]->getLength();
@@ -175,6 +175,8 @@ public:
 	CMonsterManager(const CMonsterManager& other) : CPlayableCharacterAnimationManager(other) {}
 
 	virtual int getSkillnum() { 
+		if (m_nCurrentSet == 3 || m_nCurrentSet == 0)
+			return 0;
 		if (m_nAnimationSets == 7)		//1 스테이지 잡몹
 		{
 			if (m_nCurrentSet == 6) {
@@ -205,7 +207,9 @@ public:
 			}
 			else { return 0; }
 		}
-	}
+	}		// not attack -> return 0
+	void TimeIncrease(float fElapsedTime);
+	bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
 
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
 	{

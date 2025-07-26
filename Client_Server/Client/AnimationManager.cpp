@@ -639,3 +639,70 @@ void CPriestManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* play
 		player->SetPosition(targetPosition);
 	}
 }
+
+
+void CMonsterManager::TimeIncrease(float fElapsedTime)
+{
+	m_fElapsedTime += fElapsedTime; // 시간 누적
+	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
+
+	if (m_bIsBlending) {
+		m_fBlendTime += fElapsedTime;
+		if (m_fBlendTime >= m_fBlendDuration) {
+			m_bIsBlending = false; // end blending
+		}
+	}
+
+	if (m_bPlayOnce) {
+		if (m_fElapsedTime >= length) {
+			m_fElapsedTime = length; // 한 번 재생 시 종료
+		}
+	}
+	else {
+		if (m_fElapsedTime > length) {
+			if (m_nCurrentSet == 0) 
+				m_fElapsedTime = length;
+			else
+				m_fElapsedTime -= length;
+		}
+	}
+
+	if (m_bIsBlending) {
+		// calculate animation matrix
+		std::vector<XMFLOAT4X4> prevMatrices(m_vFrames.size());
+		std::vector<XMFLOAT4X4> currMatrices(m_vFrames.size());
+		//---------------------------------------------------------------------------------------------------
+		m_vAnimationSets[m_nPrevSet]->BlendAnimationMatrix(m_vFrames, m_fElapsedTime, prevMatrices);	// Doyuoug you can do it
+		//---------------------------------------------------------------------------------------------------
+		m_vAnimationSets[m_nCurrentSet]->BlendAnimationMatrix(m_vFrames, m_fElapsedTime, currMatrices);
+
+		// calculate animation blend weight
+		float blendWeight = m_fBlendTime / m_fBlendDuration;
+
+		// 행렬 보간
+		for (size_t i = 0; i < m_vFrames.size(); ++i) {
+			XMFLOAT4X4 blendedMatrix;
+			XMVECTOR S0, R0, T0, S1, R1, T1;
+			XMMatrixDecompose(&S0, &R0, &T0, XMLoadFloat4x4(&prevMatrices[i]));
+			XMMatrixDecompose(&S1, &R1, &T1, XMLoadFloat4x4(&currMatrices[i]));
+
+			XMVECTOR defaultVec = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+			R0 = XMVectorSelect(R0, defaultVec, XMVectorIsNaN(R0));
+			R1 = XMVectorSelect(R1, defaultVec, XMVectorIsNaN(R1));
+			T0 = XMVectorSelect(T0, defaultVec, XMVectorIsNaN(T0));
+			T1 = XMVectorSelect(T1, defaultVec, XMVectorIsNaN(T1));
+			S0 = XMVectorSelect(S0, XMVectorReplicate(1.0f), XMVectorIsNaN(S0));
+			S1 = XMVectorSelect(S1, XMVectorReplicate(1.0f), XMVectorIsNaN(S1));
+
+			XMVECTOR S = XMVectorLerp(S0, S1, blendWeight);
+			XMVECTOR T = XMVectorLerp(T0, T1, blendWeight);
+			XMVECTOR R = XMQuaternionSlerp(R0, R1, blendWeight);
+
+			XMStoreFloat4x4(&blendedMatrix, XMMatrixAffineTransformation(S, XMVectorZero(), R, T));
+			m_vFrames[i]->SetLocalMatrix(blendedMatrix);
+		}
+	}
+	else {
+		m_vAnimationSets[m_nCurrentSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);
+	}
+}

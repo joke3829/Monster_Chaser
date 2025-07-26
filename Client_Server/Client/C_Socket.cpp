@@ -307,7 +307,7 @@ void C_Socket::process_packet(char* ptr)
 	
 		Monsters[monster_id]->setCurrentAttackType(attack_type); // 몬스터의 현재 공격 타입 설정 attack_type이 1이면 Skill1 , 2면 Skill2
 		int a = Monsters[monster_id]->getCurrentAttackType();
-		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(Monsters[monster_id]->getCurrentAttackType(), true); // 몬스터 애니메이션 변경
+		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(a, true); // 몬스터 애니메이션 변경
 		
 
 		//Monsters[monster_id]->getAnimationManager()->
@@ -322,7 +322,7 @@ void C_Socket::process_packet(char* ptr)
 		if (Monsters.find(monster_id) != Monsters.end()) {
 			auto& monster = Monsters[monster_id];
 			monster->setHP(0); // 몬스터 HP를 0으로 설정
-			
+			monster->getAnimationManager()->ChangeAnimation(0, false);
 			// 몬스터가 죽었을 때 골드 드랍 처리
 			// 예: 플레이어에게 골드 지급 로직 추가 가능
 			// 예시로 그냥 출력
@@ -344,7 +344,8 @@ void C_Socket::process_packet(char* ptr)
 
 		if (Monsters.find(id) != Monsters.end()) {
 			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr  
-			m->setPosition(pkt->pos);													  // doyoung's turn
+			m->setPosition(pkt->pos);	// doyoung's turn
+			m->getAnimationManager()->ChangeAnimation(2, false);
 			//m->setVisible(true);														  // doyoung's turn
 			//m->playIdleAnim();															  // doyoung's turn
 		}
@@ -365,6 +366,7 @@ void C_Socket::process_packet(char* ptr)
 
 		int id = pkt->monster_id; // 몬스터 ID
 		Monsters[id]->setHP(pkt->hp); // 몬스터 HP 업데이트
+		Monsters[id]->getAnimationManager()->ChangeAnimation(1, true);
 		break;
 
 	}
@@ -375,7 +377,11 @@ void C_Socket::process_packet(char* ptr)
 		
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
-			monster->setPosition(pkt->pos);
+			auto* ap = dynamic_cast<CMonsterManager*>(monster->getAnimationManager());
+			if (!ap->getSkillnum()) {
+				monster->setPosition(pkt->pos);
+				monster->getAnimationManager()->ChangeAnimation(4, false);
+			}
 			
 			//monster->setVisible(true);
 			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
@@ -417,6 +423,7 @@ void C_Socket::process_packet(char* ptr)
 		int boss_id = pkt->monster_id;
 
 		if (Monsters.count(boss_id)) {
+			Monsters[boss_id]->getAnimationManager()->ChangeAnimation(3, true);
 			//Monsters[boss_id]->playRoarAnimation();  //  울부짖는 애니메이션 재생 함수
 		}
 		break;
