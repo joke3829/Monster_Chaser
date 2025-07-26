@@ -5,6 +5,15 @@
 #include "GameObject.h"
 #include "AnimationManager.h"
 
+// 07.25 ===========================================
+extern std::array<bool, 3>	g_PlayerBuffStat;
+extern std::array<float, 3> g_maxHPs;
+extern std::array<float, 3> g_maxMPs;
+extern std::array<float, 3> g_SkillCoolTime;
+extern std::array<float, 3> g_SkillCurCTime;
+extern std::array<float, 3> g_SkillCost;
+// =================================================
+
 class ObjectManager {
 public:
     ObjectManager() {}
@@ -57,6 +66,12 @@ public:
     float GetHP() const {
         return hp;
     }
+
+    int GetMP() const {
+        return mp;
+    }
+
+
 
     void Plusgold(int amount) {
         gold += amount;

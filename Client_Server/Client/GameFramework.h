@@ -7,6 +7,7 @@
 #include "Scene.h"
 #include "Timer.h"
 #include "Camera.h"
+#include "SoundManager.h"
 
 extern DXResources g_DxResource;
 extern InGameState g_InGameState;

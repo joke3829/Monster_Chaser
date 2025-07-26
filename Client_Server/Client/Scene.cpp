@@ -9,6 +9,10 @@ extern TitleState g_state;
 extern InGameState g_InGameState;
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
+CParticle* g_pBuff0{};
+CParticle* g_pBuff1{};
+CParticle* g_pBuff2{};
+
 void CScene::CreateRTVDSV()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC desc{};
@@ -197,6 +201,8 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRa
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\SelectC\\CharacterInfo3.dds"));
 	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(240, 40);
+
+	g_pSoundManager->StartBGM(ESOUND::SOUND_TITLE_BGM);
 }
 
 void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -217,6 +223,8 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 				if (Players[local_uid].getCharacterType() != JOB_NOTHING)	//if pick non character
 				{
 					bool currentReady = Players[Client.get_id()].getReady();
+					if (!currentReady)
+						g_pSoundManager->StartFx(ESOUND::SOUND_READY);
 					Players[Client.get_id()].setReady(!currentReady);
 					Client.SendsetReady(Players[Client.get_id()].getReady(), currentRoom);
 				}
@@ -243,7 +251,8 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 	case WM_LBUTTONDOWN: {
 		int mx = LOWORD(lParam);
 		int my = HIWORD(lParam);
-
+		if (g_state != GoLoading)
+			g_pSoundManager->StartFx(ESOUND::SOUND_CLICK);
 		switch (g_state) {
 		case Title:
 			g_state = RoomSelect;
@@ -282,45 +291,47 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 
 			break;
 		case InRoom:
-			if (mx >= 0 && mx < 960) {
-
-				if (!Players[Client.get_id()].getReady()) {
-					g_state = SelectC;			// change g_state
+			if (mx >= 18 && mx < 318) {
+				if (my >= 610 && my < 700) {
+					if (!Players[Client.get_id()].getReady()) {
+						g_state = SelectC;			// change g_state
+					}
+					//prevJob = userJob[local_uid];
+					//	Players[local_uid].getCharacterType()
+					//	Players[local_uid].setCharacterType(prevJob);
+					prevJob = Players[local_uid].getCharacterType();
 				}
-				//prevJob = userJob[local_uid];
-				//	Players[local_uid].getCharacterType()
-				//	Players[local_uid].setCharacterType(prevJob);
-				prevJob = Players[local_uid].getCharacterType();
 			}
 			break;
 		case SelectC:
 			short currentJob = Players[local_uid].getCharacterType();
-
-			if (mx >= 0 && mx < 960) {
-				if (my >= 400) {
+			if (mx >= 18 && mx < 318) {
+				if (my >= 610 && my < 700) {
 					Players[local_uid].setCharacterType(prevJob);
 					g_state = InRoom;		// change g_state
 					Client.SendPickCharacter(currentRoom, (int)Players[local_uid].getCharacterType());
 				}
-				else {
+			}
+			if (mx >= 20 && mx < 120) {
+				if (my >= 310 && my < 410) {
 					int newJob = (int)currentJob - 1;
 					if (newJob < 1)
 						newJob = 3;
 					Players[local_uid].setCharacterType(newJob);
-
 				}
 			}
-			else {
-				if (my >= 400)
-				{
-					Client.SendPickCharacter(currentRoom, (int)Players[local_uid].getCharacterType());
-					g_state = InRoom;		// change g_state
-				}
-				else {
+			if (mx >= 1150 && mx < 1250) {
+				if (my >= 310 && my < 410) {
 					int newJob = (int)currentJob + 1;
 					if (newJob > 3)
 						newJob = 1;
 					Players[local_uid].setCharacterType(newJob);
+				}
+			}
+			if (mx >= 962 && mx < 1262) {
+				if (my >= 610 && my < 700) {
+					Client.SendPickCharacter(currentRoom, (int)Players[local_uid].getCharacterType());
+					g_state = InRoom;		// change g_state
 				}
 			}
 			break;
@@ -501,7 +512,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		wOpacity += 0.35f * fElapsedTime;
 		if (wOpacity > 1.0f) {
 			wOpacity = 1.0f;
-			m_nNextScene = SCENE_PLAIN;
+			m_nNextScene = SCENE_WINTERLAND;
 		}
 		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
@@ -811,14 +822,14 @@ inline bool CRaytracingScene::CheckSphereCollision(const std::vector<std::unique
 
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x1100) {
+				if (bone1->getBoundingInfo() & 0x1100) { 
 					DirectX::BoundingSphere boneSphere1 = bone1->getObjectSphere();
 					bone1->getObjectSphere().Transform(boneSphere1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
-						if (obj1 != character) {
+						if (obj1 != character) { 
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x1100) {
+								if (bone2->getBoundingInfo() & 0x1100) { 
 									DirectX::BoundingSphere boneSphere2 = bone2->getObjectSphere();
 									bone2->getObjectSphere().Transform(boneSphere2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneSphere1.Intersects(boneSphere2)) {
@@ -850,7 +861,7 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 				for (const auto& character : object2) {
 					for (const auto& bone : character->getObjects()) {
-						if (bone->getBoundingInfo() & 0x0011) {
+						if (bone->getBoundingInfo() & 0x0011) { 
 							DirectX::BoundingOrientedBox boneOBB;
 							bone->getObjectOBB().Transform(boneOBB, DirectX::XMLoadFloat4x4(&bone->getWorldMatrix()));
 							if (mapOBB.Intersects(boneOBB)) {
@@ -863,14 +874,14 @@ inline void CRaytracingScene::CheckOBBCollisions(const std::vector<std::unique_p
 
 		if constexpr (HasSkinningObjectInterface<T>) {
 			for (const auto& bone1 : obj1->getObjects()) {
-				if (bone1->getBoundingInfo() & 0x0011) {
+				if (bone1->getBoundingInfo() & 0x0011) { 
 					DirectX::BoundingOrientedBox boneOBB1;
 					bone1->getObjectOBB().Transform(boneOBB1, DirectX::XMLoadFloat4x4(&bone1->getWorldMatrix()));
 
 					for (const auto& character : object2) {
 						if (obj1 != character) {
 							for (const auto& bone2 : character->getObjects()) {
-								if (bone2->getBoundingInfo() & 0x0011) {
+								if (bone2->getBoundingInfo() & 0x0011) { 
 									DirectX::BoundingOrientedBox boneOBB2;
 									bone2->getObjectOBB().Transform(boneOBB2, DirectX::XMLoadFloat4x4(&bone2->getWorldMatrix()));
 									if (boneOBB1.Intersects(boneOBB2)) {
@@ -925,7 +936,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 
 		if (!collisions.empty()) {
 
-			auto maxCollision = std::max_element(collisions.begin(), collisions.end(), [](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
+			auto maxCollision = std::max_element(collisions.begin(), collisions.end(),[](const CollisionInfo& a, const CollisionInfo& b) { return a.depth < b.depth; });
 
 			XMFLOAT3 norm = maxCollision->normal;
 			float depth = maxCollision->depth;
@@ -934,7 +945,7 @@ void CRaytracingScene::TestCollision(const std::vector<std::unique_ptr<CGameObje
 			XMVECTOR moveDir = XMLoadFloat3(&character->getMoveDirection());
 			XMVECTOR normal = XMLoadFloat3(&norm);
 			float dotProduct = XMVectorGetX(XMVector3Dot(moveDir, normal));
-			if (dotProduct < 0.0f) {
+			if (dotProduct < 0.0f) { 
 				character->sliding(depth, norm, meshHeight);
 			}
 		}
@@ -1150,174 +1161,6 @@ void CRaytracingGameScene::CreateUIPipelineState()
 		pd3dPBlob->Release();
 }
 
-void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag)
-{
-	//스피어-박스
-	/*for (const auto& target : targets) {
-		if (target->IsOnceAttacked()) continue;
-		for (const auto& targetBone : target->getObject()->getObjects()) {
-			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
-			BoundingSphere targetSphere = targetBone->getObjectSphere();
-			BoundingSphere transformedTargetSphere;
-			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
-			for (const auto& attacker : attackers) {
-				if (!attacker->IsAttacking()) continue;
-				for (const auto& attackerBone : attacker->getObject()->getObjects()) {
-					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
-					BoundingOrientedBox attackerOBB = attackerBone->getObjectOBB();
-					BoundingOrientedBox transformedAttackerOBB;
-					attackerOBB.Transform(transformedAttackerOBB, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
-					if (transformedAttackerOBB.Intersects(transformedTargetSphere)) {
-						float damage = 0.0f;
-						switch (attacker->getCurrentSkill()) {
-						case 1: damage = 200.0f; break;
-						case 2: damage = 400.0f; break;
-						case 3: damage = 300.0f; break;
-						}
-						if (damage > 0.0f) {
-							target->Attacked(damage);
-						}
-						return;
-					}
-				}
-			}
-		}
-	}*/
-	//스피어-스피어
-	for (int i = 0; i < targets.size(); i++) {
-
-		//for (const auto& target : targets) {
-		if (targets[i]->IsOnceAttacked())
-			continue;
-		for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
-			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
-			BoundingSphere targetSphere = targetBone->getObjectSphere();
-			BoundingSphere transformedTargetSphere;
-			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
-			for (int attacker_id = 0; attacker_id < attackers.size(); attacker_id++) {
-				//	for (const auto& attacker : attackers) {
-				if (!attackers[attacker_id]->IsAttacking() && !attackers[attacker_id]->IsCombo()) continue;
-				for (const auto& attackerBone : attackers[attacker_id]->getObject()->getObjects()) {
-					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
-					BoundingSphere attackerSphere = attackerBone->getObjectSphere();
-					BoundingSphere transformedAttackerSphere;
-					attackerSphere.Transform(transformedAttackerSphere, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
-					if (transformedAttackerSphere.Intersects(transformedTargetSphere)) {
-						float damage = 0.0f;
-						damage = attackers[attacker_id]->getCurrentDamage();
-						targets[i]->Attacked(damage);
-						if (flag == 1)
-						{
-							
-							Client.SendPlayerAttack(i, attackers[attacker_id]->getCurrentSkill());
-							//플레이어가 공격할 때
-						}
-						else
-						{
-							Client.SendMonsterAttack(i, attacker_id, attackers[attacker_id]->getCurrentSkill());
-					
-							//몬스터가 공격할 때
-
-						}
-						return;
-					}
-				}
-			}
-		}
-	}
-
-}
-
-void CRaytracingGameScene::ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag)
-{
-	for (int i = 0; i < targets.size(); i++) {
-
-		//for (const auto& target : targets) {
-		for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
-			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
-			BoundingSphere targetSphere = targetBone->getObjectSphere();
-			BoundingSphere transformedTargetSphere;
-			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
-			for (int attacker_id = 0; attacker_id < attackers.size(); attacker_id++) {
-				//	for (const auto& attacker : attackers) {
-				auto& bullets = attackers[attacker_id]->GetBullets();
-				if (bullets.empty()) continue;
-				for (const auto& bullet : bullets) {
-					if (!bullet || !bullet->getActive()) continue;
-					BoundingOrientedBox bulletSphere = bullet->getObjects().getObjectOBB();
-					BoundingOrientedBox transformedBulletBox;
-					bulletSphere.Transform(transformedBulletBox, XMLoadFloat4x4(&bullet->getObjects().getWorldMatrix()));
-					if (transformedBulletBox.Intersects(transformedTargetSphere)) {
-						//float damage = attackers[attacker_id]->getCurrentDamage();
-						/*target->Attacked(damage);*/
-						bullet->getObjects().SetPosition(attackers[attacker_id]->getObject()->getPosition());
-						bullet->getObjects().SetRenderState(false);
-						bullet->setActive(false);
-						if (flag == 1)
-						{
-							Client.SendPlayerAttack(i, attackers[attacker_id]->getCurrentSkill());
-							//플레이어가 공격할 때
-						}
-						else
-						{
-							//몬스터가 공격할 때
-
-						}
-					}
-				}
-			}
-		}
-	}
-
-}
-
-void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlayableCharacter>>& attacker, const std::vector<std::unique_ptr<CPlayableCharacter>>& targets)
-{
-	if (attacker.empty() || targets.empty()) {
-		return;
-	}
-
-	CPlayableCharacter* attackerPtr = attacker[0].get();
-	XMFLOAT3 attackerPos = attackerPtr->getObject()->getPosition();
-	XMFLOAT3 attackerDir = attackerPtr->getObject()->getLook();
-	float fov = 90.0f * (3.14159f / 180.0f);
-	float cosFov = std::cos(fov / 2.0f);
-	float maxDistance = 150.0f;
-	float minDistance = 150.0f;
-	XMFLOAT3 directionToTarget = { 0.0f, 0.0f, 0.0f };
-	bool targetFound = false;
-	XMVECTOR vAttackerDir = XMLoadFloat3(&attackerDir);
-	XMVECTOR vAttackerPos = XMLoadFloat3(&attackerPos);
-	for (const auto& target : targets) {
-		if (!target) continue;
-		XMFLOAT3 targetPos = target->getObject()->getPosition();
-		XMVECTOR vTargetPos = XMLoadFloat3(&targetPos);
-		XMVECTOR vRelativeDir = XMVectorSubtract(vTargetPos, vAttackerPos);
-		XMVECTOR vDistance = XMVector3Length(vRelativeDir);
-		float distance;
-		XMStoreFloat(&distance, vDistance);
-		if (distance > 0.0f && distance <= maxDistance) {
-			XMVECTOR vNormRelativeDir = XMVector3Normalize(vRelativeDir);
-			XMVECTOR vDot = XMVector3Dot(vAttackerDir, vNormRelativeDir);
-			float dot;
-			XMStoreFloat(&dot, vDot);
-			if (dot >= cosFov && distance < minDistance) {
-				minDistance = distance;
-				XMStoreFloat3(&directionToTarget, vNormRelativeDir);
-				targetFound = true;
-			}
-		}
-	}
-
-	if (targetFound) {
-		attackerPtr->SetAutoDirect(directionToTarget);
-	}
-	else {
-		XMFLOAT3 dir = m_pCamera->getDir();
-		attackerPtr->SetAutoDirect({ dir.x,0.0f,dir.z });
-	}
-}
-
 void CRaytracingGameScene::CreateMageCharacter()
 {
 	m_pResourceManager->AddSkinningResourceFromFile(L"src\\model\\Greycloak_33.bin", "src\\texture\\Greycloak\\", JOB_MAGE);
@@ -1329,14 +1172,6 @@ void CRaytracingGameScene::CreateMageCharacter()
 	auto& sv = m_pResourceManager->getSkinningObjectList();
 	sv.back()->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
 
-	for (auto& s : m_vPlayers.back()->getObject()->getObjects())
-	{
-		if (s->getFrameName() == "Bip001-Spine1")
-		{
-			m_vPlayers.back()->SetHead(s.get());
-			break;
-		}
-	}
 	// Create Mage's own objects and Set
 	// ex) bullet, particle, barrier  etc...
 	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
@@ -1354,6 +1189,8 @@ void CRaytracingGameScene::CreateMageCharacter()
 
 		mage->GetBullets().push_back(std::move(projectile));
 	}
+
+
 }
 void CRaytracingGameScene::CreateWarriorCharacter()
 {
@@ -1362,7 +1199,7 @@ void CRaytracingGameScene::CreateWarriorCharacter()
 		m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 1].get(),
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
-	auto& sv = m_pResourceManager->getSkinningObjectList();
+	auto& sv = m_pResourceManager->getSkinningObjectList(); 
 	sv.back()->getTextures().emplace_back(std::make_shared<CTexture>(L"src\\texture\\Swordman\\@Dex Studio_soullike_style.dds"));
 	for (auto& p : sv.back()->getObjects()) {
 		auto& v = p->getMaterials();
@@ -1383,31 +1220,272 @@ void CRaytracingGameScene::CreatePriestCharacter()
 
 	auto& sv = m_pResourceManager->getSkinningObjectList();
 	sv.back()->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
+}
+void CRaytracingGameScene::CreateParticle(short job)
+{
+	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<CParticle>>& particles = m_pResourceManager->getParticleList();
 
-	for (auto& s : m_vPlayers.back()->getObject()->getObjects())
-	{
-		if (s->getFrameName() == "Bip001-Spine1")
-		{
-			m_vPlayers.back()->SetHead(s.get());
-			break;
-		}
+	ComPtr<ID3D12PipelineState> OnePath;
+	ComPtr<ID3D12PipelineState> TwoPath;
+	switch (job) {
+	case JOB_MAGE: {
+		CreateOnePath(OnePath, "GS_M_Laser_OnePath");
+		CreateTwoPath(TwoPath, "GS_M_Laser_TwoPath");
+
+		particles.emplace_back(std::make_unique<CRaytracingParticle>());
+		particles[0]->setOnePathPipeline(OnePath);
+		particles[0]->setTwoPathPipeline(TwoPath);
+		particles[0]->ParticleSetting(0.0f, 7.0f, XMFLOAT3(0.0, 1.0, 0.0));
+		Material pmaterial{};
+		pmaterial.m_bHasAlbedoColor = pmaterial.m_bHasAlbedoMap = true;
+		pmaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+		pmaterial.m_nAlbedoMapIndex = textures.size();
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\laser.dds"));
+		particles[0]->setMaterial(pmaterial);
+	}
+		break;
+	case JOB_WARRIOR: {
+		CreateOnePath(OnePath, "GS_Boom_OnePath");
+		CreateTwoPath(TwoPath, "GS_Boom_TwoPath");
+
+		particles.emplace_back(std::make_unique<CRaytracingParticle>());
+		particles[0]->setOnePathPipeline(OnePath);
+		particles[0]->setTwoPathPipeline(TwoPath);
+		particles[0]->ParticleSetting(0.0f, 3.0f, XMFLOAT3(0.0, 1.0, 0.0));
+		Material pmaterial{};
+		pmaterial.m_bHasAlbedoColor = pmaterial.m_bHasAlbedoMap = true;
+		pmaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+		pmaterial.m_nAlbedoMapIndex = textures.size();
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\Particle.dds"));
+		particles[0]->setMaterial(pmaterial);
+	}
+		break;
+	case JOB_HEALER: {
+		CreateOnePath(OnePath, "GS_Buff_OnePath");
+		CreateTwoPath(TwoPath, "GS_Buff_TwoPath");
+
+		particles.emplace_back(std::make_unique<CRaytracingParticle>());
+		particles[0]->setOnePathPipeline(OnePath);
+		particles[0]->setTwoPathPipeline(TwoPath);
+		particles[0]->ParticleSetting(0.0f, 3.0f);
+		Material pmaterial{};
+		pmaterial.m_bHasAlbedoColor = pmaterial.m_bHasAlbedoMap = true;
+		pmaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+		pmaterial.m_nAlbedoMapIndex = textures.size();
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\mana.dds"));
+		particles[0]->setMaterial(pmaterial);
+	}
+		break;
 	}
 
-	m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
-	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
-	CPlayerPriest* mage = dynamic_cast<CPlayerPriest*>(m_vPlayers.back().get());
-	Material sharedMaterial;
+	CreateOnePath(OnePath, "GS_Buff_OnePath");
+	CreateTwoPath(TwoPath, "GS_Buff_TwoPath");
 
-	for (int i = 0; i < 20; ++i) {
-		m_pResourceManager->getGameObjectList().emplace_back(std::make_unique<CGameObject>());
-		m_pResourceManager->getGameObjectList().back()->SetMeshIndex(meshIndex);
-		m_pResourceManager->getGameObjectList().back()->getMaterials().push_back(sharedMaterial);
+	particles.emplace_back(std::make_unique<CRaytracingParticle>());
+	particles[1]->setOnePathPipeline(OnePath);
+	particles[1]->setTwoPathPipeline(TwoPath);
+	particles[1]->ParticleSetting(0.0f, 3.0f);
+	Material pmaterial{};
+	pmaterial.m_bHasAlbedoColor = pmaterial.m_bHasAlbedoMap = true;
+	pmaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	pmaterial.m_nAlbedoMapIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\UI_Buff0.dds"));
+	particles[1]->setMaterial(pmaterial);
 
-		auto projectile = std::make_unique<CProjectile>();
-		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
+	particles.emplace_back(std::make_unique<CRaytracingParticle>());
+	particles[2]->setOnePathPipeline(OnePath);
+	particles[2]->setTwoPathPipeline(TwoPath);
+	particles[2]->ParticleSetting(0.0f, 3.0f);
+	pmaterial.m_nAlbedoMapIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\UI_Buff1.dds"));
+	particles[2]->setMaterial(pmaterial);
 
-		mage->GetBullets().push_back(std::move(projectile));
-	}
+	particles.emplace_back(std::make_unique<CRaytracingParticle>());
+	particles[3]->setOnePathPipeline(OnePath);
+	particles[3]->setTwoPathPipeline(TwoPath);
+	particles[3]->ParticleSetting(0.0f, 3.0f);
+	pmaterial.m_nAlbedoMapIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\GreenCross.dds"));
+	particles[3]->setMaterial(pmaterial);
+
+	g_pBuff0 = particles[1].get();
+	g_pBuff1 = particles[2].get();
+	g_pBuff2 = particles[3].get();
+}
+
+void CRaytracingGameScene::CreateParticleRS()
+{
+	D3D12_ROOT_PARAMETER rp{};
+	rp.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rp.Descriptor.ShaderRegister = 0;
+	rp.Descriptor.RegisterSpace = 0;
+
+	D3D12_ROOT_SIGNATURE_DESC desc{};
+	desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
+	desc.NumParameters = 1;
+	desc.NumStaticSamplers = 0;
+	desc.pParameters = &rp;
+	desc.pStaticSamplers = nullptr;
+
+	ID3DBlob* pBlob{};
+	D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_ParticleRS.GetAddressOf()));
+	pBlob->Release();
+}
+
+void CRaytracingGameScene::CreateOnePath(ComPtr<ID3D12PipelineState>& res, const char* entry)
+{
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dGBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_ParticleRS.Get();
+
+	D3D12_INPUT_ELEMENT_DESC ldesc[4]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "DIRECTION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[3] = { "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 4;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 0;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	//ID3DBlob* errorb;
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	//OutputDebugStringA((char*)errorb->GetBufferPointer());
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, entry, "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
+	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
+	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
+
+	D3D12_SO_DECLARATION_ENTRY soEntry[4]{};
+	soEntry[0] = { 0, "POSITION", 0, 0, 3, 0 };
+	soEntry[1] = { 0, "DIRECTION", 0, 0, 3, 0 };
+	soEntry[2] = { 0, "LIFETIME", 0, 0, 1, 0 };
+	soEntry[3] = { 0, "TYPE", 0, 0, 1, 0 };
+
+	UINT stride[1] = { sizeof(ParticleVertex) };
+
+	d3dPipelineState.StreamOutput.NumEntries = 4;
+	d3dPipelineState.StreamOutput.pSODeclaration = soEntry;
+	d3dPipelineState.StreamOutput.NumStrides = 1;
+	d3dPipelineState.StreamOutput.pBufferStrides = stride;
+	d3dPipelineState.StreamOutput.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
+
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(res.GetAddressOf()));
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dGBlob)
+		pd3dGBlob->Release();
+}
+void CRaytracingGameScene::CreateTwoPath(ComPtr<ID3D12PipelineState>& res, const char* entry)
+{
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dGBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_ParticleRS.Get();
+
+	D3D12_INPUT_ELEMENT_DESC ldesc[4]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "DIRECTION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[3] = { "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 4;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 0;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, entry, "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
+	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
+	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
+
+	D3D12_SO_DECLARATION_ENTRY soEntry[3]{};
+	soEntry[0] = { 0, "POSITION", 0, 0, 3, 0 };
+	soEntry[1] = { 1, "TEXCOORD", 0, 0, 2, 1 };
+	soEntry[2] = { 2, "COLOR", 0, 0, 4, 2 };
+
+	UINT stride[3] = { sizeof(XMFLOAT3), sizeof(XMFLOAT2), sizeof(XMFLOAT4) };
+
+	d3dPipelineState.StreamOutput.NumEntries = 3;
+	d3dPipelineState.StreamOutput.pSODeclaration = soEntry;
+	d3dPipelineState.StreamOutput.NumStrides = 3;
+	d3dPipelineState.StreamOutput.pBufferStrides = stride;
+	d3dPipelineState.StreamOutput.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
+
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(res.GetAddressOf()));
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dGBlob)
+		pd3dGBlob->Release();
 }
 
 void CRaytracingGameScene::PostProcess()
@@ -1425,8 +1503,10 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 	std::vector<std::unique_ptr<Mesh>>& meshes = m_pResourceManager->getMeshList();
 
 	// status UI ===================================================================
-	maxHPs[0] = 1200; maxHPs[1] = 1000; maxHPs[2] = 800;
-	cHPs[0] = 1200; cHPs[1] = 800; cHPs[2] = 730;
+
+	m_numUser = Players.size();
+	m_local_id = Client.get_id();
+	m_myJob = job;
 
 	mindex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 30, 30));		// buff icon
@@ -1435,6 +1515,9 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 264, 14.4));		// coop hp/mp 
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 60, 60));		// coop player face
+
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 520, 35));
+	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 510, 25));
 
 	tindex = textures.size();
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_HPbar.dds"));	// HPbar
@@ -1448,6 +1531,8 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MiniPlayer0.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MiniPlayer1.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_MiniPlayer2.dds"));
+
+	for (auto& p : g_PlayerBuffState) p = false;
 
 	int otherPlayer = 0;
 	for (int i = 0; i < m_numUser; ++i) {
@@ -1500,12 +1585,19 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 			m_vPlayersStatUI[i][uindex]->setPositionInViewport(92, 138 + 50 + (otherPlayer * 80) + 4);
 
 			uindex = m_vPlayersStatUI[i].size();
-			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 4].get(), textures[tindex + user_job[i] + 5].get()));
+			m_vPlayersStatUI[i].emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 4].get(), textures[tindex + Players[i].getCharacterType() + 5].get()));
 			m_vPlayersStatUI[i][uindex]->setPositionInViewport(20, 100 + 50 + (otherPlayer * 80));
 			m_vPlayersStatUI[i][uindex]->setColor(1.0, 1.0, 1.0, 0.5);
 			++otherPlayer;
 		}
 	}
+
+	m_vBossUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 5].get(), textures[tindex].get()));
+	m_vBossUIs[0]->setPositionInViewport(380, 10);
+
+	m_vBossUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex + 6].get()));
+	m_vBossUIs[1]->setColor(1.0, 0.0, 0.0, 1.0);
+	m_vBossUIs[1]->setPositionInViewport(385, 15);
 	// =============================================================================
 
 	// item ========================================================================
@@ -1518,20 +1610,26 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item2.dds"));
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Item3.dds"));
 
-	for (int i = 0; i < 4; ++i) {
-		uindex = m_vItemUIs.size();
-		m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
-		m_vItemUIs[uindex]->setColor(0.2 * (i + 1), 0.3, 0.2 * (i + 1), 1.0);
-		m_vItemUIs[uindex]->setPositionInViewport(20, 525);
-		m_vItemUIs[uindex]->setRenderState(false);
+	for (int i = 0; i < 5; ++i) {
+		if (i < 4) {
+			uindex = m_vItemUIs.size();
+			m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get(), textures[tindex + i].get()));
+			m_vItemUIs[uindex]->setPositionInViewport(20, 525);
+			m_vItemUIs[uindex]->setRenderState(false);
+		}
+		else {
+			uindex = m_vItemUIs.size();
+			m_vItemUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[mindex].get()));
+			m_vItemUIs[uindex]->setColor(0.0, 0.0, 0.0, 0.5);
+			m_vItemUIs[uindex]->setPositionInViewport(20, 525);
+			m_vItemUIs[uindex]->setRenderState(true);
+		}
 	}
 	m_vItemUIs[0]->setRenderState(true);
 
 	// =============================================================================
 
 	// skills ======================================================================
-
-	coolTime[0] = 5.0f; coolTime[1] = 10.0f; coolTime[2] = 20.0f;
 
 	mindex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 100, 100));
@@ -1542,18 +1640,26 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician2.dds"));
+		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 20.0f; g_SkillCoolTime[2] = 40.0f;
+		g_SkillCost[0] = 30.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 70.0f;
 		break;
 	case JOB_WARRIOR:
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior2.dds"));
+		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 5.0f; g_SkillCoolTime[2] = 20.0f;
+		g_SkillCost[0] = 25.0f; g_SkillCost[1] = 5.0f; g_SkillCost[2] = 40.0f;
 		break;
 	case JOB_HEALER:
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer2.dds"));
+		g_SkillCoolTime[0] = 15.0f; g_SkillCoolTime[1] = 30.0f; g_SkillCoolTime[2] = 60.0f;
+		g_SkillCost[0] = 20.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 80.0f;
 		break;
 	}
+	for (auto& p : g_SkillCurCTime) p = 0;
+	
 	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_MP_Less.dds"));
 	for (int i = 0; i < 3; ++i) {
 		uindex = m_vSkillUIs.size();
@@ -1575,6 +1681,42 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 	}
 }
 
+void CRaytracingGameScene::UIUseSkill(KeyInputRet input)
+{
+	switch(input) {
+	case KEY_SKILL1:
+		g_SkillCurCTime[0] = g_SkillCoolTime[0];
+		// Send Skill use Packet
+		break;
+	case KEY_SKILL2:
+		g_SkillCurCTime[1] = g_SkillCoolTime[1];
+		// Send Skill use Packet
+		break;
+	case KEY_SKILL3:
+		g_SkillCurCTime[2] = g_SkillCoolTime[2];
+		// Send Skill use Packet
+		break;
+	}
+}
+
+void CRaytracingGameScene::SkillParticleStart(KeyInputRet input)
+{
+	switch (m_myJob) {
+	case JOB_MAGE:
+		if (input == KEY_SKILL3)
+			m_pResourceManager->getParticleList()[0]->Start();
+		break;
+	case JOB_WARRIOR:
+		if (input == KEY_SKILL3)
+			m_pResourceManager->getParticleList()[0]->Start();
+		break;
+	case JOB_HEALER:
+		if (input == KEY_SKILL3)
+			m_pResourceManager->getParticleList()[0]->Start();
+		break;
+	}
+}
+
 // =====================================================================================
 
 void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
@@ -1587,6 +1729,9 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	CreateRTVDSV();
 	CreateUIRootSignature();
 	CreateUIPipelineState();
+
+	// ParticleRS
+	CreateParticleRS();
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
@@ -1628,6 +1773,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 		Players[i].setAnimationManager(aManagers[aManagers.size() - 1].get());
 		if (i == Client.get_id()) {
 			m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
+			CreateParticle(player_job);
 		}
 	}
 
@@ -1697,6 +1843,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 
 	for (int i = 0; i < Players.size(); ++i) {
 		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
+		//skinned[i]->SetPosition(XMFLOAT3(0.0, 0.0f, 0.0));
 	}
 
 	// ==============================================================================
@@ -1722,7 +1869,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
-	Client.SendPlayerReady(SCENE_WINTERLAND);
+	Client.SendPlayerReady();
 }
 
 void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -1751,27 +1898,14 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 				g_InGameState = IS_FINISH;
 			}
 			break;
-		case 'U':
-			cHPs[0] += 10;
-			if (maxHPs[0] < cHPs[0])
-				cHPs[0] = maxHPs[0];
-			break;
-		case 'J':
-			cHPs[0] -= 10;
-			if (0 > cHPs[0])
-				cHPs[0] = 0;
-			break;
 		case '1':			// 1~4 test
-			m_BuffState[0] = !m_BuffState[0];
+			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
 			break;
 		case '2':
-			m_BuffState[1] = !m_BuffState[1];
+			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
 			break;
 		case '3':
-			m_BuffState[2] = !m_BuffState[2];
-			break;
-		case '4':
-			cMPs[m_local_id] = 100;
+			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -1786,24 +1920,12 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			Client.SendUseItem(cItem);
-			break;
-		case 'Q':
-			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
-				cMPs[m_local_id] -= 30;
-				curCTime[0] = coolTime[0];
-			}
-			break;
-		case 'E':
-			if (cMPs[m_local_id] >= 40 && curCTime[1] <= 0) {
-				cMPs[m_local_id] -= 40;
-				curCTime[1] = coolTime[1];
-			}
-			break;
-		case 'R':
-			if (cMPs[m_local_id] >= 60 && curCTime[2] <= 0) {
-				cMPs[m_local_id] -= 60;
-				curCTime[2] = coolTime[2];
+			if (m_fItemCurTime <= 0.0f) {
+				//Client.SendHPitem(ItemType::HP_POTION);
+				//Client.SendHPitem(ItemType::MP_POTION);
+				Client.SendHPitem(ItemType::ATK_BUFF);
+				//Client.SendHPitem(ItemType::DEF_BUFF);
+				m_fItemCurTime = m_fItemCoolTime;
 			}
 			break;
 		case 'P':
@@ -1819,6 +1941,15 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 void CRaytracingWinterLandScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	m_pPlayer->MouseProcess(hWnd, nMessage, wParam, lParam);
+	switch (nMessage) {
+	case WM_MOUSEWHEEL:
+		short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		if (delta > 0)
+			m_pCamera->ChangeLength(1);
+		else if (delta < 0)
+			m_pCamera->ChangeLength(0);
+		break;
+	}
 }
 
 void CRaytracingWinterLandScene::Create_Gorhorrid()
@@ -1843,7 +1974,7 @@ void CRaytracingWinterLandScene::Create_Gorhorrid()
 
 
 	// server object add ==============================================
-	auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Gorhorrid);
+	auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::GorhorridBoss);
 	newMonster->setRenderingObject(m_vMonsters.back()->getObject());
 	newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 	Monsters[m_nMonsterNum] = std::move(newMonster);
@@ -1899,8 +2030,9 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
-			m_vMonsters[0]->ProcessInput(keyBuffer, fElapsedTime);
+			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			UIUseSkill(ret);
+			SkillParticleStart(ret);
 			CAnimationManager* myManager = m_pPlayer->getAniManager();
 			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
 		}
@@ -2090,15 +2222,9 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
-	for (auto& m : m_vMonsters)
-	{
-		m->UpdateObject(fElapsedTime);
-	}
-
-	AutoDirection(m_vPlayers, m_vMonsters);
-
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+
 
 	for (auto& p : m_pMonsters) {
 		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
@@ -2120,6 +2246,11 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	}
 	else
 		m_pCamera->UpdateViewMatrix();
+
+	g_DxResource.cmdList->SetGraphicsRootSignature(m_ParticleRS.Get());
+	m_pCamera->SetElapsedTimeAndShader(fElapsedTime, 0);
+	m_pResourceManager->UpdateParticles(fElapsedTime);
+
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 
 	switch (g_InGameState) {
@@ -2149,15 +2280,18 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 
 	// Player UI ==================================================
 	int buffstart = 20; int bstride = 40;
+	float cMP = Players[m_local_id].GetMP();
 
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		m_vPlayersStatUI[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
-		m_vPlayersStatUI[i][3]->setScaleXWithUV(cMPs[i] / maxMPs[i]);
+		float tge = static_cast<float>(Players[i].GetHP());
+		float tt = g_maxHPs[i];
+		m_vPlayersStatUI[i][1]->setScaleX(static_cast<float>(Players[i].GetHP()) / g_maxHPs[i]);
+		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
-				if (m_BuffState[j]) {
+				if (g_PlayerBuffState[j]) {
 					m_vPlayersStatUI[i][j + 4]->setRenderState(true);
 					m_vPlayersStatUI[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), 100);
 					++t;
@@ -2166,29 +2300,40 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 					m_vPlayersStatUI[i][j + 4]->setRenderState(false);
 				}
 			}
+			XMFLOAT3 mpos = m_pMonsters[0]->getObject()->getObject()->getPosition(); mpos.y = 0;
+			XMFLOAT3 ppos = Players[m_local_id].getRenderingObject()->getPosition(); ppos.y = 0;
+			float distance;
+			XMStoreFloat(&distance, XMVector3Length(XMLoadFloat3(&mpos) - XMLoadFloat3(&ppos)));
+			if (distance <= 100.0f)
+				m_bBossBattle = true;
 		}
 	}
 
+	m_fItemCurTime -= fElapsedTime;
+	if (m_fItemCurTime < 0.0)
+		m_fItemCurTime = 0.0f;
+	m_vItemUIs[4]->setScaleY(m_fItemCurTime / m_fItemCoolTime);
+
 	{
-		if (cMPs[m_local_id] < 30)
+		if (cMP < g_SkillCost[0])
 			m_vSkillUIs[6]->setRenderState(true);
 		else
 			m_vSkillUIs[6]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 40)
+		if (cMP < g_SkillCost[1])
 			m_vSkillUIs[7]->setRenderState(true);
 		else
 			m_vSkillUIs[7]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 60)
+		if (cMP < g_SkillCost[2])
 			m_vSkillUIs[8]->setRenderState(true);
 		else
 			m_vSkillUIs[8]->setRenderState(false);
 
 		for (int i = 0; i < 3; ++i) {
-			curCTime[i] -= fElapsedTime;
-			if (curCTime[i] < 0) curCTime[i] = 0.0f;
-			m_vSkillUIs[i + 3]->setScaleY(curCTime[i] / coolTime[i]);
+			g_SkillCurCTime[i] -= fElapsedTime;
+			if (g_SkillCurCTime[i] < 0) g_SkillCurCTime[i] = 0.0f;
+			m_vSkillUIs[i + 3]->setScaleY(g_SkillCurCTime[i] / g_SkillCoolTime[i]);
 		}
 	}
 	// =================================================================
@@ -2256,6 +2401,10 @@ void CRaytracingWinterLandScene::Render()
 				p->Render();
 		}
 
+		if (m_bBossBattle)
+			for (auto& p : m_vBossUIs)
+				p->Render();
+
 		for (auto& p : m_vItemUIs)
 			p->Render();
 
@@ -2283,6 +2432,9 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	CreateUIRootSignature();
 	CreateUIPipelineState();
 
+	// ParticleRS
+	CreateParticleRS();
+
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
 	CreateComputeShader();
@@ -2302,7 +2454,7 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 
 	// Object File Read ========================================	! !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\Map\\Cave\\Cave.bin", "src\\texture\\Map\\");
-
+	
 	// Players Create ========================================================================
 	for (int i = 0; i < Players.size(); ++i) {
 		// player job check
@@ -2403,9 +2555,11 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 
-	PlayerUISetup(JOB_MAGE);
+	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
-	Client.SendPlayerReady(SCENE_CAVE);
+	Client.SendPlayerReady();
+
+	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE2_AMB);
 }
 
 void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -2434,27 +2588,14 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 				g_InGameState = IS_FINISH;
 			}
 			break;
-		case 'U':
-			cHPs[0] += 10;
-			if (maxHPs[0] < cHPs[0])
-				cHPs[0] = maxHPs[0];
-			break;
-		case 'J':
-			cHPs[0] -= 10;
-			if (0 > cHPs[0])
-				cHPs[0] = 0;
-			break;
 		case '1':			// 1~4 test
-			m_BuffState[0] = !m_BuffState[0];
+			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
 			break;
 		case '2':
-			m_BuffState[1] = !m_BuffState[1];
+			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
 			break;
 		case '3':
-			m_BuffState[2] = !m_BuffState[2];
-			break;
-		case '4':
-			cMPs[m_local_id] = 100;
+			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -2469,26 +2610,12 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-		{
-			Client.SendUseItem(cItem);
-		}
-		break;
-		case 'Q':
-			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
-				cMPs[m_local_id] -= 30;
-				curCTime[0] = coolTime[0];
-			}
-			break;
-		case 'E':
-			if (cMPs[m_local_id] >= 40 && curCTime[1] <= 0) {
-				cMPs[m_local_id] -= 40;
-				curCTime[1] = coolTime[1];
-			}
-			break;
-		case 'R':
-			if (cMPs[m_local_id] >= 60 && curCTime[2] <= 0) {
-				cMPs[m_local_id] -= 60;
-				curCTime[2] = coolTime[2];
+			if (m_fItemCurTime <= 0.0f) {
+				//Client.SendHPitem(ItemType::HP_POTION);
+				//Client.SendHPitem(ItemType::MP_POTION);
+				Client.SendHPitem(ItemType::ATK_BUFF);
+				//Client.SendHPitem(ItemType::DEF_BUFF);
+				m_fItemCurTime = m_fItemCoolTime;
 			}
 			break;
 		case 'P':
@@ -2504,6 +2631,15 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 void CRaytracingCaveScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	m_pPlayer->MouseProcess(hWnd, nMessage, wParam, lParam);
+	switch (nMessage) {
+	case WM_MOUSEWHEEL:
+		short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		if (delta > 0)
+			m_pCamera->ChangeLength(1);
+		else if (delta < 0)
+			m_pCamera->ChangeLength(0);
+		break;
+	}
 }
 
 void CRaytracingCaveScene::Create_Limadon()
@@ -2546,7 +2682,7 @@ void CRaytracingCaveScene::Create_Limadon()
 
 	newAnimationManager->SetFramesPointerFromSkinningObject(newSkinningObject->getObjects());
 	newAnimationManager->MakeAnimationMatrixIndex(newSkinningObject.get());
-
+	
 	m_vMonsters.emplace_back(std::make_unique<Limadon>(newSkinningObject.get(), newAnimationManager.get()));
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
@@ -2808,7 +2944,7 @@ void CRaytracingCaveScene::Create_Crassorrid()
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 
 	{ // server object
-		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Crassorrid);
+		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::CrassorridBoss);
 		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
 		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 		Monsters[m_nMonsterNum] = std::move(newMonster);
@@ -2820,7 +2956,7 @@ void CRaytracingCaveScene::ProcessInput(float fElapsedTime)
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
-	if (g_InGameState == IS_GAMING) {
+	if (m_nState == IS_GAMING) {
 		if (!m_pCamera->getThirdPersonState()) {
 			bool shiftDown = false;
 			if (keyBuffer[VK_SHIFT] & 0x80)
@@ -2839,7 +2975,8 @@ void CRaytracingCaveScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			UIUseSkill(ret);
 			CAnimationManager* myManager = m_pPlayer->getAniManager();
 			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
 		}
@@ -2866,9 +3003,6 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 	for (auto& p : m_vPlayers)
 		p->UpdateObject(fElapsedTime);
 
-
-	AutoDirection(m_vPlayers, m_vMonsters);
-
 	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
 	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
 
@@ -2890,11 +3024,11 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 		m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 
-	switch (g_InGameState) {
+	switch (m_nState) {
 	case IS_LOADING: {
 		wOpacity -= 0.5 * fElapsedTime;
 		if (wOpacity < 0.0f) {
-			g_InGameState = IS_GAMING;
+			m_nState = IS_GAMING;
 			wOpacity = 0.0f;
 		}
 		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
@@ -2916,15 +3050,18 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 	}
 	// Player UI ==================================================
 	int buffstart = 20; int bstride = 40;
+	float cMP = Players[m_local_id].GetMP();
 
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		m_vPlayersStatUI[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
-		m_vPlayersStatUI[i][3]->setScaleXWithUV(cMPs[i] / maxMPs[i]);
+		float tge = static_cast<float>(Players[i].GetHP());
+		float tt = g_maxHPs[i];
+		m_vPlayersStatUI[i][1]->setScaleX(static_cast<float>(Players[i].GetHP()) / g_maxHPs[i]);
+		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
-				if (m_BuffState[j]) {
+				if (g_PlayerBuffState[j]) {
 					m_vPlayersStatUI[i][j + 4]->setRenderState(true);
 					m_vPlayersStatUI[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), 100);
 					++t;
@@ -2936,26 +3073,31 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
+	m_fItemCurTime -= fElapsedTime;
+	if (m_fItemCurTime < 0.0)
+		m_fItemCurTime = 0.0f;
+	m_vItemUIs[4]->setScaleY(m_fItemCurTime / m_fItemCoolTime);
+
 	{
-		if (cMPs[m_local_id] < 30)
+		if (cMP < g_SkillCost[0])
 			m_vSkillUIs[6]->setRenderState(true);
 		else
 			m_vSkillUIs[6]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 40)
+		if (cMP < g_SkillCost[1])
 			m_vSkillUIs[7]->setRenderState(true);
 		else
 			m_vSkillUIs[7]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 60)
+		if (cMP < g_SkillCost[2])
 			m_vSkillUIs[8]->setRenderState(true);
 		else
 			m_vSkillUIs[8]->setRenderState(false);
 
 		for (int i = 0; i < 3; ++i) {
-			curCTime[i] -= fElapsedTime;
-			if (curCTime[i] < 0) curCTime[i] = 0.0f;
-			m_vSkillUIs[i + 3]->setScaleY(curCTime[i] / coolTime[i]);
+			g_SkillCurCTime[i] -= fElapsedTime;
+			if (g_SkillCurCTime[i] < 0) g_SkillCurCTime[i] = 0.0f;
+			m_vSkillUIs[i + 3]->setScaleY(g_SkillCurCTime[i] / g_SkillCoolTime[i]);
 		}
 	}
 	// =================================================================
@@ -3051,6 +3193,9 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	CreateUIRootSignature();
 	CreateUIPipelineState();
 
+	// ParticleRS
+	CreateParticleRS();
+
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
 	CreateComputeShader();
@@ -3071,6 +3216,17 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	// Object File Read ========================================	! !
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\Map\\ETP\\ETP.bin", "src\\texture\\Map\\");
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\Map\\ETP\\Water.bin", "src\\texture\\Map\\");
+
+	{		// Water
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\WaterTurbulent00_NORM.dds"));
+		auto p = normalObjects[normalObjects.size() - 1].get();
+		p->SetInstanceID(2);
+		p->getMaterials().emplace_back();
+		Material& mt = p->getMaterials()[0];
+		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
+		//mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
+		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 1;
+	}
 
 	// Players Create ========================================================================
 	for (int i = 0; i < Players.size(); ++i) {
@@ -3107,17 +3263,6 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 
 	// Create Normal Object & skinning Object Copy ========================================
 
-	{		// Water
-		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Map\\WaterTurbulent00_NORM.dds"));
-		auto p = normalObjects[normalObjects.size() - 1].get();
-		p->SetInstanceID(2);
-		p->getMaterials().emplace_back();
-		Material& mt = p->getMaterials()[0];
-		mt.m_bHasAlbedoColor = true; mt.m_xmf4AlbedoColor = XMFLOAT4(0.1613118, 0.2065666, 0.2358491, 0.2);
-		//mt.m_bHasMetallicMap = true; mt.m_nMetallicMapIndex = textures.size() - 1;
-		mt.m_bHasNormalMap = true; mt.m_nNormalMapIndex = textures.size() - 1;
-	}
-
 	m_pHeightMap = std::make_unique<CHeightMapImage>(L"src\\model\\Map\\ETP\\ETP_Terrain.raw", 1024, 1024, XMFLOAT3(1.0f, 0.0156, 1.0f));
 	meshes.emplace_back(std::make_unique<Mesh>(m_pHeightMap.get(), "terrain"));
 	normalObjects.emplace_back(std::make_unique<CGameObject>());
@@ -3151,7 +3296,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	// Copy(normalObject) & SetPreMatrix ===============================
 
 	for (int i = 0; i < Players.size(); ++i) {
-		skinned[i]->SetPosition(XMFLOAT3(-219.0f, 0.0f, 301.0f));
+		skinned[i]->SetPosition(XMFLOAT3(99.0f, 0.0f, 395.0f));
 	}
 
 	// ==============================================================================
@@ -3175,9 +3320,11 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 
-	PlayerUISetup(JOB_MAGE);
+	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
-	Client.SendPlayerReady(SCENE_PLAIN);
+	Client.SendPlayerReady();
+
+	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE1_AMB);
 }
 
 void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -3206,27 +3353,14 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 				g_InGameState = IS_FINISH;
 			}
 			break;
-		case 'U':
-			cHPs[0] += 10;
-			if (maxHPs[0] < cHPs[0])
-				cHPs[0] = maxHPs[0];
-			break;
-		case 'J':
-			cHPs[0] -= 10;
-			if (0 > cHPs[0])
-				cHPs[0] = 0;
-			break;
 		case '1':			// 1~4 test
-			m_BuffState[0] = !m_BuffState[0];
+			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
 			break;
 		case '2':
-			m_BuffState[1] = !m_BuffState[1];
+			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
 			break;
 		case '3':
-			m_BuffState[2] = !m_BuffState[2];
-			break;
-		case '4':
-			cMPs[m_local_id] = 100;
+			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -3241,24 +3375,12 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			Client.SendUseItem(cItem);
-			break;
-		case 'Q':
-			if (cMPs[m_local_id] >= 30 && curCTime[0] <= 0) {
-				cMPs[m_local_id] -= 30;
-				curCTime[0] = coolTime[0];
-			}
-			break;
-		case 'E':
-			if (cMPs[m_local_id] >= 40 && curCTime[1] <= 0) {
-				cMPs[m_local_id] -= 40;
-				curCTime[1] = coolTime[1];
-			}
-			break;
-		case 'R':
-			if (cMPs[m_local_id] >= 60 && curCTime[2] <= 0) {
-				cMPs[m_local_id] -= 60;
-				curCTime[2] = coolTime[2];
+			if (m_fItemCurTime <= 0.0f) {
+				//Client.SendHPitem(ItemType::HP_POTION);
+				//Client.SendHPitem(ItemType::MP_POTION);
+				Client.SendHPitem(ItemType::ATK_BUFF);
+				//Client.SendHPitem(ItemType::DEF_BUFF);
+				m_fItemCurTime = m_fItemCoolTime;
 			}
 			break;
 		case 'P':
@@ -3274,6 +3396,15 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 void CRaytracingETPScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
 {
 	m_pPlayer->MouseProcess(hWnd, nMessage, wParam, lParam);
+	switch (nMessage) {
+	case WM_MOUSEWHEEL:
+		short delta = GET_WHEEL_DELTA_WPARAM(wParam);
+		if (delta > 0)
+			m_pCamera->ChangeLength(1);
+		else if (delta < 0)
+			m_pCamera->ChangeLength(0);
+		break;
+	}
 }
 
 void CRaytracingETPScene::Create_Feroptere()
@@ -3284,7 +3415,7 @@ void CRaytracingETPScene::Create_Feroptere()
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-280.0f, 0.0f, 215.4f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(208.8f, 0.0f, 352.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 290.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3317,7 +3448,7 @@ void CRaytracingETPScene::Create_Feroptere()
 	m_vMonsters.emplace_back(std::make_unique<Feroptere>(newSkinningObject.get(), newAnimationManager.get()));
 
 	m_vMonsters.back()->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters.back()->getObject()->SetPosition(XMFLOAT3(-246.3f, 0.0f, 15.1f));
+	m_vMonsters.back()->getObject()->SetPosition(XMFLOAT3(120.0f, 0.0f, 127.0f));
 	m_vMonsters.back()->getObject()->Rotate(XMFLOAT3(0.0f, 20.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3331,6 +3462,40 @@ void CRaytracingETPScene::Create_Feroptere()
 	}
 
 	for (auto& o : newSkinningObject->getObjects()) {
+		for (auto& ma : o->getMaterials()) {
+			ma.m_bHasEmissiveColor = false;
+		}
+	}
+
+	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	auto& newSkinningObject1 = m_pResourceManager->getSkinningObjectList().back();
+	newSkinningObject1->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
+
+	auto* sourceManager1 = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
+	auto* monsterManager1 = dynamic_cast<CMonsterManager*>(sourceManager1);
+	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager1));
+	auto& newAnimationManager1 = m_pResourceManager->getAnimationManagers().back();
+
+	newAnimationManager1->SetFramesPointerFromSkinningObject(newSkinningObject1->getObjects());
+	newAnimationManager1->MakeAnimationMatrixIndex(newSkinningObject1.get());
+
+	m_vMonsters.emplace_back(std::make_unique<Feroptere>(newSkinningObject1.get(), newAnimationManager1.get()));
+
+	m_vMonsters.back()->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters.back()->getObject()->SetPosition(XMFLOAT3(264.0f, 0.0f, -13.0f));
+	m_vMonsters.back()->getObject()->Rotate(XMFLOAT3(0.0f, 340.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	{ // server object
+		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Feroptere);
+		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
+		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
+		Monsters[m_nMonsterNum] = std::move(newMonster);
+		++m_nMonsterNum;
+	}
+
+	for (auto& o : newSkinningObject1->getObjects()) {
 		for (auto& ma : o->getMaterials()) {
 			ma.m_bHasEmissiveColor = false;
 		}
@@ -3350,7 +3515,7 @@ void CRaytracingETPScene::Create_Pistriptere()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-240.0f, 0.0f, 149.8f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(142.0f, 0.0f, 262.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 20.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3378,7 +3543,7 @@ void CRaytracingETPScene::Create_Pistriptere()
 	m_vMonsters.emplace_back(std::make_unique<Pistriptere>(newSkinningObject.get(), newAnimationManager.get()));
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-351.1f, 0.0f, 26.7f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(220.0f, 0.0f, -1.6f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 350.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3392,6 +3557,40 @@ void CRaytracingETPScene::Create_Pistriptere()
 	}
 
 	for (auto& o : newSkinningObject->getObjects()) {
+		for (auto& ma : o->getMaterials()) {
+			ma.m_bHasEmissiveColor = false;
+		}
+	}
+
+	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	auto& newSkinningObject1 = m_pResourceManager->getSkinningObjectList().back();
+	newSkinningObject1->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
+
+	auto* sourceManager1 = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
+	auto* monsterManager1 = dynamic_cast<CMonsterManager*>(sourceManager1);
+	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager1));
+	auto& newAnimationManager1 = m_pResourceManager->getAnimationManagers().back();
+
+	newAnimationManager1->SetFramesPointerFromSkinningObject(newSkinningObject1->getObjects());
+	newAnimationManager1->MakeAnimationMatrixIndex(newSkinningObject1.get());
+
+	m_vMonsters.emplace_back(std::make_unique<Pistriptere>(newSkinningObject1.get(), newAnimationManager1.get()));
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-37.0f, 0.0f, 37.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 50.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	{ // server object
+		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Pistiripere);
+		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
+		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
+		Monsters[m_nMonsterNum] = std::move(newMonster);
+		++m_nMonsterNum;
+	}
+
+	for (auto& o : newSkinningObject1->getObjects()) {
 		for (auto& ma : o->getMaterials()) {
 			ma.m_bHasEmissiveColor = false;
 		}
@@ -3411,7 +3610,7 @@ void CRaytracingETPScene::Create_RostrokarckLarvae()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-150.5f, 0.0f, 85.7f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(256.0f, 0.0f, 228.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 320.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3439,7 +3638,7 @@ void CRaytracingETPScene::Create_RostrokarckLarvae()
 	m_vMonsters.emplace_back(std::make_unique<RostrokarckLarvae>(newSkinningObject.get(), newAnimationManager.get()));
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-164.7f, 0.0f, 66.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(287.5f, 0.0f, -124.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 320.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
@@ -3453,6 +3652,74 @@ void CRaytracingETPScene::Create_RostrokarckLarvae()
 	}
 
 	for (auto& o : newSkinningObject->getObjects()) {
+		for (auto& ma : o->getMaterials()) {
+			ma.m_bHasEmissiveColor = false;
+		}
+	}
+
+	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	auto& newSkinningObject1 = m_pResourceManager->getSkinningObjectList().back();
+	newSkinningObject1->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
+
+	auto* sourceManager1 = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
+	auto* monsterManager1 = dynamic_cast<CMonsterManager*>(sourceManager1);
+	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager1));
+	auto& newAnimationManager1 = m_pResourceManager->getAnimationManagers().back();
+
+	newAnimationManager1->SetFramesPointerFromSkinningObject(newSkinningObject1->getObjects());
+	newAnimationManager1->MakeAnimationMatrixIndex(newSkinningObject1.get());
+
+	m_vMonsters.emplace_back(std::make_unique<RostrokarckLarvae>(newSkinningObject1.get(), newAnimationManager1.get()));
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(130.0f, 0.0f, -45.5f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 330.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	{ // server object
+		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::RostrokarackLarvae);
+		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
+		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
+		Monsters[m_nMonsterNum] = std::move(newMonster);
+		++m_nMonsterNum;
+	}
+
+	for (auto& o : newSkinningObject1->getObjects()) {
+		for (auto& ma : o->getMaterials()) {
+			ma.m_bHasEmissiveColor = false;
+		}
+	}
+
+	m_pResourceManager->getSkinningObjectList().emplace_back(std::make_unique<CRayTracingSkinningObject>());
+	auto& newSkinningObject2 = m_pResourceManager->getSkinningObjectList().back();
+	newSkinningObject2->CopyFromOtherObject(m_pResourceManager->getSkinningObjectList()[m_pResourceManager->getSkinningObjectList().size() - 2].get());
+
+	auto* sourceManager2 = m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get();
+	auto* monsterManager2 = dynamic_cast<CMonsterManager*>(sourceManager2);
+	m_pResourceManager->getAnimationManagers().emplace_back(std::make_unique<CMonsterManager>(*monsterManager2));
+	auto& newAnimationManager2 = m_pResourceManager->getAnimationManagers().back();
+
+	newAnimationManager2->SetFramesPointerFromSkinningObject(newSkinningObject2->getObjects());
+	newAnimationManager2->MakeAnimationMatrixIndex(newSkinningObject2.get());
+
+	m_vMonsters.emplace_back(std::make_unique<RostrokarckLarvae>(newSkinningObject2.get(), newAnimationManager2.get()));
+
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(10.0f, XMFLOAT3(), XMFLOAT3());
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(274.3f, 0.0f, 192.7f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 300.0f, 0.0f));
+
+	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
+
+	{ // server object
+		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::RostrokarackLarvae);
+		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
+		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
+		Monsters[m_nMonsterNum] = std::move(newMonster);
+		++m_nMonsterNum;
+	}
+
+	for (auto& o : newSkinningObject2->getObjects()) {
 		for (auto& ma : o->getMaterials()) {
 			ma.m_bHasEmissiveColor = false;
 		}
@@ -3472,13 +3739,13 @@ void CRaytracingETPScene::Create_Xenokarce()
 	}
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(3.0f, XMFLOAT3(), XMFLOAT3());
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-306.7f, 0.0f, -150.8f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(185.0f, 0.0f, -304.0f));
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 0.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 
 	{ // server object
-		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Xenokarce);
+		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::XenokarceBoss);
 		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
 		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 		Monsters[m_nMonsterNum] = std::move(newMonster);
@@ -3491,7 +3758,7 @@ void CRaytracingETPScene::ProcessInput(float fElapsedTime)
 	UCHAR keyBuffer[256];
 	GetKeyboardState(keyBuffer);
 
-	if (g_InGameState == IS_GAMING) {
+	if (m_nState == IS_GAMING) {
 		if (!m_pCamera->getThirdPersonState()) {
 			bool shiftDown = false;
 			if (keyBuffer[VK_SHIFT] & 0x80)
@@ -3510,7 +3777,8 @@ void CRaytracingETPScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+			UIUseSkill(ret);
 			CAnimationManager* myManager = m_pPlayer->getAniManager();
 			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
 		}
@@ -3694,48 +3962,15 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 	// particle update
 	// SetRootSignature
 	// particle update
-	//for (int i = 0; i < m_vMonsters.size(); ++i)
-	//{
-	//	m_vMonsters[i]->getObject()->SetPosition(Monsters[i]->getPosition());
-	//}
+
 	Flush();
 	// Skinning Object BLAS ReBuild
 	m_pResourceManager->ReBuildBLAS();
 
 	m_pResourceManager->UpdateWorldMatrix();
 
-
-	for (auto& m : m_vPlayers)
-	{
-		m->UpdateObject(fElapsedTime);
-
-		if (m->CheckAC())
-		{
-			AttackCollision(m_vMonsters,m_vPlayers ,1);
-		}
-		if (m->HasActiveBullet())
-		{
-			ShootCollision( m_vMonsters, m_vPlayers,1);
-		}
-	}
-
-	for (auto& m : m_vMonsters)
-	{
-		m->UpdateObject(fElapsedTime);
-
-		if (m->CheckAC())
-		{
-			AttackCollision(m_vPlayers, m_vMonsters,0);
-		}
-		if (m->HasActiveBullet())
-		{
-			ShootCollision(m_vPlayers, m_vMonsters, 0);
-		}
-	}
-
-
-	AutoDirection(m_vPlayers, m_vMonsters);
-
+	for (auto& p : m_vPlayers)
+		p->UpdateObject(fElapsedTime);
 
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
@@ -3758,11 +3993,11 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		m_pCamera->UpdateViewMatrix();
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 
-	switch (g_InGameState) {
+	switch (m_nState) {
 	case IS_LOADING: {
 		wOpacity -= 0.5 * fElapsedTime;
 		if (wOpacity < 0.0f) {
-			g_InGameState = IS_GAMING;
+			m_nState = IS_GAMING;
 			wOpacity = 0.0f;
 		}
 		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
@@ -3785,15 +4020,18 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 
 	// Player UI ==================================================
 	int buffstart = 20; int bstride = 40;
+	float cMP = Players[m_local_id].GetMP();
 
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		m_vPlayersStatUI[i][1]->setScaleX(cHPs[i] / maxHPs[i]);
-		m_vPlayersStatUI[i][3]->setScaleXWithUV(cMPs[i] / maxMPs[i]);
+		float tge = static_cast<float>(Players[i].GetHP());
+		float tt = g_maxHPs[i];
+		m_vPlayersStatUI[i][1]->setScaleX(static_cast<float>(Players[i].GetHP()) / g_maxHPs[i]);
+		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
-				if (m_BuffState[j]) {
+				if (g_PlayerBuffState[j]) {
 					m_vPlayersStatUI[i][j + 4]->setRenderState(true);
 					m_vPlayersStatUI[i][j + 4]->setPositionInViewport(buffstart + (t * bstride), 100);
 					++t;
@@ -3805,26 +4043,31 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
+	m_fItemCurTime -= fElapsedTime;
+	if (m_fItemCurTime < 0.0)
+		m_fItemCurTime = 0.0f;
+	m_vItemUIs[4]->setScaleY(m_fItemCurTime / m_fItemCoolTime);
+
 	{
-		if (cMPs[m_local_id] < 30)
+		if (cMP < g_SkillCost[0])
 			m_vSkillUIs[6]->setRenderState(true);
 		else
 			m_vSkillUIs[6]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 40)
+		if (cMP < g_SkillCost[1])
 			m_vSkillUIs[7]->setRenderState(true);
 		else
 			m_vSkillUIs[7]->setRenderState(false);
 
-		if (cMPs[m_local_id] < 60)
+		if (cMP < g_SkillCost[2])
 			m_vSkillUIs[8]->setRenderState(true);
 		else
 			m_vSkillUIs[8]->setRenderState(false);
 
 		for (int i = 0; i < 3; ++i) {
-			curCTime[i] -= fElapsedTime;
-			if (curCTime[i] < 0) curCTime[i] = 0.0f;
-			m_vSkillUIs[i + 3]->setScaleY(curCTime[i] / coolTime[i]);
+			g_SkillCurCTime[i] -= fElapsedTime;
+			if (g_SkillCurCTime[i] < 0) g_SkillCurCTime[i] = 0.0f;
+			m_vSkillUIs[i + 3]->setScaleY(g_SkillCurCTime[i] / g_SkillCoolTime[i]);
 		}
 	}
 	// =================================================================

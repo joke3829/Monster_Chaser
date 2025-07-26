@@ -6,6 +6,16 @@
 #include "Scene.h"
 #include <mutex>
 
+// 07.25 ===========================================
+extern std::array<bool, 3>	g_PlayerBuffState;
+extern std::array<float, 3> g_maxHPs;
+extern std::array<float, 3> g_maxMPs;
+extern std::array<float, 3> g_SkillCost;
+
+extern CParticle* g_pBuff0;
+extern CParticle* g_pBuff1;
+extern CParticle* g_pBuff2;
+// =================================================
 
 class C_Socket
 {

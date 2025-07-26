@@ -71,11 +71,12 @@ void Feroptere::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Feroptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Feroptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -84,6 +85,7 @@ void Feroptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -157,11 +159,12 @@ void Pistriptere::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Pistriptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Pistriptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -170,6 +173,7 @@ void Pistriptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -243,11 +247,12 @@ void RostrokarckLarvae::UpdateObject(float fElapsedTime)
 	}
 }
 
-void RostrokarckLarvae::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet RostrokarckLarvae::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -256,6 +261,7 @@ void RostrokarckLarvae::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -347,11 +353,12 @@ void Xenokarce::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Xenokarce::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Xenokarce::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -363,6 +370,7 @@ void Xenokarce::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -480,11 +488,12 @@ void Fulgurodonte::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Fulgurodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Fulgurodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -496,6 +505,7 @@ void Fulgurodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -586,11 +596,12 @@ void Limadon::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Limadon::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Limadon::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -602,6 +613,7 @@ void Limadon::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -692,11 +704,12 @@ void Occisodonte::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Occisodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Occisodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -708,6 +721,7 @@ void Occisodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -817,11 +831,12 @@ void Crassorrid::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Crassorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Crassorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -836,6 +851,7 @@ void Crassorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==============================================================
@@ -928,11 +944,12 @@ void Gorhorrid::Attacked(float damage)
 	}
 }
 
-void Gorhorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Gorhorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -947,6 +964,7 @@ void Gorhorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 void Gorhorrid::UpdateObject(float fElapsedTime)
@@ -1006,9 +1024,9 @@ CMonster::CMonster(CPlayableCharacter* monsterObject)
 {
 }
 
-void CMonster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet CMonster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
-	m_pMonsterObject->ProcessInput(keyBuffer, fElapsedTime);
+	return m_pMonsterObject->ProcessInput(keyBuffer, fElapsedTime);
 }
 
 void CMonster::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum)

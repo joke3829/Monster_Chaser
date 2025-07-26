@@ -99,6 +99,9 @@ void CCamera::UpdateViewMatrix(float height)
 	m_pCameraInfo->xmf3Eye = m_xmf3Eye;
 	XMStoreFloat4x4(&m_pCameraInfo->xmf4x4ViewProj, XMMatrixTranspose(viewProj));
 	XMStoreFloat4x4(&m_pCameraInfo->xmf4x4InverseViewProj, XMMatrixTranspose(XMMatrixInverse(nullptr, viewProj)));
+
+	if (m_pTarget)
+		XMStoreFloat4x4(&m_pCameraInfo->particleTarget, XMMatrixTranspose(XMLoadFloat4x4(&m_pTarget->getWorldMatrix())));
 }
 
 void CCamera::SetShaderVariable()
@@ -128,4 +131,20 @@ void CCamera::SetElapsedTimeAndShader(float fElapsedTime, UINT rootParameter)
 void CCamera::SetMapNumber(int num)
 {
 	m_pCameraInfo->nMapNumber = num;
+}
+
+void CCamera::ChangeLength(short arrow)
+{
+	switch (arrow) {
+	case 0:
+		m_fCameraLength += 1.5f;
+		if (m_fCameraLength >= 30.0f)
+			m_fCameraLength = 30.0f;
+		break;
+	case 1:
+		m_fCameraLength -= 1.5f;
+		if (m_fCameraLength <= 6.0f)
+			m_fCameraLength = 6.0f;
+		break;
+	}
 }

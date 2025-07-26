@@ -74,12 +74,12 @@ void CParticle::setPosition(XMFLOAT3& pos)
 	m_WorldMatrix._41 = pos.x; m_WorldMatrix._42 = pos.y; m_WorldMatrix._43 = pos.z;
 }
 
-void CParticle::ParticleSetting(float lifeTime, float endTime)
+void CParticle::ParticleSetting(float lifeTime, float endTime, XMFLOAT3 pos)
 {
 	void* tempData{};
 
 	m_VertexBuffer->Map(0, nullptr, &tempData);
-	ParticleVertex tempV = { XMFLOAT3(0.0, 0.0, 0.0), XMFLOAT3(0.0, 0.0, 0.0), lifeTime, PARTICLE_EMITTER};
+	ParticleVertex tempV = { pos, XMFLOAT3(0.0, 0.0, 0.0), lifeTime, PARTICLE_EMITTER};
 	memcpy(tempData, &tempV, sizeof(tempV));
 	m_VertexBuffer->Unmap(0, nullptr);
 

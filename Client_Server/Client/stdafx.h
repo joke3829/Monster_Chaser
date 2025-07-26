@@ -52,6 +52,10 @@
 #include <d3d11on12.h>
 #include <dwrite.h>
 
+// 07.25
+#include "fmod.hpp"
+#include "fmod_errors.h"
+
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -61,6 +65,9 @@
 #pragma comment(lib, "d2d1.lib")
 #pragma comment(lib, "dwrite.lib")
 #pragma comment(lib, "d3d11.lib")
+
+// 07.25
+#pragma comment(lib, "fmod_vc.lib")
 
 using namespace DirectX;
 using namespace std::chrono;
@@ -98,6 +105,27 @@ enum class ItemType : unsigned char {
 enum TitleState { Title, RoomSelect, InRoom, SelectC, GoLoading };
 
 enum InGameState { IS_LOADING, IS_GAMING, IS_FINISH };
+enum KeyInputRet { KEY_NOTHING, KEY_SKILL1, KEY_SKILL2, KEY_SKILL3 };
+
+enum ESOUND {
+	SOUND_TITLE_BGM,
+	SOUND_CLICK,
+	SOUND_READY,
+	SOUND_START,
+	SOUND_STAGE1_AMB,
+	SOUND_HIT,
+	SOUND_SLASH,
+	SOUND_WANDSWING,
+	SOUND_STAGE2_AMB,
+	SOUND_SKILL_LASER,
+	SOUND_SKILL_PARRY,
+	SOUND_SKILL_MAGIC1,
+	SOUND_SKILL_MAGIC2,
+	SOUND_SKILL_PRIEST3,
+	SOUND_STAGE3_AMB,
+	SOUND_STAGE3_BOSS,
+	SOUND_ROAR
+};
 //========================================================================================
 
 // 상수 정의 ===========================================================================

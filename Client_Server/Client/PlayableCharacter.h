@@ -2,6 +2,20 @@
 #include "ResourceManager.h"
 #include "Camera.h"
 
+class C_Socket;
+class Player;
+// 07.25 ===========================================
+extern std::unordered_map<int, Player> Players;
+extern C_Socket Client;
+
+extern std::array<bool, 3>	g_PlayerBuffState;
+extern std::array<float, 3> g_maxHPs;
+extern std::array<float, 3> g_maxMPs;
+extern std::array<float, 3> g_SkillCoolTime;
+extern std::array<float, 3> g_SkillCurCTime;
+extern std::array<float, 3> g_SkillCost;
+// =================================================
+
 class CPlayableCharacter {
 public:
 	CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager);
@@ -12,7 +26,7 @@ public:
 	virtual void Skill3() {}
 
 	virtual void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam) {}
-	virtual void ProcessInput(UCHAR* keyBuffer, float fElapsedTime) {}
+	virtual KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime) { return KEY_NOTHING; }
 	virtual void UpdateObject(float fElapsedTime) {}
 
 	virtual void Attacked(float damage) {}
@@ -116,7 +130,7 @@ public:
 	CPlayerMage(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void UpdateObject(float fElapsedTime);
 
@@ -186,7 +200,7 @@ public:
 	CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void UpdateObject(float fElapsedTime);
 };
@@ -235,7 +249,7 @@ public:
 	CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager);
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void UpdateObject(float fElapsedTime);
 
@@ -269,7 +283,7 @@ public:
 	CAnimationManager* getAniManager() { return m_pPlayerObject->getAniManager(); }
 
 	void MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
 	void CollisionCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
