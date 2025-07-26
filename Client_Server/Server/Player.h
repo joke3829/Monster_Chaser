@@ -90,7 +90,7 @@ public:
 	}
 
 
-	float GetDamage(int type);
+	float GetDamage(int attacktype);
 
 	bool TakeDamage(int dmg, int type) {
 		std::lock_guard<std::mutex> lock(playerMutex);

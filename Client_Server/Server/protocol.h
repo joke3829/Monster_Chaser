@@ -212,8 +212,8 @@ constexpr char C2S_P_MASTERKEY = 63;
 struct cs_packet_login {
 	unsigned char size;
 	char type;
-	char UserID[MAX_ID_LEN];
-	char Userpassword[MAX_ID_LEN];
+	//char UserID[MAX_ID_LEN];
+	//char Userpassword[MAX_ID_LEN];
 };
 
 struct cs_packet_createuser {
@@ -287,6 +287,7 @@ struct cs_packet_item_use {
 struct cs_packet_skill_use {
 	unsigned char size;
 	char type;
+	short job;
 	char skillNumber;	// 0 ~ 2		0이 체력 회복, 1이 공격력 증가 + 방어력 감소, 2가 스킬게이지 최대치
 };
 

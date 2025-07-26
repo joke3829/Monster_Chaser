@@ -256,6 +256,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 		switch (g_state) {
 		case Title:
 			g_state = RoomSelect;
+			Client.SendBroadCastRoom();
 			break;
 		case RoomSelect:
 			for (int i = 0; i < 10; ++i) {

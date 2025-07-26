@@ -43,6 +43,20 @@ void SESSION::process_packet(char* p) {
 	char type = p[1];
 	switch (type) {
 	case C2S_P_LOGIN: {
+
+		sc_packet_room_info rp;
+		rp.size = sizeof(rp);
+		rp.type = S2C_P_UPDATEROOM;
+		for (int i = 0; i < g_server.rooms.size(); ++i)
+			rp.room_info[i] = g_server.rooms[i].GetPlayerCount();
+
+		for (auto& player : g_server.users)
+			player.second->do_send(&rp);
+
+		sc_packet_enter ep;
+		ep.size = sizeof(ep);
+		ep.type = S2C_P_ENTER;
+		g_server.users[m_uniqueNo]->do_send(&ep);//당사자한테만 보내주기
 		break;
 	}
 	case C2S_P_ENTER_ROOM: {
@@ -228,9 +242,11 @@ void SESSION::process_packet(char* p) {
 
 		auto& monster = it->second;
 		bool isDead = monster->TakeDamage(player->GetDamage(AttackType)); // 나중에 10은 플레이어 직업 공격력으로 체크 //gGetDamage수정해야됨
-		cout << "[몬스터 공격] 몬스터 ID: " << monster_id
-			<< ", 공격력: " << player->GetATK()
-			<< ", 남은 HP: " << monster->GetHP() << std::endl;
+		if (monster->GetHP() > 0) {
+			cout << "[몬스터 공격] 몬스터 ID: " << monster_id
+				<< ", 공격력: " << player->GetATK()
+				<< ", 남은 HP: " << monster->GetHP() << std::endl;
+		}
 		// 모두에게 히트 패킷 전송
 		sc_packet_monster_hit hit;
 		hit.size = sizeof(hit);
@@ -369,13 +385,11 @@ void SESSION::process_packet(char* p) {
 	case C2S_P_USE_SKILL: {
 		auto* pkt = reinterpret_cast<cs_packet_skill_use*>(p);
 		int skillNum = static_cast<int>(pkt->skillNumber);		// 1: 체력 회복 2: 공격력 증가 + 방어력 감소 3: 스킬게이지 최대치 
-
+	
 		Room& room = g_server.rooms[player->room_num];
 
 		for (int pid : room.id) {
-			if (pid == m_uniqueNo) continue; // 자기 자신에게는 보내지 않음
-
-
+			
 			auto target = g_server.playerManager.GetPlayer(pid);
 			if (!target) continue; // 대상 플레이어가 없으면 건너뜀
 			switch (skillNum) {
