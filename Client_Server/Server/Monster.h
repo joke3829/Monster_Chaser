@@ -27,12 +27,12 @@ public:
     bool TakeDamage(float dmg);
     int GetId() const { return id; }
     int GetHP() const { return hp; }
-    
+
     XMFLOAT3 GetPosition() const { return position; }
     int GetGold() const { return gold; }
 
 
-	int GetATK() const { return ATK; }
+    int GetATK() const { return ATK; }
 
     void GetDamage();
 
@@ -74,10 +74,10 @@ private:
     int gold = 0; // 몬스터가 죽었을 때 드랍하는 골드
 
     bool isRespawning = false;
-	char Attacktypecount = 1; // 공격 종류 카운트
+    char Attacktypecount = 1; // 공격 종류 카운트
 
-	int m_currentAttackType = 1; // 현재 공격 타입
-	bool hasRoared = false; // 몬스터가 울부짖었는지 여부
+    int m_currentAttackType = 1; // 현재 공격 타입
+    bool hasRoared = false; // 몬스터가 울부짖었는지 여부
 
     std::chrono::steady_clock::time_point respawnTime;
     std::chrono::steady_clock::time_point lastAttackTime;

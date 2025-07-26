@@ -3668,7 +3668,7 @@ void CRaytracingETPScene::Create_Feroptere()
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-280.0f, 0.0f, 215.4f));
-	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 290.0f, 0.0f));
+	//m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 290.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 

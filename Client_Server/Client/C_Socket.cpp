@@ -291,7 +291,8 @@ void C_Socket::process_packet(char* ptr)
 		auto& monster = Monsters[pkt->monster_id];
 		// 이미 있으면 덮어쓰기 방지
 		if (Monsters.find(id) != Monsters.end()) {
-			Monsters[pkt->monster_id]->setPosition(pkt->pos);
+			Monsters[pkt->monster_id]->getRenderingObject()->SetWorldMatrix(pkt->pos);
+			Monsters[pkt->monster_id]->getAnimationManager()->ChangeAnimation(2, false);
 		}
 		else {
 
@@ -323,12 +324,6 @@ void C_Socket::process_packet(char* ptr)
 			auto& monster = Monsters[monster_id];
 			monster->setHP(0); // 몬스터 HP를 0으로 설정
 			monster->getAnimationManager()->ChangeAnimation(0, false);
-			// 몬스터가 죽었을 때 골드 드랍 처리
-			// 예: 플레이어에게 골드 지급 로직 추가 가능
-			// 예시로 그냥 출력
-			std::cout << "몬스터 " << monster_id << "가 죽었습니다. 드랍된 골드: " << gold << std::endl;
-			// 몬스터 제거 로직 추가 가능
-			//Monsters.erase(monster_id);
 		}
 		break;
 		
@@ -367,7 +362,6 @@ void C_Socket::process_packet(char* ptr)
 
 		int id = pkt->monster_id; // 몬스터 ID
 		Monsters[id]->setHP(pkt->hp); // 몬스터 HP 업데이트
-		Monsters[id]->getAnimationManager()->ChangeAnimation(1, true);
 		break;
 
 	}
