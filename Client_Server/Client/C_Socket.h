@@ -6,6 +6,16 @@
 #include "Scene.h"
 #include <mutex>
 
+// 07.25 ===========================================
+extern std::array<bool, 3>	g_PlayerBuffState;
+extern std::array<float, 3> g_maxHPs;
+extern std::array<float, 3> g_maxMPs;
+extern std::array<float, 3> g_SkillCost;
+
+extern CParticle* g_pBuff0;
+extern CParticle* g_pBuff1;
+extern CParticle* g_pBuff2;
+// =================================================
 
 class C_Socket
 {
@@ -31,13 +41,12 @@ public:
 	void SendPlayerReady(const short Map);																			//Send Player Ready Packet
 	void SendMonsterAttack(const int monster_id, const int target_id, const int Atktype);								//Send Monster Attack Packet
 	void SendPlayerAttack(const int target_id, const int type);														//Send Player Attack Packet
-	void SendHealerBUFF(const char SkillNumber);
 	void SendUseItem(const unsigned int type);														//Send Item Packet
 	
 	void SendPriestBUFF(const char SkillNumber);	//Send Priest Buff Packet
 
 
-	void SendNEXTSTAGEMASTERKEY();	//Send Next Stage Master Key Packet
+	//void SendNEXTSTAGEMASTERKEY();	//Send Next Stage Master Key Packet
 	//--------------------------------------------------------------//									
 
 	bool getstart() { return InGameStart; }

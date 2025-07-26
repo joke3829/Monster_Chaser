@@ -1858,14 +1858,17 @@ void CRaytracingGameScene::UIUseSkill(KeyInputRet input)
 	switch(input) {
 	case KEY_SKILL1:
 		g_SkillCurCTime[0] = g_SkillCoolTime[0];
+		Client.SendPlayerAttack(-1, 1);
 		// Send Skill use Packet
 		break;
 	case KEY_SKILL2:
 		g_SkillCurCTime[1] = g_SkillCoolTime[1];
+		Client.SendPlayerAttack(-1, 2);
 		// Send Skill use Packet
 		break;
 	case KEY_SKILL3:
 		g_SkillCurCTime[2] = g_SkillCoolTime[2];
+		Client.SendPlayerAttack(-1, 3);
 		// Send Skill use Packet
 		break;
 	}
@@ -2470,6 +2473,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		if (wOpacity > 1.0f) {
 			ShowCursor(TRUE);
 			m_nNextScene = SCENE_TITLE;
+			g_state = Title;
 			wOpacity = 1.0f;
 		}
 		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
