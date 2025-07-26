@@ -14,11 +14,6 @@ enum class MonsterState {
     Dead
 };
 
-enum class Stage {
-    Stage1,
-    Stage2,
-    Stage3
-};
 
 
 class Room;
@@ -39,7 +34,7 @@ public:
 
 	int GetATK() const { return ATK; }
 
-
+    void GetDamage();
 
     void TransitionTo(MonsterState nextState);
     void HandleIdle(const Room& room, const PlayerManager& playerManager);

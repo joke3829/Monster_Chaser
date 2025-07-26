@@ -30,10 +30,11 @@ constexpr char S2C_P_MONSTER_RESPAWN = 14;
 constexpr char S2C_P_MONSTER_MOVE = 15;
 constexpr char S2C_P_PLAYER_HIT = 16;  // 플레이어가 공격해서 몬스터가 맞았을 때
 constexpr char S2C_P_NEXTSTAGE = 17;  //  보스몬스터 처치 후 다음 스테이지로 넘어갈 때
-constexpr char S2C_P_APPLY_HPITEM = 18;  // HP 아이템 사용 시
-constexpr char S2C_P_APPLY_MPITEM = 19;  // MP 아이템 사용 시
+constexpr char S2C_P_CHANGEHP = 18;  // HP 아이템 사용 시
+constexpr char S2C_P_CHANGEMP = 19;  // MP 아이템 사용 시
 constexpr char S2C_P_BOSS_ROAR = 20; // 다음 패킷 번호
-constexpr char S2C_P_BUFFCHANGE = 21; // 다음 패킷 번호
+constexpr char S2C_P_BUFFCHANGE = 21;
+
 
 constexpr char S2C_P_LEAVE = 49; // 플레이어가 방을 나갈 때
 struct sc_packet_enter {
@@ -166,36 +167,31 @@ struct sc_packet_leave {
 	int Local_id;
 };
 
-struct sc_packet_apply_hpitem {
+struct sc_packet_change_hp {
 	unsigned char size;
 	char type;
 	float hp;
 	char local_id;
 };
-struct sc_packet_apply_mpitem {
+struct sc_packet_change_mp {
 	unsigned char size;
 	char type;
 	float mp;
 	char local_id;
 };
-struct sc_packet_apply_atkitem {
-	unsigned char size;
-	char type;
-	float attack;
-	char local_id;
-};
-struct sc_packet_apply_defitem {
-	unsigned char size;
-	char type;
-	float defense;
-	char local_id;
-};
+
 struct sc_packet_boss_roar {
 	unsigned char size;
 	char type;
 	int monster_id;
 };
 
+struct sc_packet_buff_change {
+	unsigned char size;
+	char type;
+	char bufftype;		// 0: 공격력 증가, 1: 방어력 증가, 2: 방어력 감소
+	char state;			// 0: 꺼짐, 1: 켜짐
+};
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Client to Server packets
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -290,6 +286,6 @@ struct cs_packet_item_use {
 struct cs_packet_skill_use {
 	unsigned char size;
 	char type;
-	char skillNumber;	// 0 ~ 2
+	char skillNumber;	// 0 ~ 2		0이 체력 회복, 1이 공격력 증가 + 방어력 감소, 2가 스킬게이지 최대치
 };
 #pragma pack(pop)

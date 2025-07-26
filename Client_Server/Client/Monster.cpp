@@ -54,9 +54,14 @@ void Feroptere::UpdateObject(float fElapsedTime)
 
 		m_CurrentSkill = m_AManager->getSkillnum();
 
+		if(m_CurrentSkill !=0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
+			
 			if (getAniManager()->IsAnimationInTimeRange(0.4f, 0.6f))
 			{
 				m_bCheckAC = true;
@@ -136,7 +141,10 @@ void Pistriptere::UpdateObject(float fElapsedTime)
 		}
 
 		m_CurrentSkill = m_AManager->getSkillnum();
-
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -219,7 +227,10 @@ void RostrokarckLarvae::UpdateObject(float fElapsedTime)
 		}
 
 		m_CurrentSkill = m_AManager->getSkillnum();
-
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -312,7 +323,10 @@ void Xenokarce::UpdateObject(float fElapsedTime)
 		}
 
 		m_CurrentSkill = m_AManager->getSkillnum();
-
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -450,7 +464,10 @@ void Fulgurodonte::UpdateObject(float fElapsedTime)
 		}
 
 		m_CurrentSkill = m_AManager->getSkillnum();
-
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -547,7 +564,10 @@ void Limadon::UpdateObject(float fElapsedTime)
 		}
 
 		m_CurrentSkill = m_AManager->getSkillnum();
-
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -650,7 +670,10 @@ void Occisodonte::UpdateObject(float fElapsedTime)
 		}
 
 		m_CurrentSkill = m_AManager->getSkillnum();
-
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -763,7 +786,10 @@ void Crassorrid::UpdateObject(float fElapsedTime)
 		}
 
 		m_CurrentSkill = m_AManager->getSkillnum();
-
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -938,6 +964,12 @@ void Gorhorrid::UpdateObject(float fElapsedTime)
 
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+
+		m_CurrentSkill = m_AManager->getSkillnum();
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
 		}
 
 		for (auto& bulletPtr : bullet) {

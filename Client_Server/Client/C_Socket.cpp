@@ -14,6 +14,7 @@ C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(
 
 C_Socket::~C_Socket()
 {
+
 	closesocket(m_socket);
 }
 
@@ -295,9 +296,8 @@ void C_Socket::process_packet(char* ptr)
 	
 		Monsters[monster_id]->setCurrentAttackType(attack_type); // 몬스터의 현재 공격 타입 설정 attack_type이 1이면 Skill1 , 2면 Skill2
 		int a = Monsters[monster_id]->getCurrentAttackType();
-		//Monsters[monster_id]->getAnimationManager()->ChangeAnimation(Monsters[monster_id]->getCurrentAttackType(), true); // 몬스터 애니메이션 변경
-		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(4, true); // 몬스터 애니메이션 변경
-
+		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(Monsters[monster_id]->getCurrentAttackType(), true); // 몬스터 애니메이션 변경
+		
 
 		//Monsters[monster_id]->getAnimationManager()->
 		//pkt->monster_id; // 몬스터 ID		//이걸로 공격 애니메이션 셋 
@@ -370,16 +370,22 @@ void C_Socket::process_packet(char* ptr)
 	}
 	case S2C_P_NEXTSTAGE:
 	{
-		
 		g_InGameState = IS_FINISH; // 게임 상태를 완료로 변경
 		break;
 	}
-	case S2C_P_APPLY_HPITEM:
+	case S2C_P_CHANGEHP:
 	{
+		auto* pkt = reinterpret_cast<sc_packet_change_hp*>(ptr);
+		int local_id = static_cast<int>(pkt->local_id);
+		Players[local_id].SetHP(pkt->hp); // 플레이어의 HP 변경 처리
 		break;
 	}
-	case S2C_P_APPLY_MPITEM:
+	case S2C_P_CHANGEMP:
 	{
+
+		auto* pkt = reinterpret_cast<sc_packet_change_mp*>(ptr);
+		int local_id = static_cast<int>(pkt->local_id);
+		Players[local_id].SetMP(pkt->mp); // 플레이어의 HP 변경 처리
 		break;
 	}
 	case S2C_P_BOSS_ROAR:
@@ -390,6 +396,44 @@ void C_Socket::process_packet(char* ptr)
 		if (Monsters.count(boss_id)) {
 			//Monsters[boss_id]->playRoarAnimation();  //  울부짖는 애니메이션 재생 함수
 		}
+		break;
+	}
+	case S2C_P_BUFFCHANGE:
+	{
+		auto* pkt = reinterpret_cast<sc_packet_buff_change*>(ptr);
+		char buffType = pkt->bufftype;
+		char state = pkt->state;
+
+		switch (buffType)
+		{
+		case 0: // 공격력 증가
+			if(state == 1) {
+				//공격력 버프 켜짐
+			} else {
+				//공격력 버프 꺼짐
+			}
+			break;
+		case 1: // 방어력 증가
+			if (state == 1) {
+				//방어력 상승 버프 켜짐
+			}
+			else {
+				//방어력 상승 버프 꺼짐
+			}
+			break;
+		case 2: // 방어력 감소
+			if (state == 1) {
+				//방어력 감소 버프 켜짐
+			}
+			else {
+				//방어력 감소 버프 꺼짐
+			}
+			break;
+		default:
+			break;
+		}
+
+		std::cout << "[버프 변경] 타입: " << (int)buffType << ", 상태: " << (int)state << std::endl;
 		break;
 	}
 	case S2C_P_LEAVE:

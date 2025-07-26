@@ -1,7 +1,17 @@
 #pragma once
+#include "protocol.h"
 
 
+class Network;
 using namespace DirectX;
+
+
+
+enum class BuffType : char {
+	ATKUP = 0,
+	DEFUP = 1,
+	DEF_DOWN = 2
+};
 
 class Player {
 public:
@@ -29,36 +39,56 @@ public:
 
 	void Move(float dx, float dy, float dz); // 이동처리 예시
 
-	int GetHP() { return hp; }
-	void SetHP(int newHP) { hp = newHP; } // Add a setter method for HP
+	float GetHP() { return hp; }
+	void SetHP(float newHP) { hp = newHP; } // Add a setter method for HP
 
 	void PlusHP(int new_hp) {
 		std::lock_guard<std::mutex> lock(playerMutex);
 		hp += new_hp;
+		if (hp > max_hp) hp = max_hp; // HP가 최대치를 넘지 않도록 처리
 	}
 
 
-	int GetMP() { return skill_cost; } // 스킬 사용 비용 반환
-	void SetMP(int newMP) { skill_cost = newMP; } // Add a setter method for MP
-	void PlusMP(int new_mp) {
+	float GetMP() { return skill_cost; } // 스킬 사용 비용 반환
+	void SetMP(float newMP) { skill_cost = newMP; } // Add a setter method for MP
+	void PlusMP(float new_mp) {
 		std::lock_guard<std::mutex> lock(playerMutex);
 		skill_cost += new_mp;
 	}
-
+	void setSkillCost(float new_cost) {
+		std::lock_guard<std::mutex> lock(playerMutex);
+		skill_cost = new_cost;
+		if (skill_cost > max_skill_cost) skill_cost = max_skill_cost; // 스킬 사용 비용이 최대치를 넘지 않도록
+	}
+	// MP 자동 회복 관련 함수
+	void RecoverSkillCost(int amount);
+	// MP 자동 회복 관련 함수
 
 
 	void Updatestatus(Character t);
+
+	void AddATKBuff_Potion(float value, float duration_sec);
+	void AddATKBuff_Skill(float value, float duration_sec);
+
 
 
 	void AddATKBuff(float value, float duration_sec);
 
 	void AddDEFBuff(float value, float duration_sec);
 
-	float GetATK() {
-		if (std::chrono::steady_clock::now() >= atk_buff_end_time)
-			atk_buff = 0; // 버프 만료 처리
-		return attack + atk_buff;
+
+	bool IsATKBuffActive() const {
+		return atk_buff_potion > 0 || atk_buff_skill > 0;
 	}
+
+	bool IsDEFBuffActive() const {
+		return def_buff > 0;
+	}
+
+	bool IsDEFDeBuffActive() const {
+		return def_debuff > 0;
+	}
+
 
 	float GetDamage(int type);
 
@@ -73,13 +103,29 @@ public:
 
 		return hp == 0; // HP가 0이 되면 true 반환
 	}
-	float GetDEF()
-	{
-		if (std::chrono::steady_clock::now() >= def_buff_end_time)
-			def_buff = 0; // 버프 만료 처리
-		return defense + def_buff;
+
+	float GetATK();
+	float GetDEF();
+	
+
+
+
+	void SetLastHitTime() {
+		lastHitTime = std::chrono::steady_clock::now();
 	}
 
+	std::chrono::steady_clock::time_point GetLastHitTime() const {
+		return lastHitTime;
+	}
+
+
+
+	void UpdateBuffStatesIfChanged();
+	void SendBuffPacketIfChanged(BuffType type, bool currentState);
+
+
+
+	
 private:
 	Player() = default; // 기본 생성자는 private로 설정하여 사용하지 못하게 함
 
@@ -88,16 +134,34 @@ private:
 	std::string name;
 
 	XMFLOAT4X4 position;
-	int hp = 100;
-	int skill_cost = 100; // 스킬 사용 비용
+	float hp = 100;
+	float max_hp = 100; // 최대 HP
+	float skill_cost = 100; // 스킬 사용 비용
+	float max_skill_cost = 100; // 스킬 사용 비용
 	Character type = Character::None; // 캐릭터 타입 (예: 전사, 마법사 등)
 
 	int attack = 10; // 공격력
 	float atk_buff = 0.f;   // 추가 공격력
 
 	int defense = 5; // 방어력
-	float def_buff = 0.f;   // 추가 방어력
 
-	std::chrono::steady_clock::time_point atk_buff_end_time{};
-	std::chrono::steady_clock::time_point def_buff_end_time;
+	// 공격력 버프
+	float atk_buff_potion = 0.f;
+	float atk_buff_skill = 0.f;
+	std::chrono::steady_clock::time_point atk_buff_potion_end{};
+	std::chrono::steady_clock::time_point atk_buff_skill_end{};
+
+	// 추가 방어력
+	float def_buff = 0.f;  
+	std::chrono::steady_clock::time_point def_buff_end{};
+
+	// 방어력 디버프 (감소)
+	float def_debuff = 0.f;
+	std::chrono::steady_clock::time_point def_debuff_end{};
+
+
+	std::unordered_map<BuffType, bool> lastSentBuffState; // 클라에 마지막으로 전송된 버프 상태
+
+
+	std::chrono::steady_clock::time_point lastHitTime = std::chrono::steady_clock::now();
 };

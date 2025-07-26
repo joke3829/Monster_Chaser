@@ -15,7 +15,7 @@ HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 CGameFramework gGameFramework;
-
+std::thread recvThread;
 
 std::unordered_map<int, Player> Players;               // 모든 플레이어들		
 
@@ -71,7 +71,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	//  콘솔 종료
 	//FreeConsole();
-	std::thread recvThread(&C_Socket::do_recv, &Client);
+	//std::thread recvThread(&C_Socket::do_recv, &Client);
 	//recvThread.join();
 	//	std::thread drawThread(RoomListThread);
 
@@ -114,7 +114,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			DispatchMessage(&msg);
 		}
 	}*/
-
+	recvThread = std::thread(&C_Socket::do_recv, &Client);
 	for (MSG msg;;) {
 		while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT)
@@ -124,7 +124,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		gGameFramework.Render();
 	}
-	recvThread.join();
+	if (recvThread.joinable()) {
+		recvThread.join();
+	}
 	//drawThread.join();
 	//return (int) msg.wParam;
 }

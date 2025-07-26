@@ -3,8 +3,8 @@
 #include "Network.h"
 #include <random>
 
-#define MONSTER_CHASE_DISTANCE 100.0f
-#define MONSTER_ATTACK_RANGE 10.0f
+#define MONSTER_CHASE_DISTANCE 70.0f
+#define MONSTER_ATTACK_RANGE 1.0f
 constexpr float MONSTER_ATTACK_COOLDOWN = 2.0f;   // 공격 쿨타임 2초
 constexpr float MONSTER_RETURN_SPEED = 80.0f;     // 귀환 속도
 std::random_device rd;
@@ -131,6 +131,11 @@ bool Monster::TakeDamage(float dmg) {
 
     
     return false;
+}
+
+void Monster::GetDamage()
+{
+    ChangeBossAttack();
 }
 
 void Monster::TransitionTo(MonsterState nextState) {

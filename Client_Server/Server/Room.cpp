@@ -3,102 +3,105 @@
 #include "Room.h"
 #include "Network.h"
 
-
 extern Network g_server;
-int Room::room_num = 0;
-Room::Room() : room_number(room_num++) {
-	// 필요 시 초기화 코드 추가
+
+Room::Room() {}
+
+Room::~Room() {
+	StopGame();
 }
 
+void Room::setReady(int local_id, bool state) {
+	player_ready[local_id] = state;
+}
 
-
-
-bool Room::IsAddPlayer() {
-	if (id.size() >= MAX_ROOM_MEMBER)
-		return false;
-
-
+bool Room::isAllGameStartReady() {
+	int count = GetPlayerCount();
+	for (int i = 0; i < count; ++i)
+		if (!player_ready[i]) return false;
 	return true;
 }
 
-void Room::AddPlayer(const int& enter_id)
-{
-	int new_id = enter_id;
-	id.emplace_back(new_id);
-
-
+void Room::InitailizeReadyingame() {
+	for (auto& r : player_ready) r = false;
 }
 
+void Room::setReadyUser(int delta) {
+	ready_user += delta;
+}
 
+int Room::GetReadyUser() {
+	return ready_user;
+}
 
+int Room::GetPlayerCount() {
+	return static_cast<int>(id.size());
+}
 
+bool Room::IsAddPlayer() {
+	return id.size() < MAX_ROOM_MEMBER;
+}
 
+void Room::AddPlayer(int pid) {
+	id.push_back(pid);
+}
 
+void Room::RemovePlayer(int pid) {
+	id.erase(std::remove(id.begin(), id.end(), pid), id.end());
+}
 
-
-void Room::SendRoomInfo() {        //방 현황 보내주기
-	sc_packet_room_info pkt;
-	pkt.size = sizeof(pkt);
-	pkt.type = S2C_P_UPDATEROOM;
-	pkt.room_info;
-
-
-	for (auto& player : g_server.users) {
-		player.second->do_send(&pkt);
+void Room::StartGame() {
+	if (!bMonsterThreadRunning) {
+		bMonsterThreadRunning = true;
+		monsterThread = std::thread(&Room::MonsterThreadFunction, this);
 	}
 }
 
-void Room::BroadCast_Room()
-{
-	/*sc_packet_room_info rp;
-	rp.size = sizeof(rp);
-	rp.type = S2C_P_UPDATEROOM;
-	rp.room_info[Getroom_number()] = GetPlayerCount();*/
-
-
-	//for (auto& player : g_server.users) {							//send other player to broadcast room update
-	//	//if (player.second->m_uniqueNo == this->m_uniqueNo)  // 나 자신은 제외
-	//	//	continue;	
-	//	player.second->do_send(&rp);								//if come UI Not to send me
-	//}
-	//g_server.users
+void Room::StopGame() {
+	bMonsterThreadRunning = false;
+	if (monsterThread.joinable())
+		monsterThread.join();
 }
 
-void Room::StartGame()
-{
-	is_started = true;
+void Room::MonsterThreadFunction() {
+	auto lastUpdateTime = std::chrono::steady_clock::now();
 
-	// 기존 StartGame 로직이 있다면 유지하고...
-	//for (auto& [id, monster] : monsters) {
-	//	sc_packet_monster_spawn sp;
-	//	sp.size = sizeof(sp);
-	//	sp.type = S2C_P_MONSTER_SPAWN;
-	//	sp.monster_id = id;
-	//	sp.monster_type = monster->GetType(); // 타입 나중에 추가 가능
-	//	XMStoreFloat4x4(&sp.pos, XMMatrixTranslation(
-	//		monster->GetPosition().x, 
-	//		monster->GetPosition().y, 
-	//		monster->GetPosition().z)
-	//	);
+	while (bMonsterThreadRunning) {
+		if (!bStageActive) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			continue;
+		}
 
-	//	for (int pid : this->id)
-	//		g_server.users[pid]->do_send(&sp);
+		auto now = std::chrono::steady_clock::now();
+		float deltaTime = std::chrono::duration<float>(now - lastUpdateTime).count();
+		lastUpdateTime = now;
 
-	//	std::cout << "[몬스터 " << id << "] 초기 스폰 전송 완료\n";
-	//}
-	if (monsters.size() > 0) {
-		std::thread([this]() {
-			while (is_started) {
-				for (auto& [id, monster] : this->monsters) {
-					monster->Update(0.016f, *this, g_server.playerManager);
-				}
-				std::this_thread::sleep_for(std::chrono::milliseconds(16));
+		// 몬스터 업데이트
+		for (auto& [id, monster] : monsters)
+			monster->Update(deltaTime, *this, g_server.playerManager);
+
+		// 플레이어 MP 회복 및 버프 상태 갱신
+		for (int i = 0; i < GetPlayerCount(); ++i) {
+			auto now = std::chrono::steady_clock::now();
+			float elapsed = std::chrono::duration<float>(now - lastHitTime[i]).count();
+
+			auto player = g_server.playerManager.GetPlayer(id[i]);
+			if (!player) continue;
+
+			if (elapsed >= 10.0f) {
+				player->RecoverSkillCost(1); // 초당 1 회복
 			}
-			}).detach();
-	}
-	
-}
 
+			player->UpdateBuffStatesIfChanged();  // ✅ 버프 상태 변경 감지 및 패킷 전송
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(16)); // 약 60fps 주기
+	}
+}
+void Room::setStage(short stage)
+{
+	currentStage = stage;
+}
 void Room::SpawnMonsters()
 {
 	// 예시로 1마리 생성
@@ -109,7 +112,7 @@ void Room::SpawnMonsters()
 	if (!monsters.empty()) return;
 
 	// 예: 1스테이지 기준
-	switch (stage)
+	switch (currentStage)
 	{
 	case 1:
 	{
@@ -122,7 +125,7 @@ void Room::SpawnMonsters()
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-351.1, 0, 26.7), MonsterType::Pistiripere);
 
 		// RostrokarackLarvae - 4마리
-		
+
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-150.5, 0, 85.7), MonsterType::RostrokarackLarvae);
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-164.7, 0, 66), MonsterType::RostrokarackLarvae);
 
@@ -155,30 +158,8 @@ void Room::SpawnMonsters()
 	default:
 		break;
 	}
-	
 
-}
 
-void Room::setReady(int local_id, bool ready)
-{
-	if (local_id >= 0 && local_id < 3)
-		player_readytoPlaygame[local_id] = ready;
-}
-
-bool Room::isAllGameStartReady() const
-{
-	int activePlayerCount = id.size();
-	int readyCount = 0;
-	for (int i = 0; i < activePlayerCount; ++i) {
-		if (player_readytoPlaygame[i]) ++readyCount;
-	}
-	return readyCount == activePlayerCount;
-	
-}
-
-void Room::InitailizeReadyingame()
-{
-	player_readytoPlaygame = { false, false, false }; // 3명의 플레이어가 준비 상태를 나타내는 벡터 초기화
 }
 
 

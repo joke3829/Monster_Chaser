@@ -175,14 +175,14 @@ public:
 	CMonsterManager(const CMonsterManager& other) : CPlayableCharacterAnimationManager(other) {}
 
 	virtual int getSkillnum() { 
-		if (m_nAnimationSets == 7)
+		if (m_nAnimationSets == 7)		//1 스테이지 잡몹
 		{
-			if (m_nCurrentSet == 4) {
+			if (m_nCurrentSet == 6) {
 				return 1;
 			}
 			else { return 0; }
 		}
-		else if (m_nAnimationSets == 8)
+		else if (m_nAnimationSets == 8)		//1스테이지 보스 + 2스테이지 잡몹
 		{
 			if (m_nCurrentSet == 6) {
 				return 1;
@@ -192,7 +192,7 @@ public:
 			}
 			else { return 0; }
 		}
-		else if (m_nAnimationSets >= 9)
+		else if (m_nAnimationSets >= 9)			// 2,3스테이지 보스
 		{
 			if (m_nCurrentSet == 6) {
 				return 1;
