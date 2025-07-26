@@ -512,7 +512,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		wOpacity += 0.35f * fElapsedTime;
 		if (wOpacity > 1.0f) {
 			wOpacity = 1.0f;
-			m_nNextScene = SCENE_WINTERLAND;
+			m_nNextScene = SCENE_PLAIN;
 		}
 		m_vInRoomUIs[m_vInRoomUIs.size() - 1]->setColor(0.0, 0.0, 0.0, wOpacity);
 		break;
@@ -1869,7 +1869,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
-	Client.SendPlayerReady();
+	Client.SendPlayerReady(SCENE_WINTERLAND);
 }
 
 void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -1921,10 +1921,7 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			break;
 		case 'X':
 			if (m_fItemCurTime <= 0.0f) {
-				//Client.SendHPitem(ItemType::HP_POTION);
-				//Client.SendHPitem(ItemType::MP_POTION);
-				Client.SendHPitem(ItemType::ATK_BUFF);
-				//Client.SendHPitem(ItemType::DEF_BUFF);
+				Client.SendUseItem(cItem);
 				m_fItemCurTime = m_fItemCoolTime;
 			}
 			break;
@@ -1974,7 +1971,7 @@ void CRaytracingWinterLandScene::Create_Gorhorrid()
 
 
 	// server object add ==============================================
-	auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::GorhorridBoss);
+	auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Gorhorrid);
 	newMonster->setRenderingObject(m_vMonsters.back()->getObject());
 	newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 	Monsters[m_nMonsterNum] = std::move(newMonster);
@@ -2557,7 +2554,7 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
-	Client.SendPlayerReady();
+	Client.SendPlayerReady(SCENE_CAVE);
 
 	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE2_AMB);
 }
@@ -2611,10 +2608,7 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			break;
 		case 'X':
 			if (m_fItemCurTime <= 0.0f) {
-				//Client.SendHPitem(ItemType::HP_POTION);
-				//Client.SendHPitem(ItemType::MP_POTION);
-				Client.SendHPitem(ItemType::ATK_BUFF);
-				//Client.SendHPitem(ItemType::DEF_BUFF);
+				Client.SendUseItem(cItem);
 				m_fItemCurTime = m_fItemCoolTime;
 			}
 			break;
@@ -2944,7 +2938,7 @@ void CRaytracingCaveScene::Create_Crassorrid()
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 
 	{ // server object
-		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::CrassorridBoss);
+		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Crassorrid);
 		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
 		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 		Monsters[m_nMonsterNum] = std::move(newMonster);
@@ -3322,7 +3316,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
-	Client.SendPlayerReady();
+	Client.SendPlayerReady(SCENE_PLAIN);
 
 	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE1_AMB);
 }
@@ -3376,10 +3370,7 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 			break;
 		case 'X':
 			if (m_fItemCurTime <= 0.0f) {
-				//Client.SendHPitem(ItemType::HP_POTION);
-				//Client.SendHPitem(ItemType::MP_POTION);
-				Client.SendHPitem(ItemType::ATK_BUFF);
-				//Client.SendHPitem(ItemType::DEF_BUFF);
+				Client.SendUseItem(cItem);
 				m_fItemCurTime = m_fItemCoolTime;
 			}
 			break;
@@ -3745,7 +3736,7 @@ void CRaytracingETPScene::Create_Xenokarce()
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 
 	{ // server object
-		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::XenokarceBoss);
+		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Xenokarce);
 		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
 		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
 		Monsters[m_nMonsterNum] = std::move(newMonster);
