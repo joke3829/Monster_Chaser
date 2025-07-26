@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "protocol.h"
 
 
@@ -16,7 +16,7 @@ enum class BuffType : char {
 class Player {
 public:
 
-	int gold = 0; // ÇÃ·¹ÀÌ¾î°¡ È¹µæÇÑ °ñµå
+	int gold = 0; // í”Œë ˆì´ì–´ê°€ íšë“í•œ ê³¨ë“œ
 	int local_id;
 	int room_num;
 	bool isReady = false;
@@ -32,12 +32,12 @@ public:
 	bool  TakeDamage(int dmg);
 	//void GetDamage(int dmg) {
 	//	std::lock_guard<std::mutex> lock(playerMutex);
-	//	int damage = dmg - GetDEF(); // ¹æ¾î·Â Àû¿ë
+	//	int damage = dmg - GetDEF(); // ë°©ì–´ë ¥ ì ìš©
 	//	hp -= damage;
-	//	if (hp < 0) hp = 0; // HP°¡ 0 ÀÌÇÏ·Î ¶³¾îÁöÁö ¾Êµµ·Ï Ã³¸®
+	//	if (hp < 0) hp = 0; // HPê°€ 0 ì´í•˜ë¡œ ë–¨ì–´ì§€ì§€ ì•Šë„ë¡ ì²˜ë¦¬
 	//}
 
-	void Move(float dx, float dy, float dz); // ÀÌµ¿Ã³¸® ¿¹½Ã
+	void Move(float dx, float dy, float dz); // ì´ë™ì²˜ë¦¬ ì˜ˆì‹œ
 
 	float GetHP() { return hp; }
 	void SetHP(float newHP) { hp = newHP; } // Add a setter method for HP
@@ -45,11 +45,11 @@ public:
 	void PlusHP(int new_hp) {
 		std::lock_guard<std::mutex> lock(playerMutex);
 		hp += new_hp;
-		if (hp > max_hp) hp = max_hp; // HP°¡ ÃÖ´ëÄ¡¸¦ ³ÑÁö ¾Êµµ·Ï Ã³¸®
+		if (hp > max_hp) hp = max_hp; // HPê°€ ìµœëŒ€ì¹˜ë¥¼ ë„˜ì§€ ì•Šë„ë¡ ì²˜ë¦¬
 	}
 
 
-	float GetMP() { return skill_cost; } // ½ºÅ³ »ç¿ë ºñ¿ë ¹İÈ¯
+	float GetMP() { return skill_cost; } // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš© ë°˜í™˜
 	void SetMP(float newMP) { skill_cost = newMP; } // Add a setter method for MP
 	void PlusMP(float new_mp) {
 		std::lock_guard<std::mutex> lock(playerMutex);
@@ -58,11 +58,11 @@ public:
 	void setSkillCost(float new_cost) {
 		std::lock_guard<std::mutex> lock(playerMutex);
 		skill_cost = new_cost;
-		if (skill_cost > max_skill_cost) skill_cost = max_skill_cost; // ½ºÅ³ »ç¿ë ºñ¿ëÀÌ ÃÖ´ëÄ¡¸¦ ³ÑÁö ¾Êµµ·Ï
+		if (skill_cost > max_skill_cost) skill_cost = max_skill_cost; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©ì´ ìµœëŒ€ì¹˜ë¥¼ ë„˜ì§€ ì•Šë„ë¡
 	}
-	// MP ÀÚµ¿ È¸º¹ °ü·Ã ÇÔ¼ö
+	// MP ìë™ íšŒë³µ ê´€ë ¨ í•¨ìˆ˜
 	void RecoverSkillCost(int amount);
-	// MP ÀÚµ¿ È¸º¹ °ü·Ã ÇÔ¼ö
+	// MP ìë™ íšŒë³µ ê´€ë ¨ í•¨ìˆ˜
 
 
 	void Updatestatus(Character t);
@@ -94,14 +94,14 @@ public:
 
 	bool TakeDamage(int dmg, int type) {
 		std::lock_guard<std::mutex> lock(playerMutex);
-		int damage = dmg - GetDEF(); // ¹æ¾î·Â Àû¿ë
-		if (damage < 0) damage = 0; // ¹æ¾î·ÂÀ¸·Î ÀÎÇØ ÇÇÇØ°¡ 0 ÀÌÇÏ°¡ µÇÁö ¾Êµµ·Ï Ã³¸®
+		int damage = dmg - GetDEF(); // ë°©ì–´ë ¥ ì ìš©
+		if (damage < 0) damage = 0; // ë°©ì–´ë ¥ìœ¼ë¡œ ì¸í•´ í”¼í•´ê°€ 0 ì´í•˜ê°€ ë˜ì§€ ì•Šë„ë¡ ì²˜ë¦¬
 		hp -= damage;
 
 		if (hp < 0)
-			hp = 0; // HP°¡ 0 ÀÌÇÏ·Î ¶³¾îÁöÁö ¾Êµµ·Ï Ã³¸®
+			hp = 0; // HPê°€ 0 ì´í•˜ë¡œ ë–¨ì–´ì§€ì§€ ì•Šë„ë¡ ì²˜ë¦¬
 
-		return hp == 0; // HP°¡ 0ÀÌ µÇ¸é true ¹İÈ¯
+		return hp == 0; // HPê°€ 0ì´ ë˜ë©´ true ë°˜í™˜
 	}
 
 	float GetATK();
@@ -127,7 +127,7 @@ public:
 
 	
 private:
-	Player() = default; // ±âº» »ı¼ºÀÚ´Â private·Î ¼³Á¤ÇÏ¿© »ç¿ëÇÏÁö ¸øÇÏ°Ô ÇÔ
+	Player() = default; // ê¸°ë³¸ ìƒì„±ìëŠ” privateë¡œ ì„¤ì •í•˜ì—¬ ì‚¬ìš©í•˜ì§€ ëª»í•˜ê²Œ í•¨
 
 
 
@@ -135,32 +135,32 @@ private:
 
 	XMFLOAT4X4 position;
 	float hp = 100;
-	float max_hp = 100; // ÃÖ´ë HP
-	float skill_cost = 100; // ½ºÅ³ »ç¿ë ºñ¿ë
-	float max_skill_cost = 100; // ½ºÅ³ »ç¿ë ºñ¿ë
-	Character type = Character::None; // Ä³¸¯ÅÍ Å¸ÀÔ (¿¹: Àü»ç, ¸¶¹ı»ç µî)
+	float max_hp = 100; // ìµœëŒ€ HP
+	float skill_cost = 100; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+	float max_skill_cost = 100; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+	Character type = Character::None; // ìºë¦­í„° íƒ€ì… (ì˜ˆ: ì „ì‚¬, ë§ˆë²•ì‚¬ ë“±)
 
-	int attack = 10; // °ø°İ·Â
-	float atk_buff = 0.f;   // Ãß°¡ °ø°İ·Â
+	int attack = 10; // ê³µê²©ë ¥
+	float atk_buff = 0.f;   // ì¶”ê°€ ê³µê²©ë ¥
 
-	int defense = 5; // ¹æ¾î·Â
+	int defense = 5; // ë°©ì–´ë ¥
 
-	// °ø°İ·Â ¹öÇÁ
+	// ê³µê²©ë ¥ ë²„í”„
 	float atk_buff_potion = 0.f;
 	float atk_buff_skill = 0.f;
 	std::chrono::steady_clock::time_point atk_buff_potion_end{};
 	std::chrono::steady_clock::time_point atk_buff_skill_end{};
 
-	// Ãß°¡ ¹æ¾î·Â
+	// ì¶”ê°€ ë°©ì–´ë ¥
 	float def_buff = 0.f;  
 	std::chrono::steady_clock::time_point def_buff_end{};
 
-	// ¹æ¾î·Â µğ¹öÇÁ (°¨¼Ò)
+	// ë°©ì–´ë ¥ ë””ë²„í”„ (ê°ì†Œ)
 	float def_debuff = 0.f;
 	std::chrono::steady_clock::time_point def_debuff_end{};
 
 
-	std::unordered_map<BuffType, bool> lastSentBuffState; // Å¬¶ó¿¡ ¸¶Áö¸·À¸·Î Àü¼ÛµÈ ¹öÇÁ »óÅÂ
+	std::unordered_map<BuffType, bool> lastSentBuffState; // í´ë¼ì— ë§ˆì§€ë§‰ìœ¼ë¡œ ì „ì†¡ëœ ë²„í”„ ìƒíƒœ
 
 
 	std::chrono::steady_clock::time_point lastHitTime = std::chrono::steady_clock::now();

@@ -1,4 +1,4 @@
-#include "AnimationManager.h"
+ï»¿#include "AnimationManager.h"
 #include "algorithm"
 
 CAnimationSet::CAnimationSet(std::ifstream& inFile, UINT nBones)
@@ -44,7 +44,7 @@ void CAnimationSet::UpdateAnimationMatrix(std::vector<CGameObject*>& vMatrixes, 
 	UINT index = std::distance(m_vKeyTime.begin(), p) - 1;
 	// t (0 ~ 1)
 	float t = (fElapsedTime - m_vKeyTime[index]) / (m_vKeyTime[index + 1] - m_vKeyTime[index]);
-	// Çà·Ä º¸°£
+	// í–‰ë ¬ ë³´ê°„
 	for (int i = 0; i < vMatrixes.size(); ++i) {
 		XMFLOAT4X4 xmf{};
 		XMVECTOR S0, R0, T0, S1, R1, T1;
@@ -79,7 +79,7 @@ void CAnimationSet::BlendAnimationMatrix(std::vector<CGameObject*>& vMatrixes, f
 	UINT index = std::distance(m_vKeyTime.begin(), p) - 1;
 	// t (0 ~ 1)
 	float t = (fElapsedTime - m_vKeyTime[index]) / (m_vKeyTime[index + 1] - m_vKeyTime[index]);
-	// Çà·Ä º¸°£
+	// í–‰ë ¬ ë³´ê°„
 	for (int i = 0; i < vMatrixes.size(); ++i) {
 		XMFLOAT4X4 xmf{};
 		XMVECTOR S0, R0, T0, S_forest, S1, R1, T1;
@@ -182,7 +182,7 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 	while (m_fElapsedTime > length)
 		m_fElapsedTime -= length;
 	m_vAnimationSets[m_nCurrnetSet]->UpdateAnimationMatrix(m_vFrames, m_fElapsedTime);*/
-	m_fElapsedTime += fElapsedTime; // ½Ã°£ ´©Àû
+	m_fElapsedTime += fElapsedTime; // ì‹œê°„ ëˆ„ì 
 	float length = m_vAnimationSets[m_nCurrentSet]->getLength();
 
 	if (m_bIsBlending) {
@@ -194,7 +194,7 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 
 	if (m_bPlayOnce) {
 		if (m_fElapsedTime >= length) {
-			m_fElapsedTime = length; // ÇÑ ¹ø Àç»ı ½Ã Á¾·á
+			m_fElapsedTime = length; // í•œ ë²ˆ ì¬ìƒ ì‹œ ì¢…ë£Œ
 		}
 	}
 	else {
@@ -215,7 +215,7 @@ void CAnimationManager::TimeIncrease(float fElapsedTime)
 		// calculate animation blend weight
 		float blendWeight = m_fBlendTime / m_fBlendDuration;
 
-		// Çà·Ä º¸°£
+		// í–‰ë ¬ ë³´ê°„
 		for (size_t i = 0; i < m_vFrames.size(); ++i) {
 			XMFLOAT4X4 blendedMatrix;
 			XMVECTOR S0, R0, T0, S1, R1, T1;
@@ -282,7 +282,7 @@ void CAnimationManager::ChangeAnimation(UINT nSet)
 
 void CAnimationManager::ChangeAnimation(UINT nSet, bool playOnce)
 {
-	if (nSet != m_nCurrentSet || m_bPlayOnce != playOnce) { // playOnce º¯°æµµ ¹İ¿µ
+	if (nSet != m_nCurrentSet || m_bPlayOnce != playOnce) { // playOnce ë³€ê²½ë„ ë°˜ì˜
 		m_nPrevSet = m_nCurrentSet;
 		m_nCurrentSet = nSet;
 		m_bIsBlending = true;
@@ -316,11 +316,11 @@ void CMageManager::OnAttackInput()
 		return;
 	}
 
-	// ÄŞº¸ ÁøÇà
+	// ì½¤ë³´ ì§„í–‰
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
 		m_bNextAttack = true;
 		//if (!m_bWaitingForNextInput) {
-		//	m_bNextAttack = true; // ´ÙÀ½ °ø°İ ´ë±â
+		//	m_bNextAttack = true; // ë‹¤ìŒ ê³µê²© ëŒ€ê¸°
 		//}
 		//else {
 		//	m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
@@ -364,7 +364,7 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 	else {
 		ResetCombo();
 	}*/
-	m_fComboTimer += fElapsedTime; // Å¸ÀÌ¸Ó Áõ°¡
+	m_fComboTimer += fElapsedTime; // íƒ€ì´ë¨¸ ì¦ê°€
 
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
 		if (m_bNextAttack && m_bWaitingForNextInput) {
@@ -374,7 +374,7 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 				ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
 				m_bNextAttack = false;
 				m_bWaitingForNextInput = false;
-				m_fComboTimer = 0.0f; // Å¸ÀÌ¸Ó ÃÊ±âÈ­
+				m_fComboTimer = 0.0f; // íƒ€ì´ë¨¸ ì´ˆê¸°í™”
 			}
 		}
 		else {
@@ -403,7 +403,7 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 
 void CMageManager::ResetCombo()
 {
-	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // Áß´Ü °¨Áö
+	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // ì¤‘ë‹¨ ê°ì§€
 	m_bInCombo = false;
 	m_CurrentComboStep = 0;
 	m_fComboTimer = 0.0f;
@@ -412,7 +412,7 @@ void CMageManager::ResetCombo()
 	m_vComboAnimationSets.clear();
 	m_vSkillAnimationSets.clear();
 	setTimeZero();
-	ChangeAnimation(0, false); // idle·Î ÀüÈ¯
+	ChangeAnimation(0, false); // idleë¡œ ì „í™˜
 }
 
 void CMageManager::StartSkill3()
@@ -464,11 +464,11 @@ void CWarriorManager::OnAttackInput()
 		return;
 	}
 
-	// ÄŞº¸ ÁøÇà
+	// ì½¤ë³´ ì§„í–‰
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 23) {
 		m_bNextAttack = true;
 		//if (!m_bWaitingForNextInput) {
-		//	m_bNextAttack = true; // ´ÙÀ½ °ø°İ ´ë±â
+		//	m_bNextAttack = true; // ë‹¤ìŒ ê³µê²© ëŒ€ê¸°
 		//}
 		//else {
 		//	m_CurrentComboStep = (m_CurrentComboStep + 1) % m_vComboAnimationSets.size();
@@ -484,7 +484,7 @@ void CWarriorManager::UpdateCombo(float fElapsedTime)
 {
 	if (!m_bInCombo) return;
 
-	m_fComboTimer += fElapsedTime; // Å¸ÀÌ¸Ó Áõ°¡
+	m_fComboTimer += fElapsedTime; // íƒ€ì´ë¨¸ ì¦ê°€
 
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 23) {
 		if (m_bNextAttack && m_bWaitingForNextInput) {
@@ -494,7 +494,7 @@ void CWarriorManager::UpdateCombo(float fElapsedTime)
 				ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
 				m_bNextAttack = false;
 				m_bWaitingForNextInput = false;
-				m_fComboTimer = 0.0f; // Å¸ÀÌ¸Ó ÃÊ±âÈ­
+				m_fComboTimer = 0.0f; // íƒ€ì´ë¨¸ ì´ˆê¸°í™”
 			}
 		}
 		else {
@@ -511,7 +511,7 @@ void CWarriorManager::UpdateCombo(float fElapsedTime)
 
 void CWarriorManager::ResetCombo()
 {
-	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // Áß´Ü °¨Áö
+	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // ì¤‘ë‹¨ ê°ì§€
 	m_bInCombo = false;
 	m_CurrentComboStep = 0;
 	m_fComboTimer = 0.0f;
@@ -519,7 +519,7 @@ void CWarriorManager::ResetCombo()
 	m_bNextAttack = false;
 	m_vComboAnimationSets.clear();
 	setTimeZero();
-	ChangeAnimation(0, false); // idle·Î ÀüÈ¯
+	ChangeAnimation(0, false); // idleë¡œ ì „í™˜
 }
 
 void CWarriorManager::UpdateAniPosition(float fElapsedTime, CSkinningObject* player)
@@ -551,7 +551,7 @@ void CPriestManager::OnAttackInput()
 		return;
 	}
 
-	// ÄŞº¸ ÁøÇà
+	// ì½¤ë³´ ì§„í–‰
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
 		m_bNextAttack = true;
 	}
@@ -561,7 +561,7 @@ void CPriestManager::UpdateCombo(float fElapsedTime)
 {
 	if (!m_bInCombo) return;
 
-	m_fComboTimer += fElapsedTime; // Å¸ÀÌ¸Ó Áõ°¡
+	m_fComboTimer += fElapsedTime; // íƒ€ì´ë¨¸ ì¦ê°€
 
 	if (m_vComboAnimationSets.size() > 0 && m_vComboAnimationSets[0] == 22) {
 		if (m_bNextAttack && m_bWaitingForNextInput) {
@@ -571,7 +571,7 @@ void CPriestManager::UpdateCombo(float fElapsedTime)
 				ChangeAnimation(m_vComboAnimationSets[m_CurrentComboStep], true);
 				m_bNextAttack = false;
 				m_bWaitingForNextInput = false;
-				m_fComboTimer = 0.0f; // Å¸ÀÌ¸Ó ÃÊ±âÈ­
+				m_fComboTimer = 0.0f; // íƒ€ì´ë¨¸ ì´ˆê¸°í™”
 			}
 		}
 		else {
@@ -600,7 +600,7 @@ void CPriestManager::UpdateCombo(float fElapsedTime)
 
 void CPriestManager::ResetCombo()
 {
-	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // Áß´Ü °¨Áö
+	m_bComboEnd = (m_fComboTimer >= m_fComboWaitTime); // ì¤‘ë‹¨ ê°ì§€
 	m_bInCombo = false;
 	m_CurrentComboStep = 0;
 	m_fComboTimer = 0.0f;
@@ -609,7 +609,7 @@ void CPriestManager::ResetCombo()
 	m_vComboAnimationSets.clear();
 	m_vSkillAnimationSets.clear();
 	setTimeZero();
-	ChangeAnimation(0, false); // idle·Î ÀüÈ¯
+	ChangeAnimation(0, false); // idleë¡œ ì „í™˜
 }
 
 void CPriestManager::StartSkill3()

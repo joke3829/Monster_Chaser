@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "Player.h"
 #include "Network.h"
 
@@ -10,7 +10,7 @@ Player::Player(int id, const std::string& nickname, int room)
 	lastSentBuffState[BuffType::ATKUP] = false;
 	lastSentBuffState[BuffType::DEFUP] = false;
 	lastSentBuffState[BuffType::DEF_DOWN] = false;
-	position = XMFLOAT4X4(); // ÃÊ±â À§Ä¡ 0
+	position = XMFLOAT4X4(); // ì´ˆê¸° ìœ„ì¹˜ 0
 }
 
 void Player::SetPosition(const XMFLOAT4X4& pos) {
@@ -25,7 +25,7 @@ bool  Player::TakeDamage(int dmg) {
 	std::lock_guard<std::mutex> lock(playerMutex);
 	hp -= dmg;
 	if (hp < 0) hp = 0;
-	return hp == 0; // 0ÀÌ µÇ¸é Á×À½
+	return hp == 0; // 0ì´ ë˜ë©´ ì£½ìŒ
 }
 
 void Player::Move(float dx, float dy, float dz) {
@@ -53,31 +53,31 @@ void Player::Updatestatus(Character t)
 	case Wizard:
 	{
 		hp = 800;
-		max_hp = hp; // ÃÖ´ë HP ¼³Á¤
-		skill_cost = 100; // ½ºÅ³ »ç¿ë ºñ¿ë
-		max_skill_cost = skill_cost; // ½ºÅ³ »ç¿ë ºñ¿ë
-		attack = 800; // °ø°Ý·Â
-		defense = 10; // ¹æ¾î·Â
+		max_hp = hp; // ìµœëŒ€ HP ì„¤ì •
+		skill_cost = 100; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		max_skill_cost = skill_cost; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		attack = 800; // ê³µê²©ë ¥
+		defense = 10; // ë°©ì–´ë ¥
 		break;
 	}
 	case Warrior:
 	{
 		hp = 1200;
-		max_hp = hp; // ÃÖ´ë HP ¼³Á¤
-		skill_cost = 100; // ½ºÅ³ »ç¿ë ºñ¿ë
-		max_skill_cost = skill_cost; // ½ºÅ³ »ç¿ë ºñ¿ë
-		attack = 600; // °ø°Ý·Â
-		defense = 30; // ¹æ¾î·Â
+		max_hp = hp; // ìµœëŒ€ HP ì„¤ì •
+		skill_cost = 100; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		max_skill_cost = skill_cost; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		attack = 600; // ê³µê²©ë ¥
+		defense = 30; // ë°©ì–´ë ¥
 		break;
 	}
 	case Priest:
 	{
 		hp = 1000;
-		max_hp = hp; // ÃÖ´ë HP ¼³Á¤
-		skill_cost = 100; // ½ºÅ³ »ç¿ë ºñ¿ë
-		max_skill_cost = skill_cost; // ½ºÅ³ »ç¿ë ºñ¿ë
-		attack = 800; // °ø°Ý·Â
-		defense = 10; // ¹æ¾î·Â
+		max_hp = hp; // ìµœëŒ€ HP ì„¤ì •
+		skill_cost = 100; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		max_skill_cost = skill_cost; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		attack = 800; // ê³µê²©ë ¥
+		defense = 10; // ë°©ì–´ë ¥
 		break;
 	}
 	default:
@@ -105,7 +105,7 @@ void Player::AddATKBuff(float value, float duration_sec)
 {
 	atk_buff = value;
 	atk_buff_skill_end = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
-	std::cout << "[°ø°Ý·Â ¹öÇÁ Àû¿ë] +" << value << " for " << duration_sec << " seconds\n";
+	std::cout << "[ê³µê²©ë ¥ ë²„í”„ ì ìš©] +" << value << " for " << duration_sec << " seconds\n";
 
 }
 
@@ -116,7 +116,7 @@ void Player::AddDEFBuff(float value, float duration_sec)
 {
 	def_buff = value;
 	def_buff_end = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
-	std::cout << "[¹æ¾î·Â ¹öÇÁ Àû¿ë] +" << value << " for " << duration_sec << " seconds\n";
+	std::cout << "[ë°©ì–´ë ¥ ë²„í”„ ì ìš©] +" << value << " for " << duration_sec << " seconds\n";
 
 }
 
@@ -127,7 +127,7 @@ float Player::GetDamage(int type)
 
 	switch (type)
 	{
-	case 0: // ÀÏ¹Ý °ø°Ý
+	case 0: // ì¼ë°˜ ê³µê²©
 		return attack;
 	case 1:
 		return attack * 3.0f;
@@ -163,7 +163,7 @@ void Player::UpdateBuffStatesIfChanged()
 {
 	auto now = std::chrono::steady_clock::now();
 
-	// ÇöÀç ¹öÇÁ »óÅÂ °è»ê
+	// í˜„ìž¬ ë²„í”„ ìƒíƒœ ê³„ì‚°
 	bool atkActive = (atk_buff_potion > 0.f && now < atk_buff_potion_end) ||
 						(atk_buff_skill > 0.f && now < atk_buff_skill_end);
 
@@ -171,7 +171,7 @@ void Player::UpdateBuffStatesIfChanged()
 
 	bool defDownActive = (def_debuff > 0.f && now < def_debuff_end);
 
-	// °¢ »óÅÂ ºñ±³ ¹× Àü¼Û
+	// ê° ìƒíƒœ ë¹„êµ ë° ì „ì†¡
 	SendBuffPacketIfChanged(BuffType::ATKUP, atkActive);
 	SendBuffPacketIfChanged(BuffType::DEFUP, defActive);
 	SendBuffPacketIfChanged(BuffType::DEF_DOWN, defDownActive);
@@ -179,7 +179,7 @@ void Player::UpdateBuffStatesIfChanged()
 
 void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
 {
-	// ÀÌÀü¿¡ Àü¼ÛÇÑ »óÅÂ¿Í ´Ù¸£¸é »õ·Î Àü¼Û
+	// ì´ì „ì— ì „ì†¡í•œ ìƒíƒœì™€ ë‹¤ë¥´ë©´ ìƒˆë¡œ ì „ì†¡
 	if (lastSentBuffState[type] != currentState) {
 		lastSentBuffState[type] = currentState;
 
@@ -192,8 +192,8 @@ void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
 		for (int pid : g_server.rooms[room_num].id)
 			g_server.users[pid]->do_send(&pkt);
 
-		std::cout << "[¹öÇÁ »óÅÂ º¯°æ] ÇÃ·¹ÀÌ¾î " << local_id << " | Å¸ÀÔ: " << (int)pkt.bufftype
-			<< " | »óÅÂ: " << (int)pkt.state << "\n";
+		std::cout << "[ë²„í”„ ìƒíƒœ ë³€ê²½] í”Œë ˆì´ì–´ " << local_id << " | íƒ€ìž…: " << (int)pkt.bufftype
+			<< " | ìƒíƒœ: " << (int)pkt.state << "\n";
 	}
 }
 
