@@ -202,7 +202,7 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRa
 	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(240, 40);
 
-	g_pSoundManager->StartBGM(ESOUND::SOUND_TITLE_BGM);
+	/*g_pSoundManager->StartBGM(ESOUND::SOUND_TITLE_BGM);*/
 }
 
 void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -223,8 +223,8 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 				if (Players[local_uid].getCharacterType() != JOB_NOTHING)	//if pick non character
 				{
 					bool currentReady = Players[Client.get_id()].getReady();
-					if (!currentReady)
-						g_pSoundManager->StartFx(ESOUND::SOUND_READY);
+				/*	if (!currentReady)
+						g_pSoundManager->StartFx(ESOUND::SOUND_READY);*/
 					Players[Client.get_id()].setReady(!currentReady);
 					Client.SendsetReady(Players[Client.get_id()].getReady(), currentRoom);
 				}
@@ -251,8 +251,8 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 	case WM_LBUTTONDOWN: {
 		int mx = LOWORD(lParam);
 		int my = HIWORD(lParam);
-		if (g_state != GoLoading)
-			g_pSoundManager->StartFx(ESOUND::SOUND_CLICK);
+		/*if (g_state != GoLoading)
+			g_pSoundManager->StartFx(ESOUND::SOUND_CLICK);*/
 		switch (g_state) {
 		case Title:
 			g_state = RoomSelect;
@@ -1167,8 +1167,8 @@ void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPl
 	for (int i = 0; i < targets.size(); i++) {
 
 		//for (const auto& target : targets) {
-		if (targets[i]->IsOnceAttacked())
-			continue;
+		if (targets[i]->IsDodge())continue;
+		if (!targets[i]->CanBeAttacked())continue;
 		for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
 			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
 			BoundingSphere targetSphere = targetBone->getObjectSphere();
@@ -1211,7 +1211,7 @@ void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPl
 void CRaytracingGameScene::ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag)
 {
 	for (int i = 0; i < targets.size(); i++) {
-
+		if (targets[i]->IsDodge())continue;
 		//for (const auto& target : targets) {
 		for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
 			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
@@ -1264,8 +1264,8 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 	XMFLOAT3 attackerDir = attackerPtr->getObject()->getLook();
 	float fov = 90.0f * (3.14159f / 180.0f);
 	float cosFov = std::cos(fov / 2.0f);
-	float maxDistance = 150.0f;
-	float minDistance = 150.0f;
+	float maxDistance = 120.0f;
+	float minDistance = 120.0f;
 	XMFLOAT3 directionToTarget = { 0.0f, 0.0f, 0.0f };
 	bool targetFound = false;
 	XMVECTOR vAttackerDir = XMLoadFloat3(&attackerDir);
@@ -1273,6 +1273,7 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 	for (const auto& target : targets) {
 		if (!target) continue;
 		XMFLOAT3 targetPos = target->getObject()->getPosition();
+		targetPos.y += 3.0f;
 		XMVECTOR vTargetPos = XMLoadFloat3(&targetPos);
 		XMVECTOR vRelativeDir = XMVectorSubtract(vTargetPos, vAttackerPos);
 		XMVECTOR vDistance = XMVector3Length(vRelativeDir);
@@ -2764,7 +2765,7 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 
 	Client.SendPlayerReady(SCENE_CAVE);
 
-	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE2_AMB);
+	/*g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE2_AMB);*/
 }
 
 void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -3574,7 +3575,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 
 	Client.SendPlayerReady(SCENE_PLAIN);
 
-	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE1_AMB);
+	/*g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE1_AMB);*/
 }
 
 void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)

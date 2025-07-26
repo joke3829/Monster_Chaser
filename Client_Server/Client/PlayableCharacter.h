@@ -33,8 +33,9 @@ public:
 
 	bool IsAttacking()const { return m_bSkillActive; }
 	bool IsCombo()const { return m_bDoingCombo; }
-	bool IsOnceAttacked()const { return m_bAttacked; }
+	bool IsOnceAttacked() const { return m_bAttacked; }
 	bool CheckAC() const { return m_bCheckAC; }
+	bool IsDodge() const {return m_bDodged;}
 
 	int getCurrentSkill() const { return m_CurrentSkill; }
 	
@@ -56,12 +57,20 @@ public:
 		static std::vector<std::unique_ptr<CProjectile>> empty;
 		return empty;
 	}
+	bool CanBeAttacked() {
+		if (m_LastHit >= 0.0f && (m_GameTime - m_LastHit) < 0.5f) {
+			return false;
+		}
+		return true;
+	};
 protected:
 	// stat																																													
 	float m_HP{};
 	float m_MP{};
 	int m_CurrentSkill = 0;
 	float m_Damage{};
+	float m_LastHit = -1.0f;
+	float m_GameTime = 0.0f;
 
 	CSkinningObject* m_Object{};
 	CPlayableCharacterAnimationManager* m_AManager{};
@@ -75,6 +84,7 @@ protected:
 	bool m_bMoving = false;
 	bool m_bLive = true;
 	bool m_bAttacked = false;
+	bool m_bDodged = false;
 
 	bool m_bCheckAC = false;
 
@@ -156,6 +166,7 @@ protected:
 	std::vector<std::unique_ptr<CProjectile>> bullet;
 	int currentBullet = 0;
 
+	float m_Skill3Time = 0.0f;
 	bool m_bBulletFired[5] = { false, false, false, false, false };
 };
 
