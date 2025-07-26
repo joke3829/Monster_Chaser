@@ -43,6 +43,20 @@ void SESSION::process_packet(char* p) {
 	char type = p[1];
 	switch (type) {
 	case C2S_P_LOGIN: {
+
+		sc_packet_room_info rp;
+		rp.size = sizeof(rp);
+		rp.type = S2C_P_UPDATEROOM;
+		for (int i = 0; i < g_server.rooms.size(); ++i)
+			rp.room_info[i] = g_server.rooms[i].GetPlayerCount();
+
+		for (auto& player : g_server.users)
+			player.second->do_send(&rp);
+
+		sc_packet_enter ep;
+		ep.size = sizeof(ep);
+		ep.type = S2C_P_ENTER;
+		g_server.users[m_uniqueNo]->do_send(&ep);//당사자한테만 보내주기
 		break;
 	}
 	case C2S_P_ENTER_ROOM: {

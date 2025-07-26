@@ -31,7 +31,7 @@ public:
 
 	void send_packet(void* ptk);	//sendÇÏ´Â°÷ 			
 	//--------------------------------------------------------------//	
-	void SendLogin(const char* UserID, const char* Userpassword);									//Send LoginPacket
+	void SendLogin();									//Send LoginPacket
 	void SendCreateUser(const char* UserID, const char* Userpassword, const char* userNickName);	//Send CreateUserPacket
 	void SendEnterRoom(const short RoomNum);														//Send EnterroomPacket
 	void SendsetReady(const bool isReady, const int room_num);										//Send Readypakcet if isReday is true->player set ready

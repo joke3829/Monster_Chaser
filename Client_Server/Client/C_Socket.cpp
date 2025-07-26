@@ -56,8 +56,13 @@ void C_Socket::send_packet(void* pkt)
 	}
 }
 
-void C_Socket::SendLogin(const char* UserID, const char* Userpassword)
+void C_Socket::SendLogin()
 {
+	cs_packet_login p;
+	p.size = sizeof(p);
+	p.type = C2S_P_LOGIN;
+	
+	Client.send_packet(&p);
 }
 
 void C_Socket::SendCreateUser(const char* UserID, const char* Userpassword, const char* userNickName)
@@ -175,7 +180,7 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_ENTER:			//입장
 	{
 		sc_packet_enter* p = reinterpret_cast<sc_packet_enter*>(ptr);
-
+		
 
 		break;
 	}
@@ -375,7 +380,7 @@ void C_Socket::process_packet(char* ptr)
 		
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
-			monster->setPosition(pkt->pos);
+			monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
 			
 			//monster->setVisible(true);
 			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경

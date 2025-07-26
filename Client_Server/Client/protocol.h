@@ -212,8 +212,8 @@ constexpr char C2S_P_MASTERKEY = 63;
 struct cs_packet_login {
 	unsigned char size;
 	char type;
-	char UserID[MAX_ID_LEN];
-	char Userpassword[MAX_ID_LEN];
+	//char UserID[MAX_ID_LEN];
+	//char Userpassword[MAX_ID_LEN];
 };
 
 struct cs_packet_createuser {
