@@ -30,7 +30,7 @@ public:
 	virtual void setOnePathPipeline(ComPtr<ID3D12PipelineState>& ps) { m_OnePathPipeline = ps; }
 	virtual void setTwoPathPipeline(ComPtr<ID3D12PipelineState>& ps) { m_TwoPathPipeline = ps; }
 
-	virtual void ParticleSetting(float lifeTime, float endTime = 0.0f);
+	virtual void ParticleSetting(float lifeTime, float endTime = 0.0f, XMFLOAT3 pos = XMFLOAT3());
 
 	virtual void UpdateObject(float fElapsedTime);
 

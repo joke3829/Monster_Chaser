@@ -9,7 +9,9 @@ extern TitleState g_state;
 extern InGameState g_InGameState;
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
-
+CParticle* g_pBuff0{};
+CParticle* g_pBuff1{};
+CParticle* g_pBuff2{};
 
 void CScene::CreateRTVDSV()
 {
@@ -1187,6 +1189,8 @@ void CRaytracingGameScene::CreateMageCharacter()
 
 		mage->GetBullets().push_back(std::move(projectile));
 	}
+
+
 }
 void CRaytracingGameScene::CreateWarriorCharacter()
 {
@@ -1217,6 +1221,272 @@ void CRaytracingGameScene::CreatePriestCharacter()
 	auto& sv = m_pResourceManager->getSkinningObjectList();
 	sv.back()->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
 }
+void CRaytracingGameScene::CreateParticle(short job)
+{
+	std::vector<std::unique_ptr<CSkinningObject>>& skinned = m_pResourceManager->getSkinningObjectList();
+	std::vector<std::unique_ptr<CTexture>>& textures = m_pResourceManager->getTextureList();
+	std::vector<std::unique_ptr<CParticle>>& particles = m_pResourceManager->getParticleList();
+
+	ComPtr<ID3D12PipelineState> OnePath;
+	ComPtr<ID3D12PipelineState> TwoPath;
+	switch (job) {
+	case JOB_MAGE: {
+		CreateOnePath(OnePath, "GS_M_Laser_OnePath");
+		CreateTwoPath(TwoPath, "GS_M_Laser_TwoPath");
+
+		particles.emplace_back(std::make_unique<CRaytracingParticle>());
+		particles[0]->setOnePathPipeline(OnePath);
+		particles[0]->setTwoPathPipeline(TwoPath);
+		particles[0]->ParticleSetting(0.0f, 7.0f, XMFLOAT3(0.0, 1.0, 0.0));
+		Material pmaterial{};
+		pmaterial.m_bHasAlbedoColor = pmaterial.m_bHasAlbedoMap = true;
+		pmaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+		pmaterial.m_nAlbedoMapIndex = textures.size();
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\laser.dds"));
+		particles[0]->setMaterial(pmaterial);
+	}
+		break;
+	case JOB_WARRIOR: {
+		CreateOnePath(OnePath, "GS_Boom_OnePath");
+		CreateTwoPath(TwoPath, "GS_Boom_TwoPath");
+
+		particles.emplace_back(std::make_unique<CRaytracingParticle>());
+		particles[0]->setOnePathPipeline(OnePath);
+		particles[0]->setTwoPathPipeline(TwoPath);
+		particles[0]->ParticleSetting(0.0f, 3.0f, XMFLOAT3(0.0, 1.0, 0.0));
+		Material pmaterial{};
+		pmaterial.m_bHasAlbedoColor = pmaterial.m_bHasAlbedoMap = true;
+		pmaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+		pmaterial.m_nAlbedoMapIndex = textures.size();
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\Particle.dds"));
+		particles[0]->setMaterial(pmaterial);
+	}
+		break;
+	case JOB_HEALER: {
+		CreateOnePath(OnePath, "GS_Buff_OnePath");
+		CreateTwoPath(TwoPath, "GS_Buff_TwoPath");
+
+		particles.emplace_back(std::make_unique<CRaytracingParticle>());
+		particles[0]->setOnePathPipeline(OnePath);
+		particles[0]->setTwoPathPipeline(TwoPath);
+		particles[0]->ParticleSetting(0.0f, 3.0f);
+		Material pmaterial{};
+		pmaterial.m_bHasAlbedoColor = pmaterial.m_bHasAlbedoMap = true;
+		pmaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+		pmaterial.m_nAlbedoMapIndex = textures.size();
+		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\mana.dds"));
+		particles[0]->setMaterial(pmaterial);
+	}
+		break;
+	}
+
+	CreateOnePath(OnePath, "GS_Buff_OnePath");
+	CreateTwoPath(TwoPath, "GS_Buff_TwoPath");
+
+	particles.emplace_back(std::make_unique<CRaytracingParticle>());
+	particles[1]->setOnePathPipeline(OnePath);
+	particles[1]->setTwoPathPipeline(TwoPath);
+	particles[1]->ParticleSetting(0.0f, 3.0f);
+	Material pmaterial{};
+	pmaterial.m_bHasAlbedoColor = pmaterial.m_bHasAlbedoMap = true;
+	pmaterial.m_xmf4AlbedoColor = XMFLOAT4(1.0, 1.0, 1.0, 1.0);
+	pmaterial.m_nAlbedoMapIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\UI_Buff0.dds"));
+	particles[1]->setMaterial(pmaterial);
+
+	particles.emplace_back(std::make_unique<CRaytracingParticle>());
+	particles[2]->setOnePathPipeline(OnePath);
+	particles[2]->setTwoPathPipeline(TwoPath);
+	particles[2]->ParticleSetting(0.0f, 3.0f);
+	pmaterial.m_nAlbedoMapIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\UI_Buff1.dds"));
+	particles[2]->setMaterial(pmaterial);
+
+	particles.emplace_back(std::make_unique<CRaytracingParticle>());
+	particles[3]->setOnePathPipeline(OnePath);
+	particles[3]->setTwoPathPipeline(TwoPath);
+	particles[3]->ParticleSetting(0.0f, 3.0f);
+	pmaterial.m_nAlbedoMapIndex = textures.size();
+	textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\Particle\\GreenCross.dds"));
+	particles[3]->setMaterial(pmaterial);
+
+	g_pBuff0 = particles[1].get();
+	g_pBuff1 = particles[2].get();
+	g_pBuff2 = particles[3].get();
+}
+
+void CRaytracingGameScene::CreateParticleRS()
+{
+	D3D12_ROOT_PARAMETER rp{};
+	rp.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rp.Descriptor.ShaderRegister = 0;
+	rp.Descriptor.RegisterSpace = 0;
+
+	D3D12_ROOT_SIGNATURE_DESC desc{};
+	desc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT | D3D12_ROOT_SIGNATURE_FLAG_ALLOW_STREAM_OUTPUT;
+	desc.NumParameters = 1;
+	desc.NumStaticSamplers = 0;
+	desc.pParameters = &rp;
+	desc.pStaticSamplers = nullptr;
+
+	ID3DBlob* pBlob{};
+	D3D12SerializeRootSignature(&desc, D3D_ROOT_SIGNATURE_VERSION_1_0, &pBlob, nullptr);
+	g_DxResource.device->CreateRootSignature(0, pBlob->GetBufferPointer(), pBlob->GetBufferSize(), IID_PPV_ARGS(m_ParticleRS.GetAddressOf()));
+	pBlob->Release();
+}
+
+void CRaytracingGameScene::CreateOnePath(ComPtr<ID3D12PipelineState>& res, const char* entry)
+{
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dGBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_ParticleRS.Get();
+
+	D3D12_INPUT_ELEMENT_DESC ldesc[4]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "DIRECTION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[3] = { "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 4;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 0;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	d3dPipelineState.RTVFormats[0] = DXGI_FORMAT_UNKNOWN;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	//ID3DBlob* errorb;
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	//OutputDebugStringA((char*)errorb->GetBufferPointer());
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, entry, "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
+	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
+	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
+
+	D3D12_SO_DECLARATION_ENTRY soEntry[4]{};
+	soEntry[0] = { 0, "POSITION", 0, 0, 3, 0 };
+	soEntry[1] = { 0, "DIRECTION", 0, 0, 3, 0 };
+	soEntry[2] = { 0, "LIFETIME", 0, 0, 1, 0 };
+	soEntry[3] = { 0, "TYPE", 0, 0, 1, 0 };
+
+	UINT stride[1] = { sizeof(ParticleVertex) };
+
+	d3dPipelineState.StreamOutput.NumEntries = 4;
+	d3dPipelineState.StreamOutput.pSODeclaration = soEntry;
+	d3dPipelineState.StreamOutput.NumStrides = 1;
+	d3dPipelineState.StreamOutput.pBufferStrides = stride;
+	d3dPipelineState.StreamOutput.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
+
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(res.GetAddressOf()));
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dGBlob)
+		pd3dGBlob->Release();
+}
+void CRaytracingGameScene::CreateTwoPath(ComPtr<ID3D12PipelineState>& res, const char* entry)
+{
+	ID3DBlob* pd3dVBlob{ nullptr };
+	ID3DBlob* pd3dGBlob{ nullptr };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC d3dPipelineState{};
+	d3dPipelineState.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
+	d3dPipelineState.pRootSignature = m_ParticleRS.Get();
+
+	D3D12_INPUT_ELEMENT_DESC ldesc[4]{};
+	ldesc[0] = { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[1] = { "DIRECTION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[2] = { "LIFETIME", 0, DXGI_FORMAT_R32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	ldesc[3] = { "TYPE", 0, DXGI_FORMAT_R32_UINT, 0, 28, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+	d3dPipelineState.InputLayout.pInputElementDescs = ldesc;
+	d3dPipelineState.InputLayout.NumElements = 4;
+
+	d3dPipelineState.DepthStencilState.DepthEnable = FALSE;
+	d3dPipelineState.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	d3dPipelineState.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	d3dPipelineState.DepthStencilState.StencilEnable = FALSE;
+
+	d3dPipelineState.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	d3dPipelineState.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	d3dPipelineState.RasterizerState.AntialiasedLineEnable = FALSE;
+	d3dPipelineState.RasterizerState.FrontCounterClockwise = FALSE;
+	d3dPipelineState.RasterizerState.MultisampleEnable = FALSE;
+	d3dPipelineState.RasterizerState.DepthClipEnable = FALSE;
+
+	d3dPipelineState.BlendState.AlphaToCoverageEnable = FALSE;
+	d3dPipelineState.BlendState.IndependentBlendEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendEnable = TRUE;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	d3dPipelineState.BlendState.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	d3dPipelineState.BlendState.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	d3dPipelineState.BlendState.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	d3dPipelineState.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
+	d3dPipelineState.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	d3dPipelineState.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	d3dPipelineState.NumRenderTargets = 0;
+	d3dPipelineState.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT;
+	d3dPipelineState.SampleDesc.Count = 1;
+	d3dPipelineState.SampleMask = UINT_MAX;
+
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, "VSMain", "vs_5_1", 0, 0, &pd3dVBlob, nullptr);
+	d3dPipelineState.VS.BytecodeLength = pd3dVBlob->GetBufferSize();
+	d3dPipelineState.VS.pShaderBytecode = pd3dVBlob->GetBufferPointer();
+
+	D3DCompileFromFile(L"ParticleShader.hlsl", nullptr, nullptr, entry, "gs_5_1", 0, 0, &pd3dGBlob, nullptr);
+	d3dPipelineState.GS.BytecodeLength = pd3dGBlob->GetBufferSize();
+	d3dPipelineState.GS.pShaderBytecode = pd3dGBlob->GetBufferPointer();
+
+	D3D12_SO_DECLARATION_ENTRY soEntry[3]{};
+	soEntry[0] = { 0, "POSITION", 0, 0, 3, 0 };
+	soEntry[1] = { 1, "TEXCOORD", 0, 0, 2, 1 };
+	soEntry[2] = { 2, "COLOR", 0, 0, 4, 2 };
+
+	UINT stride[3] = { sizeof(XMFLOAT3), sizeof(XMFLOAT2), sizeof(XMFLOAT4) };
+
+	d3dPipelineState.StreamOutput.NumEntries = 3;
+	d3dPipelineState.StreamOutput.pSODeclaration = soEntry;
+	d3dPipelineState.StreamOutput.NumStrides = 3;
+	d3dPipelineState.StreamOutput.pBufferStrides = stride;
+	d3dPipelineState.StreamOutput.RasterizedStream = D3D12_SO_NO_RASTERIZED_STREAM;
+
+	g_DxResource.device->CreateGraphicsPipelineState(&d3dPipelineState, IID_PPV_ARGS(res.GetAddressOf()));
+
+	if (pd3dVBlob)
+		pd3dVBlob->Release();
+	if (pd3dGBlob)
+		pd3dGBlob->Release();
+}
 
 void CRaytracingGameScene::PostProcess()
 {
@@ -1236,6 +1506,7 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 
 	m_numUser = Players.size();
 	m_local_id = Client.get_id();
+	m_myJob = job;
 
 	mindex = meshes.size();
 	meshes.emplace_back(std::make_unique<Mesh>(XMFLOAT3(), 30, 30));		// buff icon
@@ -1428,6 +1699,24 @@ void CRaytracingGameScene::UIUseSkill(KeyInputRet input)
 	}
 }
 
+void CRaytracingGameScene::SkillParticleStart(KeyInputRet input)
+{
+	switch (m_myJob) {
+	case JOB_MAGE:
+		if (input == KEY_SKILL3)
+			m_pResourceManager->getParticleList()[0]->Start();
+		break;
+	case JOB_WARRIOR:
+		if (input == KEY_SKILL3)
+			m_pResourceManager->getParticleList()[0]->Start();
+		break;
+	case JOB_HEALER:
+		if (input == KEY_SKILL3)
+			m_pResourceManager->getParticleList()[0]->Start();
+		break;
+	}
+}
+
 // =====================================================================================
 
 void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
@@ -1440,6 +1729,9 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	CreateRTVDSV();
 	CreateUIRootSignature();
 	CreateUIPipelineState();
+
+	// ParticleRS
+	CreateParticleRS();
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
@@ -1481,6 +1773,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 		Players[i].setAnimationManager(aManagers[aManagers.size() - 1].get());
 		if (i == Client.get_id()) {
 			m_pPlayer = std::make_unique<CPlayer>(m_vPlayers[m_vPlayers.size() - 1].get(), m_pCamera);
+			CreateParticle(player_job);
 		}
 	}
 
@@ -1550,6 +1843,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 
 	for (int i = 0; i < Players.size(); ++i) {
 		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
+		//skinned[i]->SetPosition(XMFLOAT3(0.0, 0.0f, 0.0));
 	}
 
 	// ==============================================================================
@@ -1738,6 +2032,7 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 		else {
 			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
 			UIUseSkill(ret);
+			SkillParticleStart(ret);
 			CAnimationManager* myManager = m_pPlayer->getAniManager();
 			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
 		}
@@ -1930,6 +2225,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 
+
 	for (auto& p : m_pMonsters) {
 		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
@@ -1950,6 +2246,11 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	}
 	else
 		m_pCamera->UpdateViewMatrix();
+
+	g_DxResource.cmdList->SetGraphicsRootSignature(m_ParticleRS.Get());
+	m_pCamera->SetElapsedTimeAndShader(fElapsedTime, 0);
+	m_pResourceManager->UpdateParticles(fElapsedTime);
+
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 
 	switch (g_InGameState) {
@@ -2130,6 +2431,9 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	CreateRTVDSV();
 	CreateUIRootSignature();
 	CreateUIPipelineState();
+
+	// ParticleRS
+	CreateParticleRS();
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();
@@ -2888,6 +3192,9 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	CreateRTVDSV();
 	CreateUIRootSignature();
 	CreateUIPipelineState();
+
+	// ParticleRS
+	CreateParticleRS();
 
 	// animation Pipeline Ready
 	CreateComputeRootSignature();

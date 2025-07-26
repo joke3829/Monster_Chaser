@@ -37,6 +37,7 @@ struct CameraInfo
     matrix mtxInverseViewProj;
     float3 cameraEye;
     float fElapsedTime;
+    matrix mtxtarget;
     int bNormalMapping;
     int bReflection;
     int nMapNumber; // 0 title(No Used), 1 ETP, 2. Cave, 3. WinterLand

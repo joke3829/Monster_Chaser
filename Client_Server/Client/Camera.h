@@ -10,6 +10,7 @@ struct CB_CAMERA_INFO {
 	XMFLOAT4X4 xmf4x4InverseViewProj;
 	XMFLOAT3 xmf3Eye;
 	float fElapsedTime;
+	XMFLOAT4X4 particleTarget;			// test
 	int bNormalMapping;	// front 2byte normal, back 2byte albedo
 	int bReflection;
 	int nMapNumber;

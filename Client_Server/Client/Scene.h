@@ -180,6 +180,11 @@ public:
 	void CreateWarriorCharacter();
 	void CreatePriestCharacter();
 
+	void CreateParticle(short job);
+	void CreateParticleRS();
+	void CreateOnePath(ComPtr<ID3D12PipelineState>& res, const char* entry);
+	void CreateTwoPath(ComPtr<ID3D12PipelineState>& res, const char* entry);
+
 	virtual void Render() {}
 	void PostProcess();
 protected:
@@ -190,6 +195,7 @@ protected:
 	std::vector<std::unique_ptr<CMonster>>				m_pMonsters{};
 
 	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
+	ComPtr<ID3D12RootSignature>					m_ParticleRS{};
 
 	// InGame UI ====================================================================
 	bool m_bUIOnOff = true;
@@ -202,14 +208,16 @@ protected:
 	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vBossUIs;
 
-	short m_numUser;						// replace	Player.size()
+	short m_numUser;
 	short m_local_id;
+	short m_myJob{};
 
 	float m_fItemCoolTime = 30.0f;
 	float m_fItemCurTime{};
 
-	void PlayerUISetup(short job);		// player job need
+	void PlayerUISetup(short job);
 	void UIUseSkill(KeyInputRet input);
+	void SkillParticleStart(KeyInputRet input);
 	// ===============================================================================
 };
 
