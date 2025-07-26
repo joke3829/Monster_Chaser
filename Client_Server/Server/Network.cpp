@@ -281,7 +281,7 @@ void SESSION::process_packet(char* p) {
 		auto monster = room.monsters[pkt->attacker_id];
 		auto target = g_server.playerManager.GetPlayer(pkt->target_player_id);
 
-		// ✅ 몬스터 공격 타입 적용
+		//  몬스터 공격 타입 적용
 		int attackType = pkt->attack_type;
 
 
@@ -345,7 +345,7 @@ void SESSION::process_packet(char* p) {
 		case ItemType::ATK_BUFF:
 		{
 			float buff_amount = 100.f;
-			float duration = 60.f;
+			float duration = 10.f;
 
 			player->AddATKBuff_Potion(buff_amount, duration); //  정확한 함수 사용
 
@@ -379,7 +379,7 @@ void SESSION::process_packet(char* p) {
 			auto target = g_server.playerManager.GetPlayer(pid);
 			if (!target) continue; // 대상 플레이어가 없으면 건너뜀
 			switch (skillNum) {
-			case 1: { // 체력 회복
+			case 0: { // 체력 회복
 				target->PlusHP(50); // 임시값. 나중에 조정
 
 				sc_packet_change_hp pkt_hp;
@@ -392,15 +392,15 @@ void SESSION::process_packet(char* p) {
 					g_server.users[id]->do_send(&pkt_hp);
 				break;
 			}
-			case 2: // 공격력 증가 + 방어력 감소
+			case 1: // 공격력 증가 + 방어력 감소
 			{
-				target->AddATKBuff(+15.f, 10.0f); // +15 atk, 10초
+				player->AddATKBuff_Skill(+15.f, 3.0f); //  정확한 함수 사용
 				target->AddDEFBuff(-10.f, 10.0f); // -10 def, 10초
 
 				// 이건 클라에 보여줄 필요 없으면 패킷 생략 가능
 				break;
 			}
-			case 3: { // MP 최대치
+			case 2: { // MP 최대치
 				target->SetMP(100.0f); // max_skill_cost 기준
 
 				sc_packet_change_mp pkt_mp;
@@ -418,6 +418,21 @@ void SESSION::process_packet(char* p) {
 			}
 		}
 		break;
+	}
+	case C2S_P_MASTERKEY:
+	{
+		Room& room = g_server.rooms[player->room_num];
+		// 스레드 멈춤
+		room.StopGame();
+		room.bStageActive = false;
+
+		sc_packet_NextStage sp;
+		sp.size = sizeof(sp);
+		sp.type = S2C_P_NEXTSTAGE;
+
+		for (int pid : room.id)
+			g_server.users[pid]->do_send(&sp);
+		break; // 마스터 키 패킷 처리
 	}
 	}
 }

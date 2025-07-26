@@ -126,6 +126,24 @@ void C_Socket::SendUseItem(const unsigned int type)
 	Client.send_packet(&pkt);
 }
 
+void C_Socket::SendPriestBUFF(const char SkillNumber)
+{
+	cs_packet_skill_use pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_USE_SKILL;
+	pkt.skillNumber = SkillNumber; // 0이 체력 회복, 1이 공격력 증가 + 방어력 감소, 2가 스킬게이지 최대치
+	Client.send_packet(&pkt);
+}
+
+void C_Socket::SendNEXTSTAGEMASTERKEY()
+{
+	cs_packet_next_stage_master_key pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_MASTERKEY;
+	
+	Client.send_packet(&pkt);
+}
+
 void C_Socket::SendsetReady(const bool isReady, const int room_num)
 {
 	cs_packet_getready rp;
@@ -219,8 +237,8 @@ void C_Socket::process_packet(char* ptr)
 		Players[loacl_id].SetMaxHP(p->Max_HP);
 		Players[loacl_id].SetHP(p->Max_HP);
 
-		Players[loacl_id].SetMaxMP(p->Max_HP);
-		Players[loacl_id].SetMP(p->Max_HP);
+		Players[loacl_id].SetMaxMP(p->Max_MP);
+		Players[loacl_id].SetMP(p->Max_MP);
 		break;
 	}
 	case S2C_P_SETREADY:
@@ -316,15 +334,21 @@ void C_Socket::process_packet(char* ptr)
 			// 예: 플레이어에게 골드 지급 로직 추가 가능
 			// 예시로 그냥 출력
 			std::cout << "몬스터 " << monster_id << "가 죽었습니다. 드랍된 골드: " << gold << std::endl;
-			// 몬스터 제거 로직 추가 가능
-			Monsters.erase(monster_id);
+			
 		}
 		break;
 		
 	}
 
-	
+	case S2C_P_MONSTER_HIT:
+	{
+		sc_packet_monster_hit* pkt = reinterpret_cast<sc_packet_monster_hit*>(ptr);
 
+		int id = pkt->monster_id; // 몬스터 ID
+		Monsters[id]->setHP(pkt->hp); // 몬스터 HP 업데이트
+		break;
+
+	}
 	case S2C_P_MONSTER_RESPAWN: {
 		sc_packet_monster_respawn* pkt = reinterpret_cast<sc_packet_monster_respawn*>(ptr);
 
@@ -338,12 +362,7 @@ void C_Socket::process_packet(char* ptr)
 			//m->playIdleAnim();															  // doyoung's turn
 		}
 		else {
-			// 존재하지 않는 경우 새로 생성  
-		/*	auto newMonster = std::make_unique<Monster>(id);
-			newMonster->setPosition(pkt->pos);
-			newMonster->setVisible(true);
-			newMonster->playIdleAnim();
-			Monsters[id] = std::move(newMonster);*/
+			
 		}
 		break;
 	}

@@ -52,12 +52,17 @@ public:
     bool isBossMonster();
 
     void ChangeBossAttack();
+
+
+    bool isAlive = true;
+    float respawnTimer = 0.0f;
 private:
 
     int id;
     MonsterType type;
 
     float hp;
+    float max_hp;
     int ATK;
     int target_id = -1;
 

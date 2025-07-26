@@ -207,6 +207,7 @@ constexpr char C2S_P_PLAYERATTACK = 59;
 constexpr char C2S_P_MONSTER_ATTACK = 60;
 constexpr char C2S_P_USE_ITEM = 61;
 constexpr char C2S_P_USE_SKILL = 62;
+constexpr char C2S_P_MASTERKEY = 63;
 
 struct cs_packet_login {
 	unsigned char size;
@@ -287,5 +288,13 @@ struct cs_packet_skill_use {
 	unsigned char size;
 	char type;
 	char skillNumber;	// 0 ~ 2		0이 체력 회복, 1이 공격력 증가 + 방어력 감소, 2가 스킬게이지 최대치
+};
+
+
+
+struct cs_packet_next_stage_master_key {
+	unsigned char size;
+	char type;
+
 };
 #pragma pack(pop)

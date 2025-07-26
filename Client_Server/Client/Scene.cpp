@@ -1152,37 +1152,7 @@ void CRaytracingGameScene::CreateUIPipelineState()
 
 void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag)
 {
-	//스피어-박스
-	/*for (const auto& target : targets) {
-		if (target->IsOnceAttacked()) continue;
-		for (const auto& targetBone : target->getObject()->getObjects()) {
-			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
-			BoundingSphere targetSphere = targetBone->getObjectSphere();
-			BoundingSphere transformedTargetSphere;
-			targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
-			for (const auto& attacker : attackers) {
-				if (!attacker->IsAttacking()) continue;
-				for (const auto& attackerBone : attacker->getObject()->getObjects()) {
-					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
-					BoundingOrientedBox attackerOBB = attackerBone->getObjectOBB();
-					BoundingOrientedBox transformedAttackerOBB;
-					attackerOBB.Transform(transformedAttackerOBB, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
-					if (transformedAttackerOBB.Intersects(transformedTargetSphere)) {
-						float damage = 0.0f;
-						switch (attacker->getCurrentSkill()) {
-						case 1: damage = 200.0f; break;
-						case 2: damage = 400.0f; break;
-						case 3: damage = 300.0f; break;
-						}
-						if (damage > 0.0f) {
-							target->Attacked(damage);
-						}
-						return;
-					}
-				}
-			}
-		}
-	}*/
+
 	//스피어-스피어
 	for (int i = 0; i < targets.size(); i++) {
 
@@ -1208,14 +1178,14 @@ void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPl
 						targets[i]->Attacked(damage);
 						if (flag == 1)
 						{
-							
+
 							Client.SendPlayerAttack(i, attackers[attacker_id]->getCurrentSkill());
 							//플레이어가 공격할 때
 						}
 						else
 						{
-							Client.SendMonsterAttack(i, attacker_id, attackers[attacker_id]->getCurrentSkill());
-					
+							Client.SendMonsterAttack(attacker_id, i, attackers[attacker_id]->getCurrentSkill());
+
 							//몬스터가 공격할 때
 
 						}
@@ -1260,6 +1230,7 @@ void CRaytracingGameScene::ShootCollision(const std::vector<std::unique_ptr<CPla
 						}
 						else
 						{
+							Client.SendMonsterAttack(attacker_id, i, attackers[attacker_id]->getCurrentSkill());
 							//몬스터가 공격할 때
 
 						}
@@ -1276,46 +1247,49 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 	if (attacker.empty() || targets.empty()) {
 		return;
 	}
+	for (int i = 0; i < attacker.size(); i++)
+	{
 
-	CPlayableCharacter* attackerPtr = attacker[0].get();
-	XMFLOAT3 attackerPos = attackerPtr->getObject()->getPosition();
-	XMFLOAT3 attackerDir = attackerPtr->getObject()->getLook();
-	float fov = 90.0f * (3.14159f / 180.0f);
-	float cosFov = std::cos(fov / 2.0f);
-	float maxDistance = 150.0f;
-	float minDistance = 150.0f;
-	XMFLOAT3 directionToTarget = { 0.0f, 0.0f, 0.0f };
-	bool targetFound = false;
-	XMVECTOR vAttackerDir = XMLoadFloat3(&attackerDir);
-	XMVECTOR vAttackerPos = XMLoadFloat3(&attackerPos);
-	for (const auto& target : targets) {
-		if (!target) continue;
-		XMFLOAT3 targetPos = target->getObject()->getPosition();
-		XMVECTOR vTargetPos = XMLoadFloat3(&targetPos);
-		XMVECTOR vRelativeDir = XMVectorSubtract(vTargetPos, vAttackerPos);
-		XMVECTOR vDistance = XMVector3Length(vRelativeDir);
-		float distance;
-		XMStoreFloat(&distance, vDistance);
-		if (distance > 0.0f && distance <= maxDistance) {
-			XMVECTOR vNormRelativeDir = XMVector3Normalize(vRelativeDir);
-			XMVECTOR vDot = XMVector3Dot(vAttackerDir, vNormRelativeDir);
-			float dot;
-			XMStoreFloat(&dot, vDot);
-			if (dot >= cosFov && distance < minDistance) {
-				minDistance = distance;
-				XMStoreFloat3(&directionToTarget, vNormRelativeDir);
-				targetFound = true;
+		CPlayableCharacter* attackerPtr = attacker[i].get();
+		XMFLOAT3 attackerPos = attackerPtr->getObject()->getPosition();
+		XMFLOAT3 attackerDir = attackerPtr->getObject()->getLook();
+		float fov = 90.0f * (3.14159f / 180.0f);
+		float cosFov = std::cos(fov / 2.0f);
+		float maxDistance = 150.0f;
+		float minDistance = 150.0f;
+		XMFLOAT3 directionToTarget = { 0.0f, 0.0f, 0.0f };
+		bool targetFound = false;
+		XMVECTOR vAttackerDir = XMLoadFloat3(&attackerDir);
+		XMVECTOR vAttackerPos = XMLoadFloat3(&attackerPos);
+		for (const auto& target : targets) {
+			if (!target) continue;
+			XMFLOAT3 targetPos = target->getObject()->getPosition();
+			XMVECTOR vTargetPos = XMLoadFloat3(&targetPos);
+			XMVECTOR vRelativeDir = XMVectorSubtract(vTargetPos, vAttackerPos);
+			XMVECTOR vDistance = XMVector3Length(vRelativeDir);
+			float distance;
+			XMStoreFloat(&distance, vDistance);
+			if (distance > 0.0f && distance <= maxDistance) {
+				XMVECTOR vNormRelativeDir = XMVector3Normalize(vRelativeDir);
+				XMVECTOR vDot = XMVector3Dot(vAttackerDir, vNormRelativeDir);
+				float dot;
+				XMStoreFloat(&dot, vDot);
+				if (dot >= cosFov && distance < minDistance) {
+					minDistance = distance;
+					XMStoreFloat3(&directionToTarget, vNormRelativeDir);
+					targetFound = true;
+				}
 			}
+		}
+		if (targetFound) {
+			attackerPtr->SetAutoDirect(directionToTarget);
+		}
+		else {
+			XMFLOAT3 dir = m_pCamera->getDir();
+			attackerPtr->SetAutoDirect({ dir.x,0.0f,dir.z });
 		}
 	}
 
-	if (targetFound) {
-		attackerPtr->SetAutoDirect(directionToTarget);
-	}
-	else {
-		XMFLOAT3 dir = m_pCamera->getDir();
-		attackerPtr->SetAutoDirect({ dir.x,0.0f,dir.z });
-	}
 }
 
 void CRaytracingGameScene::CreateMageCharacter()
@@ -3206,6 +3180,11 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 				g_InGameState = IS_FINISH;
 			}
 			break;
+		case 'V':
+			Client.SendNEXTSTAGEMASTERKEY();
+			/*Client.SendUseItem(2);
+			Client.SendPriestBUFF(1);*/
+			break;
 		case 'U':
 			cHPs[0] += 10;
 			if (maxHPs[0] < cHPs[0])
@@ -3711,11 +3690,11 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 
 		if (m->CheckAC())
 		{
-			AttackCollision(m_vMonsters,m_vPlayers ,1);
+			AttackCollision(m_vMonsters, m_vPlayers, 1);
 		}
 		if (m->HasActiveBullet())
 		{
-			ShootCollision( m_vMonsters, m_vPlayers,1);
+			ShootCollision(m_vMonsters, m_vPlayers, 1);
 		}
 	}
 
@@ -3725,7 +3704,7 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 
 		if (m->CheckAC())
 		{
-			AttackCollision(m_vPlayers, m_vMonsters,0);
+			AttackCollision(m_vPlayers, m_vMonsters, 0);
 		}
 		if (m->HasActiveBullet())
 		{

@@ -34,6 +34,10 @@ public:
 	void SendHealerBUFF(const char SkillNumber);
 	void SendUseItem(const unsigned int type);														//Send Item Packet
 	
+	void SendPriestBUFF(const char SkillNumber);	//Send Priest Buff Packet
+
+
+	void SendNEXTSTAGEMASTERKEY();	//Send Next Stage Master Key Packet
 	//--------------------------------------------------------------//									
 
 	bool getstart() { return InGameStart; }

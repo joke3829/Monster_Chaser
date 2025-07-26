@@ -134,7 +134,7 @@ int main() {
 	do_accept(g_server);
 	//netework에 있는 소켓으로 처리 
 	std::vector<std::thread> workers;
-	int thread_count = thread::hardware_concurrency();
+	int thread_count = thread::hardware_concurrency() - 2;
 	for (int i = 0; i < thread_count; ++i)
 		workers.emplace_back(worker_thread, std::ref(g_server));
 

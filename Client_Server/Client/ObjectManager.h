@@ -117,7 +117,10 @@ public:
 	MonsterType getMonsterType  () const { return type; }
 
 	void setSpawnPoint(const XMFLOAT3& point) { spawnPoint = point; }
-	void setHP(int newHP) { hp = newHP; } 
+	void setHP(float newHP) 
+    {
+        hp = newHP; 
+    } 
 
     void setCurrentAttackType(int attackType);
         
@@ -127,7 +130,7 @@ public:
 private:
     int m_targetID = -1;
     float hp = -1;
-	
+	float max_hp = -1; // 몬스터 최대 HP
     MonsterType type;
 	XMFLOAT3 spawnPoint; // 몬스터 스폰 위치
 
