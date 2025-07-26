@@ -7,6 +7,8 @@
 
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
+std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager{};
+
 CGameFramework::~CGameFramework()
 {
 	::CloseHandle(m_hFenceHandle);
@@ -63,6 +65,8 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 
 	m_pCamera = std::make_shared<CCamera>();
 	m_pCamera->Setup(2);
+
+	g_pSoundManager = std::make_unique<CMonsterChaserSoundManager>(64);
 
 	InitScene();
 
@@ -456,6 +460,7 @@ LRESULT CALLBACK CGameFramework::WMMessageProcessing(HWND hWnd, UINT nMessage, W
 		KeyboardProcessing(hWnd, nMessage, wParam, lParam);
 		break;
 	case WM_MOUSEMOVE:
+	case WM_MOUSEWHEEL:
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP:
 	case WM_RBUTTONDOWN:
@@ -495,6 +500,7 @@ void CGameFramework::MouseProcessing(HWND hWnd, UINT nMessage, WPARAM wParam, LP
 	case WM_LBUTTONDOWN:;
 	case WM_LBUTTONUP:
 	case WM_MOUSEMOVE:
+	case WM_MOUSEWHEEL:
 		m_pScene->OnProcessingMouseMessage(hWnd, nMessage, wParam, lParam);
 		break;
 	}

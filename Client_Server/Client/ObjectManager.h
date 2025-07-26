@@ -5,6 +5,15 @@
 #include "GameObject.h"
 #include "AnimationManager.h"
 
+// 07.25 ===========================================
+extern std::array<bool, 3>	g_PlayerBuffStat;
+extern std::array<float, 3> g_maxHPs;
+extern std::array<float, 3> g_maxMPs;
+extern std::array<float, 3> g_SkillCoolTime;
+extern std::array<float, 3> g_SkillCurCTime;
+extern std::array<float, 3> g_SkillCost;
+// =================================================
+
 class ObjectManager {
 public:
     ObjectManager() {}
@@ -57,6 +66,12 @@ public:
     float GetHP() const {
         return hp;
     }
+
+    int GetMP() const {
+        return mp;
+    }
+
+
 
     void Plusgold(int amount) {
         gold += amount;
@@ -117,20 +132,19 @@ public:
 	MonsterType getMonsterType  () const { return type; }
 
 	void setSpawnPoint(const XMFLOAT3& point) { spawnPoint = point; }
-	void setHP(float newHP) 
-    {
-        hp = newHP; 
-    } 
+	void setHP(int newHP) { hp = newHP; } 
 
     void setCurrentAttackType(int attackType);
         
     UINT getCurrentAttackType() { return static_cast<UINT>(currentAttackType); }
   
-    
+    float getMaxHP() { return max_hp; }
+    float getHP() { return hp; }
 private:
     int m_targetID = -1;
     float hp = -1;
-	float max_hp = -1; // 몬스터 최대 HP
+    float max_hp = -1;
+	
     MonsterType type;
 	XMFLOAT3 spawnPoint; // 몬스터 스폰 위치
 

@@ -18,12 +18,12 @@ XMFLOAT3 ObjectManager::getPosition() const {
 	return pos;
 }
 
-Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t) 
+Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
 {
 
 	switch (type)
 	{
-		
+
 	case MonsterType::Feroptere:
 	case MonsterType::Pistiripere:
 	case MonsterType::RostrokarackLarvae:
@@ -50,7 +50,7 @@ Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
 		break;
 
 	default:
-		hp = 100; // �⺻��
+		hp = 100;
 		break;
 	}
 }

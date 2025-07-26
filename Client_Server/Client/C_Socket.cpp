@@ -9,6 +9,9 @@ extern std::array<short, 10>	 userPerRoom;
 extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
 extern bool allready;
 extern TitleState g_state;
+extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
+
+
 C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
 
 
@@ -105,10 +108,9 @@ void C_Socket::SendPlayerAttack(const int target_id,const int type)
 	cs_packet_player_attack pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_PLAYERATTACK;
-	pkt.target_monster_id = target_id; // 공격 대상 몬스터 ID
-	pkt.attack_type = type; // 0: 일반 공격, 1: 스킬 공격
+	pkt.target_monster_id = target_id; // 공격 대상 몬스터 ID		// 스킬 쓴거임 -1
+	pkt.attack_type = type; // 0: 일반 공격, 1: 스킬 공격			// 1: 1번 스킬 2 번 3 번
 	Client.send_packet(&pkt);
-	
 }
 
 
@@ -119,24 +121,6 @@ void C_Socket::SendUseItem(const unsigned int type)
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_USE_ITEM;
 	pkt.item_type = type;
-	Client.send_packet(&pkt);
-}
-
-void C_Socket::SendPriestBUFF(const char SkillNumber)
-{
-	cs_packet_skill_use pkt;
-	pkt.size = sizeof(pkt);
-	pkt.type = C2S_P_USE_SKILL;
-	pkt.skillNumber = SkillNumber; // 0이 체력 회복, 1이 공격력 증가 + 방어력 감소, 2가 스킬게이지 최대치
-	Client.send_packet(&pkt);
-}
-
-void C_Socket::SendNEXTSTAGEMASTERKEY()
-{
-	cs_packet_next_stage_master_key pkt;
-	pkt.size = sizeof(pkt);
-	pkt.type = C2S_P_MASTERKEY;
-	
 	Client.send_packet(&pkt);
 }
 
@@ -227,14 +211,18 @@ void C_Socket::process_packet(char* ptr)
 	{
 		sc_packet_pickcharacter* p = reinterpret_cast<sc_packet_pickcharacter*>(ptr);
 		short CT = p->C_type;
-		int loacl_id = p->Local_id;
-		Players[loacl_id].setCharacterType(CT);
+		int local_id = p->Local_id;
+		Players[local_id].setCharacterType(CT);
 
-		Players[loacl_id].SetMaxHP(p->Max_HP);
-		Players[loacl_id].SetHP(p->Max_HP);
+		Players[local_id].SetMaxHP(p->Max_HP);
+		Players[local_id].SetHP(p->Max_HP);
 
-		Players[loacl_id].SetMaxMP(p->Max_MP);
-		Players[loacl_id].SetMP(p->Max_MP);
+		Players[local_id].SetMaxMP(p->Max_MP);
+		Players[local_id].SetMP(p->Max_MP);
+
+		// 07.25
+		g_maxHPs[local_id] = p->Max_HP;
+		g_maxMPs[local_id] = p->Max_MP;
 		break;
 	}
 	case S2C_P_SETREADY:
@@ -259,7 +247,8 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
 		//g_state = GoLoading;
-
+		g_pSoundManager->AllStop();
+		g_pSoundManager->StartFx(ESOUND::SOUND_START);
 		break;
 		//4 7 9
 	}
@@ -330,21 +319,15 @@ void C_Socket::process_packet(char* ptr)
 			// 예: 플레이어에게 골드 지급 로직 추가 가능
 			// 예시로 그냥 출력
 			std::cout << "몬스터 " << monster_id << "가 죽었습니다. 드랍된 골드: " << gold << std::endl;
-			
+			// 몬스터 제거 로직 추가 가능
+			//Monsters.erase(monster_id);
 		}
 		break;
 		
 	}
 
-	case S2C_P_MONSTER_HIT:
-	{
-		sc_packet_monster_hit* pkt = reinterpret_cast<sc_packet_monster_hit*>(ptr);
+	
 
-		int id = pkt->monster_id; // 몬스터 ID
-		Monsters[id]->setHP(pkt->hp); // 몬스터 HP 업데이트
-		break;
-
-	}
 	case S2C_P_MONSTER_RESPAWN: {
 		sc_packet_monster_respawn* pkt = reinterpret_cast<sc_packet_monster_respawn*>(ptr);
 
@@ -358,9 +341,24 @@ void C_Socket::process_packet(char* ptr)
 			//m->playIdleAnim();															  // doyoung's turn
 		}
 		else {
-			
+			// 존재하지 않는 경우 새로 생성  
+		/*	auto newMonster = std::make_unique<Monster>(id);
+			newMonster->setPosition(pkt->pos);
+			newMonster->setVisible(true);
+			newMonster->playIdleAnim();
+			Monsters[id] = std::move(newMonster);*/
 		}
 		break;
+	}
+
+	case S2C_P_MONSTER_HIT:
+	{
+		sc_packet_monster_hit* pkt = reinterpret_cast<sc_packet_monster_hit*>(ptr);
+
+		int id = pkt->monster_id; // 몬스터 ID
+		Monsters[id]->setHP(pkt->hp); // 몬스터 HP 업데이트
+		break;
+
 	}
 
 	case S2C_P_MONSTER_MOVE: {
@@ -393,6 +391,8 @@ void C_Socket::process_packet(char* ptr)
 	{
 		auto* pkt = reinterpret_cast<sc_packet_change_hp*>(ptr);
 		int local_id = static_cast<int>(pkt->local_id);
+		if (Players[local_id].GetHP() < pkt->hp)
+			g_pBuff2->Start();
 		Players[local_id].SetHP(pkt->hp); // 플레이어의 HP 변경 처리
 		break;
 	}
@@ -424,24 +424,32 @@ void C_Socket::process_packet(char* ptr)
 		{
 		case 0: // 공격력 증가
 			if(state == 1) {
+				g_PlayerBuffState[0] = true;
+				g_pBuff0->Start();
 				//공격력 버프 켜짐
 			} else {
+				g_PlayerBuffState[0] = false;
 				//공격력 버프 꺼짐
 			}
 			break;
 		case 1: // 방어력 증가
 			if (state == 1) {
+				g_PlayerBuffState[1] = true;
+				g_pBuff1->Start();
 				//방어력 상승 버프 켜짐
 			}
 			else {
+				g_PlayerBuffState[1] = false;
 				//방어력 상승 버프 꺼짐
 			}
 			break;
 		case 2: // 방어력 감소
 			if (state == 1) {
+				g_PlayerBuffState[2] = true;
 				//방어력 감소 버프 켜짐
 			}
 			else {
+				g_PlayerBuffState[2] = false;
 				//방어력 감소 버프 꺼짐
 			}
 			break;

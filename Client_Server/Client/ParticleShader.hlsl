@@ -31,6 +31,7 @@ struct CameraInfo
     matrix mtxInverseViewProj;
     float3 cameraEye;
     float fElapsedTime;
+    matrix mtxtarget;
     int bNormalMapping;
     int bReflection;
     int intMapNumber;
@@ -163,9 +164,10 @@ void GS_M_Laser_OnePath(point ParticleVertex input[1], inout PointStream<Particl
     {
         case PARTICLE_EMITTER:{
                 particle.direction.x += g_camera.fElapsedTime;
+                particle.direction.z += g_camera.fElapsedTime;
                 if (particle.lifeTime <= 4.0f)
                 {
-                    if (particle.direction.x >= 0.1f)
+                    if (particle.direction.x >= 0.1f && particle.direction.z >= 1.0f)
                     {
                         while (particle.direction.x >= 0.1f)
                         {
@@ -175,7 +177,10 @@ void GS_M_Laser_OnePath(point ParticleVertex input[1], inout PointStream<Particl
                         output.particleType = PARTICLE_FLAME;
                         output.direction = float3(0.0, 0.0, 20.0);
                         output.lifeTime = particle.direction.x;
-                        output.position = particle.position + (output.direction * particle.direction.x);
+                        output.position = mul(float4(particle.position + (output.direction * particle.direction.x), 1.0f), g_camera.mtxtarget).xyz;
+                        float3 emitP = mul(float4(particle.position, 1.0f), g_camera.mtxtarget).xyz;
+                        output.direction = normalize(output.position - emitP) * 40.0f;
+                        //output.position = particle.position + (output.direction * particle.direction.x);
                     
                         outStream.Append(particle);
                         outStream.Append(output);
@@ -287,10 +292,10 @@ void GS_Boom_OnePath(point ParticleVertex input[1], inout PointStream<ParticleVe
                     for (uint j = 0; j < 6; ++j)
                     {
                         ParticleVertex output;
-                        output.position = particle.position;
+                        output.position = mul(float4(particle.position, 1.0f), g_camera.mtxtarget).xyz;
                         output.lifeTime = 0.0f;
                         output.particleType = PARTICLE_FLAME;
-                        output.direction = normalize(float3(cos(radians(60.0f * j)), sin(radians((30.0f * i) - 75.0f)), sin(radians(60.0f * j))));
+                        output.direction = normalize(float3(cos(radians(60.0f * j)), sin(radians((30.0f * i) - 75.0f)), sin(radians(60.0f * j)))) * 3.0f;
 
                         outStream.Append(output);
                     }
@@ -337,7 +342,7 @@ inout PointStream<BillBoardOutput2> outStream2, inout PointStream<BillBoardOutpu
                 float3 vRight = normalize(cross(vUp, vLook));
                 vUp = normalize(cross(vLook, vRight));
                 float3 Vertices[4];
-                float fHalf = 0.2f;
+                float fHalf = 0.5f;
                 Vertices[0] = input[0].position + fHalf * vRight - fHalf * vUp;
                 Vertices[1] = input[0].position + fHalf * vRight + fHalf * vUp;
                 Vertices[2] = input[0].position - fHalf * vRight - fHalf * vUp;
@@ -346,7 +351,7 @@ inout PointStream<BillBoardOutput2> outStream2, inout PointStream<BillBoardOutpu
                 BillBoardOutput1 output1;
                 BillBoardOutput2 output2;
                 BillBoardOutput3 output3;
-                output3.color = float4(1.0, 1.0, 1.0, 0.5);
+                output3.color = float4(1.0, 1.0, 1.0, 1.0);
                 for (int i = 0; i < 6; ++i)
                     outStream3.Append(output3);
             
@@ -412,7 +417,7 @@ void GS_Buff_OnePath(point ParticleVertex input[1], inout PointStream<ParticleVe
                             ttime -= 0.1f;
                             ++cnt;
                         }
-                        output.position = particle.position + (float3(cos(radians(36.0f * cnt)), 0.0, sin(radians(36.0f * cnt))) * 3.0f) + (output.direction * output.lifeTime);
+                        output.position = mul(float4(particle.position + (float3(cos(radians(36.0f * cnt)), 0.0, sin(radians(36.0f * cnt))) * 1.0f) + (output.direction * output.lifeTime), 1.0f), g_camera.mtxtarget).xyz;
                     
                         outStream.Append(particle);
                         outStream.Append(output);
