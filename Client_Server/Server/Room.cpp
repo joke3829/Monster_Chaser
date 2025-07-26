@@ -78,7 +78,8 @@ void Room::MonsterThreadFunction() {
 
 		// 몬스터 업데이트
 		for (auto& [id, monster] : monsters)
-			monster->Update(deltaTime, *this, g_server.playerManager);
+			//monster->Update(deltaTime, *this, g_server.playerManager);
+			monster->Update(0.016, *this, g_server.playerManager);
 
 		// 플레이어 MP 회복 및 버프 상태 갱신
 		for (int i = 0; i < GetPlayerCount(); ++i) {

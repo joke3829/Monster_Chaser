@@ -46,7 +46,7 @@ public:
 	void SendPriestBUFF(const char SkillNumber);	//Send Priest Buff Packet
 
 
-	//void SendNEXTSTAGEMASTERKEY();	//Send Next Stage Master Key Packet
+	void SendNEXTSTAGEMASTERKEY();	//Send Next Stage Master Key Packet
 	//--------------------------------------------------------------//									
 
 	bool getstart() { return InGameStart; }

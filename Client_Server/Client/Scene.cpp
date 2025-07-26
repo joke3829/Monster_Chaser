@@ -1274,7 +1274,7 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 	for (const auto& target : targets) {
 		if (!target) continue;
 		XMFLOAT3 targetPos = target->getObject()->getPosition();
-		targetPos.y += 3.0f;
+		targetPos.y += 1.0f;
 		XMVECTOR vTargetPos = XMLoadFloat3(&targetPos);
 		XMVECTOR vRelativeDir = XMVectorSubtract(vTargetPos, vAttackerPos);
 		XMVECTOR vDistance = XMVector3Length(vRelativeDir);
@@ -1289,6 +1289,7 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 				minDistance = distance;
 				XMStoreFloat3(&directionToTarget, vNormRelativeDir);
 				targetFound = true;
+				
 			}
 		}
 	}

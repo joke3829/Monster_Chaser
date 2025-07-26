@@ -344,8 +344,9 @@ void C_Socket::process_packet(char* ptr)
 
 		if (Monsters.find(id) != Monsters.end()) {
 			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr  
-			m->setPosition(pkt->pos);	// doyoung's turn
+			m->getRenderingObject()->SetWorldMatrix(pkt->pos);
 			m->getAnimationManager()->ChangeAnimation(2, false);
+			
 			//m->setVisible(true);														  // doyoung's turn
 			//m->playIdleAnim();															  // doyoung's turn
 		}
@@ -378,10 +379,10 @@ void C_Socket::process_packet(char* ptr)
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
 			auto* ap = dynamic_cast<CMonsterManager*>(monster->getAnimationManager());
-			if (!ap->getSkillnum()) {
+			//if (!ap->getSkillnum()) {
 				monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
 				monster->getAnimationManager()->ChangeAnimation(4, false);
-			}
+		//	}
 			
 			//monster->setVisible(true);
 			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
