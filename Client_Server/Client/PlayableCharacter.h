@@ -156,6 +156,7 @@ protected:
 	std::vector<std::unique_ptr<CProjectile>> bullet;
 	int currentBullet = 0;
 
+	float m_Skill3Time = 0.0f;
 	bool m_bBulletFired[5] = { false, false, false, false, false };
 };
 

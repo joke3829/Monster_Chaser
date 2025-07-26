@@ -628,6 +628,7 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 				m_bBulletFired[i] = false;
 			}
 			m_CurrentSkill = 0;
+			m_Skill3Time = 0.0f;
 		}
 		if (m_AManager->IsComboInterrupted()) {
 			test = true;
@@ -683,10 +684,31 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 			}
 			break;
 		case 3:
-			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f) && !m_bBulletFired[0])
+			m_Skill3Time += fElapsedTime;
+			if (1.1f <= m_Skill3Time && m_Skill3Time <= 1.2f && !m_bBulletFired[0])
 			{
 				MakeBullet(80.0f, 3);
 				m_bBulletFired[0] = true;
+			}
+			else if (1.7f <= m_Skill3Time && m_Skill3Time <= 1.8f && !m_bBulletFired[1])
+			{
+				MakeBullet(80.0f, 3);
+				m_bBulletFired[1] = true;
+			}
+			else if (2.3f <= m_Skill3Time && m_Skill3Time <= 2.4f && !m_bBulletFired[2])
+			{
+				MakeBullet(80.0f, 3);
+				m_bBulletFired[2] = true;
+			}
+			else if (2.9f <= m_Skill3Time && m_Skill3Time <= 3.0f && !m_bBulletFired[3])
+			{
+				MakeBullet(80.0f, 3);
+				m_bBulletFired[3] = true;
+			}
+			else if (3.5f <= m_Skill3Time && m_Skill3Time <= 3.6f && !m_bBulletFired[4])
+			{
+				MakeBullet(80.0f, 3);
+				m_bBulletFired[4] = true;
 			}
 			break;
 		}
@@ -716,20 +738,20 @@ void CPlayerMage::MakeBullet(float speed, int skill)
 
 	if (skill == 1) {
 		projectile->setPosition(pos);
-		projectile->setMoveDirection({ m_AutoDirect.x, 0.0f, m_AutoDirect.z });
+		projectile->setMoveDirection(m_AutoDirect);
 		projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
 		projectile->getObjects().SetRenderState(true);
 	}
 	else if (skill == 2) {
 		pos.y += 30.0f;
 		projectile->setPosition(pos);
-		projectile->setMoveDirection({ m_AutoDirect.x, -1.0f, m_AutoDirect.z });
+		projectile->setMoveDirection({ m_AutoDirect.x, -0.7f, m_AutoDirect.z });
 		projectile->getObjects().SetScale({ 10.0f, 10.0f, 10.0f });
 		projectile->getObjects().SetRenderState(true);
 	}
 	else if (skill == 3) {
 		projectile->setPosition(pos);
-		projectile->setMoveDirection({ m_AutoDirect.x, 0.0f, m_AutoDirect.z });
+		projectile->setMoveDirection(m_AutoDirect);
 		projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
 		projectile->getObjects().SetRenderState(false);
 	}
