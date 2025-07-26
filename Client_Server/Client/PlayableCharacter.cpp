@@ -745,7 +745,7 @@ void CPlayerMage::MakeBullet(float speed, int skill)
 	else if (skill == 2) {
 		pos.y += 30.0f;
 		projectile->setPosition(pos);
-		projectile->setMoveDirection({ m_AutoDirect.x, -0.7f, m_AutoDirect.z });
+		projectile->setMoveDirection({ m_AutoDirect.x, -0.6f, m_AutoDirect.z });
 		projectile->getObjects().SetScale({ 10.0f, 10.0f, 10.0f });
 		projectile->getObjects().SetRenderState(true);
 	}
