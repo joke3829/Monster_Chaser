@@ -23,14 +23,14 @@ public:
 	BoundingSphere& getBoundingSphere() { return m_Sphere; }
 	XMFLOAT4X4& getWorldMatrix() { return m_WorldMatrix; }
 
-	
+	void setTarget(CGameObject* target) { m_pTarget = target; }
 	void setPosition(XMFLOAT3& pos);
 	virtual void setMaterial(Material& material) { m_material = material; }
 	virtual void setNotUseLightCalurate() {}
 	virtual void setOnePathPipeline(ComPtr<ID3D12PipelineState>& ps) { m_OnePathPipeline = ps; }
 	virtual void setTwoPathPipeline(ComPtr<ID3D12PipelineState>& ps) { m_TwoPathPipeline = ps; }
 
-	virtual void ParticleSetting(float lifeTime, float endTime = 0.0f);
+	virtual void ParticleSetting(float lifeTime, float endTime = 0.0f, XMFLOAT3 pos = XMFLOAT3());
 
 	virtual void UpdateObject(float fElapsedTime);
 
@@ -66,6 +66,7 @@ protected:
 	Material m_material;
 
 	BoundingSphere m_Sphere{};
+	CGameObject* m_pTarget{};
 
 	float m_fElapsedTime{};
 	float m_fEndTime{};

@@ -9,8 +9,19 @@
 #include "stdfxh.h"
 #include "Monster.h"
 #include "ObjectManager.h"
+#include "SoundManager.h"
 
 extern DXResources g_DxResource;
+extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
+
+// 07.25 ===========================================
+extern std::array<bool, 3>	g_PlayerBuffState;
+extern std::array<float, 3> g_maxHPs;
+extern std::array<float, 3> g_maxMPs;
+extern std::array<float, 3> g_SkillCoolTime;
+extern std::array<float, 3> g_SkillCurCTime;
+extern std::array<float, 3> g_SkillCost;
+// =================================================
 
 class CScene {
 public:
@@ -165,13 +176,18 @@ public:
 	void CreateUIRootSignature();
 	void CreateUIPipelineState();
 
-	void AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers);
-	void ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers);
+	void AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag);
+	void ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag);
 	void AutoDirection(const std::vector<std::unique_ptr<CPlayableCharacter>>& attacker, const std::vector<std::unique_ptr<CPlayableCharacter>>& targets);
 
 	void CreateMageCharacter();
 	void CreateWarriorCharacter();
 	void CreatePriestCharacter();
+
+	void CreateParticle(short job);
+	void CreateParticleRS();
+	void CreateOnePath(ComPtr<ID3D12PipelineState>& res, const char* entry);
+	void CreateTwoPath(ComPtr<ID3D12PipelineState>& res, const char* entry);
 
 	virtual void Render() {}
 	void PostProcess();
@@ -183,36 +199,29 @@ protected:
 	std::vector<std::unique_ptr<CMonster>>				m_pMonsters{};
 
 	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
+	ComPtr<ID3D12RootSignature>					m_ParticleRS{};
 
 	// InGame UI ====================================================================
 	bool m_bUIOnOff = true;
+	bool m_bBossBattle = false;
 
-	unsigned int cItem{};
+	int cItem{};
 
 	std::array<std::vector<std::unique_ptr<UIObject>>, 3> m_vPlayersStatUI{};
 	std::vector<std::unique_ptr<UIObject>>	m_vItemUIs;
 	std::vector<std::unique_ptr<UIObject>>	m_vSkillUIs;
+	std::vector<std::unique_ptr<UIObject>>	m_vBossUIs;
 
-	short m_numUser = 3;						// replace	Player.size()
-	short m_local_id = 0;
-	short user_job[3] = { JOB_MAGE, JOB_WARRIOR, JOB_HEALER };
+	short m_numUser;
+	short m_local_id;
+	short m_myJob{};
 
-	std::array<bool, 3>	m_BuffState{};	// replace
-	std::array<float, 3> maxHPs;		// replace
-	std::array<float, 3> cHPs;			// replace
+	float m_fItemCoolTime = 30.0f;
+	float m_fItemCurTime{};
 
-	std::array<float, 3> coolTime{};
-	std::array<float, 3> curCTime{};
-	std::array<float, 3> skillCost{};
-
-	float maxMPs[3] = { 100, 100, 100 };			// replace
-	float cMPs[3] = { 100, 37, 78 };			// replace
-
-	UINT m_nGold = 1500;
-
-	size_t ItemNumTextIndex;
-
-	void PlayerUISetup(short job);		// player job need
+	void PlayerUISetup(short job);
+	void UIUseSkill(KeyInputRet input);
+	void SkillParticleStart(KeyInputRet input);
 	// ===============================================================================
 };
 
@@ -270,8 +279,6 @@ public:
 protected:
 	unsigned int								m_nSkyboxIndex{};
 
-	InGameState									m_nState{};
-
 	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
 	float										startTime{};
 	float										wOpacity = 1.0f;
@@ -303,8 +310,6 @@ public:
 	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
 protected:
 	unsigned int								m_nSkyboxIndex{};
-
-	InGameState									m_nState{};
 
 	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
 	float										startTime{};

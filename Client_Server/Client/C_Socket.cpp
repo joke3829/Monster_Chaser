@@ -4,15 +4,20 @@
 extern C_Socket Client;
 extern std::unordered_map<int, Player> Players;
 extern std::unordered_map<int, std::unique_ptr<Monster>> Monsters;
+extern InGameState g_InGameState;
 extern std::array<short, 10>	 userPerRoom;
 extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
 extern bool allready;
 extern TitleState g_state;
+extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
+
+
 C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
 
 
 C_Socket::~C_Socket()
 {
+
 	closesocket(m_socket);
 }
 
@@ -78,22 +83,49 @@ void C_Socket::SendPickCharacter(const short RoomNum, const short Job)
 	Client.send_packet(&p);
 }
 
-void C_Socket::SendPlayerReady()
+void C_Socket::SendPlayerReady(const short Map)
 {
 	cs_packet_readytoIngame pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_READYINGAME;
-	/*pkt.room_number = room_num;
-	pkt.local_id = local_id;*/
+	pkt.Map = Map;			//어떤 맵 준비완료됐는지
 	Client.send_packet(&pkt);
 }
 
-void C_Socket::SendHPitem(ItemType type)
+void C_Socket::SendMonsterAttack(const int monster_id, const int target_id,const int Atktype)
 {
-	cs_packet_use_item pkt;
+	cs_packet_monster_attack pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_MONSTER_ATTACK;
+	pkt.attacker_id = monster_id; // 공격하는 몬스터 ID
+	pkt.target_player_id = target_id; // 공격 대상 플레이어 ID
+	pkt.attack_type = Atktype; // 0: 일반 공격, 1: 스킬 공격
+	Client.send_packet(&pkt);
+}
+
+void C_Socket::SendPlayerAttack(const int target_id,const int type)
+{
+	cs_packet_player_attack pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_PLAYERATTACK;
+	pkt.target_monster_id = target_id; // 공격 대상 몬스터 ID
+	pkt.attack_type = type; // 0: 일반 공격, 1: 스킬 공격
+	Client.send_packet(&pkt);
+	
+}
+
+void C_Socket::SendHealerBUFF(const char SkillNumber)
+{
+
+}
+
+void C_Socket::SendUseItem(const unsigned int type)
+{
+	
+	cs_packet_item_use pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_USE_ITEM;
-	pkt.item_type = static_cast<unsigned char>(type);
+	pkt.item_type = type;
 	Client.send_packet(&pkt);
 }
 
@@ -184,14 +216,18 @@ void C_Socket::process_packet(char* ptr)
 	{
 		sc_packet_pickcharacter* p = reinterpret_cast<sc_packet_pickcharacter*>(ptr);
 		short CT = p->C_type;
-		int loacl_id = p->Local_id;
-		Players[loacl_id].setCharacterType(CT);
+		int local_id = p->Local_id;
+		Players[local_id].setCharacterType(CT);
 
-		Players[loacl_id].SetMaxHP(p->Max_HP);
-		Players[loacl_id].SetHP(p->Max_HP);
+		Players[local_id].SetMaxHP(p->Max_HP);
+		Players[local_id].SetHP(p->Max_HP);
 
-		Players[loacl_id].SetMaxMP(p->Max_HP);
-		Players[loacl_id].SetMP(p->Max_HP);
+		Players[local_id].SetMaxMP(p->Max_MP);
+		Players[local_id].SetMP(p->Max_MP);
+
+		// 07.25
+		g_maxHPs[local_id] = p->Max_HP;
+		g_maxMPs[local_id] = p->Max_MP;
 		break;
 	}
 	case S2C_P_SETREADY:
@@ -216,7 +252,8 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
 		//g_state = GoLoading;
-
+		g_pSoundManager->AllStop();
+		g_pSoundManager->StartFx(ESOUND::SOUND_START);
 		break;
 		//4 7 9
 	}
@@ -259,8 +296,22 @@ void C_Socket::process_packet(char* ptr)
 		}
 		break;
 	}
+	case S2C_P_MONSTER_ATTACK://몬스터가 공격 상태일 떄
+	{
+		sc_packet_monster_attack* pkt = reinterpret_cast<sc_packet_monster_attack*>(ptr);
+		int attack_type = pkt->attack_type; // 공격 타입 (0: 1번 공격 모양, 1: 2번 공격모양, 2: 3번 공격모양)	char형태
+		int monster_id = pkt->monster_id; // 몬스터 ID
 	
+		Monsters[monster_id]->setCurrentAttackType(attack_type); // 몬스터의 현재 공격 타입 설정 attack_type이 1이면 Skill1 , 2면 Skill2
+		int a = Monsters[monster_id]->getCurrentAttackType();
+		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(Monsters[monster_id]->getCurrentAttackType(), true); // 몬스터 애니메이션 변경
+		
 
+		//Monsters[monster_id]->getAnimationManager()->
+		//pkt->monster_id; // 몬스터 ID		//이걸로 공격 애니메이션 셋 
+
+		break;
+	}
 	case S2C_P_MONSTER_DIE: {
 		sc_packet_monster_die* pkt = reinterpret_cast<sc_packet_monster_die*>(ptr);
 		int monster_id = pkt->monster_id;
@@ -274,7 +325,7 @@ void C_Socket::process_packet(char* ptr)
 			// 예시로 그냥 출력
 			std::cout << "몬스터 " << monster_id << "가 죽었습니다. 드랍된 골드: " << gold << std::endl;
 			// 몬스터 제거 로직 추가 가능
-			Monsters.erase(monster_id);
+			//Monsters.erase(monster_id);
 		}
 		break;
 		
@@ -305,6 +356,16 @@ void C_Socket::process_packet(char* ptr)
 		break;
 	}
 
+	case S2C_P_MONSTER_HIT:
+	{
+		sc_packet_monster_hit* pkt = reinterpret_cast<sc_packet_monster_hit*>(ptr);
+
+		int id = pkt->monster_id; // 몬스터 ID
+		Monsters[id]->setHP(pkt->hp); // 몬스터 HP 업데이트
+		break;
+
+	}
+
 	case S2C_P_MONSTER_MOVE: {
 		sc_packet_monster_move* pkt = reinterpret_cast<sc_packet_monster_move*>(ptr);
 		int id = pkt->monster_id;
@@ -312,13 +373,87 @@ void C_Socket::process_packet(char* ptr)
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
 			monster->setPosition(pkt->pos);
+			
 			//monster->setVisible(true);
 			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
 		}
 
 		break;
 	}
-		
+	case S2C_P_PLAYER_HIT:
+	{
+		sc_packet_player_hit* pkt = reinterpret_cast<sc_packet_player_hit*>(ptr);
+		Players[pkt->local_id].SetHP(pkt->hp); // 플레이어가 데미지를 받았을 때 HP 감소 처리
+		break;
+	}
+	case S2C_P_NEXTSTAGE:
+	{
+		g_InGameState = IS_FINISH; // 게임 상태를 완료로 변경
+		break;
+	}
+	case S2C_P_CHANGEHP:
+	{
+		auto* pkt = reinterpret_cast<sc_packet_change_hp*>(ptr);
+		int local_id = static_cast<int>(pkt->local_id);
+		Players[local_id].SetHP(pkt->hp); // 플레이어의 HP 변경 처리
+		break;
+	}
+	case S2C_P_CHANGEMP:
+	{
+
+		auto* pkt = reinterpret_cast<sc_packet_change_mp*>(ptr);
+		int local_id = static_cast<int>(pkt->local_id);
+		Players[local_id].SetMP(pkt->mp); // 플레이어의 HP 변경 처리
+		break;
+	}
+	case S2C_P_BOSS_ROAR:
+	{
+		auto* pkt = reinterpret_cast<sc_packet_boss_roar*>(ptr);
+		int boss_id = pkt->monster_id;
+
+		if (Monsters.count(boss_id)) {
+			//Monsters[boss_id]->playRoarAnimation();  //  울부짖는 애니메이션 재생 함수
+		}
+		break;
+	}
+	case S2C_P_BUFFCHANGE:
+	{
+		auto* pkt = reinterpret_cast<sc_packet_buff_change*>(ptr);
+		char buffType = pkt->bufftype;
+		char state = pkt->state;
+
+		switch (buffType)
+		{
+		case 0: // 공격력 증가
+			if(state == 1) {
+				//공격력 버프 켜짐
+			} else {
+				//공격력 버프 꺼짐
+			}
+			break;
+		case 1: // 방어력 증가
+			if (state == 1) {
+				//방어력 상승 버프 켜짐
+			}
+			else {
+				//방어력 상승 버프 꺼짐
+			}
+			break;
+		case 2: // 방어력 감소
+			if (state == 1) {
+				//방어력 감소 버프 켜짐
+			}
+			else {
+				//방어력 감소 버프 꺼짐
+			}
+			break;
+		default:
+			break;
+		}
+
+		std::cout << "[버프 변경] 타입: " << (int)buffType << ", 상태: " << (int)state << std::endl;
+		break;
+	}
 	case S2C_P_LEAVE:
 	{
 		sc_packet_leave* pkt = reinterpret_cast<sc_packet_leave*>(ptr);
@@ -334,6 +469,7 @@ void C_Socket::process_packet(char* ptr)
 		}
 		break;
 	}
+	
 	default:
 		break;
 	}

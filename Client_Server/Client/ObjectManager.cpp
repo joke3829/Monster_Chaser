@@ -18,36 +18,62 @@ XMFLOAT3 ObjectManager::getPosition() const {
 	return pos;
 }
 
-Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t) 
+Monster::Monster(int id, MonsterType t) : ObjectManager(id), type(t)
 {
 
 	switch (type)
 	{
-		
+
 	case MonsterType::Feroptere:
-		hp = 100;
-		break;
 	case MonsterType::Pistiripere:
-		hp = 200;
-		break;
 	case MonsterType::RostrokarackLarvae:
-		hp = 300;
+		hp = 15000;
+		max_hp = hp; // 최대 HP 설정
 		break;
-	case MonsterType::XenokarceBoss:
+	case MonsterType::Xenokarce:
+		hp = 40000;
+		max_hp = hp; // 최대 HP 설정
 		break;
 	case MonsterType::Occisodonte:
-		break;
 	case MonsterType::Limadon:
-		break;
 	case MonsterType::Fulgurodonte:
+		hp = 30000;
+		max_hp = hp; // 최대 HP 설정
 		break;
-	case MonsterType::CrassorridBoss:
+	case MonsterType::Crassorrid:
+		hp = 80000;
+		max_hp = hp; // 최대 HP 설정
 		break;
-	case MonsterType::GorhorridBoss:
+	case MonsterType::Gorhorrid:
+		hp = 200000;
+		max_hp = hp; // 최대 HP 설정
 		break;
 
 	default:
-		hp = 100; // �⺻��
+		hp = 100;
 		break;
 	}
+}
+
+
+
+void Monster::setCurrentAttackType(int attackType)
+{
+	
+	switch (attackType)
+	{
+	case 1:
+		currentAttackType = ANIMATION::ANI_SKILL1;
+		break;
+	case 2:
+		currentAttackType = ANIMATION::ANI_SKILL2;
+		break;
+	case 3:
+		currentAttackType = ANIMATION::ANI_SKILL3;
+		break;
+	default:
+		currentAttackType = ANIMATION::ANI_IDLE; // 기본값으로 IDLE 설정
+		break;
+	}
+	
 }

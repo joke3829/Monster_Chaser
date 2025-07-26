@@ -1,4 +1,6 @@
 #include "PlayableCharacter.h"
+#include "ObjectManager.h"
+#include "C_Socket.h"
 
 CPlayableCharacter::CPlayableCharacter(CSkinningObject* object, CAnimationManager* aManager)
 	: m_Object(object)
@@ -47,11 +49,11 @@ void CPlayerMage::Skill3()
 	m_Damage = 4000.0f;
 }
 
-void CPlayerMage::Attacked(float damage)
+bool CPlayerMage::Attacked(float damage)
 {
-	m_HP -= damage;
+	//// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive && !m_bDoingCombo) {
 			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT), true);
@@ -61,7 +63,8 @@ void CPlayerMage::Attacked(float damage)
 	{
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 CPlayerMage::CPlayerMage(CSkinningObject* object, CAnimationManager* aManager)
@@ -130,7 +133,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 	}
 }
 
-void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 characterDir = cameraDir;
@@ -140,9 +143,11 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 	XMStoreFloat3(&normalizedCharacterDir, XMVector3Normalize(XMLoadFloat3(&normalizedCharacterDir)));
 	XMFLOAT3 moveDir{};
 
+	KeyInputRet ret = KEY_NOTHING;
+
 	if (m_bSkillActive || m_bDoingCombo) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	// Handle single and combined key presses
@@ -589,17 +594,21 @@ void CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_bSkillActive = true;
 		}
-		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
+		if ((keyBuffer['Q'] & 0x80) && !(m_PrevKeyBuffer['Q'] & 0x80)) {	// Mp검사 추가해서 
 			Skill1();
+			ret = KEY_SKILL1;
 		}
-		if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
+		if ((keyBuffer['E'] & 0x80) && !(m_PrevKeyBuffer['E'] & 0x80)) {
 			Skill2();
+			ret = KEY_SKILL2;
 		}
-		if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
+		if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80)) {
 			Skill3();
+			ret = KEY_SKILL3;
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 void CPlayerMage::UpdateObject(float fElapsedTime)
@@ -757,15 +766,15 @@ void CPlayerWarrior::Skill3()
 	//m_Damage = 600.0f; //2
 }
 
-void CPlayerWarrior::Attacked(float damage)
+bool CPlayerWarrior::Attacked(float damage)
 {
 	if (m_bSkillActive && m_CurrentSkill == 2)
 	{
-		return;
+		return false;
 	}
-	m_HP -= damage;
+	//// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive && !m_bDoingCombo) {
 			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_HIT), true);
@@ -775,7 +784,8 @@ void CPlayerWarrior::Attacked(float damage)
 	{
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 CPlayerWarrior::CPlayerWarrior(CSkinningObject* object, CAnimationManager* aManager)
@@ -843,7 +853,7 @@ void CPlayerWarrior::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARA
 	}
 }
 
-void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 characterDir = cameraDir;
@@ -853,9 +863,11 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 	XMStoreFloat3(&normalizedCharacterDir, XMVector3Normalize(XMLoadFloat3(&normalizedCharacterDir)));
 	XMFLOAT3 moveDir{};
 
+	KeyInputRet ret = KEY_NOTHING;
+
 	if (m_bSkillActive || m_bDoingCombo) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	// Handle single and combined key presses
@@ -1677,17 +1689,21 @@ void CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_bSkillActive = true;
 		}
-		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
+		if ((keyBuffer['Q'] & 0x80) && !(m_PrevKeyBuffer['Q'] & 0x80)) {
 			Skill1();
+			ret = KEY_SKILL1;
 		}
-		if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
+		if ((keyBuffer['E'] & 0x80) && !(m_PrevKeyBuffer['E'] & 0x80)) {
 			Skill2();
+			ret = KEY_SKILL2;
 		}
-		if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
+		if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80)) {
 			Skill3();
+			ret = KEY_SKILL3;
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 void CPlayerWarrior::UpdateObject(float fElapsedTime)
@@ -1791,11 +1807,11 @@ void CPlayerPriest::Skill3()
 	m_CurrentSkill = 3;
 }
 
-void CPlayerPriest::Attacked(float damage)
+bool CPlayerPriest::Attacked(float damage)
 {
-	m_HP -= damage;
+	//// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive && !m_bDoingCombo) {
 			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT), true);
@@ -1805,7 +1821,8 @@ void CPlayerPriest::Attacked(float damage)
 	{
 		m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT_DEATH), true);
 		m_bLive = false;
-	}
+	}*/
+	return true;
 }
 
 CPlayerPriest::CPlayerPriest(CSkinningObject* object, CAnimationManager* aManager)
@@ -1874,7 +1891,7 @@ void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM
 	}
 }
 
-void CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
 	XMFLOAT3 cameraDir = m_pCamera->getDir();
 	XMFLOAT3 characterDir = cameraDir;
@@ -1884,9 +1901,11 @@ void CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 	XMStoreFloat3(&normalizedCharacterDir, XMVector3Normalize(XMLoadFloat3(&normalizedCharacterDir)));
 	XMFLOAT3 moveDir{};
 
+	KeyInputRet ret = KEY_NOTHING;
+
 	if (m_bSkillActive || m_bDoingCombo) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	// Handle single and combined key presses
@@ -2333,17 +2352,21 @@ void CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_bSkillActive = true;
 		}
-		if ((keyBuffer['1'] & 0x80) && !(m_PrevKeyBuffer['1'] & 0x80)) {
+		if ((keyBuffer['Q'] & 0x80) && !(m_PrevKeyBuffer['Q'] & 0x80)) {
 			Skill1();
+			ret = KEY_SKILL1;
 		}
-		if ((keyBuffer['2'] & 0x80) && !(m_PrevKeyBuffer['2'] & 0x80)) {
+		if ((keyBuffer['E'] & 0x80) && !(m_PrevKeyBuffer['E'] & 0x80)) {
 			Skill2();
+			ret = KEY_SKILL2;
 		}
-		if ((keyBuffer['3'] & 0x80) && !(m_PrevKeyBuffer['3'] & 0x80)) {
+		if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80)) {
 			Skill3();
+			ret = KEY_SKILL3;
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 void CPlayerPriest::UpdateObject(float fElapsedTime)
@@ -2420,9 +2443,9 @@ void CPlayer::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lPara
 	m_pPlayerObject->MouseProcess(hWnd, nMessage, wParam, lParam);
 }
 
-void CPlayer::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet CPlayer::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
-	m_pPlayerObject->ProcessInput(keyBuffer, fElapsedTime);
+	return m_pPlayerObject->ProcessInput(keyBuffer, fElapsedTime);
 }
 
 void CPlayer::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum)

@@ -19,11 +19,11 @@ void Feroptere::Skill1()
 	}
 }
 
-void Feroptere::Attacked(float damage)
+bool Feroptere::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -32,7 +32,8 @@ void Feroptere::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Feroptere::UpdateObject(float fElapsedTime)
@@ -52,9 +53,16 @@ void Feroptere::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+
+		if(m_CurrentSkill !=0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
+			
 			if (getAniManager()->IsAnimationInTimeRange(0.4f, 0.6f))
 			{
 				m_bCheckAC = true;
@@ -64,11 +72,12 @@ void Feroptere::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Feroptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Feroptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -77,6 +86,7 @@ void Feroptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -100,11 +110,11 @@ void Pistriptere::Skill1()
 	}
 }
 
-void Pistriptere::Attacked(float damage)
+bool Pistriptere::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -113,7 +123,8 @@ void Pistriptere::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Pistriptere::UpdateObject(float fElapsedTime)
@@ -133,6 +144,11 @@ void Pistriptere::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -145,11 +161,12 @@ void Pistriptere::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Pistriptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Pistriptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -158,6 +175,7 @@ void Pistriptere::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -181,11 +199,11 @@ void RostrokarckLarvae::Skill1()
 	}
 }
 
-void RostrokarckLarvae::Attacked(float damage)
+bool RostrokarckLarvae::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -194,7 +212,8 @@ void RostrokarckLarvae::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void RostrokarckLarvae::UpdateObject(float fElapsedTime)
@@ -214,6 +233,11 @@ void RostrokarckLarvae::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -226,11 +250,12 @@ void RostrokarckLarvae::UpdateObject(float fElapsedTime)
 	}
 }
 
-void RostrokarckLarvae::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet RostrokarckLarvae::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -239,6 +264,7 @@ void RostrokarckLarvae::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -272,11 +298,11 @@ void Xenokarce::Skill2()
 	}
 }
 
-void Xenokarce::Attacked(float damage)
+bool Xenokarce::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
@@ -285,7 +311,8 @@ void Xenokarce::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Xenokarce::UpdateObject(float fElapsedTime)
@@ -305,6 +332,11 @@ void Xenokarce::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -325,11 +357,12 @@ void Xenokarce::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Xenokarce::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Xenokarce::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -341,6 +374,7 @@ void Xenokarce::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -402,11 +436,11 @@ void Fulgurodonte::Skill2()
 	}
 }
 
-void Fulgurodonte::Attacked(float damage)
+bool Fulgurodonte::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -415,7 +449,8 @@ void Fulgurodonte::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Fulgurodonte::UpdateObject(float fElapsedTime)
@@ -441,6 +476,11 @@ void Fulgurodonte::UpdateObject(float fElapsedTime)
 			}
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -453,11 +493,12 @@ void Fulgurodonte::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Fulgurodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Fulgurodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -469,6 +510,7 @@ void Fulgurodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -503,11 +545,11 @@ void Limadon::Skill2()
 	}
 }
 
-void Limadon::Attacked(float damage)
+bool Limadon::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -516,7 +558,8 @@ void Limadon::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Limadon::UpdateObject(float fElapsedTime)
@@ -536,6 +579,11 @@ void Limadon::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -554,11 +602,12 @@ void Limadon::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Limadon::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Limadon::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -570,6 +619,7 @@ void Limadon::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -604,11 +654,11 @@ void Occisodonte::Skill2()
 	}
 }
 
-void Occisodonte::Attacked(float damage)
+bool Occisodonte::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_HIT), true);
@@ -617,7 +667,8 @@ void Occisodonte::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Occisodonte::UpdateObject(float fElapsedTime)
@@ -637,6 +688,11 @@ void Occisodonte::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -655,11 +711,12 @@ void Occisodonte::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Occisodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Occisodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -671,6 +728,7 @@ void Occisodonte::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==================================================
@@ -715,11 +773,11 @@ void Crassorrid::Skill3()
 	}
 }
 
-void Crassorrid::Attacked(float damage)
+bool Crassorrid::Attacked(float damage)
 {
-	m_HP -= damage;
+	//// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
@@ -728,7 +786,8 @@ void Crassorrid::Attacked(float damage)
 	else {
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
 void Crassorrid::UpdateObject(float fElapsedTime)
@@ -748,6 +807,11 @@ void Crassorrid::UpdateObject(float fElapsedTime)
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
 		}
 
+		m_CurrentSkill = m_AManager->getSkillnum();
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
+		}
 		switch (getCurrentSkill())
 		{
 		case 1:
@@ -775,11 +839,12 @@ void Crassorrid::UpdateObject(float fElapsedTime)
 	}
 }
 
-void Crassorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Crassorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -794,6 +859,7 @@ void Crassorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 // ==============================================================
@@ -869,11 +935,11 @@ void Gorhorrid::Skill3()
 	}
 }
 
-void Gorhorrid::Attacked(float damage)
+bool Gorhorrid::Attacked(float damage)
 {
-	m_HP -= damage;
+	// m_JP -= damage;
 	m_bAttacked = true;
-	if (m_HP > 0.0f)
+	/*if (m_HP > 0.0f)
 	{
 		if (!m_bSkillActive) {
 			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_HIT), true);
@@ -883,14 +949,16 @@ void Gorhorrid::Attacked(float damage)
 	{
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_DEATH), true);
-	}
+	}*/
+	return true;
 }
 
-void Gorhorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet Gorhorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
+	KeyInputRet ret = KEY_NOTHING;
 	if (m_bSkillActive) {
 		memset(m_PrevKeyBuffer, 0, sizeof(m_PrevKeyBuffer));
-		return;
+		return ret;
 	}
 
 	if (!m_bSkillActive) {
@@ -905,6 +973,7 @@ void Gorhorrid::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		}
 	}
 	memcpy(m_PrevKeyBuffer, keyBuffer, sizeof(m_PrevKeyBuffer));
+	return ret;
 }
 
 void Gorhorrid::UpdateObject(float fElapsedTime)
@@ -922,6 +991,12 @@ void Gorhorrid::UpdateObject(float fElapsedTime)
 
 		if (test) {
 			m_AManager->UpdateAniPosition(fElapsedTime, m_Object);
+		}
+
+		m_CurrentSkill = m_AManager->getSkillnum();
+		if (m_CurrentSkill != 0)
+		{
+			m_bSkillActive = true;
 		}
 
 		for (auto& bulletPtr : bullet) {
@@ -958,9 +1033,9 @@ CMonster::CMonster(CPlayableCharacter* monsterObject)
 {
 }
 
-void CMonster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
+KeyInputRet CMonster::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 {
-	m_pMonsterObject->ProcessInput(keyBuffer, fElapsedTime);
+	return m_pMonsterObject->ProcessInput(keyBuffer, fElapsedTime);
 }
 
 void CMonster::HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum)

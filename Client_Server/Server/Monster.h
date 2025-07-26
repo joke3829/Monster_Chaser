@@ -14,11 +14,6 @@ enum class MonsterState {
     Dead
 };
 
-enum class Stage {
-    Stage1,
-    Stage2,
-    Stage3
-};
 
 
 class Room;
@@ -29,18 +24,23 @@ public:
     MonsterType GetType() const { return type; }
 
     void Update(float deltaTime, const Room& room, const PlayerManager& playerManager);
-    bool TakeDamage(int dmg);
+    bool TakeDamage(float dmg);
     int GetId() const { return id; }
     int GetHP() const { return hp; }
-
+    
     XMFLOAT3 GetPosition() const { return position; }
     int GetGold() const { return gold; }
+
+
+	int GetATK() const { return ATK; }
+
+    void GetDamage();
 
     void TransitionTo(MonsterState nextState);
     void HandleIdle(const Room& room, const PlayerManager& playerManager);
     void HandleChase(const PlayerManager& playerManager, const Room& room);
     void HandleAttack(const PlayerManager& playerManager, const Room& room);
-    void HandleReturn(const Room& room);
+    void HandleReturn(const PlayerManager& playerManager, const Room& room);
     void HandleDead(const Room& room);
     float DistanceToPlayer(const PlayerManager& playerManager) const;
     float DistanceFromSpawnToPlayer(const PlayerManager& playerManager) const;
@@ -49,12 +49,16 @@ public:
     int GetAttackTypeCount() const { return Attacktypecount; }
 
     void SendSyncPacket(const Room& room);
+    bool isBossMonster();
+
+    void ChangeBossAttack();
 private:
 
     int id;
     MonsterType type;
 
-    int hp;
+    float hp;
+    int ATK;
     int target_id = -1;
 
     MonsterState state;
@@ -64,9 +68,10 @@ private:
     int gold = 0; // 몬스터가 죽었을 때 드랍하는 골드
 
     bool isRespawning = false;
-	char Attacktypecount = 0; // 공격 종류 카운트
+	char Attacktypecount = 1; // 공격 종류 카운트
 
-
+	int m_currentAttackType = 1; // 현재 공격 타입
+	bool hasRoared = false; // 몬스터가 울부짖었는지 여부
 
     std::chrono::steady_clock::time_point respawnTime;
     std::chrono::steady_clock::time_point lastAttackTime;

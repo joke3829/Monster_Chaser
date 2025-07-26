@@ -1,9 +1,16 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "Player.h"
+#include "Network.h"
+
+extern Network g_server;
+
 Player::Player(int id, const std::string& nickname, int room)
 	: local_id(id), name(nickname), room_num(room)
 {
-	position = XMFLOAT4X4(); // ÃÊ±â À§Ä¡ 0
+	lastSentBuffState[BuffType::ATKUP] = false;
+	lastSentBuffState[BuffType::DEFUP] = false;
+	lastSentBuffState[BuffType::DEF_DOWN] = false;
+	position = XMFLOAT4X4(); // ì´ˆê¸° ìœ„ì¹˜ 0
 }
 
 void Player::SetPosition(const XMFLOAT4X4& pos) {
@@ -18,13 +25,22 @@ bool  Player::TakeDamage(int dmg) {
 	std::lock_guard<std::mutex> lock(playerMutex);
 	hp -= dmg;
 	if (hp < 0) hp = 0;
-	return hp == 0; // 0ÀÌ µÇ¸é Á×À½
+	return hp == 0; // 0ì´ ë˜ë©´ ì£½ìŒ
 }
 
 void Player::Move(float dx, float dy, float dz) {
 	position._41 += dx;
 	position._42 += dy;
 	position._43 += dz;
+}
+
+
+void Player::RecoverSkillCost(int amount)
+{
+	skill_cost += amount;
+	if (skill_cost > max_skill_cost) {
+		skill_cost = max_skill_cost;
+	}
 }
 
 void Player::Updatestatus(Character t)
@@ -37,25 +53,31 @@ void Player::Updatestatus(Character t)
 	case Wizard:
 	{
 		hp = 800;
-		skill_cost = 100; // ½ºÅ³ »ç¿ë ºñ¿ë
-		attack = 800; // °ø°Ý·Â
-		defense = 10; // ¹æ¾î·Â
+		max_hp = hp; // ìµœëŒ€ HP ì„¤ì •
+		skill_cost = 100; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		max_skill_cost = skill_cost; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		attack = 800; // ê³µê²©ë ¥
+		defense = 10; // ë°©ì–´ë ¥
 		break;
 	}
 	case Warrior:
 	{
 		hp = 1200;
-		skill_cost = 100; // ½ºÅ³ »ç¿ë ºñ¿ë
-		attack = 600; // °ø°Ý·Â
-		defense = 30; // ¹æ¾î·Â
+		max_hp = hp; // ìµœëŒ€ HP ì„¤ì •
+		skill_cost = 100; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		max_skill_cost = skill_cost; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		attack = 600; // ê³µê²©ë ¥
+		defense = 30; // ë°©ì–´ë ¥
 		break;
 	}
 	case Priest:
 	{
 		hp = 1000;
-		skill_cost = 100; // ½ºÅ³ »ç¿ë ºñ¿ë
-		attack = 800; // °ø°Ý·Â
-		defense = 10; // ¹æ¾î·Â
+		max_hp = hp; // ìµœëŒ€ HP ì„¤ì •
+		skill_cost = 100; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		max_skill_cost = skill_cost; // ìŠ¤í‚¬ ì‚¬ìš© ë¹„ìš©
+		attack = 800; // ê³µê²©ë ¥
+		defense = 10; // ë°©ì–´ë ¥
 		break;
 	}
 	default:
@@ -63,19 +85,115 @@ void Player::Updatestatus(Character t)
 	}
 }
 
+void Player::AddATKBuff_Potion(float value, float duration_sec)
+{
+	atk_buff_potion = value;
+	atk_buff_potion_end = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
+}
+
+void Player::AddATKBuff_Skill(float value, float duration_sec)
+{
+	atk_buff_skill = value;
+	atk_buff_skill_end = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
+}
+
+
+
+
+
 void Player::AddATKBuff(float value, float duration_sec)
 {
 	atk_buff = value;
-	atk_buff_end_time = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
-	std::cout << "[°ø°Ý·Â ¹öÇÁ Àû¿ë] +" << value << " for " << duration_sec << " seconds\n";
+	atk_buff_skill_end = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
+	std::cout << "[ê³µê²©ë ¥ ë²„í”„ ì ìš©] +" << value << " for " << duration_sec << " seconds\n";
 
 }
+
+
+
 
 void Player::AddDEFBuff(float value, float duration_sec)
 {
 	def_buff = value;
-	def_buff_end_time = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
-	std::cout << "[¹æ¾î·Â ¹öÇÁ Àû¿ë] +" << value << " for " << duration_sec << " seconds\n";
+	def_buff_end = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
+	std::cout << "[ë°©ì–´ë ¥ ë²„í”„ ì ìš©] +" << value << " for " << duration_sec << " seconds\n";
 
+}
+
+float Player::GetDamage(int type)
+{
+
+	float attack = GetATK();	
+
+	switch (type)
+	{
+	case 0: // ì¼ë°˜ ê³µê²©
+		return attack;
+	case 1:
+		return attack * 3.0f;
+	case 2:
+		return attack * 3.3f;
+	case 3:
+		return attack * 4.0f;
+	default:
+		break;
+	}
+	return 0.0f;
+}
+
+float Player::GetATK() {
+	auto now = std::chrono::steady_clock::now();
+	if (now >= atk_buff_potion_end)
+		atk_buff_potion = 0.f;
+	if (now >= atk_buff_skill_end) 
+		atk_buff_skill = 0.f;
+	return attack + atk_buff_potion + atk_buff_skill;
+}
+
+
+float Player::GetDEF() {
+	auto now = std::chrono::steady_clock::now();
+	if (now >= def_buff_end) def_buff = 0.f;
+	if (now >= def_debuff_end) def_debuff = 0.f;
+
+	return defense + def_buff - def_debuff;
+}
+
+void Player::UpdateBuffStatesIfChanged()
+{
+	auto now = std::chrono::steady_clock::now();
+
+	// í˜„ìž¬ ë²„í”„ ìƒíƒœ ê³„ì‚°
+	bool atkActive = (atk_buff_potion > 0.f && now < atk_buff_potion_end) ||
+						(atk_buff_skill > 0.f && now < atk_buff_skill_end);
+
+	bool defActive = (def_buff > 0.f && now < def_buff_end);
+
+	bool defDownActive = (def_debuff > 0.f && now < def_debuff_end);
+
+	// ê° ìƒíƒœ ë¹„êµ ë° ì „ì†¡
+	SendBuffPacketIfChanged(BuffType::ATKUP, atkActive);
+	SendBuffPacketIfChanged(BuffType::DEFUP, defActive);
+	SendBuffPacketIfChanged(BuffType::DEF_DOWN, defDownActive);
+}
+
+void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
+{
+	// ì´ì „ì— ì „ì†¡í•œ ìƒíƒœì™€ ë‹¤ë¥´ë©´ ìƒˆë¡œ ì „ì†¡
+	if (lastSentBuffState[type] != currentState) {
+		lastSentBuffState[type] = currentState;
+
+		sc_packet_buff_change pkt;
+		pkt.size = sizeof(pkt);
+		pkt.type = S2C_P_BUFFCHANGE;
+		pkt.bufftype = static_cast<char>(type);
+		pkt.state = currentState ? 1 : 0;
+
+		for (int pid : g_server.rooms[room_num].id)
+			g_server.users[pid]->do_send(&pkt);
+
+		std::cout << "[ë²„í”„ ìƒíƒœ ë³€ê²½] í”Œë ˆì´ì–´ " << local_id << " | íƒ€ìž…: " << (int)pkt.bufftype
+			<< " | ìƒíƒœ: " << (int)pkt.state << "\n";
+	}
 }
 

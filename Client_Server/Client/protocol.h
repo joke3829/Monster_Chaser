@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "stdafx.h"
 
 constexpr int PORT_NUM = 3500;
@@ -23,19 +23,20 @@ constexpr char S2C_P_MOVE = 7;
 constexpr char S2C_P_PICKCHARACTER = 8;
 constexpr char S2C_P_INGAME_START = 9;
 constexpr char S2C_P_MONSTER_SPAWN = 10;
-constexpr char S2C_P_MONSTER_ATTACK = 11;  // ¸ó½ºÅÍ°¡ ÇÃ·¹ÀÌ¾î °ø°İÇÑ »óÅÂ·Î ¹Ù²Ù±â   
-constexpr char S2C_P_MONSTER_HIT = 12;  // ¸ó½ºÅÍ°¡ ÇÃ·¹ÀÌ¾î °ø°İÇÑ »óÅÂ·Î ¹Ù²Ù±â   
+constexpr char S2C_P_MONSTER_ATTACK = 11;  // ëª¬ìŠ¤í„°ê°€ í”Œë ˆì´ì–´ ê³µê²©í•œ ìƒíƒœë¡œ ë°”ê¾¸ê¸°   
+constexpr char S2C_P_MONSTER_HIT = 12;  // ëª¬ìŠ¤í„°ê°€ í”Œë ˆì´ì–´ ê³µê²©í•œ ìƒíƒœë¡œ ë°”ê¾¸ê¸°   
 constexpr char S2C_P_MONSTER_DIE = 13;
 constexpr char S2C_P_MONSTER_RESPAWN = 14;
 constexpr char S2C_P_MONSTER_MOVE = 15;
-constexpr char S2C_P_PLAYER_HIT = 16;  // ÇÃ·¹ÀÌ¾î°¡ °ø°İÇØ¼­ ¸ó½ºÅÍ°¡ ¸Â¾ÒÀ» ¶§
-constexpr char S2C_P_NEXTSTAGE = 17;  //  º¸½º¸ó½ºÅÍ Ã³Ä¡ ÈÄ ´ÙÀ½ ½ºÅ×ÀÌÁö·Î ³Ñ¾î°¥ ¶§
-constexpr char S2C_P_APPLY_HPITEM = 18;  // HP ¾ÆÀÌÅÛ »ç¿ë ½Ã
-constexpr char S2C_P_APPLY_MPITEM = 19;  // MP ¾ÆÀÌÅÛ »ç¿ë ½Ã
-constexpr char S2C_P_APPLY_ATKITEM = 20; // °ø°İ·Â ¾ÆÀÌÅÛ »ç¿ë ½Ã
-constexpr char S2C_P_APPLY_DEFITEM = 21; // ¹æ¾î·Â ¾ÆÀÌÅÛ »ç¿ë ½Ã
+constexpr char S2C_P_PLAYER_HIT = 16;  // í”Œë ˆì´ì–´ê°€ ê³µê²©í•´ì„œ ëª¬ìŠ¤í„°ê°€ ë§ì•˜ì„ ë•Œ
+constexpr char S2C_P_NEXTSTAGE = 17;  //  ë³´ìŠ¤ëª¬ìŠ¤í„° ì²˜ì¹˜ í›„ ë‹¤ìŒ ìŠ¤í…Œì´ì§€ë¡œ ë„˜ì–´ê°ˆ ë•Œ
+constexpr char S2C_P_CHANGEHP = 18;  // HP ì•„ì´í…œ ì‚¬ìš© ì‹œ
+constexpr char S2C_P_CHANGEMP = 19;  // MP ì•„ì´í…œ ì‚¬ìš© ì‹œ
+constexpr char S2C_P_BOSS_ROAR = 20; // ë‹¤ìŒ íŒ¨í‚· ë²ˆí˜¸
+constexpr char S2C_P_BUFFCHANGE = 21;
 
-constexpr char S2C_P_LEAVE = 49; // ÇÃ·¹ÀÌ¾î°¡ ¹æÀ» ³ª°¥ ¶§
+
+constexpr char S2C_P_LEAVE = 49; // í”Œë ˆì´ì–´ê°€ ë°©ì„ ë‚˜ê°ˆ ë•Œ
 struct sc_packet_enter {
 	unsigned char size;
 	char type;
@@ -92,8 +93,8 @@ struct sc_packet_pickcharacter {
 	unsigned char size;
 	char type;
 	int Local_id;
-	int Max_HP;
-	int Max_MP;
+	float Max_HP;
+	float Max_MP;
 	short C_type;
 };
 
@@ -110,21 +111,21 @@ struct sc_packet_monster_spawn {
 	XMFLOAT4X4 pos;
 };
 
-struct sc_packet_monster_attack  //¸ó½ºÅÍ°¡ °ø°İ »óÅÂÀÏ ‹š
+struct sc_packet_monster_attack  //ëª¬ìŠ¤í„°ê°€ ê³µê²© ìƒíƒœì¼ ë–„
 {
 	unsigned char size;
 	char type;
 	int monster_id;
 	char attack_type; // Attacktype
 };
-struct sc_packet_monster_hit  //¸ó½ºÅÍ°¡ °ø°İ »óÅÂÀÏ ‹š
+struct sc_packet_monster_hit  //ëª¬ìŠ¤í„°ê°€ ë§ì•˜ì„ë•Œ
 {
 	unsigned char size;
 	char type;
 	int monster_id;
-	int hp;
+	float hp;
 };
-struct sc_packet_monster_die  //¸ó½ºÅÍ°¡ Á×¾úÀ»¶§
+struct sc_packet_monster_die  //ëª¬ìŠ¤í„°ê°€ ì£½ì—ˆì„ë•Œ
 {
 	unsigned char size;
 	char type;
@@ -151,8 +152,8 @@ struct sc_packet_monster_move {
 struct sc_packet_player_hit {
 	unsigned char size;
 	char type;
-	int target_id;
-	int current_hp;
+	int local_id;
+	float hp;
 };
 
 struct sc_packet_NextStage {
@@ -166,32 +167,31 @@ struct sc_packet_leave {
 	int Local_id;
 };
 
-struct sc_packet_apply_hpitem {
+struct sc_packet_change_hp {
 	unsigned char size;
 	char type;
-	int hp;
+	float hp;
 	char local_id;
 };
-struct sc_packet_apply_mpitem {
+struct sc_packet_change_mp {
 	unsigned char size;
 	char type;
-	int mp;
-	char local_id;
-};
-struct sc_packet_apply_atkitem {
-	unsigned char size;
-	char type;
-	float attack;
-	char local_id;
-};
-struct sc_packet_apply_defitem {
-	unsigned char size;
-	char type;
-	float defense;
+	float mp;
 	char local_id;
 };
 
+struct sc_packet_boss_roar {
+	unsigned char size;
+	char type;
+	int monster_id;
+};
 
+struct sc_packet_buff_change {
+	unsigned char size;
+	char type;
+	char bufftype;		// 0: ê³µê²©ë ¥ ì¦ê°€, 1: ë°©ì–´ë ¥ ì¦ê°€, 2: ë°©ì–´ë ¥ ê°ì†Œ
+	char state;			// 0: êº¼ì§, 1: ì¼œì§
+};
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Client to Server packets
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -204,8 +204,9 @@ constexpr char C2S_P_GETREADY = 56;
 constexpr char C2S_P_READYINGAME = 57;
 constexpr char C2S_P_MOVE = 58;
 constexpr char C2S_P_PLAYERATTACK = 59;
-constexpr char C2S_P_MONSTER_HIT = 60;
+constexpr char C2S_P_MONSTER_ATTACK = 60;
 constexpr char C2S_P_USE_ITEM = 61;
+constexpr char C2S_P_USE_SKILL = 62;
 
 struct cs_packet_login {
 	unsigned char size;
@@ -249,8 +250,7 @@ struct cs_packet_getready {
 struct cs_packet_readytoIngame {
 	unsigned char size;
 	char type;
-	//int local_id; // ·ÎÄÃ ID
-	//int room_number; // ¹æ ¹øÈ£
+	short Map;
 };
 
 struct cs_packet_move {
@@ -262,26 +262,30 @@ struct cs_packet_move {
 };
 
 
-struct cs_packet_player_attack_monster {
+struct cs_packet_player_attack {
 	unsigned char size;
 	char type;
 	int target_monster_id;
-	float AtkCalculation; // °ø°İ·Â °è¼ö
 	int attack_type; // Attacktype
 };
 
-struct cs_packet_monster_hit {
+struct cs_packet_monster_attack {
 	unsigned char size;
 	char type;
-	int attacker_id;  // ¸ó½ºÅÍ ID
+	int attacker_id;  // ëª¬ìŠ¤í„° ID
 	int target_player_id;
 	int attack_type; // Attacktype
-	float attack_power; // °ø°İ·Â
 };
 
-struct cs_packet_use_item {
+struct cs_packet_item_use {
 	unsigned char size;
 	char type;
-	unsigned char item_type;   // enum ItemType
+	char item_type;   // enum ItemType
+};
+
+struct cs_packet_skill_use {
+	unsigned char size;
+	char type;
+	char skillNumber;	// 0 ~ 2		0ì´ ì²´ë ¥ íšŒë³µ, 1ì´ ê³µê²©ë ¥ ì¦ê°€ + ë°©ì–´ë ¥ ê°ì†Œ, 2ê°€ ìŠ¤í‚¬ê²Œì´ì§€ ìµœëŒ€ì¹˜
 };
 #pragma pack(pop)

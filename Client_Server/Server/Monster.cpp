@@ -3,8 +3,8 @@
 #include "Network.h"
 #include <random>
 
-#define MONSTER_CHASE_DISTANCE 100.0f
-#define MONSTER_ATTACK_RANGE 20.0f
+#define MONSTER_CHASE_DISTANCE 70.0f
+#define MONSTER_ATTACK_RANGE 1.0f
 constexpr float MONSTER_ATTACK_COOLDOWN = 2.0f;   // 공격 쿨타임 2초
 constexpr float MONSTER_RETURN_SPEED = 80.0f;     // 귀환 속도
 std::random_device rd;
@@ -45,6 +45,7 @@ float Monster::DistanceFromSpawnToPlayer(const PlayerManager& playerManager) con
     return sqrtf(dx * dx + dy * dy + dz * dz);
 }
 
+
 Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
     : id(id), hp(100), state(MonsterState::Idle), position(spawnPos), spawnPoint(spawnPos), type(t){
 
@@ -61,24 +62,34 @@ Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
         case MonsterType::Feroptere:
         case MonsterType::Pistiripere:
         case MonsterType::RostrokarackLarvae:
+            hp = 15000;
+            ATK = 100;
             Attacktypecount = 1;
             break;
 
-        case MonsterType::XenokarceBoss:
+        case MonsterType::Xenokarce:
+            hp = 40000;
+            ATK = 200;
             Attacktypecount = 2;
             break;
 
         case MonsterType::Occisodonte:
         case MonsterType::Limadon:
         case MonsterType::Fulgurodonte:
+            hp = 30000;
+            ATK = 100;
             Attacktypecount = 2;
             break;
 
-        case MonsterType::RostrokarckBoss:
+        case MonsterType::Crassorrid:
+            hp = 80000;
+            ATK = 200;
             Attacktypecount = 3;
             break;
 
-        case MonsterType::GorhorridBoss:
+        case MonsterType::Gorhorrid:
+            hp = 200000;
+            ATK = 300;
             Attacktypecount = 3;
             break;
         default:
@@ -88,32 +99,43 @@ Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
 
 void Monster::Update(float deltaTime, const Room& room, const PlayerManager& playerManager) {
     std::lock_guard<std::mutex> lock(mtx);
-
+    target_id = FindClosestPlayerInRoom(room, position, playerManager);
+    if (!room.bStageActive) return;
     if (hp <= 0) {
         TransitionTo(MonsterState::Dead);
     }
-
     switch (state) {
     case MonsterState::Idle:    HandleIdle(room, playerManager); break;
     case MonsterState::Chase:   HandleChase(playerManager, room); break;
     case MonsterState::Attack:  HandleAttack(playerManager,room); break;
-    case MonsterState::Return:  HandleReturn(room); break;
+    case MonsterState::Return:  HandleReturn(playerManager,room); break;
     case MonsterState::Dead:    HandleDead(room); return; // 죽으면 패킷 보내지 않음
     }
 
     SendSyncPacket(room); //  매 업데이트마다 위치+상태 전송         //추적 귀환일떄만 보내면 되지 않을까?
 }
 
-bool Monster::TakeDamage(int dmg) {
+bool Monster::TakeDamage(float dmg) {
     std::lock_guard<std::mutex> lock(mtx);
     hp -= dmg;
-   
-
-    if (hp <= 0) {
+    if (hp <= 0 && !isBossMonster()) {
+        hp = 0;
         TransitionTo(MonsterState::Dead);
         return true;
     }
+
+    if (hp <= 0 ) {
+        hp = 0;
+        return true;
+    }
+
+    
     return false;
+}
+
+void Monster::GetDamage()
+{
+    ChangeBossAttack();
 }
 
 void Monster::TransitionTo(MonsterState nextState) {
@@ -121,7 +143,7 @@ void Monster::TransitionTo(MonsterState nextState) {
 }
 
 void Monster::HandleIdle(const Room& room, const PlayerManager& playerManager) {
-    target_id = FindClosestPlayerInRoom(room, position, playerManager);
+   
     if (target_id != -1 && IsPlayerNear(playerManager)) {
         TransitionTo(MonsterState::Chase);
     }
@@ -137,6 +159,22 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         TransitionTo(MonsterState::Attack);
         return;
     }
+
+    if (!hasRoared && isBossMonster()) {
+        hasRoared = true;
+
+        sc_packet_boss_roar pkt;
+        pkt.size = sizeof(pkt);
+        pkt.type = S2C_P_BOSS_ROAR;
+        pkt.monster_id = id;
+
+        for (int pid : room.id) {
+            g_server.users[pid]->do_send(&pkt);
+        }
+
+        std::cout << "[보스 몬스터 " << id << "] 울부짖음 패킷 전송!\n";
+    }
+
     target_id = FindClosestPlayerInRoom(room, position, playerManager);
 
     auto player = playerManager.GetPlayer(target_id);
@@ -160,7 +198,7 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         position.y += dy * speed * 0.016f;
         position.z += dz * speed * 0.016f;
     }
-    //SendSyncPacket(room);
+    SendSyncPacket(room);
 }
 
 void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room) {
@@ -174,10 +212,11 @@ void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room)
         return;
     }
     
-		char attackCount = 0; // 공격 타입 랜덤 선택
-    if(Attacktypecount > 1) {
+		
+    if(Attacktypecount > 1) {                       //보스라는 뜻
         std::uniform_int_distribution<> dis(1, GetAttackTypeCount());
-         attackCount = dis(gen); // 공격 타입 랜덤 선택
+         m_currentAttackType = dis(gen); // 공격 타입 랜덤 선택
+		 ChangeBossAttack(); // 공격력 변경
 	}
     
     auto now = std::chrono::steady_clock::now();
@@ -190,7 +229,7 @@ void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room)
         pkt.size = sizeof(pkt);
 		pkt.type = S2C_P_MONSTER_ATTACK;
         pkt.monster_id = id;
-		pkt.attack_type = attackCount; // 공격 타입 설정
+		pkt.attack_type = m_currentAttackType; // 공격 타입 설정
         //  방의 유저 목록을 직접 사용
         for (int pid : room.id) {
             g_server.users[pid]->do_send(&pkt);
@@ -204,7 +243,11 @@ void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room)
 }
 
 
-void Monster::HandleReturn(const Room& room) {
+void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room) {
+    if (DistanceFromSpawnToPlayer(playerManager) <= MONSTER_CHASE_DISTANCE) {
+        TransitionTo(MonsterState::Chase);
+        return;
+	}
     float dx = spawnPoint.x - position.x;
     float dy = spawnPoint.y - position.y;
     float dz = spawnPoint.z - position.z;
@@ -283,4 +326,71 @@ void Monster::SendSyncPacket(const Room& room) {
 
     for (int pid : room.id)
         g_server.users[pid]->do_send(&pkt);
+}
+
+bool Monster::isBossMonster()
+{
+    return type == MonsterType::Xenokarce ||
+        type == MonsterType::Crassorrid ||
+        type == MonsterType::Gorhorrid;
+}
+
+void Monster::ChangeBossAttack()
+{
+    if(type ==MonsterType::Xenokarce) {
+        switch (m_currentAttackType)
+        {
+        case 1: // 1번 공격
+            ATK = 200;
+			break;
+		case 2:// 2번 공격
+            ATK = 230;
+            break;
+        default:
+            break;
+        }
+
+
+
+    } else if (type == MonsterType::Crassorrid) {
+        
+        switch (m_currentAttackType)
+        {
+
+        case 1: // 1번 공격
+            ATK = 200;
+            break;
+        case 2:// 2번 공격
+            ATK = 200;
+            break;
+		case 3:// 3번 공격
+            ATK=250;
+            break;
+        default:
+            break;
+        }
+    
+	}
+    else if(type == MonsterType::Gorhorrid) {
+
+
+        switch (m_currentAttackType)
+        {
+        case 1: // 1번 공격
+            ATK = 300;
+            break;
+        case 2:// 2번 공격
+            ATK = 350;
+            break;
+        case 3:// 3번 공격
+            ATK = 300;
+            break;
+        default:
+            break;
+        }
+    }
+    else {
+        return; // 잘못된 상태
+    }
+	// 상태 변경 시 추가 로직이 필요하다면 여기에 작성
 }

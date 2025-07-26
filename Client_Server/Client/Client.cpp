@@ -15,7 +15,7 @@ HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 CGameFramework gGameFramework;
-
+std::thread recvThread;
 
 std::unordered_map<int, Player> Players;               // 모든 플레이어들		
 
@@ -25,6 +25,16 @@ std::unordered_map<int, std::unique_ptr<Monster>> Monsters;           // 몬스�
 std::array<short, 10>	 userPerRoom{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };			// 방 UI대신 쓸거 
 TitleState g_state = Title;
 InGameState g_InGameState;
+
+// 07.25 ======================================
+std::array<bool, 3>	g_PlayerBuffState{};
+std::array<float, 3> g_maxHPs;
+std::array<float, 3> g_maxMPs;
+std::array<float, 3> g_SkillCoolTime{};
+std::array<float, 3> g_SkillCurCTime{};
+std::array<float, 3> g_SkillCost{};
+// ============================================
+
 C_Socket Client;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다
@@ -71,14 +81,17 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 	//  콘솔 종료
 	//FreeConsole();
-	std::thread recvThread(&C_Socket::do_recv, &Client);
+	//std::thread recvThread(&C_Socket::do_recv, &Client);
+	//recvThread.join();
 	//	std::thread drawThread(RoomListThread);
+
 
 
 		//준비 완료되기 전까지 대기
 	/*   while (!Client.get_ready_to_start()) {
 		   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	   }*/
+
 
 
 
@@ -111,7 +124,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 			DispatchMessage(&msg);
 		}
 	}*/
-
+	recvThread = std::thread(&C_Socket::do_recv, &Client);
 	for (MSG msg;;) {
 		while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT)
@@ -121,7 +134,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 		}
 		gGameFramework.Render();
 	}
-	recvThread.join();
+	if (recvThread.joinable()) {
+		recvThread.join();
+	}
 	//drawThread.join();
 	//return (int) msg.wParam;
 }
@@ -209,6 +224,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_RBUTTONUP:
 	case WM_MOUSEMOVE:
+	case WM_MOUSEWHEEL:
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 		gGameFramework.WMMessageProcessing(hWnd, message, wParam, lParam);

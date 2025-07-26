@@ -10,18 +10,18 @@ public:
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1
 	};
 
 	Feroptere(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class Pistriptere : public CPlayableCharacter
@@ -32,18 +32,18 @@ public:
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1
 	};
 
 	Pistriptere(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class RostrokarckLarvae : public CPlayableCharacter
@@ -54,18 +54,18 @@ public:
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1
 	};
 
 	RostrokarckLarvae(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class Xenokarce : public CPlayableCharacter
@@ -76,20 +76,20 @@ public:
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
-		ANI_SKILL2,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1,
+		ANI_SKILL2
 	};
 
 	Xenokarce(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 	virtual void Skill2();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 // ==========================================================================
@@ -102,20 +102,20 @@ public:
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
-		ANI_SKILL2,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1,
+		ANI_SKILL2
 	};
 
 	Fulgurodonte(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 	virtual void Skill2();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 	virtual bool HasActiveBullet() const
 	{
 		for (const auto& bullet : bullet)
@@ -144,20 +144,20 @@ public:
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
-		ANI_SKILL2,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1,
+		ANI_SKILL2
 	};
 
 	Limadon(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 	virtual void Skill2();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class Occisodonte : public CPlayableCharacter
@@ -168,20 +168,20 @@ public:
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
-		ANI_SKILL1,
-		ANI_SKILL2,
 		ANI_FRONT,
-		ANI_BACK
+		ANI_BACK,
+		ANI_SKILL1,
+		ANI_SKILL2
 	};
 
 	Occisodonte(CSkinningObject* obj, CAnimationManager* aManager);
 	virtual void Skill1();
 	virtual void Skill2();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class Crassorrid : public CPlayableCharacter
@@ -192,11 +192,11 @@ public:
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
+		ANI_FRONT,
+		ANI_BACK,
 		ANI_SKILL1,
 		ANI_SKILL2,
 		ANI_SKILL3,
-		ANI_FRONT,
-		ANI_BACK
 	};
 
 	Crassorrid(CSkinningObject* obj, CAnimationManager* aManager);
@@ -204,10 +204,10 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 };
 
 class Gorhorrid : public CPlayableCharacter
@@ -218,12 +218,12 @@ public:
 		ANI_HIT,
 		ANI_IDLE,
 		ANI_ROAR,
+		ANI_FRONT,
+		ANI_BACK,
 		ANI_SKILL1,
 		ANI_SKILL2,
 		ANI_SKILL3,
-		ANI_RUN,
-		ANI_FRONT,
-		ANI_BACK
+		ANI_RUN
 	};
 	Gorhorrid(CSkinningObject* obj, CAnimationManager* aManager);
 
@@ -231,10 +231,10 @@ public:
 	virtual void Skill2();
 	virtual void Skill3();
 
-	virtual void Attacked(float damage);
+	virtual bool Attacked(float damage = 0.0f);
 
 	virtual void UpdateObject(float fElapsedTime);
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	virtual bool HasActiveBullet() const
 	{
@@ -264,7 +264,7 @@ public:
 	CPlayableCharacter* getObject() { return m_pMonsterObject; }
 	CAnimationManager* getAniManager() { return m_pMonsterObject->getAniManager(); }
 
-	void ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
+	KeyInputRet ProcessInput(UCHAR* keyBuffer, float fElapsedTime);
 
 	void HeightCheck(CHeightMapImage* heightmap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
 	void CollisionCheck(CHeightMapImage* heightmap, CHeightMapImage* CollisionMap, float fElapsedTime, float offsetx, float offsety, float offsetz, short mapNum);
