@@ -144,18 +144,29 @@ float Player::GetDamage(int type)
 float Player::GetATK() {
 	auto now = std::chrono::steady_clock::now();
 	if (now >= atk_buff_potion_end)
+	{
 		atk_buff_potion = 0.f;
-	if (now >= atk_buff_skill_end) 
+		//cout << "[공격력 버프 종료] 포션 버프가 만료되었습니다.\n";
+	}
+	if (now >= atk_buff_skill_end) {
 		atk_buff_skill = 0.f;
+		//cout << "[공격력 버프 종료] 스킬 버프가 만료되었습니다.\n";
+	}
 	return attack + atk_buff_potion + atk_buff_skill;
 }
 
 
 float Player::GetDEF() {
 	auto now = std::chrono::steady_clock::now();
-	if (now >= def_buff_end) def_buff = 0.f;
-	if (now >= def_debuff_end) def_debuff = 0.f;
-
+	if (now >= def_buff_end) { 
+		def_buff = 0.f; 
+	//	cout << "[방어력 버프 종료] 방어력 버프가 만료되었습니다.\n";
+	}
+	if (now >= def_debuff_end)
+	{
+		def_debuff = 0.f;
+		cout << "[방어력 감소 버프 종료] 방어력 감소 버프가 만료되었습니다.\n";
+	}
 	return defense + def_buff - def_debuff;
 }
 
@@ -193,7 +204,7 @@ void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
 			g_server.users[pid]->do_send(&pkt);
 
 		std::cout << "[버프 상태 변경] 플레이어 " << local_id << " | 타입: " << (int)pkt.bufftype
-			<< " | 상태: " << (int)pkt.state << "\n";
+			<< " | 상태: " << (int)pkt.state << "공격력: "<<GetATK()<<" 방어력: "<<GetDEF() << "\n";
 	}
 }
 

@@ -33,7 +33,7 @@ constexpr char S2C_P_NEXTSTAGE = 17;  //  보스몬스터 처치 후 다음 스�
 constexpr char S2C_P_CHANGEHP = 18;  // HP 아이템 사용 시
 constexpr char S2C_P_CHANGEMP = 19;  // MP 아이템 사용 시
 constexpr char S2C_P_BOSS_ROAR = 20; // 다음 패킷 번호
-constexpr char S2C_P_BUFFCHANGE = 21; 
+constexpr char S2C_P_BUFFCHANGE = 21;
 
 
 constexpr char S2C_P_LEAVE = 49; // 플레이어가 방을 나갈 때
@@ -207,6 +207,7 @@ constexpr char C2S_P_PLAYERATTACK = 59;
 constexpr char C2S_P_MONSTER_ATTACK = 60;
 constexpr char C2S_P_USE_ITEM = 61;
 constexpr char C2S_P_USE_SKILL = 62;
+constexpr char C2S_P_MASTERKEY = 63;
 
 struct cs_packet_login {
 	unsigned char size;
@@ -287,5 +288,13 @@ struct cs_packet_skill_use {
 	unsigned char size;
 	char type;
 	char skillNumber;	// 0 ~ 2		0이 체력 회복, 1이 공격력 증가 + 방어력 감소, 2가 스킬게이지 최대치
+};
+
+
+
+struct cs_packet_next_stage_master_key {
+	unsigned char size;
+	char type;
+
 };
 #pragma pack(pop)
