@@ -7,7 +7,7 @@
 
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
-std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager{};
+//std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager{};
 
 CGameFramework::~CGameFramework()
 {
@@ -66,7 +66,7 @@ bool CGameFramework::OnInit(HWND hWnd, HINSTANCE hInstance)
 	m_pCamera = std::make_shared<CCamera>();
 	m_pCamera->Setup(2);
 
-	g_pSoundManager = std::make_unique<CMonsterChaserSoundManager>(64);
+	/*g_pSoundManager = std::make_unique<CMonsterChaserSoundManager>(64);*/
 
 	InitScene();
 

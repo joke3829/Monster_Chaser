@@ -53,8 +53,8 @@
 #include <dwrite.h>
 
 // 07.25
-#include "fmod.hpp"
-#include "fmod_errors.h"
+//#include "fmod.hpp"
+//#include "fmod_errors.h"
 
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "d3d12.lib")
@@ -66,8 +66,8 @@
 #pragma comment(lib, "dwrite.lib")
 #pragma comment(lib, "d3d11.lib")
 
-// 07.25
-#pragma comment(lib, "fmod_vc.lib")
+//// 07.25
+//#pragma comment(lib, "fmod_vc.lib")
 
 using namespace DirectX;
 using namespace std::chrono;

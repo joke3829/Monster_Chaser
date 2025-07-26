@@ -682,6 +682,13 @@ void CPlayerMage::UpdateObject(float fElapsedTime)
 				m_bBulletFired[0] = true;
 			}
 			break;
+		case 3:
+			if (getAniManager()->IsAnimationInTimeRange(0.5f, 0.6f) && !m_bBulletFired[0])
+			{
+				MakeBullet(80.0f, 3);
+				m_bBulletFired[0] = true;
+			}
+			break;
 		}
 	}
 
@@ -709,17 +716,24 @@ void CPlayerMage::MakeBullet(float speed, int skill)
 
 	if (skill == 1) {
 		projectile->setPosition(pos);
-		projectile->setMoveDirection(m_AutoDirect);
+		projectile->setMoveDirection({ m_AutoDirect.x, 0.0f, m_AutoDirect.z });
 		projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
+		projectile->getObjects().SetRenderState(true);
 	}
 	else if (skill == 2) {
 		pos.y += 30.0f;
 		projectile->setPosition(pos);
-		projectile->setMoveDirection({ m_AutoDirect.x, -0.5f, m_AutoDirect.z });
+		projectile->setMoveDirection({ m_AutoDirect.x, -1.0f, m_AutoDirect.z });
 		projectile->getObjects().SetScale({ 10.0f, 10.0f, 10.0f });
+		projectile->getObjects().SetRenderState(true);
+	}
+	else if (skill == 3) {
+		projectile->setPosition(pos);
+		projectile->setMoveDirection({ m_AutoDirect.x, 0.0f, m_AutoDirect.z });
+		projectile->getObjects().SetScale({ 1.0f, 1.0f, 1.0f });
+		projectile->getObjects().SetRenderState(false);
 	}
 	projectile->setActive(true);
-	projectile->getObjects().SetRenderState(true);
 	currentBullet = (currentBullet + 1) % bullet.size();
 }
 

@@ -9,7 +9,7 @@ extern std::array<short, 10>	 userPerRoom;
 extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
 extern bool allready;
 extern TitleState g_state;
-extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
+//extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
 
 
 C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
@@ -252,8 +252,8 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
 		//g_state = GoLoading;
-		g_pSoundManager->AllStop();
-		g_pSoundManager->StartFx(ESOUND::SOUND_START);
+		/*g_pSoundManager->AllStop();
+		g_pSoundManager->StartFx(ESOUND::SOUND_START);*/
 		break;
 		//4 7 9
 	}
