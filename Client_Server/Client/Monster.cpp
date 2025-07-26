@@ -6,6 +6,7 @@ Feroptere::Feroptere(CSkinningObject* obj, CAnimationManager* aManager)
 	m_HP = 15000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), false);
 	m_Damage = 100.0f;
+	m_GameTime = 0.0f;
 }
 
 void Feroptere::Skill1()
@@ -21,7 +22,11 @@ void Feroptere::Skill1()
 
 bool Feroptere::Attacked(float damage)
 {
+	if (!CanBeAttacked()) {
+		return false;
+	}
 	// m_JP -= damage;
+	m_LastHit = m_GameTime;
 	m_bAttacked = true;
 	/*if (m_HP > 0.0f)
 	{
@@ -40,6 +45,7 @@ void Feroptere::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
+	m_GameTime += fElapsedTime;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
 			m_AManager->ChangeAnimation(static_cast<int>(Minion::ANI_IDLE), true);
@@ -274,6 +280,7 @@ Xenokarce::Xenokarce(CSkinningObject* obj, CAnimationManager* aManager)
 {
 	m_HP = 40000.0f;
 	m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), false);
+	m_GameTime = 0.0f;
 }
 
 void Xenokarce::Skill1()
@@ -300,7 +307,11 @@ void Xenokarce::Skill2()
 
 bool Xenokarce::Attacked(float damage)
 {
+	if (!CanBeAttacked()) {
+		return false;
+	}
 	// m_JP -= damage;
+	m_LastHit = m_GameTime;
 	m_bAttacked = true;
 	/*if (m_HP > 0.0f)
 	{
@@ -319,6 +330,7 @@ void Xenokarce::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
 	m_bCheckAC = false;
+	m_GameTime += fElapsedTime;
 	if (m_bLive) {
 		if (m_AManager->IsAnimationFinished()) {
 			m_AManager->ChangeAnimation(static_cast<int>(Boss::ANI_IDLE), true);

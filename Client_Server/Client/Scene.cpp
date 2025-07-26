@@ -1167,8 +1167,8 @@ void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPl
 	for (int i = 0; i < targets.size(); i++) {
 
 		//for (const auto& target : targets) {
-		if (targets[i]->IsOnceAttacked())
-			continue;
+		if (targets[i]->IsDodge())continue;
+		if (!targets[i]->CanBeAttacked())continue;
 		for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
 			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
 			BoundingSphere targetSphere = targetBone->getObjectSphere();
@@ -1211,7 +1211,7 @@ void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPl
 void CRaytracingGameScene::ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag)
 {
 	for (int i = 0; i < targets.size(); i++) {
-
+		if (targets[i]->IsDodge())continue;
 		//for (const auto& target : targets) {
 		for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
 			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
