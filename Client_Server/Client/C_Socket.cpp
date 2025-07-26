@@ -58,11 +58,6 @@ void C_Socket::send_packet(void* pkt)
 
 void C_Socket::SendLogin()
 {
-	cs_packet_login p;
-	p.size = sizeof(p);
-	p.type = C2S_P_LOGIN;
-	
-	Client.send_packet(&p);
 }
 
 void C_Socket::SendCreateUser(const char* UserID, const char* Userpassword, const char* userNickName)
@@ -180,7 +175,7 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_ENTER:			//입장
 	{
 		sc_packet_enter* p = reinterpret_cast<sc_packet_enter*>(ptr);
-		
+
 
 		break;
 	}
@@ -348,10 +343,9 @@ void C_Socket::process_packet(char* ptr)
 
 
 		if (Monsters.find(id) != Monsters.end()) {
-			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr
-			m->getRenderingObject()->SetWorldMatrix(pkt->pos);
+			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr  
+			m->setPosition(pkt->pos);	// doyoung's turn
 			m->getAnimationManager()->ChangeAnimation(2, false);
-
 			//m->setVisible(true);														  // doyoung's turn
 			//m->playIdleAnim();															  // doyoung's turn
 		}
@@ -388,15 +382,16 @@ void C_Socket::process_packet(char* ptr)
 				monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
 				monster->getAnimationManager()->ChangeAnimation(4, false);
 			}
-
 			
 			//monster->setVisible(true);
+			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
 		}
 
 		break;
 	}
 	case S2C_P_PLAYER_HIT:
-	{		sc_packet_player_hit* pkt = reinterpret_cast<sc_packet_player_hit*>(ptr);
+	{
+		sc_packet_player_hit* pkt = reinterpret_cast<sc_packet_player_hit*>(ptr);
 		Players[pkt->local_id].SetHP(pkt->hp); // 플레이어가 데미지를 받았을 때 HP 감소 처리
 		break;
 	}
