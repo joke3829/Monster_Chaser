@@ -10,6 +10,7 @@
 #include "Monster.h"
 #include "ObjectManager.h"
 #include "SoundManager.h"
+#include "GameObject.h"
 
 extern DXResources g_DxResource;
 //extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
@@ -179,6 +180,8 @@ public:
 	void AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag);
 	void ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag);
 	void AutoDirection(const std::vector<std::unique_ptr<CPlayableCharacter>>& attacker, const std::vector<std::unique_ptr<CPlayableCharacter>>& targets);
+	void BulletCheck(const std::vector<std::unique_ptr<CProjectile>>& projectile, CHeightMapImage* terrain, CHeightMapImage* collisionMap, float fElapsedTime, float offsetX, float offsetY, float offsetZ, int sceneType);
+	void BulletCheck(const std::vector<std::unique_ptr<CProjectile>>& projectile, CHeightMapImage* terrain, float fElapsedTime, float offsetX, float offsetY, float offsetZ, int sceneType);
 
 	void CreateMageCharacter();
 	void CreateWarriorCharacter();

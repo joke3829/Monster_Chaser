@@ -1258,7 +1258,6 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 	if (attacker.empty() || targets.empty()) {
 		return;
 	}
-
 	CPlayableCharacter* attackerPtr = attacker[0].get();
 	XMFLOAT3 attackerPos = attackerPtr->getObject()->getPosition();
 	XMFLOAT3 attackerDir = attackerPtr->getObject()->getLook();
@@ -1270,10 +1269,14 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 	bool targetFound = false;
 	XMVECTOR vAttackerDir = XMLoadFloat3(&attackerDir);
 	XMVECTOR vAttackerPos = XMLoadFloat3(&attackerPos);
+	const float yThreshold = 0.7f;
 	for (const auto& target : targets) {
 		if (!target) continue;
 		XMFLOAT3 targetPos = target->getObject()->getPosition();
 		targetPos.y += 3.0f;
+		if (std::abs(targetPos.y - attackerPos.y) > 10.0f) {
+			continue;
+		}
 		XMVECTOR vTargetPos = XMLoadFloat3(&targetPos);
 		XMVECTOR vRelativeDir = XMVectorSubtract(vTargetPos, vAttackerPos);
 		XMVECTOR vDistance = XMVector3Length(vRelativeDir);
@@ -1281,6 +1284,11 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 		XMStoreFloat(&distance, vDistance);
 		if (distance > 0.0f && distance <= maxDistance) {
 			XMVECTOR vNormRelativeDir = XMVector3Normalize(vRelativeDir);
+			XMFLOAT3 normDir;
+			XMStoreFloat3(&normDir, vNormRelativeDir);
+			if (std::abs(normDir.y) > yThreshold) {
+				continue;
+			}
 			XMVECTOR vDot = XMVector3Dot(vAttackerDir, vNormRelativeDir);
 			float dot;
 			XMStoreFloat(&dot, vDot);
@@ -1291,13 +1299,45 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 			}
 		}
 	}
-
 	if (targetFound) {
 		attackerPtr->SetAutoDirect(directionToTarget);
 	}
 	else {
 		XMFLOAT3 dir = m_pCamera->getDir();
-		attackerPtr->SetAutoDirect({ dir.x,0.0f,dir.z });
+		attackerPtr->SetAutoDirect({dir.x,0.0f,dir.z});
+	}
+}
+
+void CRaytracingGameScene::BulletCheck(const std::vector<std::unique_ptr<CProjectile>>& projectile, CHeightMapImage* terrain, CHeightMapImage* collisionMap, float fElapsedTime, float offsetX, float offsetY, float offsetZ, int sceneType)
+{
+	for (auto& pro : projectile)
+	{
+		if (!pro->getActive())continue;
+		CGameObject* p = &pro->getObjects();
+		XMFLOAT4X4& projWorld = p->getWorldMatrix();
+		float colHeight = collisionMap->GetHeightinWorldSpace(projWorld._41 - offsetX, projWorld._43 - offsetZ);
+		float terrainHeight = terrain->GetHeightinWorldSpace(projWorld._41 - offsetX, projWorld._43 - offsetZ);
+		if (colHeight - terrainHeight >= 0.1f)
+		{
+			pro->getObjects().SetRenderState(false);
+			pro->setActive(false);
+		}
+	}
+}
+
+void CRaytracingGameScene::BulletCheck(const std::vector<std::unique_ptr<CProjectile>>& projectile, CHeightMapImage* terrain, float fElapsedTime, float offsetX, float offsetY, float offsetZ, int sceneType)
+{
+	for (auto& pro : projectile)
+	{
+		if (!pro->getActive())continue;
+		CGameObject* p = &pro->getObjects();
+		XMFLOAT4X4& projWorld = p->getWorldMatrix();
+		float terrainHeight = terrain->GetHeightinWorldSpace(projWorld._41 - offsetX, projWorld._43 - offsetZ);
+		if (terrainHeight > 0.0f)
+		{
+			pro->getObjects().SetRenderState(false);
+			pro->setActive(false);
+		}
 	}
 }
 
@@ -2402,6 +2442,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		if (m->HasActiveBullet())
 		{
 			ShootCollision(m_vMonsters, m_vPlayers, 1);
+			BulletCheck(m->GetBullets(), m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 		}
 	}
 
@@ -2416,6 +2457,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		if (m->HasActiveBullet())
 		{
 			ShootCollision(m_vPlayers, m_vMonsters, 0);
+			BulletCheck(m->GetBullets(), m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 		}
 	}
 
@@ -3213,6 +3255,7 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 		if (m->HasActiveBullet())
 		{
 			ShootCollision(m_vMonsters, m_vPlayers, 1);
+			BulletCheck(m->GetBullets(), m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
 		}
 	}
 
@@ -3227,6 +3270,7 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 		if (m->HasActiveBullet())
 		{
 			ShootCollision(m_vPlayers, m_vMonsters, 0);
+			BulletCheck(m->GetBullets(), m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
 		}
 	}
 
@@ -4091,6 +4135,7 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		if (m->HasActiveBullet())
 		{
 			ShootCollision(m_vMonsters, m_vPlayers, 1);
+			BulletCheck(m->GetBullets(), m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 		}
 	}
 
@@ -4105,6 +4150,7 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		if (m->HasActiveBullet())
 		{
 			ShootCollision(m_vPlayers, m_vMonsters, 0);
+			BulletCheck(m->GetBullets(), m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 		}
 	}
 
