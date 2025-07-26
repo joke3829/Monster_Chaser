@@ -56,7 +56,7 @@ void C_Socket::send_packet(void* pkt)
 	}
 }
 
-void C_Socket::SendLogin(const char* UserID, const char* Userpassword)
+void C_Socket::SendLogin()
 {
 }
 
@@ -379,7 +379,7 @@ void C_Socket::process_packet(char* ptr)
 			auto& monster = Monsters[id];
 			auto* ap = dynamic_cast<CMonsterManager*>(monster->getAnimationManager());
 			if (!ap->getSkillnum()) {
-				monster->setPosition(pkt->pos);
+				monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
 				monster->getAnimationManager()->ChangeAnimation(4, false);
 			}
 			
