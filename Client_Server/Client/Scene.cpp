@@ -228,7 +228,7 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 			switch (wParam) {
 			case 'R':
 			{
-				if (Players[local_uid].getCharacterType() != JOB_NOTHING)	//if pick non character
+				if (Players[Client.get_id()].getCharacterType() != JOB_NOTHING)	//if pick non character
 				{
 					bool currentReady = Players[Client.get_id()].getReady();
 					if (!currentReady)
@@ -274,7 +274,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					int y1 = i / 2 * 100 + 20 + 180, y2 = i / 2 * 100 + 20 + 84 + 180;
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
-							local_uid = userPerRoom[i]++;
+							//local_uid = userPerRoom[i]++;
 							currentRoom = i;
 							Client.SendEnterRoom(currentRoom);
 							//g_state = InRoom;
@@ -287,7 +287,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					int y1 = i / 2 * 100 + 20 + 180, y2 = i / 2 * 100 + 20 + 84 + 180;
 					if (mx >= x1 && mx <= x2 && my >= y1 && my <= y2) {
 						if (userPerRoom[i] < 3) {
-							local_uid = userPerRoom[i]++;
+							//local_uid = userPerRoom[i]++;
 							currentRoom = i;
 							Client.SendEnterRoom(currentRoom);
 							//g_state = InRoom;
@@ -308,17 +308,17 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					//prevJob = userJob[local_uid];
 					//	Players[local_uid].getCharacterType()
 					//	Players[local_uid].setCharacterType(prevJob);
-					prevJob = Players[local_uid].getCharacterType();
+					prevJob = Players[Client.get_id()].getCharacterType();
 				}
 			}
 			break;
 		case SelectC:
-			short currentJob = Players[local_uid].getCharacterType();
+			short currentJob = Players[Client.get_id()].getCharacterType();
 			if (mx >= 18 && mx < 318) {
 				if (my >= 610 && my < 700) {
-					Players[local_uid].setCharacterType(prevJob);
+					Players[Client.get_id()].setCharacterType(prevJob);
 					g_state = InRoom;		// change g_state
-					Client.SendPickCharacter(currentRoom, (int)Players[local_uid].getCharacterType());
+					Client.SendPickCharacter(currentRoom, (int)Players[Client.get_id()].getCharacterType());
 				}
 			}
 			if (mx >= 20 && mx < 120) {
@@ -326,7 +326,7 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					int newJob = (int)currentJob - 1;
 					if (newJob < 1)
 						newJob = 3;
-					Players[local_uid].setCharacterType(newJob);
+					Players[Client.get_id()].setCharacterType(newJob);
 				}
 			}
 			if (mx >= 1150 && mx < 1250) {
@@ -334,12 +334,12 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 					int newJob = (int)currentJob + 1;
 					if (newJob > 3)
 						newJob = 1;
-					Players[local_uid].setCharacterType(newJob);
+					Players[Client.get_id()].setCharacterType(newJob);
 				}
 			}
 			if (mx >= 962 && mx < 1262) {
 				if (my >= 610 && my < 700) {
-					Client.SendPickCharacter(currentRoom, (int)Players[local_uid].getCharacterType());
+					Client.SendPickCharacter(currentRoom, (int)Players[Client.get_id()].getCharacterType());
 					g_state = InRoom;		// change g_state
 				}
 			}
@@ -527,7 +527,7 @@ void TitleScene::UpdateObject(float fElapsedTime)
 		break;
 	}
 	case SelectC: {
-		int currentJob = (int)Players[local_uid].getCharacterType();
+		int currentJob = (int)Players[Client.get_id()].getCharacterType();
 		for (int i = CUIindex; i < CUIindex + 3; ++i) {
 			if (currentJob == i - CUIindex + 1)		//check
 				m_vSelectCUIs[i]->setRenderState(true);
