@@ -1319,6 +1319,7 @@ void CRaytracingGameScene::BulletCheck(const std::vector<std::unique_ptr<CProjec
 		float terrainHeight = terrain->GetHeightinWorldSpace(projWorld._41 - offsetX, projWorld._43 - offsetZ);
 		if (colHeight - terrainHeight >= 0.1f)
 		{
+			pro->setPosition(m_pPlayer->getObject()->getObject()->getPosition());
 			pro->getObjects().SetRenderState(false);
 			pro->setActive(false);
 		}
