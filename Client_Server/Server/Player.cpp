@@ -279,3 +279,39 @@ void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
 	}
 }
 
+void Player::Death()
+{
+	std::lock_guard<std::mutex> lock(playerMutex);
+	if (isDead)return;
+
+	isDead = true;
+	isRespawning = true;
+	respawnTime = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+}
+
+void Player::TryRespawn()
+{
+	std::lock_guard<std::mutex> lock(playerMutex);
+	if (!isDead || !isRespawning) return;
+
+	auto now = std::chrono::steady_clock::now();	
+	if(now>=respawnTime) {
+		hp = max_hp; // 부활 시 최대 HP로 초기화
+		skill_cost = max_skill_cost; // 스킬 비용 초기화
+		isDead = false;
+		isRespawning = false;
+		
+		
+		sc_packet_respawn pkt;
+		pkt.size = sizeof(pkt);
+		pkt.type = S2C_P_PlAYER_RESPAWN;
+		pkt.Local_id = local_id;
+		XMStoreFloat4x4(&pkt.pos, XMLoadFloat4x4(&position));
+		
+		for (int pid : g_server.rooms[room_num].id)
+			g_server.users[pid]->do_send(&pkt);
+		
+		std::cout << "[플레이어 부활] 플레이어 " << local_id << "이(가) 부활했습니다.\n";
+	}
+}
+

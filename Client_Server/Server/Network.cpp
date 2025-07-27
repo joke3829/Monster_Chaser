@@ -332,9 +332,15 @@ void SESSION::process_packet(char* p) {
 			for (int pid : room.id)
 				g_server.users[pid]->do_send(&hpkt);
 
-			//if (dead) {
-			//    // 죽었을 경우 처리 추가 가능
-			//}
+			if (dead) {
+
+				sc_packet_player_die dpkt;
+				dpkt.size = sizeof(dpkt);	
+				dpkt.type = S2C_P_PlAYER_DIE;
+				dpkt.Local_id = pkt->target_player_id;
+
+			    // 죽었을 경우 처리 추가 가능
+			}
 		}
 		break;
 	}

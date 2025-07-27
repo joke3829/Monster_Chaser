@@ -480,6 +480,18 @@ void C_Socket::process_packet(char* ptr)
 		}
 		break;
 	}
+	case S2C_P_PlAYER_DIE:
+	{
+		// 플레이어가 죽었을 때 처리
+		break;
+	}
+	case S2C_P_PlAYER_RESPAWN:
+	{
+		// 플레이어가 부활했을 때 처리
+		break;
+	}
+
+
 	case S2C_P_LEAVE:
 	{
 		sc_packet_leave* pkt = reinterpret_cast<sc_packet_leave*>(ptr);

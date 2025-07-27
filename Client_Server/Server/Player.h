@@ -118,6 +118,11 @@ public:
 	const auto& GetLastRecoverTime() const { return lastRecoverTime; }
 	void SetLastHitTime() { lastHitTime = std::chrono::steady_clock::now(); }
 	void SetLastRecoverTime(std::chrono::steady_clock::time_point t) { lastRecoverTime = t; }
+
+
+	void Death();
+	void TryRespawn();
+	bool ISDead() const { return isDead; } // 플레이어가 죽었는지 확인하는 함수
 	
 private:
 	Player() = default; // 기본 생성자는 private로 설정하여 사용하지 못하게 함
@@ -137,6 +142,11 @@ private:
 	float atk_buff = 0.f;   // 추가 공격력
 
 	int defense = 5; // 방어력
+
+	bool isDead = false;
+	bool isRespawning = false; // 플레이어가 부활 중인지 여부
+	std::chrono::steady_clock::time_point respawnTime; // 부활 시간
+
 
 	// 공격력 버프
 	float atk_buff_potion = 0.f;
