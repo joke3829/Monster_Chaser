@@ -288,7 +288,7 @@ void C_Socket::process_packet(char* ptr)
 		int id = pkt->monster_id;
 		MonsterType type = pkt->monster_type;
 
-		auto& monster = Monsters[pkt->monster_id];
+		
 		// 이미 있으면 덮어쓰기 방지
 		if (Monsters.find(id) != Monsters.end()) {
 			Monsters[pkt->monster_id]->getRenderingObject()->SetWorldMatrix(pkt->pos);

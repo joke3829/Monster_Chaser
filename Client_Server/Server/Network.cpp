@@ -188,6 +188,7 @@ void SESSION::process_packet(char* p) {
 
 			room.monsters.clear(); // 몬스터 초기화
 			room.SpawnMonsters(); // 몬스터 스폰
+
 			room.StartGame();  // 몬스터 스레드 시작
 
 			room.InitailizeReadyingame();		//다시	player_readytoPlaygame 다 False로 초기화
@@ -347,7 +348,7 @@ void SESSION::process_packet(char* p) {
 		{
 		case ItemType::HP_POTION:
 		{
-			player->PlusHP(300); // 예시로 50만큼 HP 회복
+			player->PlusHP(480); // 예시로 50만큼 HP 회복
 			sc_packet_change_hp ap;
 			ap.size = sizeof(ap);
 			ap.type = S2C_P_CHANGEHP;
@@ -360,7 +361,7 @@ void SESSION::process_packet(char* p) {
 		}
 		case ItemType::MP_POTION:
 		{
-			player->PlusMP(5); // 예시로 5만큼 MP 회복
+			player->PlusMP(50); // 예시로 5만큼 MP 회복
 			sc_packet_change_mp mp;
 			mp.size = sizeof(mp);
 			mp.type = S2C_P_CHANGEMP;
@@ -374,7 +375,7 @@ void SESSION::process_packet(char* p) {
 		case ItemType::ATK_BUFF:
 		{
 			float buff_amount = 100.f;
-			float duration = 10.f;
+			float duration = 50.f;
 
 			player->AddATKBuff_Potion(buff_amount, duration); //  정확한 함수 사용
 
@@ -407,7 +408,7 @@ void SESSION::process_packet(char* p) {
 			if (!target) continue; // 대상 플레이어가 없으면 건너뜀
 			switch (skillNum) {
 			case 0: { // 체력 회복
-				target->PlusHP(50); // 임시값. 나중에 조정
+				target->PlusHP(200); // 임시값. 나중에 조정
 
 				sc_packet_change_hp pkt_hp;
 				pkt_hp.size = sizeof(pkt_hp);

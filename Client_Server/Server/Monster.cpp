@@ -7,6 +7,7 @@
 #define MONSTER_ATTACK_RANGE 1.0f
 constexpr float MONSTER_ATTACK_COOLDOWN = 2.0f;   // 공격 쿨타임 2초
 constexpr float MONSTER_RETURN_SPEED = 80.0f;     // 귀환 속도
+constexpr float MONSTER_CHASE_SPEED = 10.0f;     // 귀환 속도
 std::random_device rd;
 std::mt19937 gen(rd());
 
@@ -85,12 +86,14 @@ Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
         max_hp = hp;
         ATK = 100;
         Attacktypecount = 1;
+		stage = SCENE_PLAIN; // 1스테이지 몬스터
         break;
     case MonsterType::Xenokarce:
         hp = 40000;
         max_hp = hp;
         ATK = 200;
         Attacktypecount = 2;
+        stage = SCENE_PLAIN; // 1스테이지 몬스터
         break;
     case MonsterType::Occisodonte:
     case MonsterType::Limadon:
@@ -99,22 +102,27 @@ Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
         max_hp = hp;
         ATK = 100;
         Attacktypecount = 2;
+        stage = SCENE_CAVE; // 2스테이지 몬스터
         break;
     case MonsterType::Crassorrid:
         hp = 80000;
         max_hp = hp;
         ATK = 200;
         Attacktypecount = 3;
+        stage = SCENE_CAVE; // 2스테이지 몬스터
         break;
     case MonsterType::Gorhorrid:
         hp = 200000;
         max_hp = hp;
         ATK = 300;
         Attacktypecount = 3;
+        stage = SCENE_WINTERLAND; // 3스테이지 몬스터
         break;
     default:
         break;
     }
+   
+
 }
 
 void Monster::Update(float deltaTime, const Room& room, const PlayerManager& playerManager) {
@@ -192,7 +200,7 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         player->GetPosition()._42,
         player->GetPosition()._43
     };
-    float speed = 10.0f;
+
     float dx = targetPos.x - position.x;
     float dz = targetPos.z - position.z;
     float len = sqrtf(dx * dx + dz * dz); // y축 무시
@@ -201,15 +209,15 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         dx /= len;
         dz /= len;
 
-        position.x += dx * speed * 0.016f;
-        position.z += dz * speed * 0.016f;
+        position.x += dx * MONSTER_CHASE_SPEED * 0.016f;
+        position.z += dz * MONSTER_CHASE_SPEED * 0.016f;
 
-        switch(스테이지) {
+        switch(stage) {
         case SCENE_PLAIN:
             if (CollisionCheck(g_pStage1Height.get(), g_pStage1Collision.get(), position.x, position.z,
                 -512.0f, 0.0f, -512.0f, SCENE_PLAIN)) {
-                position.x -= dx * speed * 0.016f;
-                position.z -= dz * speed * 0.016f;
+                position.x -= dx * MONSTER_CHASE_SPEED * 0.016f;
+                position.z -= dz * MONSTER_CHASE_SPEED * 0.016f;
             }
             position.y = getHeight(g_pStage1Height.get(), position.x, position.z,
                 -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
@@ -217,8 +225,8 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         case SCENE_CAVE:
             if (CollisionCheck(g_pStage2Height.get(), g_pStage2Collision.get(), position.x, position.z,
                 -200.0f, -10.0f, -66.5f, SCENE_CAVE)) {
-                position.x -= dx * speed * 0.016f;
-                position.z -= dz * speed * 0.016f;
+                position.x -= dx *MONSTER_CHASE_SPEED * 0.016f;
+                position.z -= dz *MONSTER_CHASE_SPEED * 0.016f;
             }
             position.y = getHeight(g_pStage2Height.get(), position.x, position.z,
                 -200.0f, -10.0f, -66.5f, SCENE_CAVE);
@@ -226,8 +234,8 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         case SCENE_WINTERLAND:
             if (CollisionCheck(g_pStage3Height.get(), g_pStage3Collision.get(), position.x, position.z,
                 -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND)) {
-                position.x -= dx * speed * 0.016f;
-                position.z -= dz * speed * 0.016f;
+                position.x -= dx * MONSTER_CHASE_SPEED * 0.016f;
+                position.z -= dz * MONSTER_CHASE_SPEED * 0.016f;
             }
             position.y = getHeight(g_pStage3Height.get(), position.x, position.z,
                 -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
@@ -277,7 +285,8 @@ void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room)
   
     if (dist < 10.0f) {
         TransitionTo(MonsterState::Idle);
-        // 👇 Idle 전환 시 패킷 전송
+		lookDir = defaultLookDir; // 기본 바라보는 방향으로 설정
+        //  Idle 전환 시 패킷 전송
         sc_packet_monster_idle pkt;
         pkt.size = sizeof(pkt);
         pkt.type = S2C_P_MONSTERIDLE;
@@ -294,7 +303,35 @@ void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room)
 
         position.x += dx * MONSTER_RETURN_SPEED * 0.016f;
         position.z += dz * MONSTER_RETURN_SPEED * 0.016f;
-
+        switch (stage) {
+        case SCENE_PLAIN:
+            if (CollisionCheck(g_pStage1Height.get(), g_pStage1Collision.get(), position.x, position.z,
+                -512.0f, 0.0f, -512.0f, SCENE_PLAIN)) {
+                position.x -= dx *MONSTER_RETURN_SPEED * 0.016f;
+                position.z -= dz *MONSTER_RETURN_SPEED * 0.016f;
+            }
+            position.y = getHeight(g_pStage1Height.get(), position.x, position.z,
+                -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+            break;
+        case SCENE_CAVE:
+            if (CollisionCheck(g_pStage2Height.get(), g_pStage2Collision.get(), position.x, position.z,
+                -200.0f, -10.0f, -66.5f, SCENE_CAVE)) {
+                position.x -= dx * MONSTER_RETURN_SPEED * 0.016f;
+                position.z -= dz * MONSTER_RETURN_SPEED * 0.016f;
+            }
+            position.y = getHeight(g_pStage2Height.get(), position.x, position.z,
+                -200.0f, -10.0f, -66.5f, SCENE_CAVE);
+            break;
+        case SCENE_WINTERLAND:
+            if (CollisionCheck(g_pStage3Height.get(), g_pStage3Collision.get(), position.x, position.z,
+                -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND)) {
+                position.x -= dx * MONSTER_RETURN_SPEED * 0.016f;
+                position.z -= dz * MONSTER_RETURN_SPEED * 0.016f;
+            }
+            position.y = getHeight(g_pStage3Height.get(), position.x, position.z,
+                -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+            break;
+        }
         // y는 그대로 유지
         lookDir = { dx, 0.0f, dz };
     }

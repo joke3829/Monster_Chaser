@@ -101,7 +101,7 @@ void Player::Updatestatus(Character t)
 		skill_cost = 100; // 스킬 사용 비용
 		max_skill_cost = skill_cost; // 스킬 사용 비용
 		attack = 800; // 공격력
-		defense = 10; // 방어력
+		defense = 30; // 방어력
 		break;
 	}
 	case Warrior:
@@ -111,7 +111,7 @@ void Player::Updatestatus(Character t)
 		skill_cost = 100; // 스킬 사용 비용
 		max_skill_cost = skill_cost; // 스킬 사용 비용
 		attack = 600; // 공격력
-		defense = 30; // 방어력
+		defense = 70; // 방어력
 		break;
 	}
 	case Priest:
@@ -121,7 +121,7 @@ void Player::Updatestatus(Character t)
 		skill_cost = 100; // 스킬 사용 비용
 		max_skill_cost = skill_cost; // 스킬 사용 비용
 		attack = 700; // 공격력
-		defense = 10; // 방어력
+		defense = 30; // 방어력
 		break;
 	}
 	default:

@@ -123,22 +123,28 @@ void Room::SpawnMonsters()
 	case 1:
 	{
 		// Feroptere - 3마리
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-280.0f, 0.0f, 215.4f), MonsterType::Feroptere);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-246.3, 0, 15.1), MonsterType::Feroptere);
-
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-280.0f, 
+			getHeight(g_pStage1Height.get(), -280.0f, 215.4f, -512.0f, 0.0f, -512.0f, SCENE_PLAIN)
+			, 215.4f), MonsterType::Feroptere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-246.3, 
+			getHeight(g_pStage1Height.get(), -246.3, 15.1, -512.0f, 0.0f, -512.0f, SCENE_PLAIN)
+			, 15.1), MonsterType::Feroptere);
+		
 		// Pistiripere - 3마리
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-240, 0, 149.8), MonsterType::Pistiripere);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-351.1, 0, 26.7), MonsterType::Pistiripere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-240, getHeight(g_pStage1Height.get(), -240.0f, 149.8f, -512.0f, 0.0f, -512.0f, SCENE_PLAIN), 149.8), MonsterType::Pistiripere);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-351.1, getHeight(g_pStage1Height.get(), -351.1f, 26.7f, -512.0f, 0.0f, -512.0f, SCENE_PLAIN), 26.7), MonsterType::Pistiripere);
 
 		// RostrokarackLarvae - 4마리
 
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-150.5, 0, 85.7), MonsterType::RostrokarackLarvae);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-164.7, 0, 66), MonsterType::RostrokarackLarvae);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-150.5, getHeight(g_pStage1Height.get(), -150.5f, 85.7f, -512.0f, 0.0f, -512.0f, SCENE_PLAIN), 85.7), MonsterType::RostrokarackLarvae);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-164.7, getHeight(g_pStage1Height.get(), -164.7f, 66.0f, -512.0f, 0.0f, -512.0f, SCENE_PLAIN), 66), MonsterType::RostrokarackLarvae);
 
 		// Boss - Xenokarce
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-306.7, 0, -150.8), MonsterType::Xenokarce);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-306.7, getHeight(g_pStage1Height.get(), -306.7f, -150.8f, -512.0f, 0.0f, -512.0f, SCENE_PLAIN), -150.8), MonsterType::Xenokarce);
 
-		break;
+		
+		
+		
 	}
 	case 2:
 	{
@@ -164,7 +170,18 @@ void Room::SpawnMonsters()
 	default:
 		break;
 	}
+	for (auto& [monster_id, monster] : monsters) {
+		// 몬스터 스폰 패킷 전송
+		sc_packet_monster_spawn pkt;
+		pkt.size = sizeof(pkt);
+		pkt.type = S2C_P_MONSTER_SPAWN;
+		pkt.monster_id = monster_id;
+		XMStoreFloat4x4(&pkt.pos, XMMatrixTranslation(monster->GetPosition().x, monster->GetPosition().y, monster->GetPosition().z));
 
+		for (int pid : id) {
+			g_server.users[pid]->do_send(&pkt);
+		}
+	}
 
 }
 

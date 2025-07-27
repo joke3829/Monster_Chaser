@@ -57,9 +57,6 @@
     <Filter Include="Resource\GameObject">
       <UniqueIdentifier>{b53e0a0f-7fa3-4281-b326-33917618c968}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource\ResourceManager">
-      <UniqueIdentifier>{0d1b56cb-2641-4657-b002-5cc17ec1e9f4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource\AnimationManager">
       <UniqueIdentifier>{26e56987-728b-4f9b-bb23-ee29f7266adc}</UniqueIdentifier>
     </Filter>
@@ -93,6 +90,9 @@
     </Filter>
     <Filter Include="Resource\SoundManager">
       <UniqueIdentifier>{4404b1cc-be7e-47c9-ba3e-4674a17890f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ResourceManager">
+      <UniqueIdentifier>{0d1b56cb-2641-4657-b002-5cc17ec1e9f4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -151,7 +151,7 @@
       <Filter>Resource\GameObject</Filter>
     </ClInclude>
     <ClInclude Include="ResourceManager.h">
-      <Filter>Resource\ResourceManager</Filter>
+      <Filter>ResourceManager</Filter>
     </ClInclude>
     <ClInclude Include="d3dx12.h">
       <Filter>헤더 파일</Filter>
@@ -243,7 +243,7 @@
       <Filter>Resource\GameObject</Filter>
     </ClCompile>
     <ClCompile Include="ResourceManager.cpp">
-      <Filter>Resource\ResourceManager</Filter>
+      <Filter>ResourceManager</Filter>
     </ClCompile>
     <ClCompile Include="DDSTextureLoader12.cpp">
       <Filter>소스 파일</Filter>

@@ -83,9 +83,13 @@ private:
     XMFLOAT3 position;
     XMFLOAT3 spawnPoint;
     XMFLOAT3 lookDir = { 0.0f, 0.0f, 1.0f }; // 기본값은 정면 (z축)
+	XMFLOAT3 defaultLookDir = { 0.0f, 0.0f, 1.0f }; // 기본 바라보는 방향
 
+	int stage = None; // 몬스터가 속한 스테이지 (1, 2, 3 등)
     int gold = 0; // 몬스터가 죽었을 때 드랍하는 골드
 
+
+    
     bool isRespawning = false;
     char Attacktypecount = 1; // 공격 종류 카운트
 
