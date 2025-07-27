@@ -196,9 +196,9 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
     auto player = playerManager.GetPlayer(target_id);
     if (!player) return;
     XMFLOAT3 targetPos = {
-        player->GetPosition()._41,
-        player->GetPosition()._42,
-        player->GetPosition()._43
+        player->GetBoanPosition()._41,
+        player->GetBoanPosition()._42,
+        player->GetBoanPosition()._43
     };
 
     float dx = targetPos.x - position.x;

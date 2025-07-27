@@ -119,6 +119,12 @@ public:
 	void SetLastHitTime() { lastHitTime = std::chrono::steady_clock::now(); }
 	void SetLastRecoverTime(std::chrono::steady_clock::time_point t) { lastRecoverTime = t; }
 
+	void setBoanPosition(const XMFLOAT4X4& pos) {
+		Bogan_position = pos;
+	}
+	const XMFLOAT4X4& GetBoanPosition() const {
+		return Bogan_position;
+	}
 
 	void Death();
 	void TryRespawn();
@@ -132,6 +138,7 @@ private:
 	std::string name;
 
 	XMFLOAT4X4 position;
+	XMFLOAT4X4 Bogan_position;
 	float hp = 100;
 	float max_hp = 100; // 최대 HP
 	float skill_cost = 100; // 스킬 사용 비용

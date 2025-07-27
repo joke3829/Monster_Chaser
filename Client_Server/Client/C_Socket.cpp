@@ -361,7 +361,9 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_monster_hit* pkt = reinterpret_cast<sc_packet_monster_hit*>(ptr);
 
 		int id = pkt->monster_id; // 몬스터 ID
-		Monsters[id]->setHP(pkt->hp); // 몬스터 HP 업데이트
+		if (Monsters.contains(id)) {
+			Monsters[id]->setHP(pkt->hp); // 몬스터 HP 업데이트
+		}
 		break;
 
 	}
