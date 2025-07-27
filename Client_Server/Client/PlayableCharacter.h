@@ -14,6 +14,8 @@ extern std::array<float, 3> g_maxMPs;
 extern std::array<float, 3> g_SkillCoolTime;
 extern std::array<float, 3> g_SkillCurCTime;
 extern std::array<float, 3> g_SkillCost;
+
+extern std::array<bool, 3> g_PlayerDie;
 // =================================================
 
 class CPlayableCharacter {
