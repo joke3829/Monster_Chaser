@@ -119,7 +119,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
 			m_Damage = 800.0f;
-			MakeBullet();
+			MakeBullet(50.0f,1);
 		}
 		break;
 	}
@@ -1923,7 +1923,7 @@ void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
-			MakeBullet();
+			MakeBullet(50.0f, 1);
 		}
 		break;
 	}
