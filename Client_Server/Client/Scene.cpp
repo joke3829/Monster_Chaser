@@ -1259,8 +1259,8 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 	if (attacker.empty() || targets.empty()) {
 		return;
 	}
-
-	CPlayableCharacter* attackerPtr = attacker[0].get();
+	auto& attackerPtr = attacker[m_local_id];
+	if (attackerPtr->GetBullets().empty())return;
 	XMFLOAT3 attackerPos = attackerPtr->getObject()->getPosition();
 	XMFLOAT3 attackerDir = attackerPtr->getObject()->getLook();
 	float fov = 90.0f * (3.14159f / 180.0f);
@@ -1289,7 +1289,7 @@ void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlay
 				minDistance = distance;
 				XMStoreFloat3(&directionToTarget, vNormRelativeDir);
 				targetFound = true;
-				
+
 			}
 		}
 	}
@@ -4120,11 +4120,12 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 
+	for (auto& p : m_pMonsters) {
+		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+	}
+	
 	AutoDirection(m_vPlayers, m_vMonsters);
-	//for (auto& p : m_pMonsters) {
-	//	p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
-	//	p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
-	//}
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
