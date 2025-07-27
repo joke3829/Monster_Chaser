@@ -13,7 +13,7 @@
 #include "GameObject.h"
 
 extern DXResources g_DxResource;
-//extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
+extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
 
 // 07.25 ===========================================
 extern std::array<bool, 3>	g_PlayerBuffState;

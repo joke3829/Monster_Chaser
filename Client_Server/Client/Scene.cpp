@@ -202,7 +202,7 @@ void TitleScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRa
 	m_vSelectCUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get(), textures[textures.size() - 1].get()));
 	m_vSelectCUIs[m_vSelectCUIs.size() - 1]->setPositionInViewport(240, 40);
 
-	/*g_pSoundManager->StartBGM(ESOUND::SOUND_TITLE_BGM);*/
+	g_pSoundManager->StartBGM(ESOUND::SOUND_TITLE_BGM);
 }
 
 void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -223,8 +223,8 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 				if (Players[local_uid].getCharacterType() != JOB_NOTHING)	//if pick non character
 				{
 					bool currentReady = Players[Client.get_id()].getReady();
-				/*	if (!currentReady)
-						g_pSoundManager->StartFx(ESOUND::SOUND_READY);*/
+					if (!currentReady)
+						g_pSoundManager->StartFx(ESOUND::SOUND_READY);
 					Players[Client.get_id()].setReady(!currentReady);
 					Client.SendsetReady(Players[Client.get_id()].getReady(), currentRoom);
 				}
@@ -251,8 +251,8 @@ void TitleScene::OnProcessingMouseMessage(HWND hWnd, UINT nMessage, WPARAM wPara
 	case WM_LBUTTONDOWN: {
 		int mx = LOWORD(lParam);
 		int my = HIWORD(lParam);
-		/*if (g_state != GoLoading)
-			g_pSoundManager->StartFx(ESOUND::SOUND_CLICK);*/
+		if (g_state != GoLoading)
+			g_pSoundManager->StartFx(ESOUND::SOUND_CLICK);
 		switch (g_state) {
 		case Title:
 			g_state = RoomSelect;
@@ -2809,7 +2809,7 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 
 	Client.SendPlayerReady(SCENE_CAVE);
 
-	/*g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE2_AMB);*/
+	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE2_AMB);
 }
 
 void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -3622,7 +3622,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 
 	Client.SendPlayerReady(SCENE_PLAIN);
 
-	/*g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE1_AMB);*/
+	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE1_AMB);
 }
 
 void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
