@@ -2,7 +2,7 @@
 #include "HeightMap.h"
 
 
-CHeightMapImage::CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3& xmf3Scale)
+CHeightMapImage::CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3 xmf3Scale)
 {
     m_nWidth = nWidth;
     m_nLength = nLength;
