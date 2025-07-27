@@ -218,6 +218,11 @@ void TitleScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, WPARAM wP
 			Client.SendBroadCastRoom();
 			break;
 		case RoomSelect:
+			switch (wParam) {
+			case 'R':
+				Client.SendBroadCastRoom();
+				break;
+			}
 			break;
 		case InRoom: {
 			switch (wParam) {
@@ -2623,33 +2628,6 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 
 	m_pAccelerationStructureManager->UpdateScene(m_pCamera->getEye());
 
-	switch (g_InGameState) {
-	case IS_LOADING: {
-		wOpacity -= 0.5 * fElapsedTime;
-		if (wOpacity < 0.0f) {
-			g_InGameState = IS_GAMING;
-			wOpacity = 0.0f;
-		}
-		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
-		break;
-	}
-	case IS_GAMING: {
-		break;
-	}
-	case IS_FINISH: {
-		wOpacity += 0.2 * fElapsedTime;
-		if (wOpacity > 1.0f) {
-			ShowCursor(TRUE);
-			g_pSoundManager->AllStop();
-			m_nNextScene = SCENE_TITLE;
-			g_state = Title;
-			wOpacity = 1.0f;
-		}
-		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
-		break;
-	}
-	}
-
 	// Player UI ==================================================
 	int buffstart = 20; int bstride = 40;
 	float cMP = Players[m_local_id].GetMP();
@@ -2723,6 +2701,35 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		m_vUIs.back()->setColor(0.5, 0.5, 0.5, 0.5);
 	else
 		m_vUIs.back()->setColor(0.5, 0.5, 0.5, 0.0);
+
+	switch (g_InGameState) {
+	case IS_LOADING: {
+		wOpacity -= 0.5 * fElapsedTime;
+		if (wOpacity < 0.0f) {
+			g_InGameState = IS_GAMING;
+			wOpacity = 0.0f;
+		}
+		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
+		break;
+	}
+	case IS_GAMING: {
+		break;
+	}
+	case IS_FINISH: {
+		wOpacity += 0.2 * fElapsedTime;
+		if (wOpacity > 1.0f) {
+			ShowCursor(TRUE);
+			g_pSoundManager->AllStop();
+			m_nNextScene = SCENE_TITLE;
+			Players.clear();
+			Client.set_id(-1);
+			g_state = Title;
+			wOpacity = 1.0f;
+		}
+		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
+		break;
+	}
+	}
 }
 
 void CRaytracingWinterLandScene::Render()
@@ -2812,7 +2819,6 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	g_InGameState = IS_LOADING;
 	wOpacity = 1.0f;
 	m_vMonsters.clear();
-	m_vPlayers.clear();
 	m_vPlayers.clear();
 	Monsters.clear();
 
@@ -3625,6 +3631,7 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	g_InGameState = IS_LOADING;
 	wOpacity = 1.0f;
 	m_vMonsters.clear();
+	m_vPlayers.clear();
 	Monsters.clear();
 
 	m_pOutputBuffer = outputBuffer;
