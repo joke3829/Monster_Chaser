@@ -5,6 +5,7 @@
 #include <DirectXMath.h>
 #include "PlayerManager.h"
 #include "Room.h"
+#include "HeightMap.h"
 
 enum class MonsterState {
     Idle,

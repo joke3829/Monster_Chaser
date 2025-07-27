@@ -35,7 +35,51 @@ void Player::Move(float dx, float dy, float dz) {
 }
 
 
-void Player::RecoverSkillCost(int amount)
+void Player::PlaySkill(const int attacktype)
+{
+	switch (type)
+	{
+	case None:
+		break;
+	case Wizard:
+	{
+		std::lock_guard<std::mutex> lock(playerMutex);
+		if (attacktype == 1) // 스킬 공격
+			skill_cost -= 20; // 스킬 공격은 20 스킬 비용
+		else if (attacktype == 2) // 메테오
+			skill_cost -= 50; // 메테오 스킬은 50 스킬 비용
+		else if (attacktype == 3) // 궁극기
+			skill_cost -= 100; // 궁극기는 100 스킬 비용
+		break;
+	}
+	case Warrior:
+	{
+		std::lock_guard<std::mutex> lock(playerMutex);
+		if (attacktype == 1) // 스킬 공격
+			skill_cost -= 20; // 스킬 공격은 20 스킬 비용
+		if (attacktype == 2) // 메테오
+			skill_cost -= 50; // 메테오 스킬은 50 스킬 비용
+		else if (attacktype == 3) // 궁극기
+			skill_cost -= 100; // 궁극기는 100 스킬 비용
+		break;
+	}
+	case Priest:
+	{
+		std::lock_guard<std::mutex> lock(playerMutex);
+		if (attacktype == 1) // 스킬 공격
+			skill_cost -= 20; // 스킬 공격은 20 스킬 비용
+		else if (attacktype == 2) // 메테오
+			skill_cost -= 50; // 메테오 스킬은 50 스킬 비용
+		else if (attacktype == 3) // 궁극기
+			skill_cost -= 100; // 궁극기는 100 스킬 비용
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+void Player::RecoverSkillCost(float amount)
 {
 	skill_cost += amount;
 	if (skill_cost > max_skill_cost) {
@@ -124,7 +168,7 @@ float Player::GetDamage(int attacktype)
 {
 
 
-	float attack = GetATK();	
+	float attack = GetATK();
 	switch (type)
 	{
 	case None:
@@ -143,7 +187,7 @@ float Player::GetDamage(int attacktype)
 		else if (attacktype == 3) // 궁극기
 			return attack * 4.0f; // 궁극기는 4배
 	}
-		break;
+	break;
 	case Warrior:
 	{
 		if (attacktype == 0) // 일반 공격
@@ -158,7 +202,7 @@ float Player::GetDamage(int attacktype)
 		else if (attacktype == 3) // 궁극기
 			return attack * 4.0f; // 궁극기는 4배
 	}
-		break;
+	break;
 	case Priest:
 		return attack; // 프리스트는 일반 공격만 사용						700
 		break;
@@ -185,9 +229,9 @@ float Player::GetATK() {
 
 float Player::GetDEF() {
 	auto now = std::chrono::steady_clock::now();
-	if (now >= def_buff_end) { 
-		def_buff = 0.f; 
-	//	cout << "[방어력 버프 종료] 방어력 버프가 만료되었습니다.\n";
+	if (now >= def_buff_end) {
+		def_buff = 0.f;
+		//	cout << "[방어력 버프 종료] 방어력 버프가 만료되었습니다.\n";
 	}
 	if (now >= def_debuff_end)
 	{
@@ -203,7 +247,7 @@ void Player::UpdateBuffStatesIfChanged()
 
 	// 현재 버프 상태 계산
 	bool atkActive = (atk_buff_potion > 0.f && now < atk_buff_potion_end) ||
-						(atk_buff_skill > 0.f && now < atk_buff_skill_end);
+		(atk_buff_skill > 0.f && now < atk_buff_skill_end);
 
 	bool defActive = (def_buff > 0.f && now < def_buff_end);
 
@@ -231,7 +275,7 @@ void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
 			g_server.users[pid]->do_send(&pkt);
 
 		std::cout << "[버프 상태 변경] 플레이어 " << local_id << " | 타입: " << (int)pkt.bufftype
-			<< " | 상태: " << (int)pkt.state << "공격력: "<<GetATK()<<" 방어력: "<<GetDEF() << "\n";
+			<< " | 상태: " << (int)pkt.state << "공격력: " << GetATK() << " 방어력: " << GetDEF() << "\n";
 	}
 }
 

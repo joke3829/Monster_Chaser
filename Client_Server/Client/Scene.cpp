@@ -2396,6 +2396,17 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
+
+
+
+	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+
+
+	for (auto& p : m_pMonsters) {
+		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	}
 	for (auto& m : m_vPlayers)
 	{
 		m->UpdateObject(fElapsedTime);
@@ -2423,18 +2434,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 			ShootCollision(m_vPlayers, m_vMonsters, 0);
 		}
 	}
-
-
 	AutoDirection(m_vPlayers, m_vMonsters);
-
-	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-
-
-	for (auto& p : m_pMonsters) {
-		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-	}
 
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
@@ -3208,6 +3208,17 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
+
+
+
+
+	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
+	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
+
+	for (auto& p : m_pMonsters) {
+		p->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
+		p->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
+	}
 	for (auto& m : m_vPlayers)
 	{
 		m->UpdateObject(fElapsedTime);
@@ -3235,18 +3246,7 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 			ShootCollision(m_vPlayers, m_vMonsters, 0);
 		}
 	}
-
-
 	AutoDirection(m_vPlayers, m_vMonsters);
-
-	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
-	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
-
-	for (auto& p : m_pMonsters) {
-		p->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
-		p->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
-	}
-
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
 		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 200.0f, EYE.z + 66.5f);
@@ -4086,6 +4086,11 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
+	
+
+
+	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 	for (auto& m : m_vPlayers)
 	{
 		m->UpdateObject(fElapsedTime);
@@ -4114,12 +4119,7 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-
 	AutoDirection(m_vPlayers, m_vMonsters);
-
-	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
-	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
-
 	for (auto& p : m_pMonsters) {
 		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);

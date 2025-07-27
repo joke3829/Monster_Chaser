@@ -55,13 +55,14 @@ public:
 		std::lock_guard<std::mutex> lock(playerMutex);
 		skill_cost += new_mp;
 	}
+	void PlaySkill(const int attacktype);
 	void setSkillCost(float new_cost) {
 		std::lock_guard<std::mutex> lock(playerMutex);
 		skill_cost = new_cost;
 		if (skill_cost > max_skill_cost) skill_cost = max_skill_cost; // 스킬 사용 비용이 최대치를 넘지 않도록
 	}
 	// MP 자동 회복 관련 함수
-	void RecoverSkillCost(int amount);
+	void RecoverSkillCost(float amount);
 	// MP 자동 회복 관련 함수
 
 
@@ -109,22 +110,14 @@ public:
 	
 
 
-
-	void SetLastHitTime() {
-		lastHitTime = std::chrono::steady_clock::now();
-	}
-
-	std::chrono::steady_clock::time_point GetLastHitTime() const {
-		return lastHitTime;
-	}
-
-
-
 	void UpdateBuffStatesIfChanged();
 	void SendBuffPacketIfChanged(BuffType type, bool currentState);
 
 
-
+	const auto& GetLastHitTime() const { return lastHitTime; }
+	const auto& GetLastRecoverTime() const { return lastRecoverTime; }
+	void SetLastHitTime() { lastHitTime = std::chrono::steady_clock::now(); }
+	void SetLastRecoverTime(std::chrono::steady_clock::time_point t) { lastRecoverTime = t; }
 	
 private:
 	Player() = default; // 기본 생성자는 private로 설정하여 사용하지 못하게 함
@@ -163,5 +156,7 @@ private:
 	std::unordered_map<BuffType, bool> lastSentBuffState; // 클라에 마지막으로 전송된 버프 상태
 
 
-	std::chrono::steady_clock::time_point lastHitTime = std::chrono::steady_clock::now();
+
+	std::chrono::steady_clock::time_point lastHitTime;
+	std::chrono::steady_clock::time_point lastRecoverTime;
 };

@@ -51,6 +51,9 @@
     <ClInclude Include="PlayerManager.h">
       <Filter>소스 파일\OBJECT\JOB</Filter>
     </ClInclude>
+    <ClInclude Include="HeightMap.h">
+      <Filter>소스 파일\OBJECT\MONSTER</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MainServer.cpp">
@@ -76,6 +79,9 @@
     </ClCompile>
     <ClCompile Include="PlayerManager.cpp">
       <Filter>소스 파일\OBJECT\JOB</Filter>
+    </ClCompile>
+    <ClCompile Include="HeightMap.cpp">
+      <Filter>소스 파일\OBJECT\MONSTER</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

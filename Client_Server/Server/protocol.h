@@ -87,6 +87,8 @@ struct sc_packet_move {
 	float time;
 	UINT state;
 	UINT pingTime;
+	float mp;
+	float hp;
 };
 
 struct sc_packet_pickcharacter {
@@ -270,7 +272,7 @@ struct cs_packet_player_attack {
 	int attack_type; // Attacktype
 };
 
-struct cs_packet_monster_attack {
+struct cs_packet_monster_attack{					
 	unsigned char size;
 	char type;
 	int attacker_id;  // 몬스터 ID

@@ -87,6 +87,8 @@ struct sc_packet_move {
 	float time;
 	UINT state;
 	UINT pingTime;
+	float mp;
+	float hp;
 };
 
 struct sc_packet_pickcharacter {

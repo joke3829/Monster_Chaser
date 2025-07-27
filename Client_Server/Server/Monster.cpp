@@ -41,9 +41,8 @@ float Monster::DistanceFromSpawnToPlayer(const PlayerManager& playerManager) con
 
     const auto& p = player->GetPosition();
     float dx = spawnPoint.x - p._41;
-    float dy = spawnPoint.y - p._42;
     float dz = spawnPoint.z - p._43;
-    return sqrtf(dx * dx + dy * dy + dz * dz);
+    return sqrtf(dx * dx + dz * dz);
 }
 
 Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
@@ -171,19 +170,18 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
     };
     float speed = 10.0f;
     float dx = targetPos.x - position.x;
-    float dy = targetPos.y - position.y;
     float dz = targetPos.z - position.z;
-    float len = sqrtf(dx * dx + dy * dy + dz * dz);
-    if (len > 0.001f) {
+    float len = sqrtf(dx * dx + dz * dz); // y축 무시
 
-        dx /= len; dy /= len; dz /= len;
+    if (len > 0.001f) {
+        dx /= len;
+        dz /= len;
 
         position.x += dx * speed * 0.016f;
-        position.y += dy * speed * 0.016f;
         position.z += dz * speed * 0.016f;
 
-        // 바라보는 방향 회전 적용 (추적 대상 쪽)
-        lookDir = { dx, 0, dz };
+        // y는 그대로 유지
+        lookDir = { dx, 0.0f, dz };
     }
 }
 
@@ -220,20 +218,24 @@ void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room)
         return;
     }
     float dx = spawnPoint.x - position.x;
-    float dy = spawnPoint.y - position.y;
     float dz = spawnPoint.z - position.z;
-    float dist = sqrtf(dx * dx + dy * dy + dz * dz);
+    float dist = sqrtf(dx * dx + dz * dz); // y축 무시
+  
     if (dist < 10.0f) {
         TransitionTo(MonsterState::Idle);
         return;
     }
-    dx /= dist; dy /= dist; dz /= dist;
-    position.x += dx * MONSTER_RETURN_SPEED * 0.016f;
-    position.y += dy * MONSTER_RETURN_SPEED * 0.016f;
-    position.z += dz * MONSTER_RETURN_SPEED * 0.016f;
 
-    // 귀환 중엔 스폰 위치를 바라보도록 설정
-    lookDir = { dx, 0, dz };
+    if (dist > 0.001f) {
+        dx /= dist;
+        dz /= dist;
+
+        position.x += dx * MONSTER_RETURN_SPEED * 0.016f;
+        position.z += dz * MONSTER_RETURN_SPEED * 0.016f;
+
+        // y는 그대로 유지
+        lookDir = { dx, 0.0f, dz };
+    }
 }
 
 void Monster::HandleDead(const Room& room) {
@@ -263,7 +265,7 @@ float Monster::DistanceToPlayer(const PlayerManager& playerManager) const {
     float dx = position.x - p._41;
     float dy = position.y - p._42;
     float dz = position.z - p._43;
-    return sqrtf(dx * dx + dy * dy + dz * dz);
+    return sqrtf(dx * dx + dz * dz);
 }
 
 bool Monster::IsPlayerNear(const PlayerManager& playerManager) const {

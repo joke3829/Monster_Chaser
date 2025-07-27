@@ -267,6 +267,7 @@ void C_Socket::process_packet(char* ptr)
 		int local_id = p->Local_id;
 		float time = p->time;
 		unsigned int state = p->state;
+		Players[local_id].SetMP(p->mp); // 플레이어의 HP 변경 처리
 		if (local_id == Client.get_id()) {
 			return;
 		}
@@ -277,7 +278,6 @@ void C_Socket::process_packet(char* ptr)
 		Players[local_id].getRenderingObject()->SetWorldMatrix(position);
 		Players[local_id].getAnimationManager()->ChangeAnimation(state, true);
 		Players[local_id].getAnimationManager()->UpdateAnimation(time);		// 받은 시간과 현재 시간이 얼마 차이 안나면 바꾸지 않도록 추가하자
-
 
 		break;
 	}

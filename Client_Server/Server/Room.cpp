@@ -81,16 +81,20 @@ void Room::MonsterThreadFunction() {
 			//monster->Update(deltaTime, *this, g_server.playerManager);
 			monster->Update(0.016, *this, g_server.playerManager);
 
+		
 		// 플레이어 MP 회복 및 버프 상태 갱신
 		for (int i = 0; i < GetPlayerCount(); ++i) {
 			auto now = std::chrono::steady_clock::now();
-			float elapsed = std::chrono::duration<float>(now - lastHitTime[i]).count();
-
 			auto player = g_server.playerManager.GetPlayer(id[i]);
 			if (!player) continue;
+			lastHitTime[i] = player->GetLastHitTime();
+			float elapsed = std::chrono::duration<float>(now - lastHitTime[i]).count();
 
-			if (elapsed >= 10.0f) {
-				player->RecoverSkillCost(1); // 초당 1 회복
+			// 아직 피격 후 10초가 지나지 않았으면 회복 차단
+			if (elapsed < 10.0f)
+				continue;
+			if (elapsed >= 0.016f) {
+				player->RecoverSkillCost(0.1); // 초당 1 회복
 			}
 
 			player->UpdateBuffStatesIfChanged();  // ✅ 버프 상태 변경 감지 및 패킷 전송
