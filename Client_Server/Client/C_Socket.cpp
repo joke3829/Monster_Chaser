@@ -476,6 +476,7 @@ void C_Socket::process_packet(char* ptr)
 		int monster_id = pkt->monster_id;
 		if (Monsters.find(monster_id) != Monsters.end()) {
 			auto& monster = Monsters[monster_id];
+			monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
 			monster->getAnimationManager()->ChangeAnimation(2, false); // 몬스터 애니메이션을 Idle 상태로 변경
 		}
 		break;

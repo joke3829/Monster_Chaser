@@ -285,13 +285,26 @@ void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room)
   
     if (dist < 10.0f) {
         TransitionTo(MonsterState::Idle);
-		lookDir = defaultLookDir; // 기본 바라보는 방향으로 설정
+        lookDir.x *= -1.0f;
+        lookDir.z *= -1.0f;
         //  Idle 전환 시 패킷 전송
         sc_packet_monster_idle pkt;
         pkt.size = sizeof(pkt);
         pkt.type = S2C_P_MONSTERIDLE;
         pkt.monster_id = id;
 
+        XMVECTOR forward = XMVector3Normalize(XMLoadFloat3(&lookDir));
+        XMVECTOR up = XMVectorSet(0, 1, 0, 0);
+        XMVECTOR right = XMVector3Normalize(XMVector3Cross(up, forward));
+        up = XMVector3Cross(forward, right);
+
+        XMMATRIX rotation = XMMATRIX(
+            right,
+            up,
+            forward,
+            XMVectorSet(position.x, position.y, position.z, 1.0f)
+        );
+        XMStoreFloat4x4(&pkt.pos, rotation);
         for (int pid : room.id)
             g_server.users[pid]->do_send(&pkt);
         return;

@@ -24,7 +24,10 @@ const XMFLOAT4X4& Player::GetPosition() const {
 bool  Player::TakeDamage(int dmg) {
 	std::lock_guard<std::mutex> lock(playerMutex);
 	hp -= dmg;
-	if (hp < 0) hp = 0;
+	if (hp < 0) {
+		Death();
+		hp = 0;
+	}
 	return hp == 0; // 0이 되면 죽음
 }
 

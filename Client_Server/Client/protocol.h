@@ -202,6 +202,7 @@ struct sc_packet_monster_idle {
 	unsigned char size;
 	char type;
 	int monster_id;
+	XMFLOAT4X4 pos;
 };
 struct sc_packet_player_die {
 	unsigned char size;
