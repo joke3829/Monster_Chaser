@@ -81,7 +81,8 @@ void Room::MonsterThreadFunction() {
 			//monster->Update(deltaTime, *this, g_server.playerManager);
 			monster->Update(0.016, *this, g_server.playerManager);
 
-		
+		ResolveMonsterSeparation();  // <- 충돌 방지 처리도 함께
+
 		// 플레이어 MP 회복 및 버프 상태 갱신
 		for (int i = 0; i < GetPlayerCount(); ++i) {
 			auto now = std::chrono::steady_clock::now();
@@ -89,15 +90,17 @@ void Room::MonsterThreadFunction() {
 			if (!player) continue;
 			lastHitTime[i] = player->GetLastHitTime();
 			float elapsed = std::chrono::duration<float>(now - lastHitTime[i]).count();
+			player->TryRespawn(); // 플레이어가 사망했으면 리스폰 시도
 
 			// 아직 피격 후 10초가 지나지 않았으면 회복 차단
 			if (elapsed < 10.0f)
 				continue;
 			if (elapsed >= 0.016f) {
 				player->RecoverSkillCost(0.1); // 초당 1 회복
+
 			}
 
-			player->UpdateBuffStatesIfChanged();  // ✅ 버프 상태 변경 감지 및 패킷 전송
+			player->UpdateBuffStatesIfChanged(false);  // ✅ 버프 상태 변경 감지 및 패킷 전송
 		}
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(16)); // 약 60fps 주기
@@ -123,13 +126,13 @@ void Room::SpawnMonsters()
 	case 1:
 	{
 		// Feroptere - 3마리
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-280.0f, 
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-280.0f,
 			getHeight(g_pStage1Height.get(), -280.0f, 215.4f, -512.0f, 0.0f, -512.0f, SCENE_PLAIN)
 			, 215.4f), MonsterType::Feroptere);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-246.3, 
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-246.3,
 			getHeight(g_pStage1Height.get(), -246.3, 15.1, -512.0f, 0.0f, -512.0f, SCENE_PLAIN)
 			, 15.1), MonsterType::Feroptere);
-		
+
 		// Pistiripere - 3마리
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-240, getHeight(g_pStage1Height.get(), -240.0f, 149.8f, -512.0f, 0.0f, -512.0f, SCENE_PLAIN), 149.8), MonsterType::Pistiripere);
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-351.1, getHeight(g_pStage1Height.get(), -351.1f, 26.7f, -512.0f, 0.0f, -512.0f, SCENE_PLAIN), 26.7), MonsterType::Pistiripere);
@@ -142,9 +145,10 @@ void Room::SpawnMonsters()
 		// Boss - Xenokarce
 		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-306.7, getHeight(g_pStage1Height.get(), -306.7f, -150.8f, -512.0f, 0.0f, -512.0f, SCENE_PLAIN), -150.8), MonsterType::Xenokarce);
 
-		
-		
-		
+
+
+
+		break;
 	}
 	case 2:
 	{
@@ -185,6 +189,37 @@ void Room::SpawnMonsters()
 
 }
 
+void Room::ResolveMonsterSeparation() {
+	const float MIN_SEPARATION = 10.0f;
+	const float PUSH_STRENGTH = 5.0f;
+
+	for (auto& [idA, monA] : monsters) {
+		//if (monA->GetState() == MonsterState::Attack) continue; // 공격 중인 몬스터는 예외
+
+		for (auto& [idB, monB] : monsters) {
+			if (idA == idB) continue;
+			//if (monB->GetState() == MonsterState::Attack) continue; // 상대가 공격 중이면 예외
+
+			XMFLOAT3 posA = monA->GetPosition();
+			XMFLOAT3 posB = monB->GetPosition();
+
+			float dx = posA.x - posB.x;
+			float dz = posA.z - posB.z;
+			float distSq = dx * dx + dz * dz;
+
+			if (distSq < MIN_SEPARATION * MIN_SEPARATION && distSq > 0.01f) {
+				float dist = sqrtf(distSq);
+				float push = (MIN_SEPARATION - dist) * 0.5f;
+
+				dx /= dist;
+				dz /= dist;
+
+				monA->MovePosition(dx * push * PUSH_STRENGTH, dz * push * PUSH_STRENGTH);
+				monB->MovePosition(-dx * push * PUSH_STRENGTH, -dz * push * PUSH_STRENGTH);
+			}
+		}
+	}
+}
 
 
 

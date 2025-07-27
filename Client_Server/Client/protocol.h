@@ -284,6 +284,7 @@ struct cs_packet_move {
 	unsigned char size;
 	char type;
 	XMFLOAT4X4 pos;
+	XMFLOAT3 BOGAN_POS;
 	float time;
 	UINT state;
 };

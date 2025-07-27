@@ -74,8 +74,8 @@ public:
 
 
 	void AddATKBuff(float value, float duration_sec);
-
 	void AddDEFBuff(float value, float duration_sec);
+	void AddDEFDEBuff(float value, float duration_sec);
 
 
 	bool IsATKBuffActive() const {
@@ -110,8 +110,7 @@ public:
 	
 
 
-	void UpdateBuffStatesIfChanged();
-	void SendBuffPacketIfChanged(BuffType type, bool currentState);
+	void SendBuffPacketIfChanged(BuffType type, bool currentState,bool broadcastAll);
 
 
 	const auto& GetLastHitTime() const { return lastHitTime; }
@@ -119,13 +118,14 @@ public:
 	void SetLastHitTime() { lastHitTime = std::chrono::steady_clock::now(); }
 	void SetLastRecoverTime(std::chrono::steady_clock::time_point t) { lastRecoverTime = t; }
 
-	void setBoanPosition(const XMFLOAT4X4& pos) {
+	void setBoanPosition(const XMFLOAT3& pos) {
 		Bogan_position = pos;
 	}
-	const XMFLOAT4X4& GetBoanPosition() const {
+	const XMFLOAT3& GetBoanPosition() const {
 		return Bogan_position;
 	}
 
+	void UpdateBuffStatesIfChanged(bool broadcastAll);
 	void Death();
 	void TryRespawn();
 	bool ISDead() const { return isDead; } // 플레이어가 죽었는지 확인하는 함수
@@ -138,7 +138,7 @@ private:
 	std::string name;
 
 	XMFLOAT4X4 position;
-	XMFLOAT4X4 Bogan_position;
+	XMFLOAT3 Bogan_position;
 	float hp = 100;
 	float max_hp = 100; // 최대 HP
 	float skill_cost = 100; // 스킬 사용 비용

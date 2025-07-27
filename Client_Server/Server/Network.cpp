@@ -215,6 +215,8 @@ void SESSION::process_packet(char* p) {
 		cs_packet_move* pkt = reinterpret_cast<cs_packet_move*>(p);
 
 		g_server.playerManager.SetPosition(m_uniqueNo, pkt->pos);
+		player->setBoanPosition(pkt->BOGAN_POS); // 플레이어의 보안 위치 설정	
+		//pkt->BOGAN_POS;
 
 		sc_packet_move mp;
 		mp.size = sizeof(mp);
@@ -338,7 +340,8 @@ void SESSION::process_packet(char* p) {
 				dpkt.size = sizeof(dpkt);	
 				dpkt.type = S2C_P_PlAYER_DIE;
 				dpkt.Local_id = pkt->target_player_id;
-
+				for (int pid : room.id)
+					g_server.users[pid]->do_send(&dpkt);
 			    // 죽었을 경우 처리 추가 가능
 			}
 		}
@@ -360,9 +363,8 @@ void SESSION::process_packet(char* p) {
 			ap.type = S2C_P_CHANGEHP;
 			ap.local_id = player->local_id;
 			ap.hp = player->GetHP();
-			for (int id : g_server.rooms[room_num].id) {
-				g_server.users[id]->do_send(&ap);
-			}
+			g_server.users[m_uniqueNo]->do_send(&ap);
+			
 			break;
 		}
 		case ItemType::MP_POTION:
@@ -373,9 +375,8 @@ void SESSION::process_packet(char* p) {
 			mp.type = S2C_P_CHANGEMP;
 			mp.local_id = player->local_id;
 			mp.mp = player->GetMP();
-			for (int id : g_server.rooms[room_num].id) {
-				g_server.users[id]->do_send(&mp);
-			}
+			//  본인에게만 전송
+			g_server.users[m_uniqueNo]->do_send(&mp);
 			break;
 		}
 		case ItemType::ATK_BUFF:
@@ -384,6 +385,7 @@ void SESSION::process_packet(char* p) {
 			float duration = 50.f;
 
 			player->AddATKBuff_Potion(buff_amount, duration); //  정확한 함수 사용
+			//player->UpdateBuffStatesIfChanged(false); // 버프 상태 업데이트
 
 			break;
 		}
@@ -393,6 +395,7 @@ void SESSION::process_packet(char* p) {
 			float duration = 60.f;
 
 			player->AddDEFBuff(buff_amount, duration);
+			//player->UpdateBuffStatesIfChanged(false); // 버프 상태 업데이트
 			break;
 		}
 		default:
@@ -428,9 +431,9 @@ void SESSION::process_packet(char* p) {
 			}
 			case 1: // 공격력 증가 + 방어력 감소
 			{
-				player->AddATKBuff_Skill(+15.f, 3.0f); //  정확한 함수 사용
-				target->AddDEFBuff(-10.f, 10.0f); // -10 def, 10초
-
+				player->AddATKBuff_Skill(150.0f, 30.0f); //  정확한 함수 사용
+				target->AddDEFDEBuff(30.f, 10.0f); // -10 def, 10초
+				target->UpdateBuffStatesIfChanged(true);   //  전체에게 전송
 				// 이건 클라에 보여줄 필요 없으면 패킷 생략 가능
 				break;
 			}

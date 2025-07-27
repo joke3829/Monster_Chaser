@@ -167,6 +167,13 @@ void Player::AddDEFBuff(float value, float duration_sec)
 
 }
 
+void Player::AddDEFDEBuff(float value, float duration_sec)
+{
+	def_debuff = value;
+	def_debuff_end = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
+	std::cout << "[방어력 버프 적용] +" << value << " for " << duration_sec << " seconds\n";
+}
+
 float Player::GetDamage(int attacktype)
 {
 
@@ -216,22 +223,28 @@ float Player::GetDamage(int attacktype)
 }
 
 float Player::GetATK() {
-	auto now = std::chrono::steady_clock::now();
-	if (now >= atk_buff_potion_end)
-	{
-		atk_buff_potion = 0.f;
-		//cout << "[공격력 버프 종료] 포션 버프가 만료되었습니다.\n";
-	}
-	if (now >= atk_buff_skill_end) {
-		atk_buff_skill = 0.f;
-		//cout << "[공격력 버프 종료] 스킬 버프가 만료되었습니다.\n";
-	}
+	
 	return attack + atk_buff_potion + atk_buff_skill;
 }
 
 
 float Player::GetDEF() {
+	return defense + def_buff - def_debuff;
+}
+
+void Player::UpdateBuffStatesIfChanged(bool broadcastAll)
+{
 	auto now = std::chrono::steady_clock::now();
+
+	if (now >= atk_buff_potion_end)
+	{
+		atk_buff_potion = 0.0f;
+		//cout << "[공격력 버프 종료] 포션 버프가 만료되었습니다.\n";
+	}
+	if (now >= atk_buff_skill_end) {
+		atk_buff_skill = 0.0f;
+		//cout << "[공격력 버프 종료] 스킬 버프가 만료되었습니다.\n";
+	}
 	if (now >= def_buff_end) {
 		def_buff = 0.f;
 		//	cout << "[방어력 버프 종료] 방어력 버프가 만료되었습니다.\n";
@@ -239,30 +252,20 @@ float Player::GetDEF() {
 	if (now >= def_debuff_end)
 	{
 		def_debuff = 0.f;
-		cout << "[방어력 감소 버프 종료] 방어력 감소 버프가 만료되었습니다.\n";
+		//cout << "[방어력 감소 버프 종료] 방어력 감소 버프가 만료되었습니다.\n";
 	}
-	return defense + def_buff - def_debuff;
-}
-
-void Player::UpdateBuffStatesIfChanged()
-{
-	auto now = std::chrono::steady_clock::now();
-
 	// 현재 버프 상태 계산
-	bool atkActive = (atk_buff_potion > 0.f && now < atk_buff_potion_end) ||
-		(atk_buff_skill > 0.f && now < atk_buff_skill_end);
-
-	bool defActive = (def_buff > 0.f && now < def_buff_end);
-
-	bool defDownActive = (def_debuff > 0.f && now < def_debuff_end);
+	bool atkActive = (now < atk_buff_potion_end) || (now < atk_buff_skill_end);
+	bool defActive = (now < def_buff_end);
+	bool defDownActive = (now < def_debuff_end);
 
 	// 각 상태 비교 및 전송
-	SendBuffPacketIfChanged(BuffType::ATKUP, atkActive);
-	SendBuffPacketIfChanged(BuffType::DEFUP, defActive);
-	SendBuffPacketIfChanged(BuffType::DEF_DOWN, defDownActive);
+	SendBuffPacketIfChanged(BuffType::ATKUP, atkActive, broadcastAll);
+	SendBuffPacketIfChanged(BuffType::DEFUP, defActive, broadcastAll);
+	SendBuffPacketIfChanged(BuffType::DEF_DOWN, defDownActive, broadcastAll);
 }
 
-void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
+void Player::SendBuffPacketIfChanged(BuffType type, bool currentState, bool broadcastAll)
 {
 	// 이전에 전송한 상태와 다르면 새로 전송
 	if (lastSentBuffState[type] != currentState) {
@@ -274,17 +277,25 @@ void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
 		pkt.bufftype = static_cast<char>(type);
 		pkt.state = currentState ? 1 : 0;
 
-		for (int pid : g_server.rooms[room_num].id)
-			g_server.users[pid]->do_send(&pkt);
+		if (broadcastAll) {
+			for (int pid : g_server.rooms[room_num].id)
+				g_server.users[pid]->do_send(&pkt);
+		}
+		else {
+			g_server.users[local_id]->do_send(&pkt); // 본인에게만
+		}
 
-		std::cout << "[버프 상태 변경] 플레이어 " << local_id << " | 타입: " << (int)pkt.bufftype
-			<< " | 상태: " << (int)pkt.state << "공격력: " << GetATK() << " 방어력: " << GetDEF() << "\n";
+		std::cout << "[버프 상태 변경] 플레이어 " << local_id
+			<< " | 타입: " << static_cast<int>(type)
+			<< " | 상태: " << static_cast<int>(pkt.state)
+			<< " | ATK: " << GetATK() << ", DEF: " << GetDEF() << "\n";
 	}
 }
 
+
 void Player::Death()
 {
-	std::lock_guard<std::mutex> lock(playerMutex);
+
 	if (isDead)return;
 
 	isDead = true;

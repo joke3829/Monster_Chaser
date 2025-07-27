@@ -51,4 +51,5 @@ public:
     void StartGame();
     void StopGame();
     void MonsterThreadFunction();
+    void ResolveMonsterSeparation();
 };

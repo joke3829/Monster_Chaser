@@ -3,11 +3,11 @@
 #include "Network.h"
 #include <random>
 
-#define MONSTER_CHASE_DISTANCE 70.0f
-#define MONSTER_ATTACK_RANGE 1.0f
-constexpr float MONSTER_ATTACK_COOLDOWN = 2.0f;   // 공격 쿨타임 2초
-constexpr float MONSTER_RETURN_SPEED = 80.0f;     // 귀환 속도
-constexpr float MONSTER_CHASE_SPEED = 10.0f;     // 귀환 속도
+#define MONSTER_CHASE_DISTANCE 100.0f
+#define MONSTER_ATTACK_RANGE 3.0f
+constexpr float MONSTER_ATTACK_COOLDOWN = 3.5f;   // 공격 쿨타임 3.5초
+constexpr float MONSTER_RETURN_SPEED = 50.0f;     // 귀환 속도
+constexpr float MONSTER_CHASE_SPEED = 8.0f;     // 귀환 속도
 std::random_device rd;
 std::mt19937 gen(rd());
 
@@ -44,6 +44,8 @@ int FindClosestPlayerInRoom(const Room& room, const DirectX::XMFLOAT3& monsterPo
     for (int playerId : room.id) {
         auto player = playerManager.GetPlayer(playerId);
         if (!player) continue;
+
+        if (player->GetHP() <= 0) continue;
 
         const auto& pos = player->GetPosition();
         float dx = monsterPos.x - pos._41;
@@ -177,6 +179,17 @@ void Monster::HandleIdle(const Room& room, const PlayerManager& playerManager) {
 }
 
 void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) {
+    auto player = playerManager.GetPlayer(target_id);
+    if (!player || player->GetHP() <= 0) {
+        target_id = FindClosestPlayerInRoom(room, position, playerManager);
+        player = playerManager.GetPlayer(target_id);
+
+        if (!player || player->GetHP() <= 0) {
+            TransitionTo(MonsterState::Return);
+            return;
+        }
+    }
+
     if (!IsPlayerNear(playerManager)) {
         TransitionTo(MonsterState::Return);
         return;
@@ -193,12 +206,11 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         pkt.monster_id = id;
         for (int pid : room.id) g_server.users[pid]->do_send(&pkt);
     }
-    auto player = playerManager.GetPlayer(target_id);
     if (!player) return;
     XMFLOAT3 targetPos = {
-        player->GetBoanPosition()._41,
-        player->GetBoanPosition()._42,
-        player->GetBoanPosition()._43
+        player->GetPosition()._41,
+        player->GetPosition()._42,
+        player->GetPosition()._43
     };
 
     float dx = targetPos.x - position.x;
@@ -248,14 +260,32 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
 }
 
 void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room) {
+    
+    auto player = playerManager.GetPlayer(target_id);
+    if (!player || player->GetHP() <= 0) {
+        target_id = FindClosestPlayerInRoom(room, position, playerManager);
+        player = playerManager.GetPlayer(target_id);
+
+        if (!player || player->GetHP() <= 0) {
+            TransitionTo(MonsterState::Return);
+            return;
+        }
+
+        // 새 타겟이 잡혔으면 추적 상태로 돌아감
+        TransitionTo(MonsterState::Chase);
+        return;
+    }
+
     if (!IsPlayerNear(playerManager)) {
         TransitionTo(MonsterState::Return);
         return;
     }
+
     if (!IsPlayerInAttackRange(playerManager)) {
         TransitionTo(MonsterState::Chase);
         return;
     }
+
     if (Attacktypecount > 1) {
         std::uniform_int_distribution<> dis(1, GetAttackTypeCount());
         m_currentAttackType = dis(gen);
@@ -264,7 +294,7 @@ void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room)
     auto now = std::chrono::steady_clock::now();
     float elapsed = std::chrono::duration<float>(now - lastAttackTime).count();
     if (elapsed >= MONSTER_ATTACK_COOLDOWN) {
-        lastAttackTime = now;
+         lastAttackTime = now;
         sc_packet_monster_attack pkt;
         pkt.size = sizeof(pkt);
         pkt.type = S2C_P_MONSTER_ATTACK;
@@ -304,7 +334,7 @@ void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room)
             forward,
             XMVectorSet(position.x, position.y, position.z, 1.0f)
         );
-        XMStoreFloat4x4(&pkt.pos, rotation);
+         XMStoreFloat4x4(&pkt.pos, rotation);
         for (int pid : room.id)
             g_server.users[pid]->do_send(&pkt);
         return;
@@ -441,4 +471,13 @@ void Monster::ChangeBossAttack() {
     default:
         break;
     }
+}
+
+
+
+// Monster.cpp
+void Monster::MovePosition(float dx, float dz) {
+    std::lock_guard<std::mutex> lock(mtx);
+    position.x += dx;
+    position.z += dz;
 }

@@ -12,7 +12,7 @@ public:
 
     // 위치 설정
     void SetPosition(int id, const XMFLOAT4X4& pos);
-	void SetBoganPostion(int id, const XMFLOAT4X4& pos);
+    void SetBoganPostion(int id, const XMFLOAT4X4& pos);
     std::shared_ptr<Player> GetPlayer(int id) const;
 
 private:

@@ -1858,22 +1858,63 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 
 void CRaytracingGameScene::UIUseSkill(KeyInputRet input)
 {
-	switch(input) {
-	case KEY_SKILL1:
-		g_SkillCurCTime[0] = g_SkillCoolTime[0];
-		Client.SendPlayerAttack(-1, 1);
-		// Send Skill use Packet
-		break;
-	case KEY_SKILL2:
-		g_SkillCurCTime[1] = g_SkillCoolTime[1];
-		Client.SendPlayerAttack(-1, 2);
-		// Send Skill use Packet
-		break;
-	case KEY_SKILL3:
-		g_SkillCurCTime[2] = g_SkillCoolTime[2];
-		Client.SendPlayerAttack(-1, 3);
-		// Send Skill use Packet
-		break;
+	if (m_myJob == JOB_HEALER) {
+		switch (input) {
+		case KEY_SKILL1:
+			g_SkillCurCTime[0] = g_SkillCoolTime[0];
+			Client.SendPriestBUFF(0);
+			g_pSoundManager->StartFx(ESOUND::SOUND_SKILL_MAGIC1);
+			break;
+		case KEY_SKILL2:
+			g_SkillCurCTime[1] = g_SkillCoolTime[1];
+			Client.SendPriestBUFF(1);
+			g_pSoundManager->StartFx(ESOUND::SOUND_SKILL_MAGIC2);
+			break;
+		case KEY_SKILL3:
+			g_SkillCurCTime[2] = g_SkillCoolTime[2];
+			Client.SendPriestBUFF(2);
+			g_pSoundManager->StartFx(ESOUND::SOUND_SKILL_PRIEST3);
+			// Send Skill use Packet
+			break;
+		}
+	}
+	else if (m_myJob == JOB_MAGE) {
+		switch (input) {
+		case KEY_SKILL1:
+			g_SkillCurCTime[0] = g_SkillCoolTime[0];
+			Client.SendPlayerAttack(-1, 1);
+			g_pSoundManager->StartFx(ESOUND::SOUND_SKILL_MAGIC1);
+			break;
+		case KEY_SKILL2:
+			g_SkillCurCTime[1] = g_SkillCoolTime[1];
+			Client.SendPlayerAttack(-1, 2);
+			g_pSoundManager->StartFx(ESOUND::SOUND_SKILL_MAGIC2);
+			break;
+		case KEY_SKILL3:
+			g_SkillCurCTime[2] = g_SkillCoolTime[2];
+			Client.SendPlayerAttack(-1, 3);
+			g_pSoundManager->StartFx(ESOUND::SOUND_SKILL_LASER);
+			break;
+		}
+	}
+	else if (m_myJob == JOB_WARRIOR) {
+		switch (input) {
+		case KEY_SKILL1:
+			g_SkillCurCTime[0] = g_SkillCoolTime[0];
+			Client.SendPlayerAttack(-1, 1);
+			g_pSoundManager->StartFx(ESOUND::SOUND_SLASH);
+			break;
+		case KEY_SKILL2:
+			g_SkillCurCTime[1] = g_SkillCoolTime[1];
+			Client.SendPlayerAttack(-1, 2);
+			g_pSoundManager->StartFx(ESOUND::SOUND_WANDSWING);
+			break;
+		case KEY_SKILL3:
+			g_SkillCurCTime[2] = g_SkillCoolTime[2];
+			Client.SendPlayerAttack(-1, 3);
+			//g_pSoundManager->StartFx(ESOUND::SOUND_SHIELD_ATTACK);
+			break;
+		}
 	}
 }
 

@@ -92,7 +92,7 @@ void C_Socket::SendPlayerReady(const short Map)
 	Client.send_packet(&pkt);
 }
 
-void C_Socket::SendMonsterAttack(const int monster_id, const int target_id,const int Atktype)
+void C_Socket::SendMonsterAttack(const int monster_id, const int target_id, const int Atktype)
 {
 	cs_packet_monster_attack pkt;
 	pkt.size = sizeof(pkt);
@@ -103,7 +103,7 @@ void C_Socket::SendMonsterAttack(const int monster_id, const int target_id,const
 	Client.send_packet(&pkt);
 }
 
-void C_Socket::SendPlayerAttack(const int target_id,const int type)
+void C_Socket::SendPlayerAttack(const int target_id, const int type)
 {
 	cs_packet_player_attack pkt;
 	pkt.size = sizeof(pkt);
@@ -115,7 +115,7 @@ void C_Socket::SendPlayerAttack(const int target_id,const int type)
 
 void C_Socket::SendUseItem(const unsigned int type)
 {
-	
+
 	cs_packet_item_use pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_USE_ITEM;
@@ -156,6 +156,9 @@ void C_Socket::SendMovePacket(const float& Time, const UINT State)
 	mp.size = sizeof(mp);
 	mp.type = C2S_P_MOVE;
 	mp.pos = Players[Client.get_id()].getRenderingObject()->getWorldMatrix();
+	mp.BOGAN_POS = { Players[Client.get_id()].getRenderingObject()->getObjects()[0]->getWorldMatrix()._41,
+		Players[Client.get_id()].getRenderingObject()->getObjects()[0]->getWorldMatrix()._41,
+	Players[Client.get_id()].getRenderingObject()->getObjects()[0]->getWorldMatrix()._41, };
 	mp.time = Time;
 	mp.state = State;
 	Client.send_packet(&mp);
@@ -273,7 +276,7 @@ void C_Socket::process_packet(char* ptr)
 		}
 		XMFLOAT4X4 position = p->pos;
 
-		
+
 
 		Players[local_id].getRenderingObject()->SetWorldMatrix(position);
 		Players[local_id].getAnimationManager()->ChangeAnimation(state, true);
@@ -287,8 +290,8 @@ void C_Socket::process_packet(char* ptr)
 
 		int id = pkt->monster_id;
 		MonsterType type = pkt->monster_type;
+		Monsters[id]->setSpawnPoint({ pkt->pos._41,pkt->pos._42 ,pkt->pos._43 });
 
-		
 		// 이미 있으면 덮어쓰기 방지
 		if (Monsters.find(id) != Monsters.end()) {
 			Monsters[pkt->monster_id]->getRenderingObject()->SetWorldMatrix(pkt->pos);
@@ -296,7 +299,7 @@ void C_Socket::process_packet(char* ptr)
 		}
 		else {
 
-	
+
 		}
 		break;
 	}
@@ -305,11 +308,11 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_monster_attack* pkt = reinterpret_cast<sc_packet_monster_attack*>(ptr);
 		int attack_type = pkt->attack_type; // 공격 타입 (0: 1번 공격 모양, 1: 2번 공격모양, 2: 3번 공격모양)	char형태
 		int monster_id = pkt->monster_id; // 몬스터 ID
-	
+
 		Monsters[monster_id]->setCurrentAttackType(attack_type); // 몬스터의 현재 공격 타입 설정 attack_type이 1이면 Skill1 , 2면 Skill2
 		int a = Monsters[monster_id]->getCurrentAttackType();
 		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(a, true); // 몬스터 애니메이션 변경
-		
+
 
 		//Monsters[monster_id]->getAnimationManager()->
 		//pkt->monster_id; // 몬스터 ID		//이걸로 공격 애니메이션 셋 
@@ -326,10 +329,10 @@ void C_Socket::process_packet(char* ptr)
 			monster->getAnimationManager()->ChangeAnimation(0, false);
 		}
 		break;
-		
+
 	}
 
-	
+
 
 	case S2C_P_MONSTER_RESPAWN: {
 		sc_packet_monster_respawn* pkt = reinterpret_cast<sc_packet_monster_respawn*>(ptr);
@@ -341,7 +344,7 @@ void C_Socket::process_packet(char* ptr)
 			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr  
 			m->getRenderingObject()->SetWorldMatrix(pkt->pos);
 			m->getAnimationManager()->ChangeAnimation(2, false);
-			
+
 			//m->setVisible(true);														  // doyoung's turn
 			//m->playIdleAnim();															  // doyoung's turn
 		}
@@ -371,17 +374,17 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_MONSTER_MOVE: {
 		sc_packet_monster_move* pkt = reinterpret_cast<sc_packet_monster_move*>(ptr);
 		int id = pkt->monster_id;
-		
+
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
 			auto* ap = dynamic_cast<CMonsterManager*>(monster->getAnimationManager());
 			//if (!ap->getSkillnum()) {
-				monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
-				monster->getAnimationManager()->ChangeAnimation(4, false);
-		//	}
-			
-			//monster->setVisible(true);
-			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
+			monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
+			monster->getAnimationManager()->ChangeAnimation(4, false);
+			//	}
+
+				//monster->setVisible(true);
+				//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
 		}
 
 		break;
@@ -430,15 +433,17 @@ void C_Socket::process_packet(char* ptr)
 		auto* pkt = reinterpret_cast<sc_packet_buff_change*>(ptr);
 		char buffType = pkt->bufftype;
 		char state = pkt->state;
+		
 
 		switch (buffType)
 		{
 		case 0: // 공격력 증가
-			if(state == 1) {
+			if (state == 1) {
 				g_PlayerBuffState[0] = true;
 				g_pBuff0->Start();
 				//공격력 버프 켜짐
-			} else {
+			}
+			else {
 				g_PlayerBuffState[0] = false;
 				//공격력 버프 꺼짐
 			}
@@ -501,16 +506,16 @@ void C_Socket::process_packet(char* ptr)
 
 		int local_id = pkt->Local_id;
 
-		if (Players.find(local_id) != Players.end()) {
-			Players.erase(local_id);
-			if (local_id == Client.get_id()) {
-				Client.set_id(-1); // 클라이언트 ID 초기화
-				g_state = Title; // 타이틀 상태로 변경
-			}
-		}
+		//if (Players.find(local_id) != Players.end()) {
+		//	Players.erase(local_id);
+		//	if (local_id == Client.get_id()) {
+		//		Client.set_id(-1); // 클라이언트 ID 초기화
+		//		g_state = Title; // 타이틀 상태로 변경
+		//	}
+		//}
 		break;
 	}
-	
+
 	default:
 		break;
 	}

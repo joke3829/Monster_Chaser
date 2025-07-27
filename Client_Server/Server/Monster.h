@@ -60,12 +60,12 @@ public:
     bool IsPlayerNear(const PlayerManager& playerManager) const;
     bool IsPlayerInAttackRange(const PlayerManager& playerManager) const;
     int GetAttackTypeCount() const { return Attacktypecount; }
-
+    void MovePosition(float dx, float dz);
     void SendSyncPacket(const Room& room);
     bool isBossMonster();
 
     void ChangeBossAttack();
-
+    MonsterState GetState() const { return state; }
 
     bool isAlive = true;
     float respawnTimer = 0.0f;
