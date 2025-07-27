@@ -63,18 +63,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
-	AllocConsole();
+	/*AllocConsole();
 	freopen("CONOUT$", "w", stdout);
 	freopen("CONIN$", "r", stdin);
 	std::string ip;
 	std::cout << "서버 IP 주소를 입력하세요: ";
-	std::cin >> ip;
+	std::cin >> ip;*/
 
 
 	//// TODO: 여기에 코드를 입력합니다.
 
-	if (!Client.Init(ip.c_str(), PORT_NUM))            //Change IP Address (DY - 220.120.240.160)
-	//if (!Client.Init("127.0.0.1", PORT_NUM))
+	//if (!Client.Init(ip.c_str(), PORT_NUM))            //Change IP Address (DY - 220.120.240.160)
+	if (!Client.Init("127.0.0.1", PORT_NUM))
 	{
 		MessageBoxA(nullptr, "서버 연결 실패. 클라이언트를 종료합니다.", "연결 실패", MB_ICONERROR);
 		return 0;  // 창 생성 없이 종료

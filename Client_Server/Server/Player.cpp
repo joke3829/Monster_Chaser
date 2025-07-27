@@ -23,7 +23,7 @@ const XMFLOAT4X4& Player::GetPosition() const {
 
 bool  Player::TakeDamage(int dmg) {
 	std::lock_guard<std::mutex> lock(playerMutex);
-	hp -= dmg;
+ 	hp -= dmg;
 	if (hp < 0) {
 		Death();
 		hp = 0;
@@ -155,10 +155,6 @@ void Player::AddATKBuff(float value, float duration_sec)
 	std::cout << "[공격력 버프 적용] +" << value << " for " << duration_sec << " seconds\n";
 
 }
-
-
-
-
 void Player::AddDEFBuff(float value, float duration_sec)
 {
 	def_buff = value;
@@ -166,7 +162,6 @@ void Player::AddDEFBuff(float value, float duration_sec)
 	std::cout << "[방어력 버프 적용] +" << value << " for " << duration_sec << " seconds\n";
 
 }
-
 void Player::AddDEFDEBuff(float value, float duration_sec)
 {
 	def_debuff = value;

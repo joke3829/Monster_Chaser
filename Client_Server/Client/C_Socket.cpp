@@ -513,18 +513,7 @@ void C_Socket::process_packet(char* ptr)
 		}
 		break;
 	}
-	case S2C_P_PlAYER_DIE:
-	{
-		// 플레이어가 죽었을 때 처리
-		break;
-	}
-	case S2C_P_PlAYER_RESPAWN:
-	{
-		// 플레이어가 부활했을 때 처리
-		break;
-	}
-
-
+	
 	case S2C_P_LEAVE:
 	{
 		sc_packet_leave* pkt = reinterpret_cast<sc_packet_leave*>(ptr);
@@ -541,17 +530,7 @@ void C_Socket::process_packet(char* ptr)
 		break;
 	}
 
-	case S2C_P_MONSTERIDLE:
-	{
-		sc_packet_monster_idle* pkt = reinterpret_cast<sc_packet_monster_idle*>(ptr);
-		int monster_id = pkt->monster_id;
-		if (Monsters.find(monster_id) != Monsters.end()) {
-			auto& monster = Monsters[monster_id];
-			monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
-			monster->getAnimationManager()->ChangeAnimation(2, false); // 몬스터 애니메이션을 Idle 상태로 변경
-		}
-		break;
-	}
+
 	case S2C_P_PlAYER_DIE:
 	{
 		// 플레이어가 죽었을 때 처리
@@ -579,6 +558,7 @@ void C_Socket::process_packet(char* ptr)
 	default:
 		break;
 	}
+
 
 }
 
