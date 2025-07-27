@@ -29,6 +29,7 @@ public:
 	void SetupSounds();
 
 	void StartBGM(ESOUND sound);
+	void StopBGM();
 	void StartAMB(ESOUND sound);
 	void StartFx(ESOUND sound);
 

@@ -10,6 +10,7 @@
 #include "Monster.h"
 #include "ObjectManager.h"
 #include "SoundManager.h"
+#include "GameObject.h"
 
 extern DXResources g_DxResource;
 extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
@@ -179,6 +180,8 @@ public:
 	void AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag);
 	void ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag);
 	void AutoDirection(const std::vector<std::unique_ptr<CPlayableCharacter>>& attacker, const std::vector<std::unique_ptr<CPlayableCharacter>>& targets);
+	void BulletCheck(const std::vector<std::unique_ptr<CPlayableCharacter>>& shoot, CHeightMapImage* terrain, CHeightMapImage* collisionMap, float fElapsedTime, float offsetX, float offsetY, float offsetZ, int sceneType);
+	void BulletCheck(const std::vector<std::unique_ptr<CPlayableCharacter>>& shoot, CHeightMapImage* terrain, float fElapsedTime, float offsetX, float offsetY, float offsetZ, int sceneType);
 
 	void CreateMageCharacter();
 	void CreateWarriorCharacter();
@@ -195,7 +198,7 @@ protected:
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};
 
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+	
 	std::vector<std::unique_ptr<CMonster>>				m_pMonsters{};
 
 	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};
@@ -244,6 +247,7 @@ public:
 	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
 protected:
 	unsigned int								m_nSkyboxIndex{};
+	bool m_bPrevBossBattle = false;
 
 	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
 	float										startTime{};

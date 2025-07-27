@@ -2,12 +2,12 @@
 #include "Monster.h"
 #include "Network.h"
 #include <random>
-
 #define MONSTER_CHASE_DISTANCE 100.0f
 #define MONSTER_ATTACK_RANGE 3.0f
 constexpr float MONSTER_ATTACK_COOLDOWN = 3.5f;   // 공격 쿨타임 3.5초
 constexpr float MONSTER_RETURN_SPEED = 50.0f;     // 귀환 속도
 constexpr float MONSTER_CHASE_SPEED = 8.0f;     // 귀환 속도
+
 std::random_device rd;
 std::mt19937 gen(rd());
 
@@ -335,6 +335,7 @@ void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room)
             XMVectorSet(position.x, position.y, position.z, 1.0f)
         );
          XMStoreFloat4x4(&pkt.pos, rotation);
+
         for (int pid : room.id)
             g_server.users[pid]->do_send(&pkt);
         return;

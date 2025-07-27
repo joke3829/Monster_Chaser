@@ -80,6 +80,7 @@ bool CPlayerMage::Attacked(float damage)
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_HIT_DEATH), true);
 	}*/
+	g_pSoundManager->StartFx(ESOUND::SOUND_HIT);
 	return true;
 }
 
@@ -111,7 +112,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
-		if (!m_bSkillActive) {
+		if (!m_bSkillActive && !g_PlayerDie[Client.get_id()]) {
 			XMFLOAT3 characterDir = cameraDir;
 			characterDir.y = 0.0f; // delete y value
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
@@ -119,7 +120,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
 			m_Damage = 800.0f;
-			MakeBullet();
+			MakeBullet(50.0f,1);
 		}
 		break;
 	}
@@ -133,7 +134,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 			if (m_pCamera->getThirdPersonState()) {
 				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 				CGameObject* frame = m_AManager->getFrame()[0];
-				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
+				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished() && !g_PlayerDie[Client.get_id()]) {
 					m_Object->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 					XMFLOAT3 characterDir = cameraDir;
 					characterDir.y = 0.0f; // delete y value
@@ -826,6 +827,7 @@ bool CPlayerWarrior::Attacked(float damage)
 {
 	if (m_bSkillActive && m_CurrentSkill == 2)
 	{
+		g_pSoundManager->StartFx(ESOUND::SOUND_SKILL_PARRY);
 		return false;
 	}
 	if (!CanBeAttacked()) {
@@ -846,6 +848,7 @@ bool CPlayerWarrior::Attacked(float damage)
 		m_bLive = false;
 		m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_DEATH), true);
 	}*/
+	g_pSoundManager->StartFx(ESOUND::SOUND_HIT);
 	return true;
 }
 
@@ -877,7 +880,7 @@ void CPlayerWarrior::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARA
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
-		if (!m_bSkillActive) {
+		if (!m_bSkillActive && !g_PlayerDie[Client.get_id()]) {
 			XMFLOAT3 characterDir = cameraDir;
 			characterDir.y = 0.0f; // delete y value
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
@@ -898,7 +901,7 @@ void CPlayerWarrior::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARA
 			if (m_pCamera->getThirdPersonState()) {
 				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 				CGameObject* frame = m_AManager->getFrame()[0];
-				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
+				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished() && !g_PlayerDie[Client.get_id()]) {
 					m_Object->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 					XMFLOAT3 characterDir = cameraDir;
 					characterDir.y = 0.0f; // delete y value
@@ -1873,6 +1876,13 @@ void CPlayerPriest::Skill3()
 bool CPlayerPriest::Attacked(float damage)
 {
 	//// m_JP -= damage;
+
+	if (!CanBeAttacked()) {
+		return false;
+	}
+	//// m_JP -= damage;
+	m_LastHit = m_GameTime;
+
 	m_bAttacked = true;
 	/*if (m_HP > 0.0f)
 	{
@@ -1885,6 +1895,7 @@ bool CPlayerPriest::Attacked(float damage)
 		m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_HIT_DEATH), true);
 		m_bLive = false;
 	}*/
+	g_pSoundManager->StartFx(ESOUND::SOUND_HIT);
 	return true;
 }
 
@@ -1894,6 +1905,7 @@ CPlayerPriest::CPlayerPriest(CSkinningObject* object, CAnimationManager* aManage
 	m_HP = 1000.0f;
 	m_MP = 100.0f;
 	m_Damage = 800.0f;
+	m_GameTime = 0.0f;
 }
 
 void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM lParam)
@@ -1916,14 +1928,14 @@ void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
-		if (!m_bSkillActive) {
+		if (!m_bSkillActive && !g_PlayerDie[Client.get_id()]) {
 			XMFLOAT3 characterDir = cameraDir;
 			characterDir.y = 0.0f; // delete y value
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_AManager->OnAttackInput();
 			m_bDoingCombo = true;
-			MakeBullet();
+			MakeBullet(50.0f, 1);
 		}
 		break;
 	}
@@ -1937,7 +1949,7 @@ void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM
 			if (m_pCamera->getThirdPersonState()) {
 				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 				CGameObject* frame = m_AManager->getFrame()[0];
-				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
+				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished() && !g_PlayerDie[Client.get_id()]) {
 					m_Object->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 					XMFLOAT3 characterDir = cameraDir;
 					characterDir.y = 0.0f; // delete y value
@@ -2422,12 +2434,12 @@ KeyInputRet CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 			ret = KEY_SKILL1;
 		}
 		if ((keyBuffer['E'] & 0x80) && !(m_PrevKeyBuffer['E'] & 0x80) &&
-			Players[Client.get_id()].GetMP() >= g_SkillCost[0] && g_SkillCurCTime[0] <= 0) {
+			Players[Client.get_id()].GetMP() >= g_SkillCost[1] && g_SkillCurCTime[1] <= 0) {
 			Skill2();
 			ret = KEY_SKILL2;
 		}
 		if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80) &&
-			Players[Client.get_id()].GetMP() >= g_SkillCost[0] && g_SkillCurCTime[0] <= 0) {
+			Players[Client.get_id()].GetMP() >= g_SkillCost[2] && g_SkillCurCTime[2] <= 0) {
 			Skill3();
 			ret = KEY_SKILL3;
 		}
@@ -2439,6 +2451,7 @@ KeyInputRet CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 void CPlayerPriest::UpdateObject(float fElapsedTime)
 {
 	bool test = false;
+	m_GameTime += fElapsedTime;
 	if (m_bLive) {
 		m_AManager->UpdateCombo(fElapsedTime);
 		if (!m_AManager->IsInCombo() && m_AManager->IsAnimationFinished()) {

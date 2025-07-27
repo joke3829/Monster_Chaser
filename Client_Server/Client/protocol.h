@@ -323,6 +323,5 @@ struct cs_packet_skill_use {
 struct cs_packet_next_stage_master_key {
 	unsigned char size;
 	char type;
-
 };
 #pragma pack(pop)

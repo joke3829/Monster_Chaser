@@ -11,6 +11,9 @@ extern bool allready;
 extern TitleState g_state;
 extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
 
+extern std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters;
+
+
 
 C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
 
@@ -129,6 +132,14 @@ void C_Socket::SendPriestBUFF(const char SkillNumber)
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_USE_SKILL;
 	pkt.skillNumber = SkillNumber; // 0이 체력 회복, 1이 공격력 증가 + 방어력 감소, 2가 스킬게이지 최대치
+	Client.send_packet(&pkt);
+}
+
+void C_Socket::SendMasterKey()
+{
+	cs_packet_next_stage_master_key pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_MASTERKEY;
 	Client.send_packet(&pkt);
 }
 
@@ -270,7 +281,7 @@ void C_Socket::process_packet(char* ptr)
 		int local_id = p->Local_id;
 		float time = p->time;
 		unsigned int state = p->state;
-		Players[local_id].SetMP(p->mp); // 플레이어의 HP 변경 처리
+		Players[local_id].SetMP(p->mp);
 		if (local_id == Client.get_id()) {
 			return;
 		}
@@ -313,6 +324,17 @@ void C_Socket::process_packet(char* ptr)
 		int a = Monsters[monster_id]->getCurrentAttackType();
 		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(a, true); // 몬스터 애니메이션 변경
 
+		switch (a) {
+		case 6:
+			m_vMonsters[monster_id]->Skill1();
+			break;
+		case 7:
+			m_vMonsters[monster_id]->Skill2();
+			break;
+		case 8:
+			m_vMonsters[monster_id]->Skill3();
+			break;
+		}
 
 		//Monsters[monster_id]->getAnimationManager()->
 		//pkt->monster_id; // 몬스터 ID		//이걸로 공격 애니메이션 셋 
@@ -390,6 +412,7 @@ void C_Socket::process_packet(char* ptr)
 		break;
 	}
 	case S2C_P_PLAYER_HIT:
+
 	{
 		sc_packet_player_hit* pkt = reinterpret_cast<sc_packet_player_hit*>(ptr);
 		Players[pkt->local_id].SetHP(pkt->hp); // 플레이어가 데미지를 받았을 때 HP 감소 처리
@@ -404,14 +427,15 @@ void C_Socket::process_packet(char* ptr)
 	{
 		auto* pkt = reinterpret_cast<sc_packet_change_hp*>(ptr);
 		int local_id = static_cast<int>(pkt->local_id);
-		if (Players[local_id].GetHP() < pkt->hp)
+		if (local_id == Client.get_id() && Players[local_id].GetHP() < pkt->hp) {
+			g_pSoundManager->StartFx(ESOUND::SOUND_HEALING);
 			g_pBuff2->Start();
+		}
 		Players[local_id].SetHP(pkt->hp); // 플레이어의 HP 변경 처리
 		break;
 	}
 	case S2C_P_CHANGEMP:
 	{
-
 		auto* pkt = reinterpret_cast<sc_packet_change_mp*>(ptr);
 		int local_id = static_cast<int>(pkt->local_id);
 		Players[local_id].SetMP(pkt->mp); // 플레이어의 HP 변경 처리
@@ -424,6 +448,7 @@ void C_Socket::process_packet(char* ptr)
 
 		if (Monsters.count(boss_id)) {
 			Monsters[boss_id]->getAnimationManager()->ChangeAnimation(3, true);
+			g_pSoundManager->StartFx(ESOUND::SOUND_ROAR);
 			//Monsters[boss_id]->playRoarAnimation();  //  울부짖는 애니메이션 재생 함수
 		}
 		break;
@@ -473,7 +498,7 @@ void C_Socket::process_packet(char* ptr)
 			break;
 		}
 
-		std::cout << "[버프 변경] 타입: " << (int)buffType << ", 상태: " << (int)state << std::endl;
+		//std::cout << "[버프 변경] 타입: " << (int)buffType << ", 상태: " << (int)state << std::endl;
 		break;
 	}
 
@@ -513,6 +538,41 @@ void C_Socket::process_packet(char* ptr)
 		//		g_state = Title; // 타이틀 상태로 변경
 		//	}
 		//}
+		break;
+	}
+
+	case S2C_P_MONSTERIDLE:
+	{
+		sc_packet_monster_idle* pkt = reinterpret_cast<sc_packet_monster_idle*>(ptr);
+		int monster_id = pkt->monster_id;
+		if (Monsters.find(monster_id) != Monsters.end()) {
+			auto& monster = Monsters[monster_id];
+			monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
+			monster->getAnimationManager()->ChangeAnimation(2, false); // 몬스터 애니메이션을 Idle 상태로 변경
+		}
+		break;
+	}
+	case S2C_P_PlAYER_DIE:
+	{
+		// 플레이어가 죽었을 때 처리
+		sc_packet_player_die* pkt = reinterpret_cast<sc_packet_player_die*>(ptr);
+		g_PlayerDie[pkt->Local_id] = true;
+		auto p = reinterpret_cast<CPlayableCharacterAnimationManager*>(Players[pkt->Local_id].getAnimationManager());
+		p->setDie(true);
+		p->ChangeDie();
+		g_pSoundManager->StartFx(ESOUND::SOUND_PLAYER_DEAD);
+		break;
+	}
+	case S2C_P_PlAYER_RESPAWN:
+	{
+		// 플레이어가 부활했을 때 처리
+		sc_packet_respawn* pkt = reinterpret_cast<sc_packet_respawn*>(ptr);
+		g_PlayerDie[pkt->Local_id] = false;
+		auto p = reinterpret_cast<CPlayableCharacterAnimationManager*>(Players[pkt->Local_id].getAnimationManager());
+		p->setDie(false);
+		p->ChangeAlive();
+		Players[pkt->Local_id].SetHP(pkt->hp);
+		Players[pkt->Local_id].SetMP(pkt->mp);
 		break;
 	}
 

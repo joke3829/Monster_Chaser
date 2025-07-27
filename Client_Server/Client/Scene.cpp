@@ -9,6 +9,8 @@ extern TitleState g_state;
 extern InGameState g_InGameState;
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
+std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+
 CParticle* g_pBuff0{};
 CParticle* g_pBuff1{};
 CParticle* g_pBuff2{};
@@ -1164,12 +1166,53 @@ void CRaytracingGameScene::CreateUIPipelineState()
 
 void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag)
 {
-	//스피어-스피어
-	for (int i = 0; i < targets.size(); i++) {
+	if (flag == 1) {
+		for (int i = 0; i < targets.size(); i++) {
 
-		//for (const auto& target : targets) {
-		if (targets[i]->IsDodge())continue;
-		if (!targets[i]->CanBeAttacked())continue;
+			//for (const auto& target : targets) {
+			if (targets[i]->IsDodge())continue;
+			if (!targets[i]->CanBeAttacked())continue;
+			for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
+				if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+				BoundingSphere targetSphere = targetBone->getObjectSphere();
+				BoundingSphere transformedTargetSphere;
+				targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+				int attacker_id = m_local_id;
+				//	for (const auto& attacker : attackers) {
+				if (!attackers[attacker_id]->IsAttacking() && !attackers[attacker_id]->IsCombo()) return;
+				for (const auto& attackerBone : attackers[attacker_id]->getObject()->getObjects()) {
+					if (!(attackerBone->getBoundingInfo() & 0x1000)) continue;
+					BoundingSphere attackerSphere = attackerBone->getObjectSphere();
+					BoundingSphere transformedAttackerSphere;
+					attackerSphere.Transform(transformedAttackerSphere, XMLoadFloat4x4(&attackerBone->getWorldMatrix()));
+					if (transformedAttackerSphere.Intersects(transformedTargetSphere)) {
+						/*float damage = 0.0f;
+						damage = attackers[attacker_id]->getCurrentDamage();*/
+						bool realHit = targets[i]->Attacked();
+						if (realHit) {
+							if (flag == 1)
+							{
+								Client.SendPlayerAttack(i, attackers[attacker_id]->getCurrentSkill());
+								//플레이어가 공격할 때
+							}
+							else
+							{
+								Client.SendMonsterAttack(attacker_id, i, attackers[attacker_id]->getCurrentSkill());
+								//몬스터가 공격할 때
+
+							}
+						}
+						return;
+					}
+				}
+			}
+		}
+	}
+	else {
+		//스피어-스피어
+		int i = m_local_id;
+		if (targets[i]->IsDodge())return;
+		if (!targets[i]->CanBeAttacked())return;
 		for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
 			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
 			BoundingSphere targetSphere = targetBone->getObjectSphere();
@@ -1206,13 +1249,55 @@ void CRaytracingGameScene::AttackCollision(const std::vector<std::unique_ptr<CPl
 			}
 		}
 	}
-
 }
 
 void CRaytracingGameScene::ShootCollision(const std::vector<std::unique_ptr<CPlayableCharacter>>& targets, const std::vector<std::unique_ptr<CPlayableCharacter>>& attackers, int flag)
 {
-	for (int i = 0; i < targets.size(); i++) {
-		if (targets[i]->IsDodge())continue;
+	if (flag == 1) {
+		for (int i = 0; i < targets.size(); i++) {
+			if (targets[i]->IsDodge())continue;
+			//for (const auto& target : targets) {
+			for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
+				if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
+				BoundingSphere targetSphere = targetBone->getObjectSphere();
+				BoundingSphere transformedTargetSphere;
+				targetSphere.Transform(transformedTargetSphere, XMLoadFloat4x4(&targetBone->getWorldMatrix()));
+				int attacker_id = m_local_id;
+				//	for (const auto& attacker : attackers) {
+				auto& bullets = attackers[attacker_id]->GetBullets();
+				if (bullets.empty()) return;
+				for (const auto& bullet : bullets) {
+					if (!bullet || !bullet->getActive()) continue;
+					BoundingOrientedBox bulletSphere = bullet->getObjects().getObjectOBB();
+					BoundingOrientedBox transformedBulletBox;
+					bulletSphere.Transform(transformedBulletBox, XMLoadFloat4x4(&bullet->getObjects().getWorldMatrix()));
+					if (transformedBulletBox.Intersects(transformedTargetSphere)) {
+						//float damage = attackers[attacker_id]->getCurrentDamage();
+						bool realHit = targets[i]->Attacked();
+						bullet->getObjects().SetPosition(attackers[attacker_id]->getObject()->getPosition());
+						bullet->getObjects().SetRenderState(false);
+						bullet->setActive(false);
+						if (realHit) {
+							if (flag == 1)
+							{
+								Client.SendPlayerAttack(i, attackers[attacker_id]->getCurrentSkill());
+								//플레이어가 공격할 때
+							}
+							else
+							{
+								//몬스터가 공격할 때
+								Client.SendMonsterAttack(attacker_id, i, attackers[attacker_id]->getCurrentSkill());
+							}
+						}
+					}
+				}
+
+			}
+		}
+	}
+	else {
+		int i = m_local_id;
+		if (targets[i]->IsDodge()) return;
 		//for (const auto& target : targets) {
 		for (const auto& targetBone : targets[i]->getObject()->getObjects()) {
 			if (!(targetBone->getBoundingInfo() & 0x1100)) continue;
@@ -1256,50 +1341,86 @@ void CRaytracingGameScene::ShootCollision(const std::vector<std::unique_ptr<CPla
 
 void CRaytracingGameScene::AutoDirection(const std::vector<std::unique_ptr<CPlayableCharacter>>& attacker, const std::vector<std::unique_ptr<CPlayableCharacter>>& targets)
 {
-	if (attacker.empty() || targets.empty()) {
-		return;
-	}
 	auto& attackerPtr = attacker[m_local_id];
-	if (attackerPtr->GetBullets().empty())return;
-	XMFLOAT3 attackerPos = attackerPtr->getObject()->getPosition();
-	XMFLOAT3 attackerDir = attackerPtr->getObject()->getLook();
-	float fov = 90.0f * (3.14159f / 180.0f);
-	float cosFov = std::cos(fov / 2.0f);
-	float maxDistance = 120.0f;
-	float minDistance = 120.0f;
-	XMFLOAT3 directionToTarget = { 0.0f, 0.0f, 0.0f };
-	bool targetFound = false;
-	XMVECTOR vAttackerDir = XMLoadFloat3(&attackerDir);
-	XMVECTOR vAttackerPos = XMLoadFloat3(&attackerPos);
-	for (const auto& target : targets) {
-		if (!target) continue;
-		XMFLOAT3 targetPos = target->getObject()->getPosition();
-		targetPos.y += 1.0f;
-		XMVECTOR vTargetPos = XMLoadFloat3(&targetPos);
-		XMVECTOR vRelativeDir = XMVectorSubtract(vTargetPos, vAttackerPos);
-		XMVECTOR vDistance = XMVector3Length(vRelativeDir);
-		float distance;
-		XMStoreFloat(&distance, vDistance);
-		if (distance > 0.0f && distance <= maxDistance) {
-			XMVECTOR vNormRelativeDir = XMVector3Normalize(vRelativeDir);
-			XMVECTOR vDot = XMVector3Dot(vAttackerDir, vNormRelativeDir);
-			float dot;
-			XMStoreFloat(&dot, vDot);
-			if (dot >= cosFov && distance < minDistance) {
-				minDistance = distance;
-				XMStoreFloat3(&directionToTarget, vNormRelativeDir);
-				targetFound = true;
+		if (attackerPtr->GetBullets().empty()) return;
+		XMFLOAT3 attackerPos = attackerPtr->getObject()->getPosition();
+		XMFLOAT3 attackerDir = attackerPtr->getObject()->getLook();
+		float fov = 90.0f * (3.14159f / 180.0f);
+		float cosFov = std::cos(fov / 2.0f);
+		float maxDistance = 120.0f;
+		float minDistance = 120.0f;
+		XMFLOAT3 directionToTarget = { 0.0f, 0.0f, 0.0f };
+		bool targetFound = false;
+		XMVECTOR vAttackerDir = XMLoadFloat3(&attackerDir);
+		XMVECTOR vAttackerPos = XMLoadFloat3(&attackerPos);
+		for (const auto& target : targets) {
+			if (!target) continue;
+			XMFLOAT3 targetPos = target->getObject()->getPosition();
+			targetPos.y += 1.0f;
+			XMVECTOR vTargetPos = XMLoadFloat3(&targetPos);
+			XMVECTOR vRelativeDir = XMVectorSubtract(vTargetPos, vAttackerPos);
+			XMVECTOR vDistance = XMVector3Length(vRelativeDir);
+			float distance;
+			XMStoreFloat(&distance, vDistance);
+			if (distance > 0.0f && distance <= maxDistance) {
+				XMVECTOR vNormRelativeDir = XMVector3Normalize(vRelativeDir);
+				XMVECTOR vDot = XMVector3Dot(vAttackerDir, vNormRelativeDir);
+				float dot;
+				XMStoreFloat(&dot, vDot);
+				if (dot >= cosFov && distance < minDistance) {
+					minDistance = distance;
+					XMStoreFloat3(&directionToTarget, vNormRelativeDir);
+					targetFound = true;
 
+				}
+			}
+		}
+
+		if (targetFound) {
+			attackerPtr->SetAutoDirect(directionToTarget);
+		}
+		else {
+			XMFLOAT3 dir = m_pCamera->getDir();
+			attackerPtr->SetAutoDirect({ dir.x,0.0f,dir.z });
+		}
+}
+
+void CRaytracingGameScene::BulletCheck(const std::vector<std::unique_ptr<CPlayableCharacter>>& shoot, CHeightMapImage* terrain, CHeightMapImage* collisionMap, float fElapsedTime, float offsetX, float offsetY, float offsetZ, int sceneType)
+{
+	for (int attacker_id = 0; attacker_id < shoot.size(); attacker_id++) {
+		auto& bullets = shoot[attacker_id]->GetBullets();
+		if (bullets.empty()) continue;
+		for (const auto& bullet : bullets) {
+			if (!bullet || !bullet->getActive()) continue;
+			XMFLOAT4X4& projWorld = bullet->getObjects().getWorldMatrix();
+			float colHeight = collisionMap->GetHeightinWorldSpace(projWorld._41 - offsetX, projWorld._43 - offsetZ);
+			float terrainHeight = terrain->GetHeightinWorldSpace(projWorld._41 - offsetX, projWorld._43 - offsetZ);
+			if (colHeight - terrainHeight >= 0.1f)
+			{
+				bullet->getObjects().SetPosition(shoot[attacker_id]->getObject()->getPosition());
+				bullet->getObjects().SetRenderState(false);
+				bullet->setActive(false);
 			}
 		}
 	}
+}
 
-	if (targetFound) {
-		attackerPtr->SetAutoDirect(directionToTarget);
-	}
-	else {
-		XMFLOAT3 dir = m_pCamera->getDir();
-		attackerPtr->SetAutoDirect({ dir.x,0.0f,dir.z });
+void CRaytracingGameScene::BulletCheck(const std::vector<std::unique_ptr<CPlayableCharacter>>& shoot, CHeightMapImage* terrain, float fElapsedTime, float offsetX, float offsetY, float offsetZ, int sceneType)
+{
+	for (int attacker_id = 0; attacker_id < shoot.size(); attacker_id++) {
+		auto& bullets = shoot[attacker_id]->GetBullets();
+		if (bullets.empty()) continue;
+		for (const auto& bullet : bullets) {
+			if (!bullet || !bullet->getActive()) continue;
+			XMFLOAT4X4& projWorld = bullet->getObjects().getWorldMatrix();
+			float terrainHeight = terrain->GetHeightinWorldSpace(projWorld._41 - offsetX, projWorld._43 - offsetZ);
+			if (terrainHeight > 0.0f)
+			{
+				bullet->getObjects().SetPosition(shoot[attacker_id]->getObject()->getPosition());
+				bullet->getObjects().SetRenderState(false);
+				bullet->setActive(false);
+			}
+		}
 	}
 }
 
@@ -1368,7 +1489,7 @@ void CRaytracingGameScene::CreatePriestCharacter()
 		m_pResourceManager->getAnimationManagers()[m_pResourceManager->getAnimationManagers().size() - 1].get()));
 
 	auto& sv = m_pResourceManager->getSkinningObjectList();
-	sv.back()->setPreTransform(2.5f, XMFLOAT3(), XMFLOAT3());
+	sv.back()->setPreTransform(2.7f, XMFLOAT3(), XMFLOAT3());
 
 	for (auto& s : m_vPlayers.back()->getObject()->getObjects())
 	{
@@ -1382,7 +1503,7 @@ void CRaytracingGameScene::CreatePriestCharacter()
 	//m_pResourceManager->getMeshList().emplace_back(std::make_unique<Mesh>(XMFLOAT3(0.0f, 0.0f, 0.0f), 1.0f, "sphere"));
 	m_pResourceManager->AddResourceFromFile(L"src\\model\\ETP_Rock_Small03.bin", "src\\texture\\Map\\");
 	size_t meshIndex = m_pResourceManager->getMeshList().size() - 1;
-	CPlayerPriest* mage = dynamic_cast<CPlayerPriest*>(m_vPlayers.back().get());
+	CPlayerPriest* priest = dynamic_cast<CPlayerPriest*>(m_vPlayers.back().get());
 	Material sharedMaterial;
 
 	for (int i = 0; i < 20; ++i) {
@@ -1393,7 +1514,7 @@ void CRaytracingGameScene::CreatePriestCharacter()
 		auto projectile = std::make_unique<CProjectile>();
 		projectile->setGameObject(m_pResourceManager->getGameObjectList().back().get());
 
-		mage->GetBullets().push_back(std::move(projectile));
+		priest->GetBullets().push_back(std::move(projectile));
 	}
 }
 void CRaytracingGameScene::CreateParticle(short job)
@@ -1815,22 +1936,22 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician2.dds"));
-		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 20.0f; g_SkillCoolTime[2] = 40.0f;
-		g_SkillCost[0] = 30.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 70.0f;
+		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 20.0f; g_SkillCoolTime[2] = 30.0f;
+		g_SkillCost[0] = 25.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 70.0f;
 		break;
 	case JOB_WARRIOR:
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior2.dds"));
-		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 5.0f; g_SkillCoolTime[2] = 20.0f;
-		g_SkillCost[0] = 25.0f; g_SkillCost[1] = 5.0f; g_SkillCost[2] = 40.0f;
+		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 5.0f; g_SkillCoolTime[2] = 25.0f;
+		g_SkillCost[0] = 30.0f; g_SkillCost[1] = 20.0f; g_SkillCost[2] = 40.0f;
 		break;
 	case JOB_HEALER:
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer2.dds"));
-		g_SkillCoolTime[0] = 15.0f; g_SkillCoolTime[1] = 30.0f; g_SkillCoolTime[2] = 60.0f;
-		g_SkillCost[0] = 20.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 80.0f;
+		g_SkillCoolTime[0] = 8.0f; g_SkillCoolTime[1] = 20.0f; g_SkillCoolTime[2] = 40.0f;
+		g_SkillCost[0] = 30.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 60.0f;
 		break;
 	}
 	for (auto& p : g_SkillCurCTime) p = 0;
@@ -1878,7 +1999,7 @@ void CRaytracingGameScene::UIUseSkill(KeyInputRet input)
 			break;
 		}
 	}
-	else if (m_myJob == JOB_MAGE) {
+	else if(m_myJob == JOB_MAGE) {
 		switch (input) {
 		case KEY_SKILL1:
 			g_SkillCurCTime[0] = g_SkillCoolTime[0];
@@ -1912,7 +2033,7 @@ void CRaytracingGameScene::UIUseSkill(KeyInputRet input)
 		case KEY_SKILL3:
 			g_SkillCurCTime[2] = g_SkillCoolTime[2];
 			Client.SendPlayerAttack(-1, 3);
-			//g_pSoundManager->StartFx(ESOUND::SOUND_SHIELD_ATTACK);
+			g_pSoundManager->StartFx(ESOUND::SOUND_SHIELD_ATTACK);
 			break;
 		}
 	}
@@ -1940,6 +2061,7 @@ void CRaytracingGameScene::SkillParticleStart(KeyInputRet input)
 
 void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	m_vMonsters.clear();
 	Monsters.clear();
 
 	m_pOutputBuffer = outputBuffer;
@@ -2061,7 +2183,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	// Copy(normalObject) & SetPreMatrix ===============================
 
 	for (int i = 0; i < Players.size(); ++i) {
-		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
+		skinned[i]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -987.8f));
 		//skinned[i]->SetPosition(XMFLOAT3(0.0, 0.0f, 0.0));
 	}
 
@@ -2088,6 +2210,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
+	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE3_AMB);
+
 	Client.SendPlayerReady(SCENE_WINTERLAND);
 }
 
@@ -2111,20 +2235,8 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 		case '0':
 			m_pCamera->SetThirdPersonMode(true);
 			break;
-		case '8':	// Warning
-			if (g_InGameState == IS_GAMING) {
-				startTime = 0.0f;
-				g_InGameState = IS_FINISH;
-			}
-			break;
-		case '1':			// 1~4 test
-			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
-			break;
-		case '2':
-			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
-			break;
-		case '3':
-			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
+		case '7':
+			Client.SendMasterKey();
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -2139,7 +2251,7 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			if (m_fItemCurTime <= 0.0f) {
+			if (m_fItemCurTime <= 0.0f && !g_PlayerDie[m_local_id]) {
 				Client.SendUseItem(cItem);
 				m_fItemCurTime = m_fItemCoolTime;
 			}
@@ -2248,11 +2360,13 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
-			UIUseSkill(ret);
-			SkillParticleStart(ret);
-			CAnimationManager* myManager = m_pPlayer->getAniManager();
-			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			if (!g_PlayerDie[m_local_id]) {
+				KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+				UIUseSkill(ret);
+				SkillParticleStart(ret);
+				CAnimationManager* myManager = m_pPlayer->getAniManager();
+				Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			}
 		}
 	}
 }
@@ -2437,17 +2551,6 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
-
-
-
-	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-
-
-	for (auto& p : m_pMonsters) {
-		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
-	}
 	for (auto& m : m_vPlayers)
 	{
 		m->UpdateObject(fElapsedTime);
@@ -2475,8 +2578,21 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 			ShootCollision(m_vPlayers, m_vMonsters, 0);
 		}
 	}
-	AutoDirection(m_vPlayers, m_vMonsters);
 
+	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+
+	BulletCheck(m_vPlayers, m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+
+	for (auto& p : m_pMonsters) {
+		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+	}
+
+	BulletCheck(m_vMonsters, m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+
+	AutoDirection(m_vPlayers, m_vMonsters);
+	
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
 		float cHeight = m_pRoadTerrain->GetHeightinWorldSpace(EYE.x + 1024.0f, EYE.z + 1024.0f);
@@ -2516,6 +2632,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		wOpacity += 0.2 * fElapsedTime;
 		if (wOpacity > 1.0f) {
 			ShowCursor(TRUE);
+			g_pSoundManager->AllStop();
 			m_nNextScene = SCENE_TITLE;
 			g_state = Title;
 			wOpacity = 1.0f;
@@ -2532,9 +2649,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		float tge = static_cast<float>(Players[i].GetHP());
-		float tt = g_maxHPs[i];
-		m_vPlayersStatUI[i][1]->setScaleX(static_cast<float>(Players[i].GetHP()) / g_maxHPs[i]);
+		m_vPlayersStatUI[i][1]->setScaleX(Players[i].GetHP() / g_maxHPs[i]);
 		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
@@ -2552,11 +2667,21 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 			XMFLOAT3 ppos = Players[m_local_id].getRenderingObject()->getPosition(); ppos.y = 0;
 			float distance;
 			XMStoreFloat(&distance, XMVector3Length(XMLoadFloat3(&mpos) - XMLoadFloat3(&ppos)));
-			if (distance <= 100.0f)
+			if (distance <= 100.0f) {
 				m_bBossBattle = true;
+				if (m_bPrevBossBattle != m_bBossBattle) {
+					g_pSoundManager->StartBGM(ESOUND::SOUND_STAGE3_BOSS);
+				}
+			}
+			else {
+				m_bBossBattle = false;
+				if (m_bPrevBossBattle != m_bBossBattle) {
+					g_pSoundManager->StopBGM();
+				}
+			}
+			m_bPrevBossBattle = m_bBossBattle;
 		}
 	}
-
 	m_fItemCurTime -= fElapsedTime;
 	if (m_fItemCurTime < 0.0)
 		m_fItemCurTime = 0.0f;
@@ -2671,6 +2796,7 @@ void CRaytracingWinterLandScene::Render()
 
 void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	m_vMonsters.clear();
 	Monsters.clear();
 
 	m_pOutputBuffer = outputBuffer;
@@ -2831,20 +2957,8 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 		case '0':
 			m_pCamera->SetThirdPersonMode(true);
 			break;
-		case '8':	// Warning
-			if (g_InGameState == IS_GAMING) {
-				startTime = 0.0f;
-				g_InGameState = IS_FINISH;
-			}
-			break;
-		case '1':			// 1~4 test
-			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
-			break;
-		case '2':
-			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
-			break;
-		case '3':
-			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
+		case '7':
+			Client.SendMasterKey();
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -2859,7 +2973,7 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			if (m_fItemCurTime <= 0.0f) {
+			if (m_fItemCurTime <= 0.0f && !g_PlayerDie[m_local_id]) {
 				Client.SendUseItem(cItem);
 				m_fItemCurTime = m_fItemCoolTime;
 			}
@@ -3223,11 +3337,13 @@ void CRaytracingCaveScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
-			UIUseSkill(ret);
-			SkillParticleStart(ret);
-			CAnimationManager* myManager = m_pPlayer->getAniManager();
-			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			if (!g_PlayerDie[m_local_id]) {
+				KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+				UIUseSkill(ret);
+				SkillParticleStart(ret);
+				CAnimationManager* myManager = m_pPlayer->getAniManager();
+				Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			}
 		}
 	}
 }
@@ -3249,17 +3365,6 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
-
-
-
-
-	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
-	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
-
-	for (auto& p : m_pMonsters) {
-		p->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
-		p->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
-	}
 	for (auto& m : m_vPlayers)
 	{
 		m->UpdateObject(fElapsedTime);
@@ -3287,7 +3392,21 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 			ShootCollision(m_vPlayers, m_vMonsters, 0);
 		}
 	}
+
+	m_pPlayer->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
+	m_pPlayer->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
+
+	BulletCheck(m_vPlayers, m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
+
+	for (auto& p : m_pMonsters) {
+		p->CollisionCheck(m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
+		p->HeightCheck(m_pHeightMap.get(), fElapsedTime, -200.0f, -10.0f, -66.5f, SCENE_CAVE);
+	}
+
+	BulletCheck(m_vMonsters, m_pCollisionHMap.get(), fElapsedTime, -200.0f, 0.0, -66.5f, SCENE_CAVE);
+
 	AutoDirection(m_vPlayers, m_vMonsters);
+
 	if (m_pCamera->getThirdPersonState()) {
 		XMFLOAT3& EYE = m_pCamera->getEyeCalculateOffset();
 		float cHeight = m_pHeightMap->GetHeightinWorldSpace(EYE.x + 200.0f, EYE.z + 66.5f);
@@ -3323,6 +3442,7 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 		wOpacity += 0.2 * fElapsedTime;
 		if (wOpacity > 1.0f) {
 			ShowCursor(TRUE);
+			g_pSoundManager->AllStop();
 			m_nNextScene = SCENE_WINTERLAND;
 			wOpacity = 1.0f;
 		}
@@ -3337,9 +3457,7 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		float tge = static_cast<float>(Players[i].GetHP());
-		float tt = g_maxHPs[i];
-		m_vPlayersStatUI[i][1]->setScaleX(static_cast<float>(Players[i].GetHP()) / g_maxHPs[i]);
+		m_vPlayersStatUI[i][1]->setScaleX(Players[i].GetHP() / g_maxHPs[i]);
 		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
@@ -3359,6 +3477,8 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 			XMStoreFloat(&distance, XMVector3Length(XMLoadFloat3(&mpos) - XMLoadFloat3(&ppos)));
 			if (distance <= 100.0f)
 				m_bBossBattle = true;
+			else
+				m_bBossBattle = false;
 		}
 	}
 
@@ -3476,6 +3596,7 @@ void CRaytracingCaveScene::Render()
 
 void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	m_vMonsters.clear();
 	Monsters.clear();
 
 	m_pOutputBuffer = outputBuffer;
@@ -3614,6 +3735,10 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 
+	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
+	m_vUIs[m_vUIs.size() - 1]->setColor(0.5, 0.5, 0.5, 0.0);
+
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
 	Client.SendPlayerReady(SCENE_PLAIN);
@@ -3641,20 +3766,8 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 		case '0':
 			m_pCamera->SetThirdPersonMode(true);
 			break;
-		case '8':	// Warning
-			if (g_InGameState == IS_GAMING) {
-				startTime = 0.0f;
-				g_InGameState = IS_FINISH;
-			}
-			break;
-		case '1':			// 1~4 test
-			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
-			break;
-		case '2':
-			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
-			break;
-		case '3':
-			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
+		case '7':
+			Client.SendMasterKey();
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -3669,7 +3782,7 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			if (m_fItemCurTime <= 0.0f) {
+			if (m_fItemCurTime <= 0.0f && !g_PlayerDie[m_local_id]) {
 				Client.SendUseItem(cItem);
 				m_fItemCurTime = m_fItemCoolTime;
 			}
@@ -3709,7 +3822,7 @@ void CRaytracingETPScene::Create_Feroptere()
 
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[m_vMonsters.size() - 1]->getObject()->SetPosition(XMFLOAT3(-280.0f, 0.0f, 215.4f));
-	//m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 290.0f, 0.0f));
+	m_vMonsters[m_vMonsters.size() - 1]->getObject()->Rotate(XMFLOAT3(0.0f, 290.0f, 0.0f));
 
 	m_pMonsters.push_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 
@@ -3934,11 +4047,13 @@ void CRaytracingETPScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
-			UIUseSkill(ret);
-			SkillParticleStart(ret);
-			CAnimationManager* myManager = m_pPlayer->getAniManager();
-			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			if (!g_PlayerDie[m_local_id]) {
+				KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+				UIUseSkill(ret);
+				SkillParticleStart(ret);
+				CAnimationManager* myManager = m_pPlayer->getAniManager();
+				Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			}
 		}
 	}
 }
@@ -4127,9 +4242,6 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 
 	m_pResourceManager->UpdateWorldMatrix();
 
-	
-
-
 	for (auto& m : m_vPlayers)
 	{
 		m->UpdateObject(fElapsedTime);
@@ -4161,11 +4273,15 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 
+	BulletCheck(m_vPlayers, m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+
 	for (auto& p : m_pMonsters) {
 		p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 		p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 	}
-	
+
+	BulletCheck(m_vMonsters, m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+
 	AutoDirection(m_vPlayers, m_vMonsters);
 
 	if (m_pCamera->getThirdPersonState()) {
@@ -4203,6 +4319,7 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		wOpacity += 0.2 * fElapsedTime;
 		if (wOpacity > 1.0f) {
 			ShowCursor(TRUE);
+			g_pSoundManager->AllStop();
 			m_nNextScene = SCENE_CAVE;
 			wOpacity = 1.0f;
 		}
@@ -4218,9 +4335,9 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		float tge = static_cast<float>(Players[i].GetHP());
-		float tt = g_maxHPs[i];
-		m_vPlayersStatUI[i][1]->setScaleX(static_cast<float>(Players[i].GetHP()) / g_maxHPs[i]);
+		m_vPlayersStatUI[i][1]->setScaleX(Players[i].GetHP() / g_maxHPs[i]);
+		float  tt = Players[i].GetMP();
+		float ttt = g_maxMPs[i];
 		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
@@ -4240,6 +4357,8 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 			XMStoreFloat(&distance, XMVector3Length(XMLoadFloat3(&mpos) - XMLoadFloat3(&ppos)));
 			if (distance <= 100.0f)
 				m_bBossBattle = true;
+			else
+				m_bBossBattle = false;
 		}
 	}
 
@@ -4271,6 +4390,11 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		}
 	}
 	// =================================================================
+
+	if (g_PlayerDie[m_local_id])
+		m_vUIs.back()->setColor(0.5, 0.5, 0.5, 0.5);
+	else
+		m_vUIs.back()->setColor(0.5, 0.5, 0.5, 0.0);
 }
 
 void CRaytracingETPScene::Render()

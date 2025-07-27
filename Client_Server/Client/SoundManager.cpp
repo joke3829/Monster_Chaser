@@ -110,12 +110,26 @@ void CMonsterChaserSoundManager::SetupSounds()
 
 	m_vSounds.emplace_back();
 	m_System->createSound("src\\sound\\Roar.mp3", FMOD_DEFAULT, 0, &m_vSounds.back());
+
+	m_vSounds.emplace_back();
+	m_System->createSound("src\\sound\\shield_attack.mp3", FMOD_DEFAULT, 0, &m_vSounds.back());
+
+	m_vSounds.emplace_back();
+	m_System->createSound("src\\sound\\healing.mp3", FMOD_DEFAULT, 0, &m_vSounds.back());
+
+	m_vSounds.emplace_back();
+	m_System->createSound("src\\sound\\Dead.mp3", FMOD_DEFAULT, 0, &m_vSounds.back());
 }
 
 void CMonsterChaserSoundManager::StartBGM(ESOUND sound)
 {
 	m_BGMChannel->stop();
 	m_System->playSound(m_vSounds[sound], 0, false, &m_BGMChannel);
+}
+
+void CMonsterChaserSoundManager::StopBGM()
+{
+	m_BGMChannel->stop();
 }
 
 void CMonsterChaserSoundManager::StartAMB(ESOUND sound)
@@ -126,6 +140,7 @@ void CMonsterChaserSoundManager::StartAMB(ESOUND sound)
 
 void CMonsterChaserSoundManager::StartFx(ESOUND sound)
 {
+	m_vFxChannels[m_current_channel]->stop();
 	m_System->playSound(m_vSounds[sound], 0, false, &m_vFxChannels[m_current_channel]);
 	++m_current_channel;
 	if (m_current_channel >= m_numChannel - 2)

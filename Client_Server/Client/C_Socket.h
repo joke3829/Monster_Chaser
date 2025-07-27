@@ -15,6 +15,8 @@ extern std::array<float, 3> g_SkillCost;
 extern CParticle* g_pBuff0;
 extern CParticle* g_pBuff1;
 extern CParticle* g_pBuff2;
+
+extern std::array<bool, 3> g_PlayerDie;
 // =================================================
 
 class C_Socket
@@ -44,6 +46,8 @@ public:
 	void SendUseItem(const unsigned int type);														//Send Item Packet
 	
 	void SendPriestBUFF(const char SkillNumber);	//Send Priest Buff Packet
+
+	void SendMasterKey();
 
 
 	void SendNEXTSTAGEMASTERKEY();	//Send Next Stage Master Key Packet
