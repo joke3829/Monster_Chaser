@@ -24,11 +24,11 @@ const XMFLOAT4X4& Player::GetPosition() const {
 bool  Player::TakeDamage(int dmg) {
 	std::lock_guard<std::mutex> lock(playerMutex);
  	hp -= dmg;
-	if (hp < 0) {
+	if (hp <= 0) {
 		Death();
 		hp = 0;
 	}
-	return hp == 0; // 0이 되면 죽음
+	return hp <= 0; // 0이 되면 죽음
 }
 
 void Player::Move(float dx, float dy, float dz) {
@@ -315,6 +315,8 @@ void Player::TryRespawn()
 		pkt.size = sizeof(pkt);
 		pkt.type = S2C_P_PlAYER_RESPAWN;
 		pkt.Local_id = local_id;
+		pkt.hp = max_hp;
+		pkt.mp = 100;
 		XMStoreFloat4x4(&pkt.pos, XMLoadFloat4x4(&position));
 		
 		for (int pid : g_server.rooms[room_num].id)

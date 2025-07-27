@@ -2298,7 +2298,7 @@ void CRaytracingWinterLandScene::Create_Gorhorrid()
 
 	m_vMonsters[m_nMonsterNum]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[m_nMonsterNum]->getObject()->SetPosition(XMFLOAT3(-86.3f, 0.0f, -301.1f));
-	m_vMonsters[m_nMonsterNum]->getObject()->Rotate(XMFLOAT3(0.0f, 170.0f, 0.0f));
+	//m_vMonsters[m_nMonsterNum]->getObject()->Rotate(XMFLOAT3(0.0f, 170.0f, 0.0f));
 
 	m_pMonsters.emplace_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 

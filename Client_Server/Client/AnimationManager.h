@@ -229,7 +229,7 @@ public:
             }
             else { return 0; }
         }
-    }      // not attack -> return 0
+    }
     void TimeIncrease(float fElapsedTime);
     bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
 

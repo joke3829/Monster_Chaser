@@ -152,23 +152,38 @@ void Room::SpawnMonsters()
 	}
 	case 2:
 	{
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-18.0f, -0.14f, -15.5f), MonsterType::Limadon);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-30.0f, 0.0f, 21.0f), MonsterType::Occisodonte);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-160.0f, 1.3f, 78.6f), MonsterType::Fulgurodonte);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-152.1f, 2.0f, 246.3f), MonsterType::Limadon);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-128.6f, 2.2f, 272.8f), MonsterType::Fulgurodonte);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-97.0f, 3.1f, 315.3f), MonsterType::Occisodonte);
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-92.0f, 4.2f, 376.5f), MonsterType::Fulgurodonte);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-18.0f, getHeight(g_pStage2Height.get(), -18.0f, -15.5f,
+			-200.0f, -10.0f, -66.5f, SCENE_CAVE), -15.5f), MonsterType::Limadon);
+
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-30.0f, getHeight(g_pStage2Height.get(), -30.0f, 21.0f,
+			-200.0f, -10.0f, -66.5f, SCENE_CAVE), 21.0f), MonsterType::Occisodonte);
+
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-160.0f,getHeight(g_pStage2Height.get(), -160.0f, 78.6f,
+			-200.0f, -10.0f, -66.5f, SCENE_CAVE), 78.6f), MonsterType::Fulgurodonte);
+
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-152.1f,getHeight(g_pStage2Height.get(), -152.1f, 246.3f,
+			-200.0f, -10.0f, -66.5f, SCENE_CAVE), 246.3f), MonsterType::Limadon);
+
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-128.6f,getHeight(g_pStage2Height.get(), -128.6f, 272.8f,
+			-200.0f, -10.0f, -66.5f, SCENE_CAVE), 272.8f), MonsterType::Fulgurodonte);
+
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-97.0f, getHeight(g_pStage2Height.get(), -97.0f, 315.3f,
+			-200.0f, -10.0f, -66.5f, SCENE_CAVE), 315.3f), MonsterType::Occisodonte);
+
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-92.0f, getHeight(g_pStage2Height.get(), -92.0f, 376.5f,
+			-200.0f, -10.0f, -66.5f, SCENE_CAVE), 376.5f), MonsterType::Fulgurodonte);
 
 		// Boss: Crassorrid (추가 MonsterType 필요 시 정의해둬야 함)
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(0.5f, 5.2f, 362.8f), MonsterType::Crassorrid);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(0.5f, getHeight(g_pStage2Height.get(), 0.5f, 362.8f,
+			-200.0f, -10.0f, -66.5f, SCENE_CAVE), 362.8f), MonsterType::Crassorrid);
 
 		break;
 	}
 	case 3:
 	{
 		// Final Boss: Gorhorrid
-		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-86.3f, 0.0f, -301.1f), MonsterType::Gorhorrid);
+		monsters[new_id++] = std::make_shared<Monster>(new_id, XMFLOAT3(-86.3f, getHeight(g_pStage3Height.get(), -86.3f, -301.1f,
+			-1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND), -301.1f), MonsterType::Gorhorrid);
 		break;
 	}
 	default:

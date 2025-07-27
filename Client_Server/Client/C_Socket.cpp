@@ -400,13 +400,13 @@ void C_Socket::process_packet(char* ptr)
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
 			auto* ap = dynamic_cast<CMonsterManager*>(monster->getAnimationManager());
-			//if (!ap->getSkillnum()) {
-			monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
-			monster->getAnimationManager()->ChangeAnimation(4, false);
-			//	}
+			if (!ap->getSkillnum()) {
+				monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
+				monster->getAnimationManager()->ChangeAnimation(4, false);
+			}
 
-				//monster->setVisible(true);
-				//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
+
+			//monster->setVisible(true);
 		}
 
 		break;
@@ -534,7 +534,7 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_PlAYER_DIE:
 	{
 		// 플레이어가 죽었을 때 처리
-		sc_packet_player_die* pkt = reinterpret_cast<sc_packet_player_die*>(ptr);
+ 		sc_packet_player_die* pkt = reinterpret_cast<sc_packet_player_die*>(ptr);
 		g_PlayerDie[pkt->Local_id] = true;
 		auto p = reinterpret_cast<CPlayableCharacterAnimationManager*>(Players[pkt->Local_id].getAnimationManager());
 		p->setDie(true);
