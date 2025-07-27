@@ -4117,9 +4117,10 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-	AutoDirection(m_vPlayers, m_vMonsters);
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+
+	AutoDirection(m_vPlayers, m_vMonsters);
 	//for (auto& p : m_pMonsters) {
 	//	p->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
 	//	p->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
