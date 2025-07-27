@@ -247,6 +247,7 @@ public:
 	std::unique_ptr<CHeightMapImage> m_pCollisionHMap{};
 protected:
 	unsigned int								m_nSkyboxIndex{};
+	bool m_bPrevBossBattle = false;
 
 	std::vector<std::unique_ptr<UIObject>>		m_vUIs{};
 	float										startTime{};

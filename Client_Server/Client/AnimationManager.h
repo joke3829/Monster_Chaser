@@ -1,8 +1,10 @@
 #pragma once
 #include "stdafx.h"
 #include "GameObject.h"
+#include "SoundManager.h"
 
 extern DXResources g_DxResource;
+extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
 
 class CAnimationSet {
 public:

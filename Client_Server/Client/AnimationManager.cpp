@@ -313,6 +313,7 @@ void CMageManager::OnAttackInput()
 {
 	if (!m_bInCombo) {
 		StartCombo();
+		g_pSoundManager->StartFx(ESOUND::SOUND_WANDSWING);
 		return;
 	}
 
@@ -375,6 +376,7 @@ void CMageManager::UpdateCombo(float fElapsedTime)
 				m_bNextAttack = false;
 				m_bWaitingForNextInput = false;
 				m_fComboTimer = 0.0f; // 타이머 초기화
+				g_pSoundManager->StartFx(ESOUND::SOUND_WANDSWING);
 			}
 		}
 		else {
@@ -461,6 +463,7 @@ void CWarriorManager::OnAttackInput()
 {
 	if (!m_bInCombo) {
 		StartCombo();
+		g_pSoundManager->StartFx(ESOUND::SOUND_SLASH);
 		return;
 	}
 
@@ -495,6 +498,7 @@ void CWarriorManager::UpdateCombo(float fElapsedTime)
 				m_bNextAttack = false;
 				m_bWaitingForNextInput = false;
 				m_fComboTimer = 0.0f; // 타이머 초기화
+				g_pSoundManager->StartFx(ESOUND::SOUND_SLASH);
 			}
 		}
 		else {
@@ -548,6 +552,7 @@ void CPriestManager::OnAttackInput()
 {
 	if (!m_bInCombo) {
 		StartCombo();
+		g_pSoundManager->StartFx(ESOUND::SOUND_WANDSWING);
 		return;
 	}
 
@@ -572,6 +577,7 @@ void CPriestManager::UpdateCombo(float fElapsedTime)
 				m_bNextAttack = false;
 				m_bWaitingForNextInput = false;
 				m_fComboTimer = 0.0f; // 타이머 초기화
+				g_pSoundManager->StartFx(ESOUND::SOUND_WANDSWING);
 			}
 		}
 		else {
