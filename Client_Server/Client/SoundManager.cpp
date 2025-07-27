@@ -140,6 +140,7 @@ void CMonsterChaserSoundManager::StartAMB(ESOUND sound)
 
 void CMonsterChaserSoundManager::StartFx(ESOUND sound)
 {
+	m_vFxChannels[m_current_channel]->stop();
 	m_System->playSound(m_vSounds[sound], 0, false, &m_vFxChannels[m_current_channel]);
 	++m_current_channel;
 	if (m_current_channel >= m_numChannel - 2)

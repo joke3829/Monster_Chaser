@@ -1936,22 +1936,22 @@ void CRaytracingGameScene::PlayerUISetup(short job)
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Magician2.dds"));
-		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 20.0f; g_SkillCoolTime[2] = 40.0f;
-		g_SkillCost[0] = 30.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 70.0f;
+		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 20.0f; g_SkillCoolTime[2] = 30.0f;
+		g_SkillCost[0] = 25.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 70.0f;
 		break;
 	case JOB_WARRIOR:
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Warrior2.dds"));
-		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 5.0f; g_SkillCoolTime[2] = 20.0f;
-		g_SkillCost[0] = 25.0f; g_SkillCost[1] = 5.0f; g_SkillCost[2] = 40.0f;
+		g_SkillCoolTime[0] = 10.0f; g_SkillCoolTime[1] = 5.0f; g_SkillCoolTime[2] = 25.0f;
+		g_SkillCost[0] = 30.0f; g_SkillCost[1] = 20.0f; g_SkillCost[2] = 40.0f;
 		break;
 	case JOB_HEALER:
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer0.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer1.dds"));
 		textures.emplace_back(std::make_unique<CTexture>(L"src\\texture\\UI\\InGame\\UI_Skill_Buffer2.dds"));
-		g_SkillCoolTime[0] = 15.0f; g_SkillCoolTime[1] = 30.0f; g_SkillCoolTime[2] = 60.0f;
-		g_SkillCost[0] = 20.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 80.0f;
+		g_SkillCoolTime[0] = 8.0f; g_SkillCoolTime[1] = 20.0f; g_SkillCoolTime[2] = 40.0f;
+		g_SkillCost[0] = 30.0f; g_SkillCost[1] = 40.0f; g_SkillCost[2] = 60.0f;
 		break;
 	}
 	for (auto& p : g_SkillCurCTime) p = 0;
