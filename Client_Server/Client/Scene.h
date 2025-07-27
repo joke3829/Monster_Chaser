@@ -196,7 +196,6 @@ public:
 	virtual void Render() {}
 	void PostProcess();
 protected:
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};
 
 	

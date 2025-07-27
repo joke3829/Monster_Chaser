@@ -10,6 +10,7 @@ extern InGameState g_InGameState;
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
 std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 
 CParticle* g_pBuff0{};
 CParticle* g_pBuff1{};
@@ -2061,7 +2062,10 @@ void CRaytracingGameScene::SkillParticleStart(KeyInputRet input)
 
 void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	g_InGameState = IS_LOADING;
+	wOpacity = 1.0f;
 	m_vMonsters.clear();
+	m_vPlayers.clear();
 	Monsters.clear();
 
 	m_pOutputBuffer = outputBuffer;
@@ -2208,6 +2212,10 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 
+	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
+	m_vUIs[m_vUIs.size() - 1]->setColor(0.5, 0.5, 0.5, 0.0);
+
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
 	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE3_AMB);
@@ -2298,7 +2306,7 @@ void CRaytracingWinterLandScene::Create_Gorhorrid()
 
 	m_vMonsters[m_nMonsterNum]->getObject()->setPreTransform(5.0f, XMFLOAT3(), XMFLOAT3());
 	m_vMonsters[m_nMonsterNum]->getObject()->SetPosition(XMFLOAT3(-86.3f, 0.0f, -301.1f));
-	m_vMonsters[m_nMonsterNum]->getObject()->Rotate(XMFLOAT3(0.0f, 170.0f, 0.0f));
+	//m_vMonsters[m_nMonsterNum]->getObject()->Rotate(XMFLOAT3(0.0f, 0.0f, 0.0f));
 
 	m_pMonsters.emplace_back(std::make_unique<CMonster>(m_vMonsters[m_vMonsters.size() - 1].get()));
 
@@ -2710,6 +2718,11 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		}
 	}
 	// =================================================================
+
+	if (g_PlayerDie[m_local_id])
+		m_vUIs.back()->setColor(0.5, 0.5, 0.5, 0.5);
+	else
+		m_vUIs.back()->setColor(0.5, 0.5, 0.5, 0.0);
 }
 
 void CRaytracingWinterLandScene::Render()
@@ -2796,7 +2809,11 @@ void CRaytracingWinterLandScene::Render()
 
 void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	g_InGameState = IS_LOADING;
+	wOpacity = 1.0f;
 	m_vMonsters.clear();
+	m_vPlayers.clear();
+	m_vPlayers.clear();
 	Monsters.clear();
 
 	m_pOutputBuffer = outputBuffer;
@@ -2929,6 +2946,10 @@ void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shar
 	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
+
+	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
+	m_vUIs[m_vUIs.size() - 1]->setColor(0.5, 0.5, 0.5, 0.0);
 
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
@@ -3510,6 +3531,11 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 		}
 	}
 	// =================================================================
+
+	if (g_PlayerDie[m_local_id])
+		m_vUIs.back()->setColor(0.5, 0.5, 0.5, 0.5);
+	else
+		m_vUIs.back()->setColor(0.5, 0.5, 0.5, 0.0);
 }
 
 void CRaytracingCaveScene::Render()
@@ -3596,6 +3622,8 @@ void CRaytracingCaveScene::Render()
 
 void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	g_InGameState = IS_LOADING;
+	wOpacity = 1.0f;
 	m_vMonsters.clear();
 	Monsters.clear();
 

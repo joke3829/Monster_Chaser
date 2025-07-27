@@ -66,6 +66,8 @@ public:
 		}
 		return true;
 	};
+
+	virtual void InitComboState() { m_bSkillActive = false; m_bDoingCombo = false; }
 protected:
 	// stat																																													
 	float m_HP{};

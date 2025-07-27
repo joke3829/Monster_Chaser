@@ -12,6 +12,7 @@ extern TitleState g_state;
 extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
 
 extern std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters;
+extern std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers;
 
 
 
@@ -548,6 +549,7 @@ void C_Socket::process_packet(char* ptr)
 		p->ChangeAlive();
 		Players[pkt->Local_id].SetHP(pkt->hp);
 		Players[pkt->Local_id].SetMP(pkt->mp);
+		m_vPlayers[pkt->Local_id]->InitComboState();
 		break;
 	}
 	
