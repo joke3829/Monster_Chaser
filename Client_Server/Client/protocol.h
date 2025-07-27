@@ -34,6 +34,7 @@ constexpr char S2C_P_CHANGEHP = 18;  // HP 아이템 사용 시
 constexpr char S2C_P_CHANGEMP = 19;  // MP 아이템 사용 시
 constexpr char S2C_P_BOSS_ROAR = 20; // 다음 패킷 번호
 constexpr char S2C_P_BUFFCHANGE = 21;
+constexpr char S2C_P_MONSTERIDLE = 22;
 
 
 constexpr char S2C_P_LEAVE = 49; // 플레이어가 방을 나갈 때
@@ -194,6 +195,12 @@ struct sc_packet_buff_change {
 	char bufftype;		// 0: 공격력 증가, 1: 방어력 증가, 2: 방어력 감소
 	char state;			// 0: 꺼짐, 1: 켜짐
 };
+
+struct sc_packet_monster_idle {
+	unsigned char size;
+	char type;
+	int monster_id;
+};
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Client to Server packets
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -289,6 +296,7 @@ struct cs_packet_item_use {
 struct cs_packet_skill_use {
 	unsigned char size;
 	char type;
+	short job;
 	char skillNumber;	// 0 ~ 2		0이 체력 회복, 1이 공격력 증가 + 방어력 감소, 2가 스킬게이지 최대치
 };
 

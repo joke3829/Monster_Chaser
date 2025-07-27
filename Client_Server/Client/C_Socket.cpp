@@ -469,6 +469,17 @@ void C_Socket::process_packet(char* ptr)
 		std::cout << "[버프 변경] 타입: " << (int)buffType << ", 상태: " << (int)state << std::endl;
 		break;
 	}
+
+	case S2C_P_MONSTERIDLE:
+	{
+		sc_packet_monster_idle* pkt = reinterpret_cast<sc_packet_monster_idle*>(ptr);
+		int monster_id = pkt->monster_id;
+		if (Monsters.find(monster_id) != Monsters.end()) {
+			auto& monster = Monsters[monster_id];
+			monster->getAnimationManager()->ChangeAnimation(2, false); // 몬스터 애니메이션을 Idle 상태로 변경
+		}
+		break;
+	}
 	case S2C_P_LEAVE:
 	{
 		sc_packet_leave* pkt = reinterpret_cast<sc_packet_leave*>(ptr);

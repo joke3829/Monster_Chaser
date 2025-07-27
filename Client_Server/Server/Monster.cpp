@@ -223,6 +223,14 @@ void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room)
   
     if (dist < 10.0f) {
         TransitionTo(MonsterState::Idle);
+        // 👇 Idle 전환 시 패킷 전송
+        sc_packet_monster_idle pkt;
+        pkt.size = sizeof(pkt);
+        pkt.type = S2C_P_MONSTERIDLE;
+        pkt.monster_id = id;
+
+        for (int pid : room.id)
+            g_server.users[pid]->do_send(&pkt);
         return;
     }
 

@@ -106,6 +106,7 @@ void Room::MonsterThreadFunction() {
 void Room::setStage(short stage)
 {
 	currentStage = stage;
+
 }
 void Room::SpawnMonsters()
 {
