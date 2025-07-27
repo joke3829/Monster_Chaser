@@ -47,6 +47,7 @@ public:
 	void SetHead(CGameObject* h) { m_Head = h; }
 	void SetAutoDirect(XMFLOAT3 dir) { m_AutoDirect = dir; }
 
+	CGameObject* getHead() { return m_Head; }
 	virtual bool HasActiveBullet() const { return false; }
 
 	virtual std::vector<std::unique_ptr<CProjectile>>& GetBullets() {
