@@ -254,6 +254,7 @@ protected:
 	ComPtr<ID3D12Resource>								m_pTerrainCB{};
 
 	int m_nMonsterNum{};
+	bool m_bPrevBossBattle = false;
 };
 
 // real use scene

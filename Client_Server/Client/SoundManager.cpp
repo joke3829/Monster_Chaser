@@ -118,6 +118,11 @@ void CMonsterChaserSoundManager::StartBGM(ESOUND sound)
 	m_System->playSound(m_vSounds[sound], 0, false, &m_BGMChannel);
 }
 
+void CMonsterChaserSoundManager::StopBGM()
+{
+	m_BGMChannel->stop();
+}
+
 void CMonsterChaserSoundManager::StartAMB(ESOUND sound)
 {
 	m_EnmChannel->stop();

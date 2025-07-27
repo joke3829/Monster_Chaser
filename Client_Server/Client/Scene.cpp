@@ -2046,6 +2046,8 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
+	g_pSoundManager->StartAMB(ESOUND::SOUND_STAGE3_AMB);
+
 	Client.SendPlayerReady(SCENE_WINTERLAND);
 }
 
@@ -2423,8 +2425,8 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-
 	AutoDirection(m_vPlayers, m_vMonsters);
+
 
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
 	m_pPlayer->HeightCheck(m_pRoadTerrain.get(), fElapsedTime, -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
@@ -2490,9 +2492,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 	for (int i = 0; i < m_numUser; ++i) {
 		int t{};
 		// hp/mp
-		float tge = static_cast<float>(Players[i].GetHP());
-		float tt = g_maxHPs[i];
-		m_vPlayersStatUI[i][1]->setScaleX(static_cast<float>(Players[i].GetHP()) / g_maxHPs[i]);
+		m_vPlayersStatUI[i][1]->setScaleX(Players[i].GetHP() / g_maxHPs[i]);
 		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
@@ -2510,8 +2510,19 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 			XMFLOAT3 ppos = Players[m_local_id].getRenderingObject()->getPosition(); ppos.y = 0;
 			float distance;
 			XMStoreFloat(&distance, XMVector3Length(XMLoadFloat3(&mpos) - XMLoadFloat3(&ppos)));
-			if (distance <= 100.0f)
+			if (distance <= 100.0f) {
 				m_bBossBattle = true;
+				if (m_bPrevBossBattle != m_bBossBattle) {
+					g_pSoundManager->StartBGM(ESOUND::SOUND_STAGE3_BOSS);
+				}
+			}
+			else {
+				m_bBossBattle = false;
+				if (m_bPrevBossBattle != m_bBossBattle) {
+					g_pSoundManager->StopBGM();
+				}
+			}
+			m_bPrevBossBattle = m_bBossBattle;
 		}
 	}
 
@@ -3317,6 +3328,8 @@ void CRaytracingCaveScene::UpdateObject(float fElapsedTime)
 			XMStoreFloat(&distance, XMVector3Length(XMLoadFloat3(&mpos) - XMLoadFloat3(&ppos)));
 			if (distance <= 100.0f)
 				m_bBossBattle = true;
+			else
+				m_bBossBattle = false;
 		}
 	}
 
@@ -4113,7 +4126,6 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		}
 	}
 
-
 	AutoDirection(m_vPlayers, m_vMonsters);
 
 	m_pPlayer->CollisionCheck(m_pRoadTerrain.get(), m_pCollisionHMap.get(), fElapsedTime, -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
@@ -4196,6 +4208,8 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 			XMStoreFloat(&distance, XMVector3Length(XMLoadFloat3(&mpos) - XMLoadFloat3(&ppos)));
 			if (distance <= 100.0f)
 				m_bBossBattle = true;
+			else
+				m_bBossBattle = false;
 		}
 	}
 
