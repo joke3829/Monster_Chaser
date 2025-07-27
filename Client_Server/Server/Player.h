@@ -40,6 +40,7 @@ public:
 	void Move(float dx, float dy, float dz); // 이동처리 예시
 
 	float GetHP() { return hp; }
+	float GetMaxHP() { return max_hp; } // 최대 HP 반환
 	void SetHP(float newHP) { hp = newHP; } // Add a setter method for HP
 
 	void PlusHP(int new_hp) {

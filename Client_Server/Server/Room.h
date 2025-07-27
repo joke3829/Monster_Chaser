@@ -26,20 +26,25 @@ public:
 
     std::array<bool, 3> player_ready = { false, false, false };
     std::array<std::chrono::steady_clock::time_point, 3> lastHitTime;
-    int ready_user = 0;
+ 
+
+    std::array<int, 3> Ready_user{ false,false,false };
     bool bStageActive = false;
     bool bMonsterThreadRunning = false;
     short currentStage = SCENE_TITLE;
 
     Room();
     ~Room();
+    bool IsAllReady();
+	void SetReady_User(int local_id, bool state);
+
 
     void setReady(int local_id, bool state);
     bool isAllGameStartReady();
     void InitailizeReadyingame();
 
-    void setReadyUser(int delta);
-    int GetReadyUser();
+   
+ 
     int GetPlayerCount();
     bool IsAddPlayer();
 
@@ -52,4 +57,7 @@ public:
     void StopGame();
     void MonsterThreadFunction();
     void ResolveMonsterSeparation();
+
+
+    void ResetGame();
 };

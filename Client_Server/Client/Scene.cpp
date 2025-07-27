@@ -9,7 +9,10 @@ extern TitleState g_state;
 extern InGameState g_InGameState;
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
+
+
 std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 
 CParticle* g_pBuff0{};
 CParticle* g_pBuff1{};
@@ -2061,6 +2064,7 @@ void CRaytracingGameScene::SkillParticleStart(KeyInputRet input)
 
 void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	m_vPlayers.clear();
 	m_vMonsters.clear();
 	Monsters.clear();
 
@@ -2796,6 +2800,7 @@ void CRaytracingWinterLandScene::Render()
 
 void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	m_vPlayers.clear();
 	m_vMonsters.clear();
 	Monsters.clear();
 
@@ -3596,6 +3601,7 @@ void CRaytracingCaveScene::Render()
 
 void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	m_vPlayers.clear();
 	m_vMonsters.clear();
 	Monsters.clear();
 

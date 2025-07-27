@@ -139,9 +139,9 @@ void SESSION::process_packet(char* p) {
 		player->isReady = pkt->isReady;
 
 		if (player->isReady)
-			g_server.rooms[room_num].setReadyUser(1);
+			g_server.rooms[room_num].SetReady_User(player->local_id, true);
 		else
-			g_server.rooms[room_num].setReadyUser(-1);
+			g_server.rooms[room_num].SetReady_User(player->local_id, false);
 
 		sc_packet_set_ready rp;
 		rp.size = sizeof(rp);
@@ -154,16 +154,11 @@ void SESSION::process_packet(char* p) {
 			if (id != m_uniqueNo)
 				g_server.users[id]->do_send(&rp);
 
-		if (g_server.rooms[room_num].GetReadyUser() == g_server.rooms[room_num].id.size()) {
+		if (g_server.rooms[room_num].IsAllReady()) {
 			sc_packet_Ingame_start sp;
 			sp.size = sizeof(sp);
 			sp.type = S2C_P_ALLREADY;
 			sp.room_number = static_cast<char>(room_num);
-
-			//g_server.rooms[room_num].setStage(SCENE_PLAIN);      // Set Stage to Stage1
-			//myMutex.lock();
-			//g_server.rooms[room_num].SpawnMonsters();       //Monster Spawn
-		   // myMutex.unlock();
 
 			for (int id : g_server.rooms[room_num].id)
 				g_server.users[id]->do_send(&sp);
@@ -286,9 +281,23 @@ void SESSION::process_packet(char* p) {
 			//  보스몬스터일 경우 다음 스테이지 전환
 			if (monster->isBossMonster())
 			{
-				// 스레드 멈춤
 				room.StopGame();
-				room.bStageActive = false;
+
+				sc_packet_change_hp hp;
+				hp.size = sizeof(hp);
+				hp.type = S2C_P_CHANGEHP;
+				hp.local_id = player->local_id;
+				hp.hp = player->GetMaxHP();
+				for (int pid : room.id)
+					g_server.users[pid]->do_send(&hp);
+
+				sc_packet_change_mp mp;
+				mp.size = sizeof(mp);
+				mp.type = S2C_P_CHANGEMP;
+				mp.local_id = player->local_id;
+				mp.mp = 100;
+				for (int pid : room.id)
+					g_server.users[pid]->do_send(&mp);
 
 				sc_packet_NextStage sp;
 				sp.size = sizeof(sp);
@@ -296,6 +305,26 @@ void SESSION::process_packet(char* p) {
 
 				for (int pid : room.id)
 					g_server.users[pid]->do_send(&sp);
+
+				if (monster->GetType() == MonsterType::Gorhorrid)
+				{
+					sc_packet_NextStage sp;
+					sp.size = sizeof(sp);
+					sp.type = S2C_P_NEXTSTAGE;
+
+					for (int pid : room.id)
+						g_server.users[pid]->do_send(&sp);
+					room.ResetGame();
+					room.StopGame();
+					break;
+				}
+				// 스레드 멈춤
+		
+				
+
+
+			
+
 
 				std::cout << "[보스 사망 → 다음 스테이지로 이동]\n";
 			}
@@ -337,12 +366,12 @@ void SESSION::process_packet(char* p) {
 			if (dead) {
 
 				sc_packet_player_die dpkt;
-				dpkt.size = sizeof(dpkt);	
+				dpkt.size = sizeof(dpkt);
 				dpkt.type = S2C_P_PlAYER_DIE;
 				dpkt.Local_id = pkt->target_player_id;
 				for (int pid : room.id)
 					g_server.users[pid]->do_send(&dpkt);
-			    // 죽었을 경우 처리 추가 가능
+				// 죽었을 경우 처리 추가 가능
 			}
 		}
 		break;
@@ -364,7 +393,7 @@ void SESSION::process_packet(char* p) {
 			ap.local_id = player->local_id;
 			ap.hp = player->GetHP();
 			g_server.users[m_uniqueNo]->do_send(&ap);
-			
+
 			break;
 		}
 		case ItemType::MP_POTION:
@@ -461,12 +490,25 @@ void SESSION::process_packet(char* p) {
 		Room& room = g_server.rooms[player->room_num];
 		// 스레드 멈춤
 		room.StopGame();
-		room.bStageActive = false;
+
 
 		sc_packet_NextStage sp;
 		sp.size = sizeof(sp);
 		sp.type = S2C_P_NEXTSTAGE;
+		for (int pid : room.id) {
 
+			auto target = g_server.playerManager.GetPlayer(pid);
+			target->SetMP(100.0f); // 모든 플레이어 HP 회복
+		}
+		for (int pid : room.id)
+			g_server.users[pid]->do_send(&sp);
+
+
+		sc_packet_change_hp ap;
+		ap.size = sizeof(ap);
+		ap.type = S2C_P_CHANGEHP;
+		ap.local_id = player->local_id;
+		ap.hp = player->GetMaxHP();
 		for (int pid : room.id)
 			g_server.users[pid]->do_send(&sp);
 		break; // 마스터 키 패킷 처리

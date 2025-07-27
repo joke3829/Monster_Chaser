@@ -10,7 +10,7 @@ extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
 extern bool allready;
 extern TitleState g_state;
 extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
-
+extern std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers;
 extern std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters;
 
 
@@ -366,7 +366,7 @@ void C_Socket::process_packet(char* ptr)
 			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr  
 			m->getRenderingObject()->SetWorldMatrix(pkt->pos);
 			m->getAnimationManager()->ChangeAnimation(2, false);
-
+			
 			//m->setVisible(true);														  // doyoung's turn
 			//m->playIdleAnim();															  // doyoung's turn
 		}
@@ -552,6 +552,8 @@ void C_Socket::process_packet(char* ptr)
 		p->ChangeAlive();
 		Players[pkt->Local_id].SetHP(pkt->hp);
 		Players[pkt->Local_id].SetMP(pkt->mp);
+
+		m_vPlayers[pkt->Local_id]->InitComboState(); // 콤보 상태 초기화
 		break;
 	}
 
@@ -581,7 +583,7 @@ void C_Socket::do_recv()
 		if (io_byte == SOCKET_ERROR) {
 			int err = WSAGetLastError();
 			MessageBoxW(NULL, L"서버와의 연결이 끊어졌습니다.", L"연결 종료", MB_OK | MB_ICONERROR);
-			PostQuitMessage(0);  // 윈도우 루프 종료
+//			PostQuitMessage(0);  // 윈도우 루프 종료
 			return;
 
 		}

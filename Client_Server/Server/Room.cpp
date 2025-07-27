@@ -11,6 +11,22 @@ Room::~Room() {
 	StopGame();
 }
 
+bool Room::IsAllReady()
+{
+	for (int i = 0; i < id.size(); ++i) {
+		if (i >= Ready_user.size() || Ready_user[i] == false)
+			return false; // 누군가 준비 안함
+	}
+	return true; // 모두 준비 완료
+}
+void Room::SetReady_User(int local_id, bool state)
+{
+	Ready_user[local_id] = state;
+
+};
+	
+
+
 void Room::setReady(int local_id, bool state) {
 	player_ready[local_id] = state;
 }
@@ -26,13 +42,7 @@ void Room::InitailizeReadyingame() {
 	for (auto& r : player_ready) r = false;
 }
 
-void Room::setReadyUser(int delta) {
-	ready_user += delta;
-}
 
-int Room::GetReadyUser() {
-	return ready_user;
-}
 
 int Room::GetPlayerCount() {
 	return static_cast<int>(id.size());
@@ -51,6 +61,7 @@ void Room::RemovePlayer(int pid) {
 }
 
 void Room::StartGame() {
+	
 	if (!bMonsterThreadRunning) {
 		bMonsterThreadRunning = true;
 		monsterThread = std::thread(&Room::MonsterThreadFunction, this);
@@ -61,6 +72,7 @@ void Room::StopGame() {
 	bMonsterThreadRunning = false;
 	if (monsterThread.joinable())
 		monsterThread.join();
+	bStageActive = false;
 }
 
 void Room::MonsterThreadFunction() {
@@ -205,7 +217,7 @@ void Room::SpawnMonsters()
 }
 
 void Room::ResolveMonsterSeparation() {
-	const float MIN_SEPARATION = 10.0f;
+	const float MIN_SEPARATION = 5.0f;
 	const float PUSH_STRENGTH = 5.0f;
 
 	for (auto& [idA, monA] : monsters) {
@@ -234,6 +246,37 @@ void Room::ResolveMonsterSeparation() {
 			}
 		}
 	}
+}
+
+void Room::ResetGame()
+{
+	// 플레이어 준비 상태 초기화
+	Ready_user = { false, false, false };
+
+	// 플레이어가 있으면 각자의 상태도 리셋
+	for (auto& player_id : id) {
+		if (player_id != -1) {
+			auto player = g_server.playerManager.GetPlayer(player_id);
+			if (player) {
+				player->isReady = false;
+				//player->inGame = false;
+				player->local_id = -1;
+				player->room_num = -1;
+			}
+		}
+	}
+
+	// 플레이어 리스트 초기화
+	id.clear();
+
+	// 몬스터 / 스테이지 관련
+	monsters.clear();
+	setStage(SCENE_TITLE);
+	bStageActive = false;
+	bMonsterThreadRunning = false;
+	Ready_user = { false,false,false };
+	// 필요 시 추가 초기화
+	// 예: 보스 클리어 여부, 스코어, 타이머 등
 }
 
 
