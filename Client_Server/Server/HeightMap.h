@@ -1,6 +1,9 @@
+#pragma once
+#include "stdafx.h"
+
 class CHeightMapImage {
 public:
-    CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3& xmf3Scale);
+    CHeightMapImage(const wchar_t* filePath, int nWidth, int nLength, XMFLOAT3 xmf3Scale);
     float GetHeight(int x, int z);
     float GetHeightinWorldSpace(float x, float z);
 

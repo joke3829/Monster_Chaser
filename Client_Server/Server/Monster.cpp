@@ -12,6 +12,30 @@ std::mt19937 gen(rd());
 
 extern Network g_server;
 
+float getHeight(CHeightMapImage* heightmap, float x, float z, float offsetx, float offsety, float offsetz, short mapNum)
+{
+    // mapNum은 SCENE_ 따라감
+    if (mapNum == SCENE_WINTERLAND) {
+        if (z >= -500.0f) {
+            if (heightmap->GetHeightinWorldSpace(x - offsetx, z - offsetz) + offsety < 10.0f)
+                return 10.0f;
+        }
+        return heightmap->GetHeightinWorldSpace(x - offsetx, z - offsetz) + offsety;
+    }
+    return heightmap->GetHeightinWorldSpace(x - offsetx, z - offsetz) + offsety;
+}
+
+// true = 충돌(못가는 곳)
+bool CollisionCheck(CHeightMapImage* heightmap, CHeightMapImage* collisionmap, float x, float z, float offsetx, float offsety, float offsetz, short mapNum)
+{
+    float colHeight = collisionmap->GetHeightinWorldSpace(x - offsetx, z - offsetz);
+    float terHeight = heightmap->GetHeightinWorldSpace(x - offsetx, z - offsetz);
+
+    if (colHeight - terHeight >= 0.1f)
+        return true;
+    return false;
+}
+
 int FindClosestPlayerInRoom(const Room& room, const DirectX::XMFLOAT3& monsterPos, const PlayerManager& playerManager) {
     int closestId = -1;
     float closestDistSq = std::numeric_limits<float>::max();
@@ -179,6 +203,36 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
 
         position.x += dx * speed * 0.016f;
         position.z += dz * speed * 0.016f;
+
+        switch(스테이지) {
+        case SCENE_PLAIN:
+            if (CollisionCheck(g_pStage1Height.get(), g_pStage1Collision.get(), position.x, position.z,
+                -512.0f, 0.0f, -512.0f, SCENE_PLAIN)) {
+                position.x -= dx * speed * 0.016f;
+                position.z -= dz * speed * 0.016f;
+            }
+            position.y = getHeight(g_pStage1Height.get(), position.x, position.z,
+                -512.0f, 0.0f, -512.0f, SCENE_PLAIN);
+            break;
+        case SCENE_CAVE:
+            if (CollisionCheck(g_pStage2Height.get(), g_pStage2Collision.get(), position.x, position.z,
+                -200.0f, -10.0f, -66.5f, SCENE_CAVE)) {
+                position.x -= dx * speed * 0.016f;
+                position.z -= dz * speed * 0.016f;
+            }
+            position.y = getHeight(g_pStage2Height.get(), position.x, position.z,
+                -200.0f, -10.0f, -66.5f, SCENE_CAVE);
+            break;
+        case SCENE_WINTERLAND:
+            if (CollisionCheck(g_pStage3Height.get(), g_pStage3Collision.get(), position.x, position.z,
+                -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND)) {
+                position.x -= dx * speed * 0.016f;
+                position.z -= dz * speed * 0.016f;
+            }
+            position.y = getHeight(g_pStage3Height.get(), position.x, position.z,
+                -1024.0f, 0.0f, -1024.0f, SCENE_WINTERLAND);
+            break;
+        }
 
         // y는 그대로 유지
         lookDir = { dx, 0.0f, dz };

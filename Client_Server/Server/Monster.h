@@ -7,6 +7,18 @@
 #include "Room.h"
 #include "HeightMap.h"
 
+// =====================================================
+extern std::unique_ptr<CHeightMapImage> g_pStage1Height;
+extern std::unique_ptr<CHeightMapImage> g_pStage1Collision;
+extern std::unique_ptr<CHeightMapImage> g_pStage2Height;
+extern std::unique_ptr<CHeightMapImage> g_pStage2Collision;
+extern std::unique_ptr<CHeightMapImage> g_pStage3Height;
+extern std::unique_ptr<CHeightMapImage> g_pStage3Collision;
+// =====================================================
+
+float getHeight(CHeightMapImage* heightmap, float x, float z, float offsetx, float offsety, float offsetz, short mapNum);
+bool CollisionCheck(CHeightMapImage* heightmap, CHeightMapImage* collisionmap, float x, float z, float offsetx, float offsety, float offsetz, short mapNum);
+
 enum class MonsterState {
     Idle,
     Chase,
