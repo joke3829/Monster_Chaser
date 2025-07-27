@@ -29,6 +29,7 @@ public:
  
 
     std::array<int, 3> Ready_user{ false,false,false };
+	bool InGameStart = false; // 게임 시작 여부
     bool bStageActive = false;
     bool bMonsterThreadRunning = false;
     short currentStage = SCENE_TITLE;

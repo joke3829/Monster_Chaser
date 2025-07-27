@@ -64,13 +64,20 @@ void SESSION::process_packet(char* p) {
 		int room_Num = static_cast<int>(pkt->room_number);
 		lock_guard<mutex> lock(g_server.rooms[room_Num].RoomMutex);
 
+		Room& room = g_server.rooms[room_Num];
+		if (room.InGameStart) {
+			break;
+			//이미 게임이 시작된 방에 들어오려고 하면 안됨
+		}
+
+
 		if (!g_server.rooms[room_Num].IsAddPlayer()) break;
 
 		player->local_id = g_server.rooms[room_Num].GetPlayerCount();
 		player->room_num = room_Num;
 		g_server.rooms[room_Num].AddPlayer(m_uniqueNo);
 
-		for (auto& id : g_server.rooms[room_Num].id) {
+		for (auto& id : g_server.rooms[room_Num].id) {					//기존유저한테 신규유저 들어왔다고 알림
 			sc_packet_select_room sp;
 			sp.size = sizeof(sp);
 			sp.type = S2C_P_SELECT_ROOM;
@@ -80,7 +87,7 @@ void SESSION::process_packet(char* p) {
 			g_server.users[id]->do_send(&sp);
 		}
 
-		for (int existing_id : g_server.rooms[room_Num].id) {
+		for (int existing_id : g_server.rooms[room_Num].id) {			//신규 유저에게 기존유저들의 존재 알림
 			if (existing_id == m_uniqueNo) continue;
 			sc_packet_select_room sp_existing;
 			sp_existing.size = sizeof(sp_existing);
@@ -91,7 +98,7 @@ void SESSION::process_packet(char* p) {
 			g_server.users[m_uniqueNo]->do_send(&sp_existing);
 		}
 
-		for (const auto& [existing_id, char_type] : g_server.rooms[room_Num].selected_characters) {
+		for (const auto& [existing_id, char_type] : g_server.rooms[room_Num].selected_characters) {		//신규유저가 들어왔는데 이미 기존유저가 캐릭터 선택했을수도 있으니 캐릭터 타입 알려주기
 			sc_packet_pickcharacter cp;
 			cp.size = sizeof(cp);
 			cp.type = S2C_P_PICKCHARACTER;
@@ -155,6 +162,7 @@ void SESSION::process_packet(char* p) {
 				g_server.users[id]->do_send(&rp);
 
 		if (g_server.rooms[room_num].IsAllReady()) {
+			g_server.rooms[room_num].InGameStart = true;
 			sc_packet_Ingame_start sp;
 			sp.size = sizeof(sp);
 			sp.type = S2C_P_ALLREADY;
@@ -180,7 +188,7 @@ void SESSION::process_packet(char* p) {
 
 		if (room.isAllGameStartReady()) {
 			room.bStageActive = true; // 게임 시작 준비 완료
-
+			
 			room.monsters.clear(); // 몬스터 초기화
 			room.SpawnMonsters(); // 몬스터 스폰
 
@@ -281,6 +289,15 @@ void SESSION::process_packet(char* p) {
 			//  보스몬스터일 경우 다음 스테이지 전환
 			if (monster->isBossMonster())
 			{
+				sc_packet_NextStage sp;
+				sp.size = sizeof(sp);
+				sp.type = S2C_P_NEXTSTAGE;
+
+				for (int pid : room.id)
+					g_server.users[pid]->do_send(&sp);
+
+				if (monster->GetType() == MonsterType::Gorhorrid)
+					room.ResetGame();
 				room.StopGame();
 
 				sc_packet_change_hp hp;
@@ -299,31 +316,8 @@ void SESSION::process_packet(char* p) {
 				for (int pid : room.id)
 					g_server.users[pid]->do_send(&mp);
 
-				sc_packet_NextStage sp;
-				sp.size = sizeof(sp);
-				sp.type = S2C_P_NEXTSTAGE;
-
-				for (int pid : room.id)
-					g_server.users[pid]->do_send(&sp);
-
-				if (monster->GetType() == MonsterType::Gorhorrid)
-				{
-					sc_packet_NextStage sp;
-					sp.size = sizeof(sp);
-					sp.type = S2C_P_NEXTSTAGE;
-
-					for (int pid : room.id)
-						g_server.users[pid]->do_send(&sp);
-					room.ResetGame();
-					room.StopGame();
-					break;
-				}
-				// 스레드 멈춤
-		
 				
 
-
-			
 
 
 				std::cout << "[보스 사망 → 다음 스테이지로 이동]\n";
@@ -489,9 +483,6 @@ void SESSION::process_packet(char* p) {
 	{
 		Room& room = g_server.rooms[player->room_num];
 		// 스레드 멈춤
-		room.StopGame();
-
-
 		sc_packet_NextStage sp;
 		sp.size = sizeof(sp);
 		sp.type = S2C_P_NEXTSTAGE;
@@ -502,6 +493,16 @@ void SESSION::process_packet(char* p) {
 		}
 		for (int pid : room.id)
 			g_server.users[pid]->do_send(&sp);
+		auto monster = room.monsters[0];
+		if (monster->GetType() == MonsterType::Gorhorrid)
+		{
+		room.ResetGame();
+		
+
+		}
+		
+			room.StopGame();		//스레드 멈추는거
+		
 
 
 		sc_packet_change_hp ap;

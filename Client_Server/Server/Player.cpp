@@ -48,33 +48,33 @@ void Player::PlaySkill(const int attacktype)
 	{
 		std::lock_guard<std::mutex> lock(playerMutex);
 		if (attacktype == 1) // 스킬 공격
-			skill_cost -= 20; // 스킬 공격은 20 스킬 비용
+			skill_cost -= 25; // 스킬 공격은 20 스킬 비용
 		else if (attacktype == 2) // 메테오
-			skill_cost -= 50; // 메테오 스킬은 50 스킬 비용
+			skill_cost -= 40; // 메테오 스킬은 50 스킬 비용
 		else if (attacktype == 3) // 궁극기
-			skill_cost -= 100; // 궁극기는 100 스킬 비용
+			skill_cost -= 70; // 궁극기는 100 스킬 비용
 		break;
 	}
 	case Warrior:
 	{
 		std::lock_guard<std::mutex> lock(playerMutex);
 		if (attacktype == 1) // 스킬 공격
-			skill_cost -= 20; // 스킬 공격은 20 스킬 비용
+			skill_cost -= 30; // 스킬 공격은 20 스킬 비용
 		if (attacktype == 2) // 메테오
-			skill_cost -= 50; // 메테오 스킬은 50 스킬 비용
+			skill_cost -= 20; // 메테오 스킬은 50 스킬 비용
 		else if (attacktype == 3) // 궁극기
-			skill_cost -= 100; // 궁극기는 100 스킬 비용
+			skill_cost -= 40; // 궁극기는 100 스킬 비용
 		break;
 	}
 	case Priest:
 	{
 		std::lock_guard<std::mutex> lock(playerMutex);
 		if (attacktype == 1) // 스킬 공격
-			skill_cost -= 20; // 스킬 공격은 20 스킬 비용
+			skill_cost -= 30; // 스킬 공격은 20 스킬 비용
 		else if (attacktype == 2) // 메테오
-			skill_cost -= 50; // 메테오 스킬은 50 스킬 비용
+			skill_cost -= 40; // 메테오 스킬은 50 스킬 비용
 		else if (attacktype == 3) // 궁극기
-			skill_cost -= 100; // 궁극기는 100 스킬 비용
+			skill_cost -= 60; // 궁극기는 100 스킬 비용
 		break;
 	}
 	default:

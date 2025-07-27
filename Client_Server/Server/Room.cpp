@@ -252,7 +252,7 @@ void Room::ResetGame()
 {
 	// 플레이어 준비 상태 초기화
 	Ready_user = { false, false, false };
-
+	InGameStart = false;
 	// 플레이어가 있으면 각자의 상태도 리셋
 	for (auto& player_id : id) {
 		if (player_id != -1) {
@@ -260,8 +260,8 @@ void Room::ResetGame()
 			if (player) {
 				player->isReady = false;
 				//player->inGame = false;
-				player->local_id = -1;
-				player->room_num = -1;
+				//player->local_id = -1;
+				//player->room_num = -1;
 			}
 		}
 	}
@@ -274,7 +274,7 @@ void Room::ResetGame()
 	setStage(SCENE_TITLE);
 	bStageActive = false;
 	bMonsterThreadRunning = false;
-	Ready_user = { false,false,false };
+	selected_characters.clear();
 	// 필요 시 추가 초기화
 	// 예: 보스 클리어 여부, 스코어, 타이머 등
 }
