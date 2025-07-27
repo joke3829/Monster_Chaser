@@ -113,7 +113,7 @@ enum ESOUND {
 	SOUND_READY,//
 	SOUND_START,//
 	SOUND_STAGE1_AMB,	//
-	SOUND_HIT,
+	SOUND_HIT,			//
 	SOUND_SLASH,		//
 	SOUND_WANDSWING,	//
 	SOUND_STAGE2_AMB,//
@@ -124,8 +124,10 @@ enum ESOUND {
 	SOUND_SKILL_PRIEST3,//
 	SOUND_STAGE3_AMB,//
 	SOUND_STAGE3_BOSS,//
-	SOUND_ROAR,
-	SOUND_SHIELD_ATTACK	//
+	SOUND_ROAR,			//
+	SOUND_SHIELD_ATTACK,	//
+	SOUND_HEALING,		//
+	SOUND_PLAYER_DEAD
 };
 //========================================================================================
 

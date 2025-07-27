@@ -188,6 +188,7 @@ void SESSION::process_packet(char* p) {
 
 			room.monsters.clear(); // 몬스터 초기화
 			room.SpawnMonsters(); // 몬스터 스폰
+
 			room.StartGame();  // 몬스터 스레드 시작
 
 			room.InitailizeReadyingame();		//다시	player_readytoPlaygame 다 False로 초기화
@@ -222,7 +223,8 @@ void SESSION::process_packet(char* p) {
 		mp.pos = pkt->pos;
 		mp.time = pkt->time;
 		mp.state = pkt->state;
-
+		mp.hp = player->GetHP();
+		mp.mp = player->GetMP();
 		auto duration = 3; // 간단 예시 (ping 시간 계산은 생략)
 		mp.pingTime = static_cast<UINT>(duration);
 
@@ -235,27 +237,39 @@ void SESSION::process_packet(char* p) {
 		cs_packet_player_attack* pkt = reinterpret_cast<cs_packet_player_attack*>(p);
 		int monster_id = pkt->target_monster_id;
 		int AttackType = pkt->attack_type;
-		
+
 		Room& room = g_server.rooms[player->room_num];
+		if (monster_id == -1) {
+			player->PlaySkill(AttackType); // 플레이어가 공격 애니메이션 재생
+			sc_packet_change_mp mp;
+			mp.size = sizeof(mp);
+			mp.type = S2C_P_CHANGEMP;
+			mp.local_id = player->local_id;
+			mp.mp = player->GetMP();
+			for (int id : room.id) {
+				g_server.users[id]->do_send(&mp);
+			}
+			break;
+		}
+
 		auto it = room.monsters.find(monster_id);
 		if (it == room.monsters.end()) break;
-
 		auto& monster = it->second;
 		bool isDead = monster->TakeDamage(player->GetDamage(AttackType)); // 나중에 10은 플레이어 직업 공격력으로 체크 //gGetDamage수정해야됨
 		if (monster->GetHP() > 0) {
 			cout << "[몬스터 공격] 몬스터 ID: " << monster_id
 				<< ", 공격력: " << player->GetATK()
 				<< ", 남은 HP: " << monster->GetHP() << std::endl;
-		// 모두에게 히트 패킷 전송
-		sc_packet_monster_hit hit;
-		hit.size = sizeof(hit);
-		hit.type = S2C_P_MONSTER_HIT;
-		hit.monster_id = monster_id;
-		hit.hp = monster->GetHP(); // 새로 만들면 좋음
-		for (int pid : room.id)
-			g_server.users[pid]->do_send(&hit);
-		}
 
+			// 모두에게 히트 패킷 전송
+			sc_packet_monster_hit hit;
+			hit.size = sizeof(hit);
+			hit.type = S2C_P_MONSTER_HIT;
+			hit.monster_id = monster_id;
+			hit.hp = monster->GetHP(); // 새로 만들면 좋음
+			for (int pid : room.id)
+				g_server.users[pid]->do_send(&hit);
+		}
 
 		if (isDead) {
 			sc_packet_monster_die die{};
@@ -318,9 +332,16 @@ void SESSION::process_packet(char* p) {
 			for (int pid : room.id)
 				g_server.users[pid]->do_send(&hpkt);
 
-			//if (dead) {
-			//    // 죽었을 경우 처리 추가 가능
-			//}
+			if (dead) {
+
+				sc_packet_player_die dpkt;
+				dpkt.size = sizeof(dpkt);	
+				dpkt.type = S2C_P_PlAYER_DIE;
+				dpkt.Local_id = pkt->target_player_id;
+				for (int pid : room.id)
+					g_server.users[pid]->do_send(&dpkt);
+			    // 죽었을 경우 처리 추가 가능
+			}
 		}
 		break;
 	}
@@ -334,7 +355,7 @@ void SESSION::process_packet(char* p) {
 		{
 		case ItemType::HP_POTION:
 		{
-			player->PlusHP(300); // 예시로 50만큼 HP 회복
+			player->PlusHP(480); // 예시로 50만큼 HP 회복
 			sc_packet_change_hp ap;
 			ap.size = sizeof(ap);
 			ap.type = S2C_P_CHANGEHP;
@@ -347,7 +368,7 @@ void SESSION::process_packet(char* p) {
 		}
 		case ItemType::MP_POTION:
 		{
-			player->PlusMP(5); // 예시로 5만큼 MP 회복
+			player->PlusMP(50); // 예시로 5만큼 MP 회복
 			sc_packet_change_mp mp;
 			mp.size = sizeof(mp);
 			mp.type = S2C_P_CHANGEMP;
@@ -361,7 +382,7 @@ void SESSION::process_packet(char* p) {
 		case ItemType::ATK_BUFF:
 		{
 			float buff_amount = 100.f;
-			float duration = 10.f;
+			float duration = 50.f;
 
 			player->AddATKBuff_Potion(buff_amount, duration); //  정확한 함수 사용
 
@@ -385,16 +406,16 @@ void SESSION::process_packet(char* p) {
 	case C2S_P_USE_SKILL: {
 		auto* pkt = reinterpret_cast<cs_packet_skill_use*>(p);
 		int skillNum = static_cast<int>(pkt->skillNumber);		// 1: 체력 회복 2: 공격력 증가 + 방어력 감소 3: 스킬게이지 최대치 
-	
+
 		Room& room = g_server.rooms[player->room_num];
 
 		for (int pid : room.id) {
-			
+
 			auto target = g_server.playerManager.GetPlayer(pid);
 			if (!target) continue; // 대상 플레이어가 없으면 건너뜀
 			switch (skillNum) {
 			case 0: { // 체력 회복
-				target->PlusHP(50); // 임시값. 나중에 조정
+				target->PlusHP(200); // 임시값. 나중에 조정
 
 				sc_packet_change_hp pkt_hp;
 				pkt_hp.size = sizeof(pkt_hp);

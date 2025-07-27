@@ -36,6 +36,16 @@ void PlayerManager::SetPosition(int id, const XMFLOAT4X4& pos) {
     }
 }
 
+void PlayerManager::SetBoganPostion(int id, const XMFLOAT4X4& pos)
+{
+    std::lock_guard<std::mutex> lock(managerMutex);
+    auto it = players.find(id);
+    if (it != players.end()) {
+        std::lock_guard<std::mutex> playerLock(it->second->playerMutex);
+        it->second->setBoanPosition(pos);
+    }
+}
+
 std::shared_ptr<Player> PlayerManager::GetPlayer(int id) const {
     std::lock_guard<std::mutex> lock(managerMutex);
     auto it = players.find(id);

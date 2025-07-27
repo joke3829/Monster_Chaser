@@ -113,6 +113,12 @@ void CMonsterChaserSoundManager::SetupSounds()
 
 	m_vSounds.emplace_back();
 	m_System->createSound("src\\sound\\shield_attack.mp3", FMOD_DEFAULT, 0, &m_vSounds.back());
+
+	m_vSounds.emplace_back();
+	m_System->createSound("src\\sound\\healing.mp3", FMOD_DEFAULT, 0, &m_vSounds.back());
+
+	m_vSounds.emplace_back();
+	m_System->createSound("src\\sound\\Dead.mp3", FMOD_DEFAULT, 0, &m_vSounds.back());
 }
 
 void CMonsterChaserSoundManager::StartBGM(ESOUND sound)

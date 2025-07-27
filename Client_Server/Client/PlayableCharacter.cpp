@@ -112,7 +112,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
-		if (!m_bSkillActive) {
+		if (!m_bSkillActive && !g_PlayerDie[Client.get_id()]) {
 			XMFLOAT3 characterDir = cameraDir;
 			characterDir.y = 0.0f; // delete y value
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
@@ -134,7 +134,7 @@ void CPlayerMage::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM l
 			if (m_pCamera->getThirdPersonState()) {
 				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 				CGameObject* frame = m_AManager->getFrame()[0];
-				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
+				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished() && !g_PlayerDie[Client.get_id()]) {
 					m_Object->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 					XMFLOAT3 characterDir = cameraDir;
 					characterDir.y = 0.0f; // delete y value
@@ -880,7 +880,7 @@ void CPlayerWarrior::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARA
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
-		if (!m_bSkillActive) {
+		if (!m_bSkillActive && !g_PlayerDie[Client.get_id()]) {
 			XMFLOAT3 characterDir = cameraDir;
 			characterDir.y = 0.0f; // delete y value
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
@@ -901,7 +901,7 @@ void CPlayerWarrior::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARA
 			if (m_pCamera->getThirdPersonState()) {
 				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 				CGameObject* frame = m_AManager->getFrame()[0];
-				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
+				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished() && !g_PlayerDie[Client.get_id()]) {
 					m_Object->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 					XMFLOAT3 characterDir = cameraDir;
 					characterDir.y = 0.0f; // delete y value
@@ -1928,7 +1928,7 @@ void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM
 	switch (nMessage) {
 	case WM_LBUTTONDOWN:
 	{
-		if (!m_bSkillActive) {
+		if (!m_bSkillActive && !g_PlayerDie[Client.get_id()]) {
 			XMFLOAT3 characterDir = cameraDir;
 			characterDir.y = 0.0f; // delete y value
 			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
@@ -1949,7 +1949,7 @@ void CPlayerPriest::MouseProcess(HWND hWnd, UINT nMessage, WPARAM wParam, LPARAM
 			if (m_pCamera->getThirdPersonState()) {
 				m_pCamera->Rotate(deltaX * 1.5f, -deltaY * 1.5f);
 				CGameObject* frame = m_AManager->getFrame()[0];
-				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished()) {
+				if (!m_bSkillActive && !m_bDoingCombo && !m_AManager->IsInCombo() && !m_AManager->IsAnimationFinished() && !g_PlayerDie[Client.get_id()]) {
 					m_Object->Rotation(XMFLOAT3(0.0f, deltaX * 0.5f, 0.0f), *frame);
 					XMFLOAT3 characterDir = cameraDir;
 					characterDir.y = 0.0f; // delete y value

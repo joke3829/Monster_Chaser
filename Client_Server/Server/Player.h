@@ -55,13 +55,14 @@ public:
 		std::lock_guard<std::mutex> lock(playerMutex);
 		skill_cost += new_mp;
 	}
+	void PlaySkill(const int attacktype);
 	void setSkillCost(float new_cost) {
 		std::lock_guard<std::mutex> lock(playerMutex);
 		skill_cost = new_cost;
 		if (skill_cost > max_skill_cost) skill_cost = max_skill_cost; // 스킬 사용 비용이 최대치를 넘지 않도록
 	}
 	// MP 자동 회복 관련 함수
-	void RecoverSkillCost(int amount);
+	void RecoverSkillCost(float amount);
 	// MP 자동 회복 관련 함수
 
 
@@ -109,22 +110,25 @@ public:
 	
 
 
-
-	void SetLastHitTime() {
-		lastHitTime = std::chrono::steady_clock::now();
-	}
-
-	std::chrono::steady_clock::time_point GetLastHitTime() const {
-		return lastHitTime;
-	}
-
-
-
 	void UpdateBuffStatesIfChanged();
 	void SendBuffPacketIfChanged(BuffType type, bool currentState);
 
 
+	const auto& GetLastHitTime() const { return lastHitTime; }
+	const auto& GetLastRecoverTime() const { return lastRecoverTime; }
+	void SetLastHitTime() { lastHitTime = std::chrono::steady_clock::now(); }
+	void SetLastRecoverTime(std::chrono::steady_clock::time_point t) { lastRecoverTime = t; }
 
+	void setBoanPosition(const XMFLOAT4X4& pos) {
+		Bogan_position = pos;
+	}
+	const XMFLOAT4X4& GetBoanPosition() const {
+		return Bogan_position;
+	}
+
+	void Death();
+	void TryRespawn();
+	bool ISDead() const { return isDead; } // 플레이어가 죽었는지 확인하는 함수
 	
 private:
 	Player() = default; // 기본 생성자는 private로 설정하여 사용하지 못하게 함
@@ -134,6 +138,7 @@ private:
 	std::string name;
 
 	XMFLOAT4X4 position;
+	XMFLOAT4X4 Bogan_position;
 	float hp = 100;
 	float max_hp = 100; // 최대 HP
 	float skill_cost = 100; // 스킬 사용 비용
@@ -144,6 +149,11 @@ private:
 	float atk_buff = 0.f;   // 추가 공격력
 
 	int defense = 5; // 방어력
+
+	bool isDead = false;
+	bool isRespawning = false; // 플레이어가 부활 중인지 여부
+	std::chrono::steady_clock::time_point respawnTime; // 부활 시간
+
 
 	// 공격력 버프
 	float atk_buff_potion = 0.f;
@@ -163,5 +173,7 @@ private:
 	std::unordered_map<BuffType, bool> lastSentBuffState; // 클라에 마지막으로 전송된 버프 상태
 
 
-	std::chrono::steady_clock::time_point lastHitTime = std::chrono::steady_clock::now();
+
+	std::chrono::steady_clock::time_point lastHitTime;
+	std::chrono::steady_clock::time_point lastRecoverTime;
 };

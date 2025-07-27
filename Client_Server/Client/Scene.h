@@ -198,7 +198,7 @@ protected:
 	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers{};
 	std::unique_ptr<CPlayer>							m_pPlayer{};
 
-	std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+	
 	std::vector<std::unique_ptr<CMonster>>				m_pMonsters{};
 
 	ComPtr<ID3D12RootSignature>					m_UIRootSignature{};

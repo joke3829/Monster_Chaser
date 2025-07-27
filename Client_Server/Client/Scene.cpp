@@ -9,6 +9,8 @@ extern TitleState g_state;
 extern InGameState g_InGameState;
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
+std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters{};
+
 CParticle* g_pBuff0{};
 CParticle* g_pBuff1{};
 CParticle* g_pBuff2{};
@@ -2059,6 +2061,7 @@ void CRaytracingGameScene::SkillParticleStart(KeyInputRet input)
 
 void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	m_vMonsters.clear();
 	Monsters.clear();
 
 	m_pOutputBuffer = outputBuffer;
@@ -2180,7 +2183,7 @@ void CRaytracingWinterLandScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std
 	// Copy(normalObject) & SetPreMatrix ===============================
 
 	for (int i = 0; i < Players.size(); ++i) {
-		skinned[i]->SetPosition(XMFLOAT3(-72.5f + 5.0f * i, 0.0f, -500.0f));
+		skinned[i]->SetPosition(XMFLOAT3(-72.5f, 0.0f, -987.8f));
 		//skinned[i]->SetPosition(XMFLOAT3(0.0, 0.0f, 0.0));
 	}
 
@@ -2232,20 +2235,8 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 		case '0':
 			m_pCamera->SetThirdPersonMode(true);
 			break;
-		case '8':	// Warning
-			if (g_InGameState == IS_GAMING) {
-				startTime = 0.0f;
-				g_InGameState = IS_FINISH;
-			}
-			break;
-		case '1':			// 1~4 test
-			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
-			break;
-		case '2':
-			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
-			break;
-		case '3':
-			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
+		case '7':
+			Client.SendMasterKey();
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -2260,7 +2251,7 @@ void CRaytracingWinterLandScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMe
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			if (m_fItemCurTime <= 0.0f) {
+			if (m_fItemCurTime <= 0.0f && !g_PlayerDie[m_local_id]) {
 				Client.SendUseItem(cItem);
 				m_fItemCurTime = m_fItemCoolTime;
 			}
@@ -2369,11 +2360,13 @@ void CRaytracingWinterLandScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
-			UIUseSkill(ret);
-			SkillParticleStart(ret);
-			CAnimationManager* myManager = m_pPlayer->getAniManager();
-			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			if (!g_PlayerDie[m_local_id]) {
+				KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+				UIUseSkill(ret);
+				SkillParticleStart(ret);
+				CAnimationManager* myManager = m_pPlayer->getAniManager();
+				Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			}
 		}
 	}
 }
@@ -2641,6 +2634,7 @@ void CRaytracingWinterLandScene::UpdateObject(float fElapsedTime)
 			ShowCursor(TRUE);
 			g_pSoundManager->AllStop();
 			m_nNextScene = SCENE_TITLE;
+			g_state = Title;
 			wOpacity = 1.0f;
 		}
 		m_vUIs[0]->setColor(0.0, 0.0, 0.0, wOpacity);
@@ -2802,6 +2796,7 @@ void CRaytracingWinterLandScene::Render()
 
 void CRaytracingCaveScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	m_vMonsters.clear();
 	Monsters.clear();
 
 	m_pOutputBuffer = outputBuffer;
@@ -2962,20 +2957,8 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 		case '0':
 			m_pCamera->SetThirdPersonMode(true);
 			break;
-		case '8':	// Warning
-			if (g_InGameState == IS_GAMING) {
-				startTime = 0.0f;
-				g_InGameState = IS_FINISH;
-			}
-			break;
-		case '1':			// 1~4 test
-			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
-			break;
-		case '2':
-			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
-			break;
-		case '3':
-			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
+		case '7':
+			Client.SendMasterKey();
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -2990,7 +2973,7 @@ void CRaytracingCaveScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage,
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			if (m_fItemCurTime <= 0.0f) {
+			if (m_fItemCurTime <= 0.0f && !g_PlayerDie[m_local_id]) {
 				Client.SendUseItem(cItem);
 				m_fItemCurTime = m_fItemCoolTime;
 			}
@@ -3354,11 +3337,13 @@ void CRaytracingCaveScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
-			UIUseSkill(ret);
-			SkillParticleStart(ret);
-			CAnimationManager* myManager = m_pPlayer->getAniManager();
-			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			if (!g_PlayerDie[m_local_id]) {
+				KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+				UIUseSkill(ret);
+				SkillParticleStart(ret);
+				CAnimationManager* myManager = m_pPlayer->getAniManager();
+				Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			}
 		}
 	}
 }
@@ -3611,6 +3596,7 @@ void CRaytracingCaveScene::Render()
 
 void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::shared_ptr<CRayTracingPipeline> pipeline)
 {
+	m_vMonsters.clear();
 	Monsters.clear();
 
 	m_pOutputBuffer = outputBuffer;
@@ -3749,6 +3735,10 @@ void CRaytracingETPScene::SetUp(ComPtr<ID3D12Resource>& outputBuffer, std::share
 	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
 	m_vUIs[m_vUIs.size() - 1]->setColor(0.0, 0.0, 0.0, 1.0);
 
+	m_vUIs.emplace_back(std::make_unique<UIObject>(1, 2, meshes[meshes.size() - 1].get()));
+	m_vUIs[m_vUIs.size() - 1]->setPositionInViewport(0, 0);
+	m_vUIs[m_vUIs.size() - 1]->setColor(0.5, 0.5, 0.5, 0.0);
+
 	PlayerUISetup(Players[Client.get_id()].getCharacterType());
 
 	Client.SendPlayerReady(SCENE_PLAIN);
@@ -3776,20 +3766,8 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 		case '0':
 			m_pCamera->SetThirdPersonMode(true);
 			break;
-		case '8':	// Warning
-			if (g_InGameState == IS_GAMING) {
-				startTime = 0.0f;
-				g_InGameState = IS_FINISH;
-			}
-			break;
-		case '1':			// 1~4 test
-			g_PlayerBuffState[0] = !g_PlayerBuffState[0];
-			break;
-		case '2':
-			g_PlayerBuffState[1] = !g_PlayerBuffState[1];
-			break;
-		case '3':
-			g_PlayerBuffState[2] = !g_PlayerBuffState[2];
+		case '7':
+			Client.SendMasterKey();
 			break;
 		case 'Z':
 			m_vItemUIs[cItem]->setRenderState(false);
@@ -3804,7 +3782,7 @@ void CRaytracingETPScene::OnProcessingKeyboardMessage(HWND hWnd, UINT nMessage, 
 			m_vItemUIs[cItem]->setRenderState(true);
 			break;
 		case 'X':
-			if (m_fItemCurTime <= 0.0f) {
+			if (m_fItemCurTime <= 0.0f && !g_PlayerDie[m_local_id]) {
 				Client.SendUseItem(cItem);
 				m_fItemCurTime = m_fItemCoolTime;
 			}
@@ -4069,11 +4047,13 @@ void CRaytracingETPScene::ProcessInput(float fElapsedTime)
 				m_pCamera->Move(2, fElapsedTime, shiftDown);
 		}
 		else {
-			KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
-			UIUseSkill(ret);
-			SkillParticleStart(ret);
-			CAnimationManager* myManager = m_pPlayer->getAniManager();
-			Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			if (!g_PlayerDie[m_local_id]) {
+				KeyInputRet ret = m_pPlayer->ProcessInput(keyBuffer, fElapsedTime);
+				UIUseSkill(ret);
+				SkillParticleStart(ret);
+				CAnimationManager* myManager = m_pPlayer->getAniManager();
+				Client.SendMovePacket(myManager->getElapsedTime(), myManager->getCurrentSet());	// Check
+			}
 		}
 	}
 }
@@ -4356,6 +4336,8 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		int t{};
 		// hp/mp
 		m_vPlayersStatUI[i][1]->setScaleX(Players[i].GetHP() / g_maxHPs[i]);
+		float  tt = Players[i].GetMP();
+		float ttt = g_maxMPs[i];
 		m_vPlayersStatUI[i][3]->setScaleXWithUV(Players[i].GetMP() / g_maxMPs[i]);
 		if (i == m_local_id) {
 			for (int j = 0; j < 3; ++j) {
@@ -4408,6 +4390,11 @@ void CRaytracingETPScene::UpdateObject(float fElapsedTime)
 		}
 	}
 	// =================================================================
+
+	if (g_PlayerDie[m_local_id])
+		m_vUIs.back()->setColor(0.5, 0.5, 0.5, 0.5);
+	else
+		m_vUIs.back()->setColor(0.5, 0.5, 0.5, 0.0);
 }
 
 void CRaytracingETPScene::Render()
