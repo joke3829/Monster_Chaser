@@ -23,12 +23,12 @@ const XMFLOAT4X4& Player::GetPosition() const {
 
 bool  Player::TakeDamage(int dmg) {
 	std::lock_guard<std::mutex> lock(playerMutex);
-	hp -= dmg;
-	if (hp < 0) {
+ 	hp -= dmg;
+	if (hp <= 0) {
 		Death();
 		hp = 0;
 	}
-	return hp == 0; // 0이 되면 죽음
+	return hp <= 0; // 0이 되면 죽음
 }
 
 void Player::Move(float dx, float dy, float dz) {
@@ -48,33 +48,33 @@ void Player::PlaySkill(const int attacktype)
 	{
 		std::lock_guard<std::mutex> lock(playerMutex);
 		if (attacktype == 1) // 스킬 공격
-			skill_cost -= 20; // 스킬 공격은 20 스킬 비용
+			skill_cost -= 25; // 스킬 공격은 20 스킬 비용
 		else if (attacktype == 2) // 메테오
-			skill_cost -= 50; // 메테오 스킬은 50 스킬 비용
+			skill_cost -= 40; // 메테오 스킬은 50 스킬 비용
 		else if (attacktype == 3) // 궁극기
-			skill_cost -= 100; // 궁극기는 100 스킬 비용
+			skill_cost -= 70; // 궁극기는 100 스킬 비용
 		break;
 	}
 	case Warrior:
 	{
 		std::lock_guard<std::mutex> lock(playerMutex);
 		if (attacktype == 1) // 스킬 공격
-			skill_cost -= 20; // 스킬 공격은 20 스킬 비용
+			skill_cost -= 30; // 스킬 공격은 20 스킬 비용
 		if (attacktype == 2) // 메테오
-			skill_cost -= 50; // 메테오 스킬은 50 스킬 비용
+			skill_cost -= 20; // 메테오 스킬은 50 스킬 비용
 		else if (attacktype == 3) // 궁극기
-			skill_cost -= 100; // 궁극기는 100 스킬 비용
+			skill_cost -= 40; // 궁극기는 100 스킬 비용
 		break;
 	}
 	case Priest:
 	{
 		std::lock_guard<std::mutex> lock(playerMutex);
 		if (attacktype == 1) // 스킬 공격
-			skill_cost -= 20; // 스킬 공격은 20 스킬 비용
+			skill_cost -= 30; // 스킬 공격은 20 스킬 비용
 		else if (attacktype == 2) // 메테오
-			skill_cost -= 50; // 메테오 스킬은 50 스킬 비용
+			skill_cost -= 40; // 메테오 스킬은 50 스킬 비용
 		else if (attacktype == 3) // 궁극기
-			skill_cost -= 100; // 궁극기는 100 스킬 비용
+			skill_cost -= 60; // 궁극기는 100 스킬 비용
 		break;
 	}
 	default:
@@ -155,16 +155,18 @@ void Player::AddATKBuff(float value, float duration_sec)
 	std::cout << "[공격력 버프 적용] +" << value << " for " << duration_sec << " seconds\n";
 
 }
-
-
-
-
 void Player::AddDEFBuff(float value, float duration_sec)
 {
 	def_buff = value;
 	def_buff_end = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
 	std::cout << "[방어력 버프 적용] +" << value << " for " << duration_sec << " seconds\n";
 
+}
+void Player::AddDEFDEBuff(float value, float duration_sec)
+{
+	def_debuff = value;
+	def_debuff_end = std::chrono::steady_clock::now() + std::chrono::seconds((int)duration_sec);
+	std::cout << "[방어력 버프 적용] +" << value << " for " << duration_sec << " seconds\n";
 }
 
 float Player::GetDamage(int attacktype)
@@ -216,22 +218,28 @@ float Player::GetDamage(int attacktype)
 }
 
 float Player::GetATK() {
-	auto now = std::chrono::steady_clock::now();
-	if (now >= atk_buff_potion_end)
-	{
-		atk_buff_potion = 0.f;
-		//cout << "[공격력 버프 종료] 포션 버프가 만료되었습니다.\n";
-	}
-	if (now >= atk_buff_skill_end) {
-		atk_buff_skill = 0.f;
-		//cout << "[공격력 버프 종료] 스킬 버프가 만료되었습니다.\n";
-	}
+	
 	return attack + atk_buff_potion + atk_buff_skill;
 }
 
 
 float Player::GetDEF() {
+	return defense + def_buff - def_debuff;
+}
+
+void Player::UpdateBuffStatesIfChanged(bool broadcastAll)
+{
 	auto now = std::chrono::steady_clock::now();
+
+	if (now >= atk_buff_potion_end)
+	{
+		atk_buff_potion = 0.0f;
+		//cout << "[공격력 버프 종료] 포션 버프가 만료되었습니다.\n";
+	}
+	if (now >= atk_buff_skill_end) {
+		atk_buff_skill = 0.0f;
+		//cout << "[공격력 버프 종료] 스킬 버프가 만료되었습니다.\n";
+	}
 	if (now >= def_buff_end) {
 		def_buff = 0.f;
 		//	cout << "[방어력 버프 종료] 방어력 버프가 만료되었습니다.\n";
@@ -239,30 +247,20 @@ float Player::GetDEF() {
 	if (now >= def_debuff_end)
 	{
 		def_debuff = 0.f;
-		cout << "[방어력 감소 버프 종료] 방어력 감소 버프가 만료되었습니다.\n";
+		//cout << "[방어력 감소 버프 종료] 방어력 감소 버프가 만료되었습니다.\n";
 	}
-	return defense + def_buff - def_debuff;
-}
-
-void Player::UpdateBuffStatesIfChanged()
-{
-	auto now = std::chrono::steady_clock::now();
-
 	// 현재 버프 상태 계산
-	bool atkActive = (atk_buff_potion > 0.f && now < atk_buff_potion_end) ||
-		(atk_buff_skill > 0.f && now < atk_buff_skill_end);
-
-	bool defActive = (def_buff > 0.f && now < def_buff_end);
-
-	bool defDownActive = (def_debuff > 0.f && now < def_debuff_end);
+	bool atkActive = (now < atk_buff_potion_end) || (now < atk_buff_skill_end);
+	bool defActive = (now < def_buff_end);
+	bool defDownActive = (now < def_debuff_end);
 
 	// 각 상태 비교 및 전송
-	SendBuffPacketIfChanged(BuffType::ATKUP, atkActive);
-	SendBuffPacketIfChanged(BuffType::DEFUP, defActive);
-	SendBuffPacketIfChanged(BuffType::DEF_DOWN, defDownActive);
+	SendBuffPacketIfChanged(BuffType::ATKUP, atkActive, broadcastAll);
+	SendBuffPacketIfChanged(BuffType::DEFUP, defActive, broadcastAll);
+	SendBuffPacketIfChanged(BuffType::DEF_DOWN, defDownActive, broadcastAll);
 }
 
-void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
+void Player::SendBuffPacketIfChanged(BuffType type, bool currentState, bool broadcastAll)
 {
 	// 이전에 전송한 상태와 다르면 새로 전송
 	if (lastSentBuffState[type] != currentState) {
@@ -274,17 +272,29 @@ void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
 		pkt.bufftype = static_cast<char>(type);
 		pkt.state = currentState ? 1 : 0;
 
-		for (int pid : g_server.rooms[room_num].id)
-			g_server.users[pid]->do_send(&pkt);
+		if (broadcastAll) {
+			for (int pid : g_server.rooms[room_num].id)
+				g_server.users[pid]->do_send(&pkt);
+		}
+		else {
+			auto& roomIds = g_server.rooms[room_num].id;
+			if (roomIds.size() <= local_id) {//로컬 아이디가 vector out of range 방어
+				return;
+			}
+			g_server.users[roomIds[local_id]]->do_send(&pkt); // 본인에게만
+		}
 
-		std::cout << "[버프 상태 변경] 플레이어 " << local_id << " | 타입: " << (int)pkt.bufftype
-			<< " | 상태: " << (int)pkt.state << "공격력: " << GetATK() << " 방어력: " << GetDEF() << "\n";
+		std::cout << "[버프 상태 변경] 플레이어 " << local_id
+			<< " | 타입: " << static_cast<int>(type)
+			<< " | 상태: " << static_cast<int>(pkt.state)
+			<< " | ATK: " << GetATK() << ", DEF: " << GetDEF() << "\n";
 	}
 }
 
+
 void Player::Death()
 {
-	//std::lock_guard<std::mutex> lock(playerMutex);
+
 	if (isDead)return;
 
 	isDead = true;
@@ -309,6 +319,8 @@ void Player::TryRespawn()
 		pkt.size = sizeof(pkt);
 		pkt.type = S2C_P_PlAYER_RESPAWN;
 		pkt.Local_id = local_id;
+		pkt.hp = max_hp;
+		pkt.mp = 100;
 		XMStoreFloat4x4(&pkt.pos, XMLoadFloat4x4(&position));
 		
 		for (int pid : g_server.rooms[room_num].id)

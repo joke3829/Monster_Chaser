@@ -36,13 +36,18 @@ void disconnect(int client_id) {
 
 	std::shared_ptr<SESSION> session = it->second;
 	int room_num = session->player->room_num;
+	std::lock_guard<std::mutex> lock(myMutex);
+	
 
+	
 	// 방에서 제거
 	if (room_num != -1)
 	{
 		std::lock_guard<std::mutex> lock(g_server.rooms[room_num].RoomMutex);
 		auto& room_ids = g_server.rooms[room_num].id;
 		room_ids.erase(std::remove(room_ids.begin(), room_ids.end(), client_id), room_ids.end());
+		auto& room = g_server.rooms[room_num];
+		room.SetReady_User(client_id, false); // 방에서 준비 상태 해제
 		// 다른 클라이언트들에게 Leave 패킷 전송
 		sc_packet_leave leave_pkt;
 		leave_pkt.size = sizeof(leave_pkt);
@@ -53,11 +58,19 @@ void disconnect(int client_id) {
 			g_server.users[id]->do_send(&leave_pkt);
 		}
 	}
+	g_server.users.unsafe_erase(client_id);
 
+	sc_packet_room_info rp;
+	rp.size = sizeof(rp);
+	rp.type = S2C_P_UPDATEROOM;
+	for (int i = 0; i < g_server.rooms.size(); ++i)
+		rp.room_info[i] = g_server.rooms[i].GetPlayerCount();
+
+	for (auto& player : g_server.users)
+		player.second->do_send(&rp);
 
 	closesocket(session->socket);
-	std::lock_guard<std::mutex> lock(myMutex);
-	g_server.users.unsafe_erase(client_id);
+
 
 	std::cout << "[클라이언트 " << client_id << "] 비정상 종료 처리됨." << std::endl;
 }

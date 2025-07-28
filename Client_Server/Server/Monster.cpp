@@ -2,12 +2,11 @@
 #include "Monster.h"
 #include "Network.h"
 #include <random>
+#define MONSTER_CHASE_DISTANCE 50.0f
+constexpr float MONSTER_ATTACK_COOLDOWN = 3.5f;   // 공격 쿨타임 3.5초
+constexpr float MONSTER_RETURN_SPEED = 30.0f;     // 추적 속도
+constexpr float MONSTER_CHASE_SPEED = 8.0f;     // 귀환 속도
 
-#define MONSTER_CHASE_DISTANCE 70.0f
-#define MONSTER_ATTACK_RANGE 1.0f
-constexpr float MONSTER_ATTACK_COOLDOWN = 2.0f;   // 공격 쿨타임 2초
-constexpr float MONSTER_RETURN_SPEED = 80.0f;     // 귀환 속도
-constexpr float MONSTER_CHASE_SPEED = 10.0f;     // 귀환 속도
 std::random_device rd;
 std::mt19937 gen(rd());
 
@@ -45,6 +44,8 @@ int FindClosestPlayerInRoom(const Room& room, const DirectX::XMFLOAT3& monsterPo
         auto player = playerManager.GetPlayer(playerId);
         if (!player) continue;
 
+        if (player->GetHP() <= 0) continue;
+
         const auto& pos = player->GetPosition();
         float dx = monsterPos.x - pos._41;
         float dy = monsterPos.y - pos._42;
@@ -74,7 +75,8 @@ Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
     : id(id), hp(100), state(MonsterState::Idle), position(spawnPos), spawnPoint(spawnPos), type(t), isRespawning(false) {
     std::uniform_int_distribution<> dis(30, 50);
     gold = dis(gen);
-
+    InitAttackRanges();
+	m_currentAttackType = 1; // 기본 공격 타입 1로 설정
     switch (type) {
     case MonsterType::None:
         Attacktypecount = 0;
@@ -85,14 +87,12 @@ Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
         hp = 15000;
         max_hp = hp;
         ATK = 100;
-        Attacktypecount = 1;
 		stage = SCENE_PLAIN; // 1스테이지 몬스터
         break;
     case MonsterType::Xenokarce:
         hp = 40000;
         max_hp = hp;
         ATK = 200;
-        Attacktypecount = 2;
         stage = SCENE_PLAIN; // 1스테이지 몬스터
         break;
     case MonsterType::Occisodonte:
@@ -101,28 +101,25 @@ Monster::Monster(int id, const XMFLOAT3& spawnPos, MonsterType t)
         hp = 30000;
         max_hp = hp;
         ATK = 100;
-        Attacktypecount = 2;
         stage = SCENE_CAVE; // 2스테이지 몬스터
         break;
     case MonsterType::Crassorrid:
         hp = 80000;
         max_hp = hp;
         ATK = 200;
-        Attacktypecount = 3;
         stage = SCENE_CAVE; // 2스테이지 몬스터
         break;
     case MonsterType::Gorhorrid:
         hp = 200000;
         max_hp = hp;
         ATK = 300;
-        Attacktypecount = 3;
         stage = SCENE_WINTERLAND; // 3스테이지 몬스터
         break;
     default:
         break;
     }
    
-
+   
 }
 
 void Monster::Update(float deltaTime, const Room& room, const PlayerManager& playerManager) {
@@ -134,8 +131,15 @@ void Monster::Update(float deltaTime, const Room& room, const PlayerManager& pla
         HandleDead(room);
         return;
     }
+    if (bAIPaused) {
+        auto now = std::chrono::steady_clock::now();
+        if (now < ai_pause_end_time) {
+            return;
+        }
+        bAIPaused = false; // 시간 끝났으면 다시 AI 수행 허용
+    }
 
-    target_id = FindClosestPlayerInRoom(room, position, playerManager);
+	target_id = FindClosestPlayerInRoom(room, position, playerManager); //가장 가까운 플레이어 찾기
 
     switch (state) {
     case MonsterState::Idle:    HandleIdle(room, playerManager); break;
@@ -177,6 +181,17 @@ void Monster::HandleIdle(const Room& room, const PlayerManager& playerManager) {
 }
 
 void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) {
+    auto player = playerManager.GetPlayer(target_id);
+    if (!player || player->GetHP() <= 0) {
+        target_id = FindClosestPlayerInRoom(room, position, playerManager);
+        player = playerManager.GetPlayer(target_id);
+
+        if (!player || player->GetHP() <= 0) {
+            TransitionTo(MonsterState::Return);
+            return;
+        }
+    }
+
     if (!IsPlayerNear(playerManager)) {
         TransitionTo(MonsterState::Return);
         return;
@@ -192,8 +207,9 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
         pkt.type = S2C_P_BOSS_ROAR;
         pkt.monster_id = id;
         for (int pid : room.id) g_server.users[pid]->do_send(&pkt);
+        bAIPaused = true;
+        ai_pause_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(4000);
     }
-    auto player = playerManager.GetPlayer(target_id);
     if (!player) return;
     XMFLOAT3 targetPos = {
         player->GetPosition()._41,
@@ -248,30 +264,55 @@ void Monster::HandleChase(const PlayerManager& playerManager, const Room& room) 
 }
 
 void Monster::HandleAttack(const PlayerManager& playerManager, const Room& room) {
+    
+    auto player = playerManager.GetPlayer(target_id);
+    if (!player || player->GetHP() <= 0) {
+        target_id = FindClosestPlayerInRoom(room, position, playerManager);
+        player = playerManager.GetPlayer(target_id);
+
+        if (!player || player->GetHP() <= 0) {
+            TransitionTo(MonsterState::Return);
+            return;
+        }
+
+        // 새 타겟이 잡혔으면 추적 상태로 돌아감
+        TransitionTo(MonsterState::Chase);
+        return;
+    }
+
     if (!IsPlayerNear(playerManager)) {
         TransitionTo(MonsterState::Return);
         return;
     }
+
     if (!IsPlayerInAttackRange(playerManager)) {
         TransitionTo(MonsterState::Chase);
         return;
     }
-    if (Attacktypecount > 1) {
-        std::uniform_int_distribution<> dis(1, GetAttackTypeCount());
-        m_currentAttackType = dis(gen);
-        ChangeBossAttack();
-    }
+
+  
     auto now = std::chrono::steady_clock::now();
     float elapsed = std::chrono::duration<float>(now - lastAttackTime).count();
     if (elapsed >= MONSTER_ATTACK_COOLDOWN) {
-        lastAttackTime = now;
+         lastAttackTime = now;
         sc_packet_monster_attack pkt;
         pkt.size = sizeof(pkt);
         pkt.type = S2C_P_MONSTER_ATTACK;
         pkt.monster_id = id;
         pkt.attack_type = m_currentAttackType;
-        for (int pid : room.id) g_server.users[pid]->do_send(&pkt);
+        for (int pid : room.id) 
+            g_server.users[pid]->do_send(&pkt);
+
+
+        if (Attacktypecount > 1) {
+            std::uniform_int_distribution<> dis(1, GetAttackTypeCount());
+            m_currentAttackType = dis(gen);
+            ChangeBossAttack();
+        }
+        bAIPaused = true;
+        ai_pause_end_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(1500);
     }
+
 }
 
 void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room) {
@@ -304,7 +345,8 @@ void Monster::HandleReturn(const PlayerManager& playerManager, const Room& room)
             forward,
             XMVectorSet(position.x, position.y, position.z, 1.0f)
         );
-        XMStoreFloat4x4(&pkt.pos, rotation);
+         XMStoreFloat4x4(&pkt.pos, rotation);
+
         for (int pid : room.id)
             g_server.users[pid]->do_send(&pkt);
         return;
@@ -381,11 +423,16 @@ float Monster::DistanceToPlayer(const PlayerManager& playerManager) const {
 }
 
 bool Monster::IsPlayerNear(const PlayerManager& playerManager) const {
-    return DistanceFromSpawnToPlayer(playerManager) <= MONSTER_CHASE_DISTANCE;
+    return DistanceFromSpawnToPlayer(playerManager) <= m_chaseRange;
 }
 
 bool Monster::IsPlayerInAttackRange(const PlayerManager& playerManager) const {
-    return DistanceToPlayer(playerManager) <= MONSTER_ATTACK_RANGE;
+    
+    float dist = DistanceToPlayer(playerManager);
+    int idx = m_currentAttackType - 1;
+    if (idx >= 0 && idx < Attacktypecount)
+        return dist <= AttackRange[idx];
+    return false;
 }
 
 void Monster::SendSyncPacket(const Room& room) {
@@ -441,4 +488,91 @@ void Monster::ChangeBossAttack() {
     default:
         break;
     }
+}
+
+void Monster::InitAttackRanges() {
+    switch (type) {
+    case MonsterType::Feroptere:                                    //1라운드 잡몹
+        Attacktypecount = 1;
+        AttackRange[0] = 8.0f;
+        m_chaseRange = 65.0f;
+        break;
+            
+    case MonsterType::Pistiripere:                                   //1라운드 잡몹
+        Attacktypecount = 1;
+        AttackRange[0] = 8.0f;
+        m_chaseRange = 55.0f;
+        break;
+
+    case MonsterType::RostrokarackLarvae:                               //1라운드 잡몹
+        Attacktypecount = 1;
+        AttackRange[0] = 8.0f;
+        m_chaseRange = 50.0f;
+        break;
+
+    case MonsterType::Xenokarce:                                     //1라운드 보스
+        Attacktypecount = 2;
+        AttackRange[0] = 10.0f;  // 근거리
+        AttackRange[1] = 10.0f;  // 원거리
+        m_chaseRange = 65.0f;
+        break;
+
+    case MonsterType::Occisodonte:                                           //2라운드 잡몹
+        Attacktypecount = 2;
+       AttackRange[0] = 8.0f;
+       AttackRange[1] = 8.0f;
+       m_chaseRange = 40.0f; // 추적 사거리 설정
+        break;
+
+    case MonsterType::Limadon:                                        //2라운드 잡몹
+        Attacktypecount = 2;
+        AttackRange[0] = 8.0f;
+        AttackRange[1] = 8.0f;
+        m_chaseRange = 40.0f; // 추적 사거리 설정
+        break;
+
+    case MonsterType::Fulgurodonte:                                         //2라운드 잡몹
+        Attacktypecount = 2;
+        AttackRange[0] = 8.0f;
+        AttackRange[1] = 27.0f;                                             //원거리
+		m_chaseRange = 35.0f; // 추적 사거리 설정
+        break;
+
+    case MonsterType::Crassorrid:                                           //2라운드 보스
+        Attacktypecount = 3;
+        AttackRange[0] = 12.0f;
+        AttackRange[1] = 12.0f;
+        AttackRange[2] = 12.0f;
+        m_chaseRange = 40.0f; // 추적 사거리 설정
+        break;
+
+    case MonsterType::Gorhorrid: // 예외적 2스테이지 버전                    //3라운드 보스
+        Attacktypecount = 3;
+        AttackRange[0] = 13.0f;
+        AttackRange[1] = 25.0f;
+        AttackRange[2] = 25.0f;
+		m_chaseRange = 70.0f; // 추적 사거리 설정
+        break;
+
+    default:
+        Attacktypecount = 1;
+        AttackRange[0] = 10.0f;
+        break;
+    }
+
+    // 디버깅용 로그
+    std::cout << "[몬스터 사거리 설정] 타입: " << static_cast<int>(type)
+        << " | 공격 수: " << Attacktypecount << " | 사거리: ";
+    for (int i = 0; i < Attacktypecount; ++i)
+        std::cout << AttackRange[i] << " ";
+    std::cout << "\n";
+}
+
+
+
+// Monster.cpp
+void Monster::MovePosition(float dx, float dz) {
+    std::lock_guard<std::mutex> lock(mtx);
+    position.x += dx;
+    position.z += dz;
 }
