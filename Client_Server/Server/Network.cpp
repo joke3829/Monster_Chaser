@@ -343,7 +343,7 @@ void SESSION::process_packet(char* p) {
 		//  몬스터 공격 타입 적용
 		int attackType = pkt->attack_type;
 
-
+		
 		//target->GetDamage(pkt->attack_power); // HP 감소 적용
 
 
@@ -445,6 +445,7 @@ void SESSION::process_packet(char* p) {
 			if (!target) continue; // 대상 플레이어가 없으면 건너뜀
 			switch (skillNum) {
 			case 0: { // 체력 회복
+				target->PlusMP(-30.0f); // 스킬 사용 시 MP 감소
 				target->PlusHP(200); // 임시값. 나중에 조정
 
 				sc_packet_change_hp pkt_hp;

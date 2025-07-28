@@ -277,7 +277,11 @@ void Player::SendBuffPacketIfChanged(BuffType type, bool currentState, bool broa
 				g_server.users[pid]->do_send(&pkt);
 		}
 		else {
-			g_server.users[local_id]->do_send(&pkt); // 본인에게만
+			auto& roomIds = g_server.rooms[room_num].id;
+			if (roomIds.size() <= local_id) {//로컬 아이디가 vector out of range 방어
+				return;
+			}
+			g_server.users[roomIds[local_id]]->do_send(&pkt); // 본인에게만
 		}
 
 		std::cout << "[버프 상태 변경] 플레이어 " << local_id

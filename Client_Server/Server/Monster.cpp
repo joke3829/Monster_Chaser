@@ -131,7 +131,6 @@ void Monster::Update(float deltaTime, const Room& room, const PlayerManager& pla
         HandleDead(room);
         return;
     }
-
     if (bAIPaused) {
         auto now = std::chrono::steady_clock::now();
         if (now < ai_pause_end_time) {
@@ -140,7 +139,7 @@ void Monster::Update(float deltaTime, const Room& room, const PlayerManager& pla
         bAIPaused = false; // 시간 끝났으면 다시 AI 수행 허용
     }
 
-    target_id = FindClosestPlayerInRoom(room, position, playerManager);
+	target_id = FindClosestPlayerInRoom(room, position, playerManager); //가장 가까운 플레이어 찾기
 
     switch (state) {
     case MonsterState::Idle:    HandleIdle(room, playerManager); break;
