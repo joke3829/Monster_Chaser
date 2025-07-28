@@ -284,6 +284,7 @@ struct cs_packet_move {
 	unsigned char size;
 	char type;
 	XMFLOAT4X4 pos;
+	XMFLOAT3 BOGAN_POS;
 	float time;
 	UINT state;
 };
@@ -296,7 +297,7 @@ struct cs_packet_player_attack {
 	int attack_type; // Attacktype
 };
 
-struct cs_packet_monster_attack {
+struct cs_packet_monster_attack{					
 	unsigned char size;
 	char type;
 	int attacker_id;  // 몬스터 ID
@@ -322,5 +323,6 @@ struct cs_packet_skill_use {
 struct cs_packet_next_stage_master_key {
 	unsigned char size;
 	char type;
+
 };
 #pragma pack(pop)
