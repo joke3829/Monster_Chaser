@@ -334,7 +334,11 @@ void SESSION::process_packet(char* p) {
 		Room& room = g_server.rooms[player->room_num];
 
 		auto monster = room.monsters[pkt->attacker_id];
-		auto target = g_server.playerManager.GetPlayer(pkt->target_player_id);
+		if (pkt->target_player_id >= room.id.size()) {
+			return;
+		}
+		auto targetUniqId = room.id[pkt->target_player_id];
+		auto target = g_server.playerManager.GetPlayer(targetUniqId);
 
 		//  몬스터 공격 타입 적용
 		int attackType = pkt->attack_type;
@@ -353,7 +357,8 @@ void SESSION::process_packet(char* p) {
 			hpkt.type = S2C_P_PLAYER_HIT;
 			hpkt.local_id = pkt->target_player_id;
 			hpkt.hp = target->GetHP();
-
+			
+			
 			for (int pid : room.id)
 				g_server.users[pid]->do_send(&hpkt);
 

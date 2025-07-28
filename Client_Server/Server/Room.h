@@ -17,7 +17,7 @@ class Monster;  // Forward declaration of Monster class
 
 class Room {
 public:
-    std::vector<int> id;
+    std::vector<int> id; 
     std::unordered_map<int, std::shared_ptr<Monster>> monsters;
     std::unordered_map<int, short> selected_characters;
 
