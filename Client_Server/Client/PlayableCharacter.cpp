@@ -167,21 +167,27 @@ KeyInputRet CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		return ret;
 	}
 
-	// Handle single and combined key presses
+	XMVECTOR lookDir = XMLoadFloat3(&normalizedCharacterDir);
+	XMVECTOR rightDir = XMVector3Normalize(XMVector3Cross(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), lookDir));
+
 	if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z + normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorSubtract(lookDir, rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z - normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorAdd(lookDir, rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z + normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorSubtract(XMVectorNegate(lookDir), rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z - normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorAdd(XMVectorNegate(lookDir), rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['W'] & 0x80) {
@@ -189,367 +195,379 @@ KeyInputRet CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x, 0.0f, -normalizedCharacterDir.z);
+		XMStoreFloat3(&moveDir, XMVectorNegate(lookDir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.x);
+		XMStoreFloat3(&moveDir, XMVectorNegate(rightDir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.x);
+		XMStoreFloat3(&moveDir, rightDir);
 		m_bMoving = true;
 	}
 
 	if (m_bMoving) {
-		XMStoreFloat3(&moveDir, XMVector3Normalize(XMLoadFloat3(&moveDir)));
 		m_Object->SetMoveDirection(moveDir);
+		m_Object->SetDirectionMove(moveDir, XMFLOAT3(0.0f, 1.0f, 0.0f), fElapsedTime);
+
+		if (keyBuffer[VK_LSHIFT] & 0x80) {
+			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true);
+			m_Object->run(fElapsedTime);
+		}
+		else {
+			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true);
+			m_Object->move(fElapsedTime);
+		}
+	}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false);
 	}
 
-	// W -> IDLE while Shift held
-	if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// A -> IDLE while Shift held
-	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S -> IDLE while Shift held
-	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// D -> IDLE while Shift held
-	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// W + A + Shift -> Run Left Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_UP), true); // Run Left Up
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_UP), true); // Maintain Run
-		}
-	}
-	// W + A + Shift -> Walk Left Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_UP), true); // Walk Left UP
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// W + A -> Walk Left Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_UP), true); // Walk Left Up
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_UP), true); // Maintain Walk
-		}
-	}
-	// W + A + Shift, A -> Run Forward
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Run Forward
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// W + A, A -> Walk Forward
-	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Walk Forward
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// W + A, W -> Walk Left
-	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// W + D + Shift -> Run Right Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_UP), true); // Run Right Up
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_UP), true); // Maintain Run
-		}
-	}
-	// W + D + Shift -> Walk Right Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// W + D -> Walk Right Up
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_UP), true); // Maintain Walk
-		}
-	}
-	// W + D + Shift, D -> Run Forward
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Run Forward
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// W + D, D -> Walk Forward
-	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Walk Forward
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// W + D, W -> Walk Right
-	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S + A + Shift -> Run Left Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_DOWN), true); // Run Left Down
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_DOWN), true); // Maintain Run
-		}
-	}
-	// S + A + Shift -> Walk Left Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S + A -> Walk Left Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_DOWN), true); // Maintain Walk
-		}
-	}
-	// S + A + Shift, A -> Run Backward
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Run Backward
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S + A, A -> Walk Backward
-	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S + A, S -> Walk Left
-	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S + D + Shift -> Run Right Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_DOWN), true); // Run Right Down
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_DOWN), true); // Maintain Run
-		}
-	}
-	// S + D + Shift -> Walk Right Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S + D -> Walk Right Down
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_DOWN), true); // Maintain Walk
-		}
-	}
-	// S + D + Shift, D -> Run Backward
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Run Backward
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S + D, D -> Walk Backward
-	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S + D, S -> Walk Right
-	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// W + Shift -> Run Forward
-	else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Run Forward
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Maintain Run
-		}
-	}
-	// W + Shift -> Walk Forward
-	else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Walk Forward
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// W -> Walk Forward
-	else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['W'] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Maintain Walk
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Maintain Walk
-		}
-	}
-	// S + Shift -> Run Backward
-	else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Run Backward
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Maintain Run
-		}
-	}
-	// S + Shift -> Walk Backward
-	else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S -> Walk Backward
-	else if ((keyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['S'] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Maintain Walk
-		}
-	}
-	// A + Shift -> Run Left
-	else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT), true); // Run Left
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT), true); // Maintain Run
-		}
-	}
-	// A + Shift -> Walk Left
-	else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// A -> Walk Left
-	else if ((keyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['A'] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Maintain Walk
-		}
-	}
-	// D + Shift -> Run Right
-	else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT), true); // Run Right
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT), true); // Maintain Run
-		}
-	}
-	// D + Shift -> Walk Right
-	else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// D -> Walk Right
-	else if ((keyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
-		if (!(m_PrevKeyBuffer['D'] & 0x80)) {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
-			m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-			m_AManager->UpdateAniPosition(0.0f, m_Object);
-		}
-		else {
-			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Maintain Walk
-		}
-	}
-	// W -> IDLE
-	else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false);
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// S -> IDLE
-	else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// A -> IDLE
-	else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
-	// D -> IDLE
-	else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
-		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
-		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_AManager->UpdateAniPosition(0.0f, m_Object);
-	}
+	//// W -> IDLE while Shift held
+	//if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// A -> IDLE while Shift held
+	//else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S -> IDLE while Shift held
+	//else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// D -> IDLE while Shift held
+	//else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// W + A + Shift -> Run Left Up
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_UP), true); // Run Left Up
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_UP), true); // Maintain Run
+	//	}
+	//}
+	//// W + A + Shift -> Walk Left Up
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_UP), true); // Walk Left UP
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// W + A -> Walk Left Up
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['A'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_UP), true); // Walk Left Up
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_UP), true); // Maintain Walk
+	//	}
+	//}
+	//// W + A + Shift, A -> Run Forward
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Run Forward
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// W + A, A -> Walk Forward
+	//else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Walk Forward
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// W + A, W -> Walk Left
+	//else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// W + D + Shift -> Run Right Up
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_UP), true); // Run Right Up
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_UP), true); // Maintain Run
+	//	}
+	//}
+	//// W + D + Shift -> Walk Right Up
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// W + D -> Walk Right Up
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer['D'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_UP), true); // Walk Right Up
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_UP), true); // Maintain Walk
+	//	}
+	//}
+	//// W + D + Shift, D -> Run Forward
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Run Forward
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// W + D, D -> Walk Forward
+	//else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Walk Forward
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// W + D, W -> Walk Right
+	//else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S + A + Shift -> Run Left Down
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_DOWN), true); // Run Left Down
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT_DOWN), true); // Maintain Run
+	//	}
+	//}
+	//// S + A + Shift -> Walk Left Down
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S + A -> Walk Left Down
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['A'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['A'] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_DOWN), true); // Walk Left Down
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT_DOWN), true); // Maintain Walk
+	//	}
+	//}
+	//// S + A + Shift, A -> Run Backward
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Run Backward
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S + A, A -> Walk Backward
+	//else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['A'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S + A, S -> Walk Left
+	//else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S + D + Shift -> Run Right Down
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_DOWN), true); // Run Right Down
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT_DOWN), true); // Maintain Run
+	//	}
+	//}
+	//// S + D + Shift -> Walk Right Down
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S + D -> Walk Right Down
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer['D'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer['D'] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_DOWN), true); // Walk Right Down
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT_DOWN), true); // Maintain Walk
+	//	}
+	//}
+	//// S + D + Shift, D -> Run Backward
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Run Backward
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S + D, D -> Walk Backward
+	//else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S + D, S -> Walk Right
+	//else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// W + Shift -> Run Forward
+	//else if ((keyBuffer['W'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Run Forward
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true); // Maintain Run
+	//	}
+	//}
+	//// W + Shift -> Walk Forward
+	//else if ((keyBuffer['W'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Walk Forward
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// W -> Walk Forward
+	//else if ((keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['W'] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Maintain Walk
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true); // Maintain Walk
+	//	}
+	//}
+	//// S + Shift -> Run Backward
+	//else if ((keyBuffer['S'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Run Backward
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_BACKWARD), true); // Maintain Run
+	//	}
+	//}
+	//// S + Shift -> Walk Backward
+	//else if ((keyBuffer['S'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S -> Walk Backward
+	//else if ((keyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['S'] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Walk Backward
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_BACKWARD), true); // Maintain Walk
+	//	}
+	//}
+	//// A + Shift -> Run Left
+	//else if ((keyBuffer['A'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['A'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT), true); // Run Left
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_LEFT), true); // Maintain Run
+	//	}
+	//}
+	//// A + Shift -> Walk Left
+	//else if ((keyBuffer['A'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// A -> Walk Left
+	//else if ((keyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['A'] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Walk Left
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_LEFT), true); // Maintain Walk
+	//	}
+	//}
+	//// D + Shift -> Run Right
+	//else if ((keyBuffer['D'] & 0x80) && (keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['D'] & 0x80) || !(m_PrevKeyBuffer[VK_LSHIFT] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT), true); // Run Right
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_RIGHT), true); // Maintain Run
+	//	}
+	//}
+	//// D + Shift -> Walk Right
+	//else if ((keyBuffer['D'] & 0x80) && (m_PrevKeyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// D -> Walk Right
+	//else if ((keyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80)) {
+	//	if (!(m_PrevKeyBuffer['D'] & 0x80)) {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Walk Right
+	//		m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//		m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//	}
+	//	else {
+	//		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_RIGHT), true); // Maintain Walk
+	//	}
+	//}
+	//// W -> IDLE
+	//else if ((m_PrevKeyBuffer['W'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false);
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// S -> IDLE
+	//else if ((m_PrevKeyBuffer['S'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// A -> IDLE
+	//else if ((m_PrevKeyBuffer['A'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
+	//// D -> IDLE
+	//else if ((m_PrevKeyBuffer['D'] & 0x80) && !(keyBuffer['W'] & 0x80) && !(keyBuffer['A'] & 0x80) && !(keyBuffer['S'] & 0x80) && !(keyBuffer['D'] & 0x80) && !(keyBuffer[VK_LSHIFT] & 0x80)) {
+	//	m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false); // IDLE
+	//	m_Object->SetLookDirection(characterDir, XMFLOAT3(0.0f, 1.0f, 0.0f));
+	//	m_AManager->UpdateAniPosition(0.0f, m_Object);
+	//}
 
 	if (!m_bSkillActive && !m_bDoingCombo) {
 		if ((keyBuffer['J'] & 0x80) && !(m_PrevKeyBuffer['J'] & 0x80)) {
