@@ -940,7 +940,7 @@ void CSkinningObject::SetDirectionMove(const XMFLOAT3& targetDir, const XMFLOAT3
 	XMFLOAT3 targetDirXZ(targetDir.x, 0.0f, targetDir.z);
 	XMVECTOR targetLook = XMVector3Normalize(XMLoadFloat3(&targetDirXZ));
 
-	float rotationSpeed = XMConvertToRadians(540.0f);
+	float rotationSpeed = XMConvertToRadians(1620.0f);
 	float t = min(1.0f, rotationSpeed * fElapsedTime);
 
 	float dot = XMVectorGetX(XMVector3Dot(currentLook, targetLook));
