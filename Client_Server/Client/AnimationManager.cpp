@@ -282,8 +282,12 @@ void CAnimationManager::ChangeAnimation(UINT nSet)
 
 void CAnimationManager::ChangeAnimation(UINT nSet, bool playOnce)
 {
-	if (nSet != m_nCurrentSet || m_bPlayOnce != playOnce) { // playOnce 변경도 반영
-		m_nPrevSet = m_nCurrentSet;
+	/*if (nSet > m_nAnimationSets)
+		nSet = 0;*/
+	UINT nCurrentSet = m_nCurrentSet;
+	if (nSet != nCurrentSet || m_bPlayOnce != playOnce) { // playOnce 변경도 반영
+		
+		m_nPrevSet = nCurrentSet;
 		m_nCurrentSet = nSet;
 		m_bIsBlending = true;
 		m_fBlendTime = 0.0f;

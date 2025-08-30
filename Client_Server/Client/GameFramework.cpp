@@ -8,6 +8,7 @@
 constexpr unsigned short NUM_G_ROOTPARAMETER = 6;
 
 std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager{};
+extern std::mutex g_testL;
 
 CGameFramework::~CGameFramework()
 {
@@ -557,6 +558,7 @@ void CGameFramework::ProcessInput(float fElapsedTime)
 
 void CGameFramework::Render()
 {
+	std::lock_guard<std::mutex> ll{ g_testL };
 	CheckSceneFinish();
 
 	auto barrier = [&](ID3D12Resource* pResource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after)

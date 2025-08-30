@@ -6,6 +6,8 @@ std::random_device g_rd;
 std::default_random_engine g_dre(g_rd());
 std::uniform_real_distribution<float> g_unorm(0, 1);
 
+std::mutex g_testL{};
+
 void Flush()
 {
 	static UINT64 nFenceValue = 1;
