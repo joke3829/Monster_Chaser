@@ -72,7 +72,6 @@ public:
 protected:
 	std::atomic<UINT> m_nCurrentSet{};
 	std::atomic<float> m_fElapsedTime{};
-	float m_fElapsedTime{};
 	std::vector<std::string> m_vFrameNames{};		// Bone Names
 	std::vector<std::shared_ptr<CAnimationSet>> m_vAnimationSets{};
 
