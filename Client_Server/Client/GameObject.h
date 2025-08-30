@@ -305,10 +305,11 @@ public:
 
 	void SetPosition(XMFLOAT3 pos);
 	void SetLookDirection(const XMFLOAT3& look, const XMFLOAT3& up);
+	void SetDirectionMove(const XMFLOAT3& targetDir, const XMFLOAT3& up, float fElapsedTime);
 	void Rotate(XMFLOAT3 rot);
 	void Rotation(XMFLOAT3 rot, CGameObject& frame);
-	void move(float fElapsedTime, short arrow);
-	void run(float fElapsedTime, short arrow);
+	void move(float fElapsedTime);
+	void run(float fElapsedTime);
 	void sliding(float depth, const XMFLOAT3& normal, float meshHeight);
 	void SetMoveDirection(XMFLOAT3& pos);
 	void SetWorldMatrix(XMFLOAT4X4& mat);
