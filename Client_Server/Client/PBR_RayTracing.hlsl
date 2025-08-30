@@ -341,7 +341,7 @@ inline float3 CalculateBlinnPhongSpecular(inout float3 F, in float roughness, in
     return pow(NdotH, rh);
 }
 
-float3 CalculateLighting(inout RadiancePayload payload, in float3 N, in float roughness, in float3 R0, in float3 AlbedoColor, in float3 MeshNormal)
+float3 CalculateLighting(inout RadiancePayload payload, in float3 N, in float roughness, in float3 R0, in float3 AlbedoColor)
 {
     float3 V = normalize(-WorldRayDirection());
     float NdotV = saturate(dot(N, V));
@@ -547,7 +547,7 @@ float3 CalculateLighting(inout RadiancePayload payload, in float3 N, in float ro
     }
 }
 
-float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, in float4 albedoColor, uint ShaderType = 0, float2 uv = float2(0.0, 0.0), float2 uv1 = float2(0.0, 0.0), float3 MeshNormal = float3(0.0, 0.0, 0.0))
+float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, in float4 albedoColor, uint ShaderType = 0, float2 uv = float2(0.0, 0.0), float2 uv1 = float2(0.0, 0.0))
 {
     float3 R0 = float3(0.0, 0.0, 0.0);
     float roughness = 0.0f;
@@ -624,7 +624,7 @@ float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, in float4
             if (iID >= 99)
                 myColor = albedoColor.rgb;
             else
-                myColor = CalculateLighting(payload, N, roughness, R0, albedoColor.rgb, MeshNormal) + emissiveColor;
+                myColor = CalculateLighting(payload, N, roughness, R0, albedoColor.rgb) + emissiveColor;
             
             finalColor = lerp(myColor, TransmissionColor.rgb, albedoColor.a);
         }
@@ -633,7 +633,7 @@ float4 CalculateFinalColor(inout RadiancePayload payload, in float3 N, in float4
             if (InstanceID() >= 99)
                 finalColor = albedoColor.rgb;
             else
-                finalColor = CalculateLighting(payload, N, roughness, R0, albedoColor.rgb, MeshNormal) + emissiveColor;
+                finalColor = CalculateLighting(payload, N, roughness, R0, albedoColor.rgb) + emissiveColor;
         }
     }
 
@@ -783,10 +783,7 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     
     float2 texCoord0;
     float2 texCoord1;
-    
     float3 lightNormal;
-    float3 MeshNormal;
-    
     float4 albedoColor = float4(1.0, 1.0, 1.0, 1.0);
     if (0 != l_Mesh.bHasTex0)
     {
@@ -801,7 +798,7 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
     if (0 != l_Mesh.bHasNormals)
     {
         GetNormalFromBuffer(normals, idx);
-        MeshNormal = lightNormal = normalize(GetInterpolationHitFloat3(normals, bary));
+        lightNormal = normalize(GetInterpolationHitFloat3(normals, bary));
     }
     
     if (iID == 10)
@@ -852,10 +849,9 @@ void RadianceClosestHit(inout RadiancePayload payload, in BuiltInTriangleInterse
             lightNormal = GetHitNormalFromNormalMap(HitTangent, HitBiTangent, lightNormal, texCoord0);
         }
     }
-    MeshNormal = normalize(mul(MeshNormal, (float3x3) ObjectToWorld4x3()));
     lightNormal = normalize(mul(lightNormal, (float3x3) ObjectToWorld4x3()));
     
-    payload.RayColor = CalculateFinalColor(payload, lightNormal, albedoColor, ShaderType, texCoord0, texCoord1, MeshNormal);
+    payload.RayColor = CalculateFinalColor(payload, lightNormal, albedoColor, ShaderType, texCoord0, texCoord1);
 }
 
 [shader("closesthit")]

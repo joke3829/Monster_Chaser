@@ -14,8 +14,6 @@ extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
 extern std::vector<std::unique_ptr<CPlayableCharacter>>	m_vMonsters;
 extern std::vector<std::unique_ptr<CPlayableCharacter>>	m_vPlayers;
 
-extern std::mutex g_testL;
-
 
 
 C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
@@ -584,26 +582,23 @@ void C_Socket::do_recv()
 			return;
 
 		}
-		{
-			std::lock_guard<std::mutex> ll{ g_testL };
-			char* ptr = buffer;
-			io_byte += remained;
-			while (processed < io_byte) {
-				int size = ptr[0];
-				if (size > io_byte - processed)
-					break;
+		char* ptr = buffer;
+		io_byte += remained;
+		while (processed < io_byte) {
+			int size = ptr[0];
+			if (size > io_byte - processed)
+				break;
 
 
-				process_packet(ptr);
+			process_packet(ptr);
 
-				ptr += size;
-				processed += size;
-			}
-			remained = io_byte - processed;
+			ptr += size;
+			processed += size;
+		}
+		remained = io_byte - processed;
 
-			if (remained > 0) {
-				memcpy(buffer, ptr, remained);
-			}
+		if (remained > 0) {
+			memcpy(buffer, ptr, remained);
 		}
 	}
 }

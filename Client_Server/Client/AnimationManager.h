@@ -71,8 +71,8 @@ public:
 	void IsCollision() { m_bCollision = true; }
 protected:
 	UINT m_nAnimationSets{};
-	std::atomic<UINT> m_nCurrentSet{};
-	std::atomic<float> m_fElapsedTime{};
+	UINT m_nCurrentSet{};
+	float m_fElapsedTime{};
 	std::vector<std::string> m_vFrameNames{};		// Bone Names
 	std::vector<std::shared_ptr<CAnimationSet>> m_vAnimationSets{};
 
@@ -88,7 +88,7 @@ protected:
 	bool m_bIsBlending;
 	float m_fBlendTime;         // blend time
 	float m_fBlendDuration;     // blend during time
-	std::atomic<UINT> m_nPrevSet = 0;            // previous animation set
+	UINT m_nPrevSet = 0;            // previous animation set
 };
 
 class CPlayableCharacterAnimationManager : public CAnimationManager {
