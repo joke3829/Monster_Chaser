@@ -1,12 +1,8 @@
 #pragma once
 #include "stdafx.h"
 #include "GameObject.h"
-#include "SoundManager.h"
 
 extern DXResources g_DxResource;
-extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
-extern std::array<bool, 3> g_PlayerDie;
-
 
 class CAnimationSet {
 public:
@@ -72,8 +68,8 @@ public:
 	void IsCollision() { m_bCollision = true; }
 protected:
 	UINT m_nAnimationSets{};
-	std::atomic<UINT> m_nCurrentSet{};
-	std::atomic<float> m_fElapsedTime{};
+	UINT m_nCurrentSet{};
+	float m_fElapsedTime{};
 	std::vector<std::string> m_vFrameNames{};		// Bone Names
 	std::vector<std::shared_ptr<CAnimationSet>> m_vAnimationSets{};
 
@@ -89,7 +85,7 @@ protected:
 	bool m_bIsBlending;
 	float m_fBlendTime;         // blend time
 	float m_fBlendDuration;     // blend during time
-	std::atomic<UINT> m_nPrevSet = 0;            // previous animation set
+	UINT m_nPrevSet = 0;            // previous animation set
 };
 
 class CPlayableCharacterAnimationManager : public CAnimationManager {
@@ -103,16 +99,9 @@ public:
 	virtual void ResetCombo() {}
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player) {}
 
-	virtual bool IsAnimationFinished() const { return m_bPlayOnce && m_fElapsedTime >= m_vAnimationSets[m_nCurrentSet]->getLength(); }
-
 	virtual void StartSkill3() {};
 	virtual void OnKey3Input() {};
 	virtual int getSkillnum() { return 0; };
-
-	void setDie(bool b) { m_bDie = b; }
-	virtual void TimeIncrease(float fElapsedTime);
-	virtual void ChangeDie() {}
-	virtual void ChangeAlive() {}
 
 	bool IsInCombo() const { return m_bInCombo; }
 	bool IsComboInterrupted() const { return m_bComboEnd; }
@@ -128,8 +117,6 @@ protected:
 	bool m_bComboEnd = false;
 
 	std::vector<UINT> m_vSkillAnimationSets{};
-
-	bool m_bDie{};
 };
 
 class CMageManager : public CPlayableCharacterAnimationManager {
@@ -147,9 +134,6 @@ public:
 	virtual void StartSkill3();
 	virtual void OnKey3Input();
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
-
-	virtual void ChangeDie();
-	virtual void ChangeAlive();
 };
 
 class CWarriorManager : public CPlayableCharacterAnimationManager {
@@ -164,9 +148,6 @@ public:
 	virtual void UpdateCombo(float fElapsedTime);
 	virtual void ResetCombo();
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
-
-	virtual void ChangeDie();
-	virtual void ChangeAlive();
 protected:
 	const float m_fComboWaitTime = 0.7f;
 };
@@ -186,9 +167,6 @@ public:
 	virtual void StartSkill3();
 	virtual void OnKey3Input();
 	virtual void UpdateAniPosition(float fElapsedTime, CSkinningObject* player);
-
-	virtual void ChangeDie();
-	virtual void ChangeAlive();
 };
 
 class CMonsterManager : public CPlayableCharacterAnimationManager {
@@ -198,7 +176,7 @@ public:
 
 	virtual int getSkillnum() { 
 		if (m_nCurrentSet == 3 || m_nCurrentSet == 0)
-			return 1;
+			return 0;
 		if (m_nAnimationSets == 7)		//1 스테이지 잡몹
 		{
 			if (m_nCurrentSet == 6) {
