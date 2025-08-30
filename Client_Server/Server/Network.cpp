@@ -188,7 +188,7 @@ void SESSION::process_packet(char* p) {
 
 		if (room.isAllGameStartReady()) {
 			room.bStageActive = true; // 게임 시작 준비 완료
-			
+
 			room.monsters.clear(); // 몬스터 초기화
 			room.SpawnMonsters(); // 몬스터 스폰
 
@@ -316,7 +316,7 @@ void SESSION::process_packet(char* p) {
 				for (int pid : room.id)
 					g_server.users[pid]->do_send(&mp);
 
-				
+
 
 
 
@@ -343,7 +343,7 @@ void SESSION::process_packet(char* p) {
 		//  몬스터 공격 타입 적용
 		int attackType = pkt->attack_type;
 
-		
+
 		//target->GetDamage(pkt->attack_power); // HP 감소 적용
 
 
@@ -357,8 +357,8 @@ void SESSION::process_packet(char* p) {
 			hpkt.type = S2C_P_PLAYER_HIT;
 			hpkt.local_id = pkt->target_player_id;
 			hpkt.hp = target->GetHP();
-			
-			
+
+
 			for (int pid : room.id)
 				g_server.users[pid]->do_send(&hpkt);
 
@@ -380,7 +380,7 @@ void SESSION::process_packet(char* p) {
 		auto* pkt = reinterpret_cast<cs_packet_item_use*>(p);
 		int room_num = player->room_num;
 		ItemType type = static_cast<ItemType>(pkt->item_type);
-
+		Room& room = g_server.rooms[player->room_num];
 		switch (type)
 		{
 		case ItemType::HP_POTION:
@@ -391,7 +391,11 @@ void SESSION::process_packet(char* p) {
 			ap.type = S2C_P_CHANGEHP;
 			ap.local_id = player->local_id;
 			ap.hp = player->GetHP();
-			g_server.users[m_uniqueNo]->do_send(&ap);
+
+
+			for (int id : room.id)
+				g_server.users[id]->do_send(&ap);
+
 
 			break;
 		}
@@ -439,13 +443,20 @@ void SESSION::process_packet(char* p) {
 
 		Room& room = g_server.rooms[player->room_num];
 
+		if (skillNum == 0 )
+			player->PlusMP(-30.0f); // 예: 30 소모. 필요시 skillNum별 조절 가능
+		else if(skillNum == 1)
+			player->PlusMP(-40.0f); // 예: 30 소모. 필요시 skillNum별 조절 가능
+		else if (skillNum == 2)
+			player->PlusMP(-60.0f); // 예: 30 소모. 필요시 skillNum별 조절 가능
 		for (int pid : room.id) {
 
 			auto target = g_server.playerManager.GetPlayer(pid);
 			if (!target) continue; // 대상 플레이어가 없으면 건너뜀
 			switch (skillNum) {
 			case 0: { // 체력 회복
-				target->PlusMP(-30.0f); // 스킬 사용 시 MP 감소
+			
+				
 				target->PlusHP(200); // 임시값. 나중에 조정
 
 				sc_packet_change_hp pkt_hp;
@@ -460,6 +471,7 @@ void SESSION::process_packet(char* p) {
 			}
 			case 1: // 공격력 증가 + 방어력 감소
 			{
+				
 				player->AddATKBuff_Skill(150.0f, 30.0f); //  정확한 함수 사용
 				target->AddDEFDEBuff(30.f, 10.0f); // -10 def, 10초
 				target->UpdateBuffStatesIfChanged(true);   //  전체에게 전송
@@ -502,13 +514,13 @@ void SESSION::process_packet(char* p) {
 		auto monster = room.monsters[0];
 		if (monster->GetType() == MonsterType::Gorhorrid)
 		{
-		room.ResetGame();
-		
+			room.ResetGame();
+
 
 		}
-		
-			room.StopGame();		//스레드 멈추는거
-		
+
+		room.StopGame();		//스레드 멈추는거
+
 
 
 		sc_packet_change_hp ap;

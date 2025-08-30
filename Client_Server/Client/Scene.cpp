@@ -3841,7 +3841,7 @@ void CRaytracingETPScene::Create_Feroptere()
 		auto newMonster = std::make_unique<Monster>(m_nMonsterNum, MonsterType::Feroptere);
 		newMonster->setRenderingObject(m_vMonsters.back()->getObject());
 		newMonster->setAnimationManager(m_vMonsters.back()->getAniManager());
-		Monsters[m_nMonsterNum] = std::move(newMonster);
+		Monsters[m_nMonsterNum] = std::move(newMonster);		
 		++m_nMonsterNum;
 	}
 

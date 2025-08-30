@@ -127,14 +127,14 @@ void worker_thread(Network& server) {
 			bytes += user->remained;
 
 			while (processed < bytes) {
-				int size = ptr[0];
+				int size = static_cast<unsigned char>(ptr[0]);
 				if (size > bytes - processed)
 					break;
 				user->process_packet(ptr);
 				ptr += size;
 				processed += size;
 			}
-
+			
 			user->remained = bytes - processed;
 			if (user->remained > 0) {
 				memcpy(exp->buffer, ptr, user->remained);

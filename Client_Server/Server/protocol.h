@@ -288,6 +288,7 @@ struct cs_packet_move {
 	float time;
 	UINT state;
 };
+//
 
 
 struct cs_packet_player_attack {
