@@ -70,6 +70,7 @@ public:
 	bool CheckCollision() const { return m_bCollision; }
 	void IsCollision() { m_bCollision = true; }
 protected:
+	UINT m_nAnimationSets{};
 	std::atomic<UINT> m_nCurrentSet{};
 	std::atomic<float> m_fElapsedTime{};
 	std::vector<std::string> m_vFrameNames{};		// Bone Names
