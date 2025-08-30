@@ -168,21 +168,27 @@ KeyInputRet CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		return ret;
 	}
 
-	// Handle single and combined key presses
+	XMVECTOR lookDir = XMLoadFloat3(&normalizedCharacterDir);
+	XMVECTOR rightDir = XMVector3Normalize(XMVector3Cross(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), lookDir));
+
 	if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z + normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorSubtract(lookDir, rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z - normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorAdd(lookDir, rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z + normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorSubtract(XMVectorNegate(lookDir), rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z - normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorAdd(XMVectorNegate(lookDir), rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['W'] & 0x80) {
@@ -190,21 +196,33 @@ KeyInputRet CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x, 0.0f, -normalizedCharacterDir.z);
+		XMStoreFloat3(&moveDir, XMVectorNegate(lookDir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.x);
+		XMStoreFloat3(&moveDir, XMVectorNegate(rightDir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.x);
+		XMStoreFloat3(&moveDir, rightDir);
 		m_bMoving = true;
 	}
 
 	if (m_bMoving) {
-		XMStoreFloat3(&moveDir, XMVector3Normalize(XMLoadFloat3(&moveDir)));
 		m_Object->SetMoveDirection(moveDir);
+		m_Object->SetDirectionMove(moveDir, XMFLOAT3(0.0f, 1.0f, 0.0f), fElapsedTime);
+
+		if (keyBuffer[VK_LSHIFT] & 0x80) {
+			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_RUN_FORWARD), true);
+			m_Object->run(fElapsedTime);
+		}
+		else {
+			m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_WALK_FORWARD), true);
+			m_Object->move(fElapsedTime);
+		}
+	}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(MageAni::ANI_IDLE), false);
 	}
 
 	//// W -> IDLE while Shift held
@@ -935,21 +953,27 @@ KeyInputRet CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		return ret;
 	}
 
-	// Handle single and combined key presses
+	XMVECTOR lookDir = XMLoadFloat3(&normalizedCharacterDir);
+	XMVECTOR rightDir = XMVector3Normalize(XMVector3Cross(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), lookDir));
+
 	if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z + normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorSubtract(lookDir, rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z - normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorAdd(lookDir, rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z + normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorSubtract(XMVectorNegate(lookDir), rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z - normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorAdd(XMVectorNegate(lookDir), rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['W'] & 0x80) {
@@ -957,21 +981,33 @@ KeyInputRet CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x, 0.0f, -normalizedCharacterDir.z);
+		XMStoreFloat3(&moveDir, XMVectorNegate(lookDir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.x);
+		XMStoreFloat3(&moveDir, XMVectorNegate(rightDir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.x);
+		XMStoreFloat3(&moveDir, rightDir);
 		m_bMoving = true;
 	}
 
 	if (m_bMoving) {
-		XMStoreFloat3(&moveDir, XMVector3Normalize(XMLoadFloat3(&moveDir)));
 		m_Object->SetMoveDirection(moveDir);
+		m_Object->SetDirectionMove(moveDir, XMFLOAT3(0.0f, 1.0f, 0.0f), fElapsedTime);
+
+		if (keyBuffer[VK_LSHIFT] & 0x80) {
+			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_RUN_FORWARD), true);
+			m_Object->run(fElapsedTime);
+		}
+		else {
+			m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_WALK_FORWARD), true);
+			m_Object->move(fElapsedTime);
+		}
+	}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(WarriorAni::ANI_IDLE), false);
 	}
 
 //// W -> IDLE while Shift held
@@ -1608,21 +1644,27 @@ KeyInputRet CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		return ret;
 	}
 
-	// Handle single and combined key presses
+	XMVECTOR lookDir = XMLoadFloat3(&normalizedCharacterDir);
+	XMVECTOR rightDir = XMVector3Normalize(XMVector3Cross(XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f), lookDir));
+
 	if (keyBuffer['W'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z + normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorSubtract(lookDir, rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['W'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.z - normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorAdd(lookDir, rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80 && keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x - normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z + normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorSubtract(XMVectorNegate(lookDir), rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80 && keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x + normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.z - normalizedCharacterDir.x);
+		XMVECTOR dir = XMVectorAdd(XMVectorNegate(lookDir), rightDir);
+		XMStoreFloat3(&moveDir, XMVector3Normalize(dir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['W'] & 0x80) {
@@ -1630,21 +1672,33 @@ KeyInputRet CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 		m_bMoving = true;
 	}
 	else if (keyBuffer['S'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.x, 0.0f, -normalizedCharacterDir.z);
+		XMStoreFloat3(&moveDir, XMVectorNegate(lookDir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['A'] & 0x80) {
-		moveDir = XMFLOAT3(-normalizedCharacterDir.z, 0.0f, normalizedCharacterDir.x);
+		XMStoreFloat3(&moveDir, XMVectorNegate(rightDir));
 		m_bMoving = true;
 	}
 	else if (keyBuffer['D'] & 0x80) {
-		moveDir = XMFLOAT3(normalizedCharacterDir.z, 0.0f, -normalizedCharacterDir.x);
+		XMStoreFloat3(&moveDir, rightDir);
 		m_bMoving = true;
 	}
 
 	if (m_bMoving) {
-		XMStoreFloat3(&moveDir, XMVector3Normalize(XMLoadFloat3(&moveDir)));
 		m_Object->SetMoveDirection(moveDir);
+		m_Object->SetDirectionMove(moveDir, XMFLOAT3(0.0f, 1.0f, 0.0f), fElapsedTime);
+
+		if (keyBuffer[VK_LSHIFT] & 0x80) {
+			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_RUN_FORWARD), true);
+			m_Object->run(fElapsedTime);
+		}
+		else {
+			m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_WALK_FORWARD), true);
+			m_Object->move(fElapsedTime);
+		}
+	}
+	else {
+		m_AManager->ChangeAnimation(static_cast<int>(PriestAni::ANI_IDLE), false);
 	}
 
 	//// W -> IDLE while Shift held
