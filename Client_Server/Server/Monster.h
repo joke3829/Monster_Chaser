@@ -27,12 +27,12 @@ public:
     bool TakeDamage(float dmg);
     int GetId() const { return id; }
     int GetHP() const { return hp; }
-    
+
     XMFLOAT3 GetPosition() const { return position; }
     int GetGold() const { return gold; }
 
 
-	int GetATK() const { return ATK; }
+    int GetATK() const { return ATK; }
 
     void GetDamage();
 
@@ -52,26 +52,32 @@ public:
     bool isBossMonster();
 
     void ChangeBossAttack();
+
+
+    bool isAlive = true;
+    float respawnTimer = 0.0f;
 private:
 
     int id;
     MonsterType type;
 
     float hp;
+    float max_hp;
     int ATK;
     int target_id = -1;
 
     MonsterState state;
     XMFLOAT3 position;
     XMFLOAT3 spawnPoint;
+    XMFLOAT3 lookDir = { 0.0f, 0.0f, 1.0f }; // 기본값은 정면 (z축)
 
     int gold = 0; // 몬스터가 죽었을 때 드랍하는 골드
 
     bool isRespawning = false;
-	char Attacktypecount = 1; // 공격 종류 카운트
+    char Attacktypecount = 1; // 공격 종류 카운트
 
-	int m_currentAttackType = 1; // 현재 공격 타입
-	bool hasRoared = false; // 몬스터가 울부짖었는지 여부
+    int m_currentAttackType = 1; // 현재 공격 타입
+    bool hasRoared = false; // 몬스터가 울부짖었는지 여부
 
     std::chrono::steady_clock::time_point respawnTime;
     std::chrono::steady_clock::time_point lastAttackTime;

@@ -9,7 +9,7 @@ extern std::array<short, 10>	 userPerRoom;
 extern std::vector<std::unique_ptr<CSkinningObject>>& skinned;
 extern bool allready;
 extern TitleState g_state;
-//extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
+extern std::unique_ptr<CMonsterChaserSoundManager> g_pSoundManager;
 
 
 C_Socket::C_Socket() : InGameStart(false), running(true), remained(0), m_socket(INVALID_SOCKET) {}
@@ -56,8 +56,13 @@ void C_Socket::send_packet(void* pkt)
 	}
 }
 
-void C_Socket::SendLogin(const char* UserID, const char* Userpassword)
+void C_Socket::SendLogin()
 {
+	cs_packet_login p;
+	p.size = sizeof(p);
+	p.type = C2S_P_LOGIN;
+	
+	Client.send_packet(&p);
 }
 
 void C_Socket::SendCreateUser(const char* UserID, const char* Userpassword, const char* userNickName)
@@ -108,15 +113,9 @@ void C_Socket::SendPlayerAttack(const int target_id,const int type)
 	cs_packet_player_attack pkt;
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_PLAYERATTACK;
-	pkt.target_monster_id = target_id; // 공격 대상 몬스터 ID
-	pkt.attack_type = type; // 0: 일반 공격, 1: 스킬 공격
+	pkt.target_monster_id = target_id; // 공격 대상 몬스터 ID		// 스킬 쓴거임 -1
+	pkt.attack_type = type; // 0: 일반 공격, 1: 스킬 공격			// 1: 1번 스킬 2 번 3 번
 	Client.send_packet(&pkt);
-	
-}
-
-void C_Socket::SendHealerBUFF(const char SkillNumber)
-{
-
 }
 
 void C_Socket::SendUseItem(const unsigned int type)
@@ -126,6 +125,15 @@ void C_Socket::SendUseItem(const unsigned int type)
 	pkt.size = sizeof(pkt);
 	pkt.type = C2S_P_USE_ITEM;
 	pkt.item_type = type;
+	Client.send_packet(&pkt);
+}
+
+void C_Socket::SendPriestBUFF(const char SkillNumber)
+{
+	cs_packet_skill_use pkt;
+	pkt.size = sizeof(pkt);
+	pkt.type = C2S_P_USE_SKILL;
+	pkt.skillNumber = SkillNumber; // 0이 체력 회복, 1이 공격력 증가 + 방어력 감소, 2가 스킬게이지 최대치
 	Client.send_packet(&pkt);
 }
 
@@ -172,7 +180,7 @@ void C_Socket::process_packet(char* ptr)
 	case S2C_P_ENTER:			//입장
 	{
 		sc_packet_enter* p = reinterpret_cast<sc_packet_enter*>(ptr);
-
+		
 
 		break;
 	}
@@ -252,8 +260,8 @@ void C_Socket::process_packet(char* ptr)
 		sc_packet_Ingame_start* p = reinterpret_cast<sc_packet_Ingame_start*>(ptr);
 		Setstart(true);		//맴버 변수 InGameStart true로 바꿔주기
 		//g_state = GoLoading;
-		/*g_pSoundManager->AllStop();
-		g_pSoundManager->StartFx(ESOUND::SOUND_START);*/
+		g_pSoundManager->AllStop();
+		g_pSoundManager->StartFx(ESOUND::SOUND_START);
 		break;
 		//4 7 9
 	}
@@ -288,7 +296,8 @@ void C_Socket::process_packet(char* ptr)
 		auto& monster = Monsters[pkt->monster_id];
 		// 이미 있으면 덮어쓰기 방지
 		if (Monsters.find(id) != Monsters.end()) {
-			Monsters[pkt->monster_id]->setPosition(pkt->pos);
+			Monsters[pkt->monster_id]->getRenderingObject()->SetWorldMatrix(pkt->pos);
+			Monsters[pkt->monster_id]->getAnimationManager()->ChangeAnimation(2, false);
 		}
 		else {
 
@@ -304,7 +313,7 @@ void C_Socket::process_packet(char* ptr)
 	
 		Monsters[monster_id]->setCurrentAttackType(attack_type); // 몬스터의 현재 공격 타입 설정 attack_type이 1이면 Skill1 , 2면 Skill2
 		int a = Monsters[monster_id]->getCurrentAttackType();
-		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(Monsters[monster_id]->getCurrentAttackType(), true); // 몬스터 애니메이션 변경
+		Monsters[monster_id]->getAnimationManager()->ChangeAnimation(a, true); // 몬스터 애니메이션 변경
 		
 
 		//Monsters[monster_id]->getAnimationManager()->
@@ -319,13 +328,7 @@ void C_Socket::process_packet(char* ptr)
 		if (Monsters.find(monster_id) != Monsters.end()) {
 			auto& monster = Monsters[monster_id];
 			monster->setHP(0); // 몬스터 HP를 0으로 설정
-			
-			// 몬스터가 죽었을 때 골드 드랍 처리
-			// 예: 플레이어에게 골드 지급 로직 추가 가능
-			// 예시로 그냥 출력
-			std::cout << "몬스터 " << monster_id << "가 죽었습니다. 드랍된 골드: " << gold << std::endl;
-			// 몬스터 제거 로직 추가 가능
-			//Monsters.erase(monster_id);
+			monster->getAnimationManager()->ChangeAnimation(0, false);
 		}
 		break;
 		
@@ -340,8 +343,10 @@ void C_Socket::process_packet(char* ptr)
 
 
 		if (Monsters.find(id) != Monsters.end()) {
-			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr  
-			m->setPosition(pkt->pos);													  // doyoung's turn
+			auto& m = Monsters[id]; // Use auto& to correctly reference the unique_ptr
+			m->getRenderingObject()->SetWorldMatrix(pkt->pos);
+			m->getAnimationManager()->ChangeAnimation(2, false);
+
 			//m->setVisible(true);														  // doyoung's turn
 			//m->playIdleAnim();															  // doyoung's turn
 		}
@@ -372,17 +377,20 @@ void C_Socket::process_packet(char* ptr)
 		
 		if (Monsters.contains(id)) {
 			auto& monster = Monsters[id];
-			monster->setPosition(pkt->pos);
+			auto* ap = dynamic_cast<CMonsterManager*>(monster->getAnimationManager());
+			if (!ap->getSkillnum()) {
+				monster->getRenderingObject()->SetWorldMatrix(pkt->pos);
+				monster->getAnimationManager()->ChangeAnimation(4, false);
+			}
+
 			
 			//monster->setVisible(true);
-			//monster->getAnimationManager()->ChangeAnimation(pkt->state, true); // 상태에 따라 애니메이션 변경
 		}
 
 		break;
 	}
 	case S2C_P_PLAYER_HIT:
-	{
-		sc_packet_player_hit* pkt = reinterpret_cast<sc_packet_player_hit*>(ptr);
+	{		sc_packet_player_hit* pkt = reinterpret_cast<sc_packet_player_hit*>(ptr);
 		Players[pkt->local_id].SetHP(pkt->hp); // 플레이어가 데미지를 받았을 때 HP 감소 처리
 		break;
 	}
@@ -395,6 +403,8 @@ void C_Socket::process_packet(char* ptr)
 	{
 		auto* pkt = reinterpret_cast<sc_packet_change_hp*>(ptr);
 		int local_id = static_cast<int>(pkt->local_id);
+		if (Players[local_id].GetHP() < pkt->hp)
+			g_pBuff2->Start();
 		Players[local_id].SetHP(pkt->hp); // 플레이어의 HP 변경 처리
 		break;
 	}
@@ -412,6 +422,7 @@ void C_Socket::process_packet(char* ptr)
 		int boss_id = pkt->monster_id;
 
 		if (Monsters.count(boss_id)) {
+			Monsters[boss_id]->getAnimationManager()->ChangeAnimation(3, true);
 			//Monsters[boss_id]->playRoarAnimation();  //  울부짖는 애니메이션 재생 함수
 		}
 		break;
@@ -426,24 +437,32 @@ void C_Socket::process_packet(char* ptr)
 		{
 		case 0: // 공격력 증가
 			if(state == 1) {
+				g_PlayerBuffState[0] = true;
+				g_pBuff0->Start();
 				//공격력 버프 켜짐
 			} else {
+				g_PlayerBuffState[0] = false;
 				//공격력 버프 꺼짐
 			}
 			break;
 		case 1: // 방어력 증가
 			if (state == 1) {
+				g_PlayerBuffState[1] = true;
+				g_pBuff1->Start();
 				//방어력 상승 버프 켜짐
 			}
 			else {
+				g_PlayerBuffState[1] = false;
 				//방어력 상승 버프 꺼짐
 			}
 			break;
 		case 2: // 방어력 감소
 			if (state == 1) {
+				g_PlayerBuffState[2] = true;
 				//방어력 감소 버프 켜짐
 			}
 			else {
+				g_PlayerBuffState[2] = false;
 				//방어력 감소 버프 꺼짐
 			}
 			break;

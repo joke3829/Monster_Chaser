@@ -1092,6 +1092,13 @@ void CSkinningObject::SetMoveDirection(XMFLOAT3& pos)
 void CSkinningObject::SetWorldMatrix(XMFLOAT4X4& mat)
 {
 	m_xmf4x4WorldMatrix = mat;
+	XMFLOAT3 right(mat._11, mat._12, mat._13);
+	XMFLOAT3 up(mat._21, mat._22, mat._23);
+	XMFLOAT3 look(mat._31, mat._32, mat._33);
+
+	XMStoreFloat3(&m_xmf3Right, XMLoadFloat3(&right));
+	XMStoreFloat3(&m_xmf3Up, XMLoadFloat3(&up));
+	XMStoreFloat3(&m_xmf3Look, XMLoadFloat3(&look));
 }
 
 std::vector<std::unique_ptr<CSkinningInfo>>& CSkinningObject::getSkinningInfo()

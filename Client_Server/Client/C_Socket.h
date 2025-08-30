@@ -31,7 +31,7 @@ public:
 
 	void send_packet(void* ptk);	//sendÇÏ´Â°÷ 			
 	//--------------------------------------------------------------//	
-	void SendLogin(const char* UserID, const char* Userpassword);									//Send LoginPacket
+	void SendLogin();									//Send LoginPacket
 	void SendCreateUser(const char* UserID, const char* Userpassword, const char* userNickName);	//Send CreateUserPacket
 	void SendEnterRoom(const short RoomNum);														//Send EnterroomPacket
 	void SendsetReady(const bool isReady, const int room_num);										//Send Readypakcet if isReday is true->player set ready
@@ -41,9 +41,12 @@ public:
 	void SendPlayerReady(const short Map);																			//Send Player Ready Packet
 	void SendMonsterAttack(const int monster_id, const int target_id, const int Atktype);								//Send Monster Attack Packet
 	void SendPlayerAttack(const int target_id, const int type);														//Send Player Attack Packet
-	void SendHealerBUFF(const char SkillNumber);
 	void SendUseItem(const unsigned int type);														//Send Item Packet
 	
+	void SendPriestBUFF(const char SkillNumber);	//Send Priest Buff Packet
+
+
+	//void SendNEXTSTAGEMASTERKEY();	//Send Next Stage Master Key Packet
 	//--------------------------------------------------------------//									
 
 	bool getstart() { return InGameStart; }

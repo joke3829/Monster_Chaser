@@ -76,7 +76,7 @@ void Player::Updatestatus(Character t)
 		max_hp = hp; // 최대 HP 설정
 		skill_cost = 100; // 스킬 사용 비용
 		max_skill_cost = skill_cost; // 스킬 사용 비용
-		attack = 800; // 공격력
+		attack = 700; // 공격력
 		defense = 10; // 방어력
 		break;
 	}
@@ -120,42 +120,80 @@ void Player::AddDEFBuff(float value, float duration_sec)
 
 }
 
-float Player::GetDamage(int type)
+float Player::GetDamage(int attacktype)
 {
 
-	float attack = GetATK();	
 
+	float attack = GetATK();	
 	switch (type)
 	{
-	case 0: // 일반 공격
-		return attack;
-	case 1:
-		return attack * 3.0f;
-	case 2:
-		return attack * 3.3f;
-	case 3:
-		return attack * 4.0f;
+	case None:
+		break;
+	case Wizard:
+	{
+		if (attacktype == 0) // 일반 공격
+			return attack; // 일반 공격은 기본 공격력						800
+
+		else if (attacktype == 1) // 스킬 공격
+			return  attack * 0.5f; // 5발 쏘니까 다 맞추면 2000
+
+		else if (attacktype == 2) // 메테오
+			return attack * 4.0f; // 강력한 스킬 공격은 4.0배
+
+		else if (attacktype == 3) // 궁극기
+			return attack * 4.0f; // 궁극기는 4배
+	}
+		break;
+	case Warrior:
+	{
+		if (attacktype == 0) // 일반 공격
+			return attack; // 일반 공격은 기본 공격력						600
+
+		else if (attacktype == 1) // 스킬 공격
+			return  attack * 3.0f; // 스킬 공격은 3배
+
+		else if (attacktype == 2) // 강력한 스킬 공격
+			return attack * 3.3f; // 강력한 스킬 공격은 3.3배
+
+		else if (attacktype == 3) // 궁극기
+			return attack * 4.0f; // 궁극기는 4배
+	}
+		break;
+	case Priest:
+		return attack; // 프리스트는 일반 공격만 사용						700
+		break;
 	default:
 		break;
 	}
-	return 0.0f;
+
 }
 
 float Player::GetATK() {
 	auto now = std::chrono::steady_clock::now();
 	if (now >= atk_buff_potion_end)
+	{
 		atk_buff_potion = 0.f;
-	if (now >= atk_buff_skill_end) 
+		//cout << "[공격력 버프 종료] 포션 버프가 만료되었습니다.\n";
+	}
+	if (now >= atk_buff_skill_end) {
 		atk_buff_skill = 0.f;
+		//cout << "[공격력 버프 종료] 스킬 버프가 만료되었습니다.\n";
+	}
 	return attack + atk_buff_potion + atk_buff_skill;
 }
 
 
 float Player::GetDEF() {
 	auto now = std::chrono::steady_clock::now();
-	if (now >= def_buff_end) def_buff = 0.f;
-	if (now >= def_debuff_end) def_debuff = 0.f;
-
+	if (now >= def_buff_end) { 
+		def_buff = 0.f; 
+	//	cout << "[방어력 버프 종료] 방어력 버프가 만료되었습니다.\n";
+	}
+	if (now >= def_debuff_end)
+	{
+		def_debuff = 0.f;
+		cout << "[방어력 감소 버프 종료] 방어력 감소 버프가 만료되었습니다.\n";
+	}
 	return defense + def_buff - def_debuff;
 }
 
@@ -193,7 +231,7 @@ void Player::SendBuffPacketIfChanged(BuffType type, bool currentState)
 			g_server.users[pid]->do_send(&pkt);
 
 		std::cout << "[버프 상태 변경] 플레이어 " << local_id << " | 타입: " << (int)pkt.bufftype
-			<< " | 상태: " << (int)pkt.state << "\n";
+			<< " | 상태: " << (int)pkt.state << "공격력: "<<GetATK()<<" 방어력: "<<GetDEF() << "\n";
 	}
 }
 

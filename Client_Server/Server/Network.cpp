@@ -43,6 +43,20 @@ void SESSION::process_packet(char* p) {
 	char type = p[1];
 	switch (type) {
 	case C2S_P_LOGIN: {
+
+		sc_packet_room_info rp;
+		rp.size = sizeof(rp);
+		rp.type = S2C_P_UPDATEROOM;
+		for (int i = 0; i < g_server.rooms.size(); ++i)
+			rp.room_info[i] = g_server.rooms[i].GetPlayerCount();
+
+		for (auto& player : g_server.users)
+			player.second->do_send(&rp);
+
+		sc_packet_enter ep;
+		ep.size = sizeof(ep);
+		ep.type = S2C_P_ENTER;
+		g_server.users[m_uniqueNo]->do_send(&ep);//당사자한테만 보내주기
 		break;
 	}
 	case C2S_P_ENTER_ROOM: {
@@ -221,25 +235,27 @@ void SESSION::process_packet(char* p) {
 		cs_packet_player_attack* pkt = reinterpret_cast<cs_packet_player_attack*>(p);
 		int monster_id = pkt->target_monster_id;
 		int AttackType = pkt->attack_type;
-
+		
 		Room& room = g_server.rooms[player->room_num];
 		auto it = room.monsters.find(monster_id);
 		if (it == room.monsters.end()) break;
 
 		auto& monster = it->second;
 		bool isDead = monster->TakeDamage(player->GetDamage(AttackType)); // 나중에 10은 플레이어 직업 공격력으로 체크 //gGetDamage수정해야됨
-		cout << "[몬스터 공격] 몬스터 ID: " << monster_id
-			<< ", 공격력: " << player->GetATK()
-			<< ", 남은 HP: " << monster->GetHP() << std::endl;
+		if (monster->GetHP() > 0) {
+			cout << "[몬스터 공격] 몬스터 ID: " << monster_id
+				<< ", 공격력: " << player->GetATK()
+				<< ", 남은 HP: " << monster->GetHP() << std::endl;
 		// 모두에게 히트 패킷 전송
 		sc_packet_monster_hit hit;
 		hit.size = sizeof(hit);
 		hit.type = S2C_P_MONSTER_HIT;
 		hit.monster_id = monster_id;
 		hit.hp = monster->GetHP(); // 새로 만들면 좋음
-
 		for (int pid : room.id)
 			g_server.users[pid]->do_send(&hit);
+		}
+
 
 		if (isDead) {
 			sc_packet_monster_die die{};
@@ -281,7 +297,7 @@ void SESSION::process_packet(char* p) {
 		auto monster = room.monsters[pkt->attacker_id];
 		auto target = g_server.playerManager.GetPlayer(pkt->target_player_id);
 
-		// ✅ 몬스터 공격 타입 적용
+		//  몬스터 공격 타입 적용
 		int attackType = pkt->attack_type;
 
 
@@ -345,7 +361,7 @@ void SESSION::process_packet(char* p) {
 		case ItemType::ATK_BUFF:
 		{
 			float buff_amount = 100.f;
-			float duration = 60.f;
+			float duration = 10.f;
 
 			player->AddATKBuff_Potion(buff_amount, duration); //  정확한 함수 사용
 
@@ -369,17 +385,15 @@ void SESSION::process_packet(char* p) {
 	case C2S_P_USE_SKILL: {
 		auto* pkt = reinterpret_cast<cs_packet_skill_use*>(p);
 		int skillNum = static_cast<int>(pkt->skillNumber);		// 1: 체력 회복 2: 공격력 증가 + 방어력 감소 3: 스킬게이지 최대치 
-
+	
 		Room& room = g_server.rooms[player->room_num];
 
 		for (int pid : room.id) {
-			if (pid == m_uniqueNo) continue; // 자기 자신에게는 보내지 않음
-
-
+			
 			auto target = g_server.playerManager.GetPlayer(pid);
 			if (!target) continue; // 대상 플레이어가 없으면 건너뜀
 			switch (skillNum) {
-			case 1: { // 체력 회복
+			case 0: { // 체력 회복
 				target->PlusHP(50); // 임시값. 나중에 조정
 
 				sc_packet_change_hp pkt_hp;
@@ -392,15 +406,15 @@ void SESSION::process_packet(char* p) {
 					g_server.users[id]->do_send(&pkt_hp);
 				break;
 			}
-			case 2: // 공격력 증가 + 방어력 감소
+			case 1: // 공격력 증가 + 방어력 감소
 			{
-				target->AddATKBuff(+15.f, 10.0f); // +15 atk, 10초
+				player->AddATKBuff_Skill(+15.f, 3.0f); //  정확한 함수 사용
 				target->AddDEFBuff(-10.f, 10.0f); // -10 def, 10초
 
 				// 이건 클라에 보여줄 필요 없으면 패킷 생략 가능
 				break;
 			}
-			case 3: { // MP 최대치
+			case 2: { // MP 최대치
 				target->SetMP(100.0f); // max_skill_cost 기준
 
 				sc_packet_change_mp pkt_mp;
@@ -418,6 +432,21 @@ void SESSION::process_packet(char* p) {
 			}
 		}
 		break;
+	}
+	case C2S_P_MASTERKEY:
+	{
+		Room& room = g_server.rooms[player->room_num];
+		// 스레드 멈춤
+		room.StopGame();
+		room.bStageActive = false;
+
+		sc_packet_NextStage sp;
+		sp.size = sizeof(sp);
+		sp.type = S2C_P_NEXTSTAGE;
+
+		for (int pid : room.id)
+			g_server.users[pid]->do_send(&sp);
+		break; // 마스터 키 패킷 처리
 	}
 	}
 }

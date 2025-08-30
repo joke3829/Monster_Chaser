@@ -630,15 +630,18 @@ KeyInputRet CPlayerMage::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_bSkillActive = true;
 		}
-		if ((keyBuffer['Q'] & 0x80) && !(m_PrevKeyBuffer['Q'] & 0x80)) {	// Mp검사 추가해서 
+		if ((keyBuffer['Q'] & 0x80) && !(m_PrevKeyBuffer['Q'] & 0x80) &&
+			Players[Client.get_id()].GetMP() >= g_SkillCost[0] && g_SkillCurCTime[0] <= 0) {	// Mp검사 추가해서 
 			Skill1();
 			ret = KEY_SKILL1;
 		}
-		if ((keyBuffer['E'] & 0x80) && !(m_PrevKeyBuffer['E'] & 0x80)) {
+		if ((keyBuffer['E'] & 0x80) && !(m_PrevKeyBuffer['E'] & 0x80) &&
+			Players[Client.get_id()].GetMP() >= g_SkillCost[1] && g_SkillCurCTime[1] <= 0) {
 			Skill2();
 			ret = KEY_SKILL2;
 		}
-		if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80)) {
+		if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80) &&
+			Players[Client.get_id()].GetMP() >= g_SkillCost[2] && g_SkillCurCTime[2] <= 0) {
 			Skill3();
 			ret = KEY_SKILL3;
 		}
@@ -1410,15 +1413,18 @@ KeyInputRet CPlayerWarrior::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_bSkillActive = true;
 		}
-		if ((keyBuffer['Q'] & 0x80) && !(m_PrevKeyBuffer['Q'] & 0x80)) {
+		if ((keyBuffer['Q'] & 0x80) && !(m_PrevKeyBuffer['Q'] & 0x80) &&
+			Players[Client.get_id()].GetMP() >= g_SkillCost[0] && g_SkillCurCTime[0] <= 0) {
 			Skill1();
 			ret = KEY_SKILL1;
 		}
-		if ((keyBuffer['E'] & 0x80) && !(m_PrevKeyBuffer['E'] & 0x80)) {
+		if ((keyBuffer['E'] & 0x80) && !(m_PrevKeyBuffer['E'] & 0x80) &&
+			Players[Client.get_id()].GetMP() >= g_SkillCost[1] && g_SkillCurCTime[1] <= 0) {
 			Skill2();
 			ret = KEY_SKILL2;
 		}
-		if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80)) {
+		if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80) &&
+			Players[Client.get_id()].GetMP() >= g_SkillCost[2] && g_SkillCurCTime[2] <= 0) {
 			Skill3();
 			ret = KEY_SKILL3;
 		}
@@ -2089,15 +2095,18 @@ KeyInputRet CPlayerPriest::ProcessInput(UCHAR* keyBuffer, float fElapsedTime)
 			m_AManager->UpdateAniPosition(0.0f, m_Object);
 			m_bSkillActive = true;
 		}
-		if ((keyBuffer['Q'] & 0x80) && !(m_PrevKeyBuffer['Q'] & 0x80)) {
+		if ((keyBuffer['Q'] & 0x80) && !(m_PrevKeyBuffer['Q'] & 0x80) &&
+			Players[Client.get_id()].GetMP() >= g_SkillCost[0] && g_SkillCurCTime[0] <= 0) {
 			Skill1();
 			ret = KEY_SKILL1;
 		}
-		if ((keyBuffer['E'] & 0x80) && !(m_PrevKeyBuffer['E'] & 0x80)) {
+		if ((keyBuffer['E'] & 0x80) && !(m_PrevKeyBuffer['E'] & 0x80) &&
+			Players[Client.get_id()].GetMP() >= g_SkillCost[0] && g_SkillCurCTime[0] <= 0) {
 			Skill2();
 			ret = KEY_SKILL2;
 		}
-		if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80)) {
+		if ((keyBuffer['R'] & 0x80) && !(m_PrevKeyBuffer['R'] & 0x80) &&
+			Players[Client.get_id()].GetMP() >= g_SkillCost[0] && g_SkillCurCTime[0] <= 0) {
 			Skill3();
 			ret = KEY_SKILL3;
 		}
