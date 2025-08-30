@@ -52,6 +52,9 @@
 #include <d3d11on12.h>
 #include <dwrite.h>
 
+#include <mutex>
+#include <atomic>
+
 // 07.25
 #include "fmod.hpp"
 #include "fmod_errors.h"
