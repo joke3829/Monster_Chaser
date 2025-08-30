@@ -311,6 +311,7 @@ public:
 	void run(float fElapsedTime, short arrow);
 	void sliding(float depth, const XMFLOAT3& normal, float meshHeight);
 	void SetMoveDirection(XMFLOAT3& pos);
+	void SetDirectionMove(const XMFLOAT3& targetDir, const XMFLOAT3& up, float fElapsedTime);
 	void SetWorldMatrix(XMFLOAT4X4& mat);
 
 	std::string getName() const { return m_strObjectName; }

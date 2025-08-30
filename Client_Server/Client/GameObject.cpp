@@ -987,44 +987,19 @@ void CSkinningObject::Rotation(XMFLOAT3 rot, CGameObject& frame)
 	UpdateWorldMatrix();
 }
 
-void CSkinningObject::move(float fElapsedTime, short arrow) {
-	if (0 == arrow) // Forward
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 5.0f * fElapsedTime));
-	else if (1 == arrow) // Forward-Right (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
-	else if (2 == arrow) // Right
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * 5.0f * fElapsedTime));
-	else if (3 == arrow) // Backward-Right (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
-	else if (4 == arrow) // Backward
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -5.0f * fElapsedTime));
-	else if (5 == arrow) // Backward-Left (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
-	else if (6 == arrow) // Left
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * -5.0f * fElapsedTime));
-	else if (7 == arrow) // Forward-Left (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 5.0f * fElapsedTime));
+void CSkinningObject::move(float fElapsedTime)
+{
+	float speed = 5.0f;
+	XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * speed * fElapsedTime));
+
 	UpdateWorldMatrix();
 }
 
-void CSkinningObject::run(float fElapsedTime, short arrow)
+void CSkinningObject::run(float fElapsedTime)
 {
-	if (0 == arrow) // Forward
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * 30.0f * fElapsedTime));
-	else if (1 == arrow) // Forward-Right (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
-	else if (2 == arrow) // Right
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * 30.0f * fElapsedTime));
-	else if (3 == arrow) // Backward-Right (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) + XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
-	else if (4 == arrow) // Backward
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * -30.0f * fElapsedTime));
-	else if (5 == arrow) // Backward-Left (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(-XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
-	else if (6 == arrow) // Left
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Right) * -30.0f * fElapsedTime));
-	else if (7 == arrow) // Forward-Left (45 degrees)
-		XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMVector3Normalize(XMLoadFloat3(&m_xmf3Look) - XMLoadFloat3(&m_xmf3Right)) * 30.0f * fElapsedTime));
+	float speed = 10.0f;
+	XMStoreFloat3(&m_xmf3Position, XMLoadFloat3(&m_xmf3Position) + (XMLoadFloat3(&m_xmf3Look) * speed * fElapsedTime));
+
 	UpdateWorldMatrix();
 }
 
@@ -1078,6 +1053,41 @@ void CSkinningObject::sliding(float depth, const XMFLOAT3& normal, float meshHei
 void CSkinningObject::SetMoveDirection(XMFLOAT3& pos)
 {
 	m_xmf3MoveDirection = pos;
+}
+
+void CSkinningObject::SetDirectionMove(const XMFLOAT3& targetDir, const XMFLOAT3& up, float fElapsedTime)
+{
+	XMVECTOR currentLook = XMVector3Normalize(XMLoadFloat3(&m_xmf3Look));
+	XMFLOAT3 targetDirXZ(targetDir.x, 0.0f, targetDir.z);
+	XMVECTOR targetLook = XMVector3Normalize(XMLoadFloat3(&targetDirXZ));
+
+	float rotationSpeed = XMConvertToRadians(1620.0f);
+	float t = min(1.0f, rotationSpeed * fElapsedTime);
+
+	float dot = XMVectorGetX(XMVector3Dot(currentLook, targetLook));
+	if (dot < -0.8f)
+	{
+		t = min(1.0f, rotationSpeed * fElapsedTime * 1.5f);
+	}
+
+	XMVECTOR newLook = XMVector3Normalize(XMVectorLerp(currentLook, targetLook, t));
+	XMStoreFloat3(&m_xmf3Look, newLook);
+	m_xmf3Look.y = 0.0f;
+
+	XMVECTOR upVector = XMLoadFloat3(&up);
+	XMVECTOR rightVector = XMVector3Normalize(XMVector3Cross(upVector, newLook));
+	XMVECTOR recalculatedUp = XMVector3Normalize(XMVector3Cross(newLook, rightVector));
+
+	XMStoreFloat3(&m_xmf3Right, rightVector);
+	XMStoreFloat3(&m_xmf3Up, recalculatedUp);
+
+	XMMATRIX worldMatrix = XMMatrixIdentity();
+	worldMatrix.r[0] = XMLoadFloat3(&m_xmf3Right);
+	worldMatrix.r[1] = XMLoadFloat3(&m_xmf3Up);
+	worldMatrix.r[2] = XMLoadFloat3(&m_xmf3Look);
+	worldMatrix.r[3] = XMVectorSet(m_xmf3Position.x, m_xmf3Position.y, m_xmf3Position.z, 1.0f);
+
+	XMStoreFloat4x4(&m_xmf4x4WorldMatrix, worldMatrix);
 }
 
 void CSkinningObject::SetWorldMatrix(XMFLOAT4X4& mat)
